@@ -1,0 +1,6 @@
+.background-div {
+  background-image: url('/assets/images/home-group.png');
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: cover;
+}

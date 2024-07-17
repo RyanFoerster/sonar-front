@@ -1,6 +1,6 @@
-import { isPlatformBrowser } from '@angular/common';
-import { inject, Injectable, PLATFORM_ID, signal } from '@angular/core';
-import { environments } from '../../../environments/environments';
+import {isPlatformBrowser} from '@angular/common';
+import {inject, Injectable, PLATFORM_ID, signal} from '@angular/core';
+import {environments} from '../../../environments/environments';
 
 @Injectable({
   providedIn: 'root'
@@ -23,6 +23,7 @@ export class AuthService {
     sessionStorage.removeItem(environments.TOKEN_KEY)
     sessionStorage.setItem(environments.TOKEN_KEY, token)
     this.token.set(token)
+
   }
 
   getToken() {
@@ -33,4 +34,6 @@ export class AuthService {
     sessionStorage.removeItem(environments.TOKEN_KEY)
     this.token.set(null)
   }
+
+
 }

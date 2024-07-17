@@ -51,7 +51,7 @@ export class LoginComponent {
         tap((data) => {
           console.log(data)
           this.authService.saveToken(data.access_token)
-          if(data.isActive) {
+          if(data.user.isActive) {
             this.router.navigate(['/home'])
           } else {
             this.router.navigate(['/rendez-vous'])

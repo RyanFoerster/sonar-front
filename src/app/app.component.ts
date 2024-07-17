@@ -11,7 +11,7 @@ import { HeaderMobileComponent } from "./header-mobile/header-mobile.component";
   standalone: true,
   imports: [RouterOutlet, HeaderComponent, FooterComponent, HeaderMobileComponent],
   templateUrl: './app.component.html',
-  styleUrl: './app.component.css'
+  styleUrl: './app.component.css',
 })
 export class AppComponent {
   title = 'Sonar-front';

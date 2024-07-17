@@ -9,7 +9,7 @@ module.exports = {
   theme: {
     extend: {
       height: {
-        "without-header": "calc(100vh - 300px)"
+        "without-footer-and-header": "calc(100vh - 200px)"
       },
       textColor: {
         "green-sonar": "#C8C04D"

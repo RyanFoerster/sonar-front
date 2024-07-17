@@ -1,6 +1,6 @@
+import {UserEntity} from "./user.entity";
+
 export interface LoggedUser {
-    access_token: string
-    id: number
-    email: string
-    isActive: boolean
+  access_token: string
+  user: UserEntity
 }

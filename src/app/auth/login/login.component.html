@@ -1,0 +1,57 @@
+<div
+  class="flex flex-col justify-center mx-auto w-4/5 h-without-header gap-2 md:gap-4"
+>
+  <h1 class="text-lg md:text-3xl text-green-sonar">Content de vous revoir</h1>
+
+  <p class="text-xs md:text-xl">
+    Entrez votre e-mail et un mot de passe pour vous inscrire.
+  </p>
+
+  <form
+    [formGroup]="loginForm"
+    class="flex flex-col justify-center w-full mx-auto gap-2 md:gap-4"
+    (ngSubmit)="login()"
+  >
+    <label class="w-full text-xs rounded-full md:text-lg" hlmLabel
+      >Email
+      <input
+        formControlName="email"
+        class="w-full h-auto text-xs rounded-full md:text-lg"
+        hlmInput
+        type="email"
+        placeholder="exemple@exemple.be"
+      />
+    </label>
+
+    <label class="w-full text-xs rounded-full md:text-lg" hlmLabel
+      >Password
+      <input
+        formControlName="password"
+        class="w-full h-auto text-xs rounded-full md:text-lg"
+        hlmInput
+        type="password"
+        placeholder="**********"
+      />
+    </label>
+
+    <button
+      type="submit"
+      class="rounded-full cursor-pointer px-6 w-full hover:bg-white hover:text-black hover:border hover:border-black transition-all md:text-lg md:h-auto"
+      hlmBtn
+    >
+      Connexion
+    </button>
+  </form>
+
+  <div class="flex gap-2 text-[8px] justify-center md:text-xs">
+    <p>Vous n'avez pas encore de compte?</p>
+    <a routerLink="/register" class="text-green-sonar cursor-pointer"
+      >S'inscrire</a
+    >
+  </div>
+  <a
+    routerLink="/forgotten-password"
+    class="flex text-[8px] justify-center md:text-xs"
+    >Mot de passe oublié ?</a
+  >
+</div>

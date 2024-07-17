@@ -1,0 +1,50 @@
+<div class="py-5 px-10 h-20 flex gap-5 rounded justify-between items-center relative"> 
+    <div class="" >
+        <img class="w-36" src="/assets/images/Groupe-30.png"/>
+    </div>
+
+    @if (userConnected()) {
+      <div class="gap-2 justify-center items-center hidden md:flex">
+        <hlm-menu-bar class="w-fit border-none">
+            <button hlmMenuBarItem >Accueil</button>
+            <button hlmMenuBarItem >Profil</button>
+            <button hlmMenuBarItem [brnMenuTriggerFor]="admin">Admin</button>
+        </hlm-menu-bar>
+        
+        <hlm-icon size='sm' name="lucideBell" />
+
+        <a (click)="logout()" class="cursor-pointer rounded-full" hlmBtn>Déconnexion</a>
+    </div>
+    <app-header-mobile class="md:hidden" />
+    } @else {
+      <div class="flex gap-2 justify-center items-center">
+        <a routerLink="login" hlmBtn class="cursor-pointer hidden md:block rounded-full" [ngClass]="{'md:hidden': router.url === '/login'}">Connexion</a>
+        <a routerLink="register" hlmBtn class="cursor-pointer hidden rounded-full" [ngClass]="{'md:block': router.url === '/login'}">Inscription</a>
+      </div>
+    }
+    
+
+    
+</div>
+
+  <ng-template #admin>
+    <hlm-menu variant="menubar" class="w-64 flex flex-col p-0 items-center justify-start">
+      <button class="" hlmMenuItemRadio>
+        <hlm-menu-item-radio />
+        Validation utilisateur
+      </button>
+      <button hlmMenuItemRadio>
+        <hlm-menu-item-radio />
+        Validation virement SEPA
+      </button>
+      <button hlmMenuItemRadio>
+        <hlm-menu-item-radio />
+        Création nouveau membre
+      </button>
+      <button hlmMenuItemRadio>
+        <hlm-menu-item-radio />
+        Rendez-vous Visio
+      </button>
+    </hlm-menu>
+  </ng-template>
+  

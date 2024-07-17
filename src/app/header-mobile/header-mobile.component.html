@@ -1,0 +1,23 @@
+<div class="">
+  
+    <hlm-icon (click)="toggleMenu()" size='lg' name="lucideAlignJustify" />
+    @if (isToggleMenu()) 
+    {
+        <div class="gap-2 justify-center items-center flex flex-col bg-white h-screen w-screen absolute top-0 left-0 z-50 md:hidden">
+            <div class="py-5 px-10 h-20 flex gap-5 rounded justify-between items-center w-full">
+                <img class="w-36 items-center" src="assets/images/Groupe-30.png"/>
+                <hlm-icon (click)="toggleMenu()" class="text-black items-center" size='lg' name="lucideX" />
+            </div>
+            <hlm-menu-bar class="w-fit border-none flex flex-col justify-center items-center h-screen bg-transparent text-base *:font-bold">
+                <button class=" *:text-black" hlmMenuBarItem >Accueil</button>
+                <button class=" *:text-black" hlmMenuBarItem >Profil</button>
+                <button class=" *:text-black" hlmMenuBarItem >Validation utilisateur</button>
+                <button class=" *:text-black" hlmMenuBarItem >Validation virement SEPA</button>
+                <button class=" *:text-black" hlmMenuBarItem >Création nouveau membre</button>
+                <button class=" *:text-black" hlmMenuBarItem >Rendez-vous Visio</button>
+                <button (click)="logout()" class="flex w-full bg-black mt-3 text-white rounded-full" hlmBtn>Déconnexion</button>
+            </hlm-menu-bar>
+        </div>
+    }
+   
+</div>

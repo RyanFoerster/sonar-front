@@ -1,5 +1,11 @@
-import {CommonModule, JsonPipe} from '@angular/common';
-import {Component, effect, inject, signal, WritableSignal} from '@angular/core';
+import { CommonModule, JsonPipe } from '@angular/common';
+import {
+  Component,
+  effect,
+  inject,
+  signal,
+  WritableSignal,
+} from '@angular/core';
 import { BrnAccordionContentComponent } from '@spartan-ng/ui-accordion-brain';
 import {
   HlmAccordionContentDirective,
@@ -14,11 +20,16 @@ import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
 import { HlmButtonDirective } from '@spartan-ng/ui-button-helm';
-import {AccountComponentComponent} from "./account-component/account-component.component";
-import {AuthService} from "../../shared/services/auth.service";
-import {UserEntity} from "../../shared/entities/user.entity";
-import {UsersService} from "../../shared/services/users.service";
-import {tap} from "rxjs";
+import { AccountComponentComponent } from './account-component/account-component.component';
+import { AuthService } from '../../shared/services/auth.service';
+import { UserEntity } from '../../shared/entities/user.entity';
+import { UsersService } from '../../shared/services/users.service';
+import { tap } from 'rxjs';
+import { CompteGroupeEntity } from '../../shared/entities/compte-groupe.entity';
+import { sign } from 'crypto';
+import { CompteGroupeService } from '../../shared/services/compte-groupe.service';
+import { ComptePrincipalService } from '../../shared/services/compte-principal.service';
+import { PrincipalAccountEntity } from '../../shared/entities/principal-account.entity';
 
 @Component({
   selector: 'app-home',
@@ -40,18 +51,39 @@ import {tap} from "rxjs";
     JsonPipe,
   ],
   templateUrl: './home.component.html',
-  styleUrl: './home.component.css'
+  styleUrl: './home.component.css',
 })
 export class HomeComponent {
+  userConnected: WritableSignal<UserEntity | null> = signal(null);
+  groupAccounts: WritableSignal<CompteGroupeEntity[] | null> = signal(null);
+  comptePrincipal: WritableSignal<PrincipalAccountEntity[] | null> =
+    signal(null);
 
-    userConnected: WritableSignal<UserEntity | null> = signal(null)
-    usersService: UsersService = inject(UsersService)
+  usersService: UsersService = inject(UsersService);
+  groupAccountService: CompteGroupeService = inject(CompteGroupeService);
+  comptePrincipalService: ComptePrincipalService = inject(
+    ComptePrincipalService
+  );
 
-    constructor() {
-      this.usersService.getInfo().pipe(
-        tap((data) => this.userConnected.set(data))
-      ).subscribe()
-    }
+  constructor() {
+    this.usersService
+      .getInfo()
+      .pipe(
+        tap((data) => this.userConnected.set(data)),
+        tap(() => {
+          if (this.userConnected()?.role === 'ADMIN') {
+            this.groupAccountService
+              .getAllGroupAccount()
+              .pipe(tap((data) => this.groupAccounts.set(data)))
+              .subscribe();
 
-
+            this.comptePrincipalService
+              .getAllGroupPrincipal()
+              .pipe(tap((data) => this.comptePrincipal.set(data)))
+              .subscribe();
+          }
+        })
+      )
+      .subscribe();
+  }
 }

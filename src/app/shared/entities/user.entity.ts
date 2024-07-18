@@ -12,6 +12,7 @@ export interface UserEntity {
   telephone: string
   iban: string
   isActive: boolean
+  role: string
   comptePrincipal: PrincipalAccountEntity
   userSecondaryAccounts: UserSecondaryAccountEntity[]
   clients: ClientEntity[]

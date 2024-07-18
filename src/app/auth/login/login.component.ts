@@ -49,7 +49,6 @@ export class LoginComponent {
 
       this.usersService.signIn(credentials).pipe(
         tap((data) => {
-          console.log(data)
           this.authService.saveToken(data.access_token)
           if(data.user.isActive) {
             this.router.navigate(['/home'])

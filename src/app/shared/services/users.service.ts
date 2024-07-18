@@ -28,4 +28,6 @@ export class UsersService {
   getInfo() {
     return this.httpClient.get<UserEntity>(`${environments.API_URL}/users`)
   }
+
+  
 }

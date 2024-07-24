@@ -1,12 +1,6 @@
-import { CommonModule, JsonPipe } from '@angular/common';
-import {
-  Component,
-  effect,
-  inject,
-  signal,
-  WritableSignal,
-} from '@angular/core';
-import { BrnAccordionContentComponent } from '@spartan-ng/ui-accordion-brain';
+import {JsonPipe} from '@angular/common';
+import {Component, inject, signal, WritableSignal,} from '@angular/core';
+import {BrnAccordionContentComponent} from '@spartan-ng/ui-accordion-brain';
 import {
   HlmAccordionContentDirective,
   HlmAccordionDirective,
@@ -40,6 +34,7 @@ import {
   HlmDialogTitleDirective,
 } from '@spartan-ng/ui-dialog-helm';
 
+
 @Component({
   selector: 'app-home',
   standalone: true,
@@ -71,6 +66,9 @@ import {
   styleUrl: './home.component.css',
 })
 export class HomeComponent {
+
+
+
   userConnected: WritableSignal<UserEntity | null> = signal(null);
   groupAccounts: WritableSignal<CompteGroupeEntity[] | null> = signal(null);
   comptePrincipal: WritableSignal<PrincipalAccountEntity[] | null> =
@@ -103,4 +101,7 @@ export class HomeComponent {
       )
       .subscribe();
   }
+
+
+
 }

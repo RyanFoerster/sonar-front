@@ -15,4 +15,8 @@ export class ComptePrincipalService {
   getAllGroupPrincipal(){
     return this.httpClient.get<PrincipalAccountEntity[]>(`${environments.API_URL}/compte-principal`)
   }
+
+  getGroupById(id?: number) {
+    return this.httpClient.get<PrincipalAccountEntity>(`${environments.API_URL}/compte-principal/${id}`)
+  }
 }

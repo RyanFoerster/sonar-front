@@ -4,4 +4,27 @@
     class="rounded-full w-3/6 self-end text-[10px] font-semibold h-auto  bg-gray-sonar text-black md:flex md:justify-center md:items-center md:gap-2 md:min-w-4/5 md:px-10 md:text-lg"
     hlmBtn>Créer un nouveau devis
   </a>
+
+  <hlm-table class="w-full min-w-[400px]">
+    <hlm-trow>
+      <hlm-th class="w-52">Quote</hlm-th>
+      <hlm-th class="w-60">Date</hlm-th>
+      <hlm-th class="flex-1">Client</hlm-th>
+      <hlm-th class="justify-end w-40">Montant</hlm-th>
+    </hlm-trow>
+    @for (quote of connectedUser()?.comptePrincipal?.quote!; track quote.id) {
+      <hlm-trow>
+        <hlm-td truncate class="font-medium w-52">{{ quote.id }}</hlm-td>
+        <hlm-td class="w-60">{{ quote.quote_date | date : 'dd/MM/YYYY' }}</hlm-td>
+        <hlm-td class="flex-1">{{ quote.client.name }}</hlm-td>
+        <hlm-td class="justify-end w-40">{{ quote.total | euroFormat }}</hlm-td>
+        <hlm-td class="justify-end w-40">
+          <button (click)="generatePDF(quote)">
+            Générer le PDF
+          </button>
+        </hlm-td>
+      </hlm-trow>
+    }
+
+  </hlm-table>
 </div>

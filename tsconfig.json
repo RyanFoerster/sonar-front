@@ -54,6 +54,12 @@
       ],
       "@spartan-ng/ui-dialog-helm": [
         ".\\components/ui-dialog-helm/src/index.ts"
+      ],
+      "@spartan-ng/ui-alert-helm": [
+        ".\\components/ui-alert-helm/src/index.ts"
+      ],
+      "@spartan-ng/ui-checkbox-helm": [
+        ".\\components/ui-checkbox-helm/src/index.ts"
       ]
     }
   },

@@ -1,0 +1,64 @@
+<div class="flex flex-col justify-center">
+    <div class="background-div h-40 max-w-full md:h-60 relative mx-10 overflow-hidden rounded-2xl shadow">
+      <div class="absolute bottom-2 right-2 size-5 bg-white rounded-full flex justify-center items-center">
+        <hlm-icon class="w-3" name="lucideEdit"/>
+      </div>
+    </div>
+    <div class="flex flex-col justify-center gap-3">
+        <p class="flex justify-center font-semibold mt-2">Manon Aussems</p>
+        <hlm-dialog class="flex flex-col justify-start mx-8 w-auto">
+            <button class="flex rounded-full w-auto" id="edit-profile" brnDialogTrigger hlmBtn>Modifier le profil</button>
+            <hlm-dialog-content class="p-5 rounded-xl m-4 w-11/12" *brnDialogContent="let ctx">
+              <hlm-dialog-header>
+                <h3 hlmDialogTitle>Modifier le profil</h3>
+                <p hlmDialogDescription>Apportez des modifications à votre profil ici. Cliquez sur "Enregistrer" lorsque vous avez terminé.</p>
+              </hlm-dialog-header>
+              <div class="py-4 grid gap-4">
+                <div class="items-center grid grid-cols-4 gap-4">
+                    <label hlmLabel for="username" class="text-left">Username</label>
+                    <input hlmInput id="username" value="@peduarte" class="col-span-3 m-2" />
+                </div>
+
+                <div class="items-center grid grid-cols-4 gap-4">
+                  <label hlmLabel for="lastname" class="text-left">Nom</label>
+                  <input hlmInput id="lastname" value="Dupont" class="col-span-3 m-2" />
+                </div>
+
+                <div class="items-center grid grid-cols-4 gap-4">
+                    <label hlmLabel for="firstname" class="text-left">Prénom</label>
+                    <input hlmInput id="firstname" value="Olivier" class="col-span-3 m-2" />
+                </div>
+
+                <div class="items-center grid grid-cols-4 gap-4">
+                    <label hlmLabel for="number" class="text-left">Numéro national</label>
+                    <input hlmInput id="number" value="83051212345" class="col-span-3 m-2" />
+                </div>
+
+                <div class="items-center grid grid-cols-4 gap-4">
+                    <label hlmLabel for="phone" class="text-left">Téléphone</label>
+                    <input hlmInput id="phone" value="+32 478 13 92 87" class="col-span-3 m-2" />
+                </div>
+
+                <div class="items-center grid grid-cols-4 gap-4">
+                  <label hlmLabel for="email" class="text-left">E-mail</label>
+                  <input hlmInput id="email" value="test@tes.be" class="col-span-3 m-2" />
+                </div>
+
+                <div class="items-center grid grid-cols-4 gap-4">
+                    <label hlmLabel for="number" class="text-left">Compte bancaire</label>
+                    <input hlmInput id="number" value="BE95 1430 8568 5558" class="col-span-3 m-2" />
+                </div>
+
+                <div class="items-center grid grid-cols-4 gap-4">
+                    <label hlmLabel for="adress" class="text-left">Adresse</label>
+                    <input hlmInput id="adress" value="Place des arts 1, 4020 Liège" class="col-span-3 m-2" />
+                </div>
+
+              </div>
+              <hlm-dialog-footer>
+                <button class="rounded-full" hlmBtn type="submit">Enregistrer</button>
+              </hlm-dialog-footer>
+            </hlm-dialog-content>
+          </hlm-dialog>
+    </div>
+</div>    

@@ -32,6 +32,30 @@ export const routes: Routes = [
         path: "rendez-vous",
         loadComponent: () => import('./users/rendez-vous/rendez-vous.component').then((m) => m.RendezVousComponent),
         canActivate: [authGuard]
-    }
-    
+    },
+    {
+        path: "profile",
+        loadComponent: () => import('./users/profile/profile.component').then((m) => m.ProfileComponent),
+        canActivate: [authGuard]
+    },
+    {
+        path: "user-validation",
+        loadComponent: () => import('./user-validation/user-validation.component').then((m) => m.UserValidationComponent),
+        canActivate: [authGuard]
+    },
+    {
+        path: "creating-new-users",
+        loadComponent: () => import('./creating-new-users/creating-new-users.component').then((m) => m.CreatingNewUsersComponent),
+        canActivate: [authGuard]
+    },
+    {
+        path: "sepa-validation",
+        loadComponent: () => import('./sepa-validation/sepa-validation.component').then((m) => m.SepaValidationComponent),
+        canActivate: [authGuard]
+    },
+    {
+        path: "membership",
+        loadComponent: () => import('./users/membership/membership.component').then((m) => m.MembershipComponent),
+        canActivate: [authGuard]
+    },
 ];

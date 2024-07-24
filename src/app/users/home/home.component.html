@@ -127,12 +127,26 @@
       </brn-accordion-content>
     </div>
   </div>
-
   <div>
-    <button class="rounded-full w-full text-xs h-auto" hlmBtn>
-      Nouveau projet de groupe
-    </button>
-  </div>
+    <hlm-dialog>
+      <button class="rounded-full w-full text-xs h-auto" id="edit-group" brnDialogTrigger hlmBtn>Nouveau projet de groupe</button>
+      <hlm-dialog-content class="sm:max-w-[425px] rounded-xl" *brnDialogContent="let ctx">
+        <hlm-dialog-header>
+          <h3 hlmDialogTitle>Nouveau projet de groupe</h3>
+          <p hlmDialogDescription>Créer un nouveau projet de groupe.</p>
+        </hlm-dialog-header>
+        <div class="py-4 grid gap-4">
+          <div class="items-center grid grid-cols-4 gap-4">
+            <label hlmLabel for="name" class="text-right">Nom</label>
+            <input hlmInput id="name" value="Pedro Duarte" class="col-span-3" />
+          </div>
+        </div>
+        <hlm-dialog-footer>
+          <button class="rounded-full w-full text-xs h-auto" hlmBtn type="submit">Créer</button>
+        </hlm-dialog-footer>
+      </hlm-dialog-content>
+    </hlm-dialog>
+    </div>
 </div>
 
 
@@ -231,9 +245,24 @@
     <div class="flex flex-col gap-3">
       <div class="flex justify-between w-full">
         <p class="flex font-bold text-2xl">Projets de groupes</p>
-        <button class="flex rounded-full w-1/3 text-xs h-auto" hlmBtn>
-          Nouveau projet de groupe
-        </button>
+        <hlm-dialog>
+          <button class="rounded-full w-full text-xs h-auto" id="edit-group" brnDialogTrigger hlmBtn>Nouveau projet de groupe</button>
+          <hlm-dialog-content class="sm:max-w-[425px] rounded-xl" *brnDialogContent="let ctx">
+            <hlm-dialog-header>
+              <h3 hlmDialogTitle>Nouveau projet de groupe</h3>
+              <p hlmDialogDescription>Créer un nouveau projet de groupe.</p>
+            </hlm-dialog-header>
+            <div class="py-4 grid gap-4">
+              <div class="items-center grid grid-cols-4 gap-4">
+                <label hlmLabel for="name" class="text-right">Nom</label>
+                <input hlmInput id="name" value="Pedro Duarte" class="col-span-3" />
+              </div>
+            </div>
+            <hlm-dialog-footer>
+              <button class="rounded-full w-full text-xs h-auto" hlmBtn type="submit">Créer</button>
+            </hlm-dialog-footer>
+          </hlm-dialog-content>
+        </hlm-dialog>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
         @if(userConnected()?.role === "ADMIN") { 

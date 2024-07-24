@@ -30,6 +30,15 @@ import { sign } from 'crypto';
 import { CompteGroupeService } from '../../shared/services/compte-groupe.service';
 import { ComptePrincipalService } from '../../shared/services/compte-principal.service';
 import { PrincipalAccountEntity } from '../../shared/entities/principal-account.entity';
+import { BrnDialogContentDirective, BrnDialogTriggerDirective } from '@spartan-ng/ui-dialog-brain';
+import {
+  HlmDialogComponent,
+  HlmDialogContentComponent,
+  HlmDialogDescriptionDirective,
+  HlmDialogFooterComponent,
+  HlmDialogHeaderComponent,
+  HlmDialogTitleDirective,
+} from '@spartan-ng/ui-dialog-helm';
 
 @Component({
   selector: 'app-home',
@@ -49,6 +58,14 @@ import { PrincipalAccountEntity } from '../../shared/entities/principal-account.
     HlmButtonDirective,
     AccountComponentComponent,
     JsonPipe,
+    HlmDialogComponent,
+    HlmDialogContentComponent,
+    HlmDialogDescriptionDirective,
+    HlmDialogFooterComponent,
+    HlmDialogHeaderComponent,
+    HlmDialogTitleDirective,
+    BrnDialogContentDirective, 
+    BrnDialogTriggerDirective 
   ],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css',

@@ -1,12 +1,6 @@
-import { CommonModule, JsonPipe } from '@angular/common';
-import {
-  Component,
-  effect,
-  inject,
-  signal,
-  WritableSignal,
-} from '@angular/core';
-import { BrnAccordionContentComponent } from '@spartan-ng/ui-accordion-brain';
+import {JsonPipe} from '@angular/common';
+import {Component, inject, signal, WritableSignal,} from '@angular/core';
+import {BrnAccordionContentComponent} from '@spartan-ng/ui-accordion-brain';
 import {
   HlmAccordionContentDirective,
   HlmAccordionDirective,
@@ -14,22 +8,20 @@ import {
   HlmAccordionItemDirective,
   HlmAccordionTriggerDirective,
 } from '@spartan-ng/ui-accordion-helm';
-import { HlmIconComponent } from '@spartan-ng/ui-icon-helm';
-import { AccordionModule } from 'primeng/accordion';
-import { IconFieldModule } from 'primeng/iconfield';
-import { InputIconModule } from 'primeng/inputicon';
-import { InputTextModule } from 'primeng/inputtext';
-import { HlmButtonDirective } from '@spartan-ng/ui-button-helm';
-import { AccountComponentComponent } from './account-component/account-component.component';
-import { AuthService } from '../../shared/services/auth.service';
-import { UserEntity } from '../../shared/entities/user.entity';
-import { UsersService } from '../../shared/services/users.service';
-import { tap } from 'rxjs';
-import { CompteGroupeEntity } from '../../shared/entities/compte-groupe.entity';
-import { sign } from 'crypto';
-import { CompteGroupeService } from '../../shared/services/compte-groupe.service';
-import { ComptePrincipalService } from '../../shared/services/compte-principal.service';
-import { PrincipalAccountEntity } from '../../shared/entities/principal-account.entity';
+import {HlmIconComponent} from '@spartan-ng/ui-icon-helm';
+import {AccordionModule} from 'primeng/accordion';
+import {IconFieldModule} from 'primeng/iconfield';
+import {InputIconModule} from 'primeng/inputicon';
+import {InputTextModule} from 'primeng/inputtext';
+import {HlmButtonDirective} from '@spartan-ng/ui-button-helm';
+import {AccountComponentComponent} from './account-component/account-component.component';
+import {UserEntity} from '../../shared/entities/user.entity';
+import {UsersService} from '../../shared/services/users.service';
+import {tap} from 'rxjs';
+import {CompteGroupeEntity} from '../../shared/entities/compte-groupe.entity';
+import {CompteGroupeService} from '../../shared/services/compte-groupe.service';
+import {ComptePrincipalService} from '../../shared/services/compte-principal.service';
+import {PrincipalAccountEntity} from '../../shared/entities/principal-account.entity';
 
 @Component({
   selector: 'app-home',
@@ -54,6 +46,9 @@ import { PrincipalAccountEntity } from '../../shared/entities/principal-account.
   styleUrl: './home.component.css',
 })
 export class HomeComponent {
+
+
+
   userConnected: WritableSignal<UserEntity | null> = signal(null);
   groupAccounts: WritableSignal<CompteGroupeEntity[] | null> = signal(null);
   comptePrincipal: WritableSignal<PrincipalAccountEntity[] | null> =
@@ -86,4 +81,7 @@ export class HomeComponent {
       )
       .subscribe();
   }
+
+
+
 }

@@ -1,3 +1,6 @@
+import {ClientEntity} from "./client.entity";
+import {ProductEntity} from "./product.entity";
+
 export interface QuoteEntity {
   id: number
   quote_date: Date
@@ -10,4 +13,6 @@ export interface QuoteEntity {
   status: string
   group_acceptance: boolean
   order_giver_acceptance: boolean;
+  client: ClientEntity
+  products: ProductEntity[]
 }

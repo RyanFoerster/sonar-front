@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard } from './guards/auth.guard';
+import { authGuard } from './shared/guards/auth.guard';
 
 export const routes: Routes = [
     {
@@ -20,18 +20,12 @@ export const routes: Routes = [
     },
     {
         path: "home",
-        loadComponent: () => import('./users/home/home.component').then((m) => m.HomeComponent),
-        canActivate: [authGuard]
-    },
-    {
-        path: "home-group",
-        loadComponent: () => import('./users/home-group/home-group.component').then((m) => m.HomeGroupComponent),
-        canActivate: [authGuard]
+        loadChildren: () => import('./users/home/home.routes'),
     },
     {
         path: "rendez-vous",
         loadComponent: () => import('./users/rendez-vous/rendez-vous.component').then((m) => m.RendezVousComponent),
         canActivate: [authGuard]
     }
-    
+
 ];

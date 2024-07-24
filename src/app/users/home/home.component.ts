@@ -8,20 +8,32 @@ import {
   HlmAccordionItemDirective,
   HlmAccordionTriggerDirective,
 } from '@spartan-ng/ui-accordion-helm';
-import {HlmIconComponent} from '@spartan-ng/ui-icon-helm';
-import {AccordionModule} from 'primeng/accordion';
-import {IconFieldModule} from 'primeng/iconfield';
-import {InputIconModule} from 'primeng/inputicon';
-import {InputTextModule} from 'primeng/inputtext';
-import {HlmButtonDirective} from '@spartan-ng/ui-button-helm';
-import {AccountComponentComponent} from './account-component/account-component.component';
-import {UserEntity} from '../../shared/entities/user.entity';
-import {UsersService} from '../../shared/services/users.service';
-import {tap} from 'rxjs';
-import {CompteGroupeEntity} from '../../shared/entities/compte-groupe.entity';
-import {CompteGroupeService} from '../../shared/services/compte-groupe.service';
-import {ComptePrincipalService} from '../../shared/services/compte-principal.service';
-import {PrincipalAccountEntity} from '../../shared/entities/principal-account.entity';
+import { HlmIconComponent } from '@spartan-ng/ui-icon-helm';
+import { AccordionModule } from 'primeng/accordion';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
+import { InputTextModule } from 'primeng/inputtext';
+import { HlmButtonDirective } from '@spartan-ng/ui-button-helm';
+import { AccountComponentComponent } from './account-component/account-component.component';
+import { AuthService } from '../../shared/services/auth.service';
+import { UserEntity } from '../../shared/entities/user.entity';
+import { UsersService } from '../../shared/services/users.service';
+import { tap } from 'rxjs';
+import { CompteGroupeEntity } from '../../shared/entities/compte-groupe.entity';
+import { sign } from 'crypto';
+import { CompteGroupeService } from '../../shared/services/compte-groupe.service';
+import { ComptePrincipalService } from '../../shared/services/compte-principal.service';
+import { PrincipalAccountEntity } from '../../shared/entities/principal-account.entity';
+import { BrnDialogContentDirective, BrnDialogTriggerDirective } from '@spartan-ng/ui-dialog-brain';
+import {
+  HlmDialogComponent,
+  HlmDialogContentComponent,
+  HlmDialogDescriptionDirective,
+  HlmDialogFooterComponent,
+  HlmDialogHeaderComponent,
+  HlmDialogTitleDirective,
+} from '@spartan-ng/ui-dialog-helm';
+
 
 @Component({
   selector: 'app-home',
@@ -41,6 +53,14 @@ import {PrincipalAccountEntity} from '../../shared/entities/principal-account.en
     HlmButtonDirective,
     AccountComponentComponent,
     JsonPipe,
+    HlmDialogComponent,
+    HlmDialogContentComponent,
+    HlmDialogDescriptionDirective,
+    HlmDialogFooterComponent,
+    HlmDialogHeaderComponent,
+    HlmDialogTitleDirective,
+    BrnDialogContentDirective, 
+    BrnDialogTriggerDirective 
   ],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css',

@@ -3,6 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import { CompteGroupeEntity } from '../entities/compte-groupe.entity';
 import { environments } from '../../../environments/environments';
 import {PrincipalAccountEntity} from "../entities/principal-account.entity";
+import {GroupProjectDto} from "../dtos/group-project.dto";
 
 @Injectable({
   providedIn: 'root'
@@ -19,5 +20,9 @@ export class CompteGroupeService {
 
   getGroupById(id?: number) {
     return this.httpClient.get<CompteGroupeEntity>(`${environments.API_URL}/compte-groupe/${id}`)
+  }
+
+  createGroupeProject(groupProjectDto: GroupProjectDto) {
+    return this.httpClient.post(`${environments.API_URL}/compte-groupe`, groupProjectDto)
   }
 }

@@ -1,3 +1,6 @@
+import {ClientEntity} from "./client.entity";
+import {ProductEntity} from "./product.entity";
+
 export interface InvoiceEntity {
   id: number
   invoice_date: Date
@@ -11,4 +14,6 @@ export interface InvoiceEntity {
   type: string
   linkedInvoiceId: number
   creditNoteAmount: number
+  client: ClientEntity
+  products: ProductEntity[]
 }

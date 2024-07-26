@@ -1,7 +1,7 @@
 <div class="">
-  
+
     <hlm-icon (click)="toggleMenu()" size='lg' name="lucideAlignJustify" />
-    @if (isToggleMenu()) 
+    @if (isToggleMenu())
     {
         <div class="gap-2 justify-center items-center flex flex-col bg-white h-screen w-screen absolute top-0 left-0 z-50 md:hidden">
             <div class="py-5 px-10 h-20 flex gap-5 rounded justify-between items-center w-full">
@@ -9,8 +9,8 @@
                 <hlm-icon (click)="toggleMenu()" class="text-black items-center" size='lg' name="lucideX" />
             </div>
             <hlm-menu-bar class="w-fit border-none flex flex-col justify-center items-center h-screen bg-transparent text-base *:font-bold">
-                <button class=" *:text-black" hlmMenuBarItem >Accueil</button>
-                <button class=" *:text-black" hlmMenuBarItem >Profil</button>
+                <a routerLink="/home" class=" *:text-black" hlmMenuBarItem >Accueil</a>
+                <a routerLink="/profile" class=" *:text-black" hlmMenuBarItem >Profil</a>
                 <button class=" *:text-black" hlmMenuBarItem >Validation utilisateur</button>
                 <button class=" *:text-black" hlmMenuBarItem >Validation virement SEPA</button>
                 <button class=" *:text-black" hlmMenuBarItem >Création nouveau membre</button>
@@ -19,5 +19,5 @@
             </hlm-menu-bar>
         </div>
     }
-   
+
 </div>

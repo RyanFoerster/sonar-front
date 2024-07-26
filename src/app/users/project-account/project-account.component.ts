@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { HlmButtonDirective } from '@spartan-ng/ui-button-helm';
 import {
   HlmCaptionComponent,
   HlmTableComponent,
@@ -6,7 +7,6 @@ import {
   HlmThComponent,
   HlmTrowComponent,
 } from '@spartan-ng/ui-table-helm';
-import { HlmButtonDirective } from '@spartan-ng/ui-button-helm';
 import { BrnDialogContentDirective, BrnDialogTriggerDirective } from '@spartan-ng/ui-dialog-brain';
 import {
   HlmDialogComponent,
@@ -18,81 +18,55 @@ import {
 } from '@spartan-ng/ui-dialog-helm';
 import { HlmInputDirective } from '@spartan-ng/ui-input-helm';
 import { HlmLabelDirective } from '@spartan-ng/ui-label-helm';
-import { HlmCheckboxComponent } from '@spartan-ng/ui-checkbox-helm';
 import { BrnSelectImports } from '@spartan-ng/ui-select-brain';
 import { HlmSelectImports } from '@spartan-ng/ui-select-helm';
 
 
 @Component({
-  selector: 'app-membership',
+  selector: 'app-project-account',
   standalone: true,
   imports: [
     BrnSelectImports,
     HlmSelectImports,
-    HlmCheckboxComponent,
-    BrnDialogContentDirective,
+    BrnDialogContentDirective, 
     BrnDialogTriggerDirective,
+    HlmButtonDirective,
     HlmCaptionComponent,
     HlmTableComponent,
     HlmTdComponent,
     HlmThComponent,
     HlmTrowComponent,
-    HlmButtonDirective,
     HlmDialogComponent,
     HlmDialogContentComponent,
     HlmDialogDescriptionDirective,
     HlmDialogFooterComponent,
     HlmDialogHeaderComponent,
     HlmDialogTitleDirective,
-    HlmLabelDirective,
     HlmInputDirective,
+    HlmLabelDirective,
   ],
-  templateUrl: './membership.component.html',
-  styleUrl: './membership.component.css'
+  templateUrl: './project-account.component.html',
+  styleUrl: './project-account.component.css'
 })
-export class MembershipComponent {
+export class ProjectAccountComponent {
   protected _invoices = [
     {
-      invoice: '01-07-2024',
-      paymentStatus: 'User',
+      invoice: 'INV001',
+      paymentStatus: 'Paid',
       totalAmount: '$250.00',
       paymentMethod: 'Credit Card',
     },
     {
-      invoice: '01-07-2024',
-      paymentStatus: 'User',
+      invoice: 'INV002',
+      paymentStatus: 'Pending',
       totalAmount: '$150.00',
       paymentMethod: 'PayPal',
     },
     {
-      invoice: '01-07-2024',
-      paymentStatus: 'User',
+      invoice: 'INV003',
+      paymentStatus: 'Unpaid',
       totalAmount: '$350.00',
       paymentMethod: 'Bank Transfer',
-    },
-    {
-      invoice: '01-07-2024',
-      paymentStatus: 'User',
-      totalAmount: '$450.00',
-      paymentMethod: 'Credit Card',
-    },
-    {
-      invoice: '01-07-2024',
-      paymentStatus: 'User',
-      totalAmount: '$550.00',
-      paymentMethod: 'PayPal',
-    },
-    {
-      invoice: '01-07-2024',
-      paymentStatus: 'User',
-      totalAmount: '$200.00',
-      paymentMethod: 'Bank Transfer',
-    },
-    {
-      invoice: '01-07-2024',
-      paymentStatus: 'User',
-      totalAmount: '$300.00',
-      paymentMethod: 'Credit Card',
     },
   ];
 }

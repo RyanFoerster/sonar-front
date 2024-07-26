@@ -1,5 +1,6 @@
 import {ClientEntity} from "./client.entity";
 import {ProductEntity} from "./product.entity";
+import {InvoiceEntity} from "./invoice.entity";
 
 export interface QuoteEntity {
   id: number
@@ -15,4 +16,5 @@ export interface QuoteEntity {
   order_giver_acceptance: boolean;
   client: ClientEntity
   products: ProductEntity[]
+  invoice: InvoiceEntity
 }

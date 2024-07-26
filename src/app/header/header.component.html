@@ -1,4 +1,4 @@
-<div class="py-5 px-10 h-20 flex gap-5 rounded justify-between items-center relative"> 
+<div class="py-5 px-10 h-20 flex gap-5 rounded justify-between items-center relative">
     <div class="" >
         <img class="w-36" src="/assets/images/Groupe-30.png"/>
     </div>
@@ -6,11 +6,11 @@
     @if (userConnected()) {
       <div class="gap-2 justify-center items-center hidden md:flex">
         <hlm-menu-bar class="w-fit border-none">
-            <button hlmMenuBarItem >Accueil</button>
-            <button hlmMenuBarItem >Profil</button>
-            <button hlmMenuBarItem [brnMenuTriggerFor]="admin">Admin</button>
+            <a routerLink="/home" hlmMenuBarItem >Accueil</a>
+            <a routerLink="/profile" hlmMenuBarItem >Profil</a>
+            <a hlmMenuBarItem [brnMenuTriggerFor]="admin">Admin</a>
         </hlm-menu-bar>
-        
+
         <hlm-icon size='sm' name="lucideBell" />
 
         <a (click)="logout()" class="cursor-pointer rounded-full" hlmBtn>Déconnexion</a>
@@ -22,9 +22,9 @@
         <a routerLink="register" hlmBtn class="cursor-pointer hidden rounded-full" [ngClass]="{'md:block': router.url === '/login'}">Inscription</a>
       </div>
     }
-    
 
-    
+
+
 </div>
 
   <ng-template #admin>
@@ -47,4 +47,3 @@
       </button>
     </hlm-menu>
   </ng-template>
-  

@@ -61,14 +61,8 @@
       "@spartan-ng/ui-alert-helm": [
         "./components/ui-alert-helm/src/index.ts"
       ],
-      "@spartan-ng/ui-aspectratio-helm": [
-        "./components/ui-aspectratio-helm/src/index.ts"
-      ],
-      "@spartan-ng/ui-command-helm": [
-        "./components/ui-command-helm/src/index.ts"
-      ],
-      "@spartan-ng/ui-popover-helm": [
-        "./components/ui-popover-helm/src/index.ts"
+      "@spartan-ng/ui-checkbox-helm": [
+        ".\\components/ui-checkbox-helm/src/index.ts"
       ]
     }
   },

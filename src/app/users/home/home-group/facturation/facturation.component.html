@@ -1,6 +1,7 @@
 <div class="flex flex-col container gap-10">
   <a
     routerLink="new-quote"
+    [queryParams]="{ typeOfProjet: typeOfProjet()}"
     class="rounded-full w-3/6 self-end text-[10px] font-semibold h-auto  bg-gray-sonar text-black md:flex md:justify-center md:items-center md:gap-2 md:min-w-4/5 md:px-10 md:text-lg"
     hlmBtn>Créer un nouveau devis
   </a>
@@ -17,6 +18,7 @@
         <hlm-th class="flex-1"></hlm-th>
         <hlm-th class="flex-1">Facture</hlm-th>
       </hlm-trow>
+
       @if(typeOfProjet() === "PRINCIPAL") {
         @for (quote of connectedUser()?.comptePrincipal?.quote!; track quote.id) {
           <hlm-trow>

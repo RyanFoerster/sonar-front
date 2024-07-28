@@ -1,4 +1,4 @@
-import {AfterViewInit, Component, inject, input, signal} from '@angular/core';
+import {AfterViewInit, Component, inject, input, OnDestroy, signal} from '@angular/core';
 import {HlmButtonDirective} from "@spartan-ng/ui-button-helm";
 import {HlmIconComponent} from "@spartan-ng/ui-icon-helm";
 import {RouterLink} from "@angular/router";
@@ -8,24 +8,20 @@ import {UserEntity} from "../../../../shared/entities/user.entity";
 import {DatePipe, JsonPipe} from "@angular/common";
 import {
   HlmCaptionComponent,
-  HlmTableComponent, HlmTableImports,
+  HlmTableComponent,
+  HlmTableImports,
   HlmTdComponent,
   HlmThComponent,
   HlmTrowComponent,
 } from '@spartan-ng/ui-table-helm';
 import {EuroFormatPipe} from "../../../../shared/pipes/euro-format.pipe";
-import { jsPDF } from 'jspdf';
+import {jsPDF} from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import {ProductEntity} from "../../../../shared/entities/product.entity";
 import {QuoteEntity} from "../../../../shared/entities/quote.entity";
 import {HlmSeparatorDirective} from "@spartan-ng/ui-separator-helm";
 import {BrnSeparatorComponent} from "@spartan-ng/ui-separator-brain";
-import {InvoiceEntity} from "../../../../shared/entities/invoice.entity";
 import {InvoiceService} from "../../../../shared/services/invoice.service";
-import {
-  BrnAlertDialogContentDirective,
-  BrnAlertDialogTriggerDirective,
-} from '@spartan-ng/ui-alertdialog-brain';
+import {BrnAlertDialogContentDirective, BrnAlertDialogTriggerDirective,} from '@spartan-ng/ui-alertdialog-brain';
 import {
   HlmAlertDialogActionButtonDirective,
   HlmAlertDialogCancelButtonDirective,
@@ -37,8 +33,8 @@ import {
   HlmAlertDialogOverlayDirective,
   HlmAlertDialogTitleDirective,
 } from '@spartan-ng/ui-alertdialog-helm';
-import {UserSecondaryAccountEntity} from "../../../../shared/entities/user-secondary-account.entity";
 import {CompteGroupeEntity} from "../../../../shared/entities/compte-groupe.entity";
+
 @Component({
   selector: 'app-facturation',
   standalone: true,
@@ -72,7 +68,7 @@ import {CompteGroupeEntity} from "../../../../shared/entities/compte-groupe.enti
   templateUrl: './facturation.component.html',
   styleUrl: './facturation.component.css'
 })
-export class FacturationComponent implements AfterViewInit {
+export class FacturationComponent implements AfterViewInit, OnDestroy {
 
   private usersService: UsersService = inject(UsersService);
   private invoiceService: InvoiceService = inject(InvoiceService);
@@ -86,6 +82,7 @@ export class FacturationComponent implements AfterViewInit {
     await this.getConnectedUser()
 
   }
+
 
   async getConnectedUser() {
     this.usersService.getInfo().pipe(
@@ -149,8 +146,8 @@ export class FacturationComponent implements AfterViewInit {
         head: [['Information', 'Valeur']],
         body: invoiceData,
         startY: 100,
-        styles: { fontSize: 10 },
-        headStyles: { fillColor: [100, 100, 100] }
+        styles: {fontSize: 10},
+        headStyles: {fillColor: [100, 100, 100]}
       });
 
       // Récupérer la position Y après le premier tableau
@@ -167,8 +164,8 @@ export class FacturationComponent implements AfterViewInit {
         head: [['Produit', 'Quantité', 'Prix']],
         body: productData,
         startY: yAfterInvoiceTable,
-        styles: { fontSize: 10 },
-        headStyles: { fillColor: [100, 100, 100] }
+        styles: {fontSize: 10},
+        headStyles: {fillColor: [100, 100, 100]}
       });
 
       // Sauvegarder ou ouvrir le PDF
@@ -227,8 +224,8 @@ export class FacturationComponent implements AfterViewInit {
         head: [['Information', 'Valeur']],
         body: invoiceData,
         startY: 100,
-        styles: { fontSize: 10 },
-        headStyles: { fillColor: [100, 100, 100] }
+        styles: {fontSize: 10},
+        headStyles: {fillColor: [100, 100, 100]}
       });
 
       // Récupérer la position Y après le premier tableau
@@ -245,8 +242,8 @@ export class FacturationComponent implements AfterViewInit {
         head: [['Produit', 'Quantité', 'Prix']],
         body: productData,
         startY: yAfterInvoiceTable,
-        styles: { fontSize: 10 },
-        headStyles: { fillColor: [100, 100, 100] }
+        styles: {fontSize: 10},
+        headStyles: {fillColor: [100, 100, 100]}
       });
 
       // Sauvegarder ou ouvrir le PDF
@@ -261,6 +258,10 @@ export class FacturationComponent implements AfterViewInit {
         ctx.close()
       }),
     ).subscribe()
+  }
+
+  ngOnDestroy(): void {
+    this.groupAccount.set(undefined)
   }
 
 }

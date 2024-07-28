@@ -128,6 +128,7 @@ export class NewQuoteComponent implements AfterViewInit {
   protected tva6 = signal(0)
   protected total = signal(0)
   protected id = input<number>()
+  protected typeOfProjet = input<string>()
 
   protected isToggleClientForm = signal(false)
   protected isToggleProductForm = signal(false)
@@ -294,7 +295,6 @@ export class NewQuoteComponent implements AfterViewInit {
 
   createQuote() {
 
-
     if (this.createQuoteForm.valid && this.client() && this.products().length > 0) {
       let quote: QuoteDto = this.createQuoteForm.value
       quote.products_id = []
@@ -302,7 +302,15 @@ export class NewQuoteComponent implements AfterViewInit {
       for (const product of this.products()) {
         quote.products_id.push(product.id!)
       }
-      quote.main_account_id = +this.id()!
+
+
+      if(this.typeOfProjet() === 'PRINCIPAL') {
+        quote.main_account_id = +this.id()!
+      } else {
+        quote.group_account_id = +this.id()!
+      }
+
+
 
       this.quoteService.createQuote(quote).pipe(
         tap(async () => this.goBack())

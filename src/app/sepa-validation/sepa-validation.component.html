@@ -1,15 +1,16 @@
-<div class="mx-10 flex flex-col items-center gap-4">
+<div class="p-10 flex flex-col items-center gap-4">
     <hlm-table class="overflow-x-auto p-4 bg-gray-sonar rounded-xl">
+        <p class="font-bold text-lg p-3">Virements SEPA en attente de validation</p>
         <hlm-trow class="flex flex-col sm:flex-row">
-          <hlm-th class="w-full sm:flex-1">Date </hlm-th>
-          <hlm-th class="w-full sm:w-60">Titulaire du compte</hlm-th>
-          <hlm-th class="w-full sm:flex-1">IBAN</hlm-th>
-          <hlm-th class="w-full sm:flex-1">Montant TVAC</hlm-th>
-          <hlm-th class="w-full sm:flex-1">Montant HTVA</hlm-th>
-          <hlm-th class="w-full sm:flex-1">Montant TVA</hlm-th>
-          <hlm-th class="w-full sm:flex-1">Communication libre</hlm-th>
-          <hlm-th class="w-full sm:flex-1">Communication structurée</hlm-th>
-          <hlm-th class="w-full sm:flex-1">Projet</hlm-th>
+          <hlm-th class="w-full text-[10px] sm:flex-1">Date </hlm-th>
+          <hlm-th class="w-full text-[10px] sm:w-60">Titulaire du compte</hlm-th>
+          <hlm-th class="w-full text-[10px] sm:flex-1">IBAN</hlm-th>
+          <hlm-th class="w-full text-[10px] sm:flex-1">Montant TVAC</hlm-th>
+          <hlm-th class="w-full text-[10px] sm:flex-1">Montant HTVA</hlm-th>
+          <hlm-th class="w-full text-[10px] sm:flex-1">Montant TVA</hlm-th>
+          <hlm-th class="w-full text-[10px] sm:flex-1">Communication libre</hlm-th>
+          <hlm-th class="w-full text-[10px] sm:flex-1">Communication structurée</hlm-th>
+          <hlm-th class="w-full text-[10px] sm:flex-1">Projet</hlm-th>
           
         </hlm-trow>
         @for (invoice of _invoices; track invoice.invoice) {

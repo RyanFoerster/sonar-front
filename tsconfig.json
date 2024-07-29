@@ -25,6 +25,15 @@
       "@spartan-ng/ui-accordion-helm": [
         "./components/ui-accordion-helm/src/index.ts"
       ],
+      "@spartan-ng/ui-alert-helm": [
+        "./components/ui-alert-helm/src/index.ts"
+      ],
+      "@spartan-ng/ui-alertdialog-helm": [
+        "./components/ui-alertdialog-helm/src/index.ts"
+      ],
+      "@spartan-ng/ui-aspectratio-helm": [
+        "./components/ui-aspectratio-helm/src/index.ts"
+      ],
       "@spartan-ng/ui-button-helm": [
         "./components/ui-button-helm/src/index.ts"
       ],
@@ -43,6 +52,9 @@
       "@spartan-ng/ui-menu-helm": [
         "./components/ui-menu-helm/src/index.ts"
       ],
+      "@spartan-ng/ui-popover-helm": [
+        "./components/ui-popover-helm/src/index.ts"
+      ],
       "@spartan-ng/ui-separator-helm": [
         "./components/ui-separator-helm/src/index.ts"
       ],
@@ -57,12 +69,6 @@
       ],
       "@spartan-ng/ui-helm-helm": [
         "./components/ui-helm-helm/src/index.ts"
-      ],
-      "@spartan-ng/ui-alert-helm": [
-        "./components/ui-alert-helm/src/index.ts"
-      ],
-      "@spartan-ng/ui-checkbox-helm": [
-        ".\\components/ui-checkbox-helm/src/index.ts"
       ]
     }
   },

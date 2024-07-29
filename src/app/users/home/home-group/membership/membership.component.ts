@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import {AfterViewInit, Component, inject, input, signal} from '@angular/core';
 import {
   HlmCaptionComponent,
   HlmTableComponent,
@@ -21,6 +21,12 @@ import { HlmLabelDirective } from '@spartan-ng/ui-label-helm';
 import { HlmCheckboxComponent } from '@spartan-ng/ui-checkbox-helm';
 import { BrnSelectImports } from '@spartan-ng/ui-select-brain';
 import { HlmSelectImports } from '@spartan-ng/ui-select-helm';
+import {CompteGroupeEntity} from "../../../../shared/entities/compte-groupe.entity";
+import {PrincipalAccountEntity} from "../../../../shared/entities/principal-account.entity";
+import {ComptePrincipalService} from "../../../../shared/services/compte-principal.service";
+import {CompteGroupeService} from "../../../../shared/services/compte-groupe.service";
+import {HlmSpinnerComponent} from "@spartan-ng/ui-spinner-helm";
+import {JsonPipe} from "@angular/common";
 
 
 @Component({
@@ -46,11 +52,15 @@ import { HlmSelectImports } from '@spartan-ng/ui-select-helm';
     HlmDialogTitleDirective,
     HlmLabelDirective,
     HlmInputDirective,
+    HlmSpinnerComponent,
+    JsonPipe,
   ],
   templateUrl: './membership.component.html',
   styleUrl: './membership.component.css'
 })
-export class MembershipComponent {
+export class MembershipComponent implements AfterViewInit{
+  protected id = input()
+  protected typeOfProjet = input<string>()
   protected _invoices = [
     {
       invoice: '01-07-2024',
@@ -95,4 +105,16 @@ export class MembershipComponent {
       paymentMethod: 'Credit Card',
     },
   ];
+  protected account = signal<CompteGroupeEntity | PrincipalAccountEntity | null>(null)
+
+  private readonly principalAccountService: ComptePrincipalService = inject(ComptePrincipalService)
+  private readonly groupAccountService: CompteGroupeService = inject(CompteGroupeService)
+
+  ngAfterViewInit() {
+    if(this.typeOfProjet() === "PRINCIPAL") {
+      this.principalAccountService.getGroupById(+this.id()!).subscribe(account => this.account.set(account))
+    } else if(this.typeOfProjet() === "GROUP") {
+      this.groupAccountService.getGroupById(+this.id()!).subscribe(account => this.account.set(account))
+    }
+  }
 }

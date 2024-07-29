@@ -22,7 +22,7 @@ import {
   lucideFileDown,
   lucidePlus,
   lucidePlusCircle,
-  lucideTrash,
+  lucideTrash, lucideUndo2,
   lucideXCircle
 } from "@ng-icons/lucide";
 import {EuroFormatPipe} from "../../../../../shared/pipes/euro-format.pipe";
@@ -97,6 +97,14 @@ import { Location } from '@angular/common';
     NgClass,
     HlmCheckboxComponent,
     PercentPipe,
+    HlmIconComponent,
+    HlmIconComponent,
+    HlmIconComponent,
+    HlmTableComponent,
+    HlmTrowComponent,
+    HlmThComponent,
+    HlmTrowComponent,
+    HlmThComponent,
   ],
   providers: [provideIcons({
     lucidePlusCircle,
@@ -106,7 +114,8 @@ import { Location } from '@angular/common';
     lucidePlus,
     lucideCheck,
     lucideXCircle,
-    lucideAlertTriangle
+    lucideAlertTriangle,
+    lucideUndo2
   })],
   templateUrl: './new-quote.component.html',
   styleUrl: './new-quote.component.css'

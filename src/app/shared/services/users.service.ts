@@ -35,4 +35,11 @@ export class UsersService {
   }
 
 
+  getAllUsersGroup(id: number) {
+    return this.httpClient.get<UserEntity[]>(`${environments.API_URL}/users/groups`, {params: {id}})
+  }
+
+  findAll() {
+    return this.httpClient.get<UserEntity[]>(`${environments.API_URL}/users/all`)
+  }
 }

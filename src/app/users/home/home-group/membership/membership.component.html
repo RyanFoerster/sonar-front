@@ -1,98 +1,149 @@
 @defer () {
+  @if (isSpinner()) {
+    <hlm-spinner class="flex mx-auto mt-2" aria-label="Chargement en cours"/>
+  } @else {
+    <div class="m-10 flex flex-col items-center md:items-end gap-4" role="main">
+      <hlm-dialog aria-labelledby="dialog-title" aria-describedby="dialog-description">
+        <button id="edit-profile" brnDialogTrigger class="rounded-full w-80" hlmBtn aria-haspopup="dialog"
+                aria-controls="dialog-content" (click)="fetchAllUsers(); errorMessage.set(undefined)">Ajouter un membre
+        </button>
 
+        <hlm-dialog-content id="dialog-content" class="w-72 rounded-xl m-2" *brnDialogContent="let ctx">
+          <hlm-dialog-header>
+            <h3 id="dialog-title" hlmDialogTitle>Ajouter un membre</h3>
+            <p id="dialog-description" class="md:mr-28" hlmDialogDescription>Ajoutez un nouveau membre au projet de
+              groupe
+              ici. Cliquez sur enregistrer lorsque vous avez terminé.</p>
+          </hlm-dialog-header>
 
-  <div class="m-10 flex flex-col items-center md:items-end gap-4">
-    <hlm-dialog>
-      <button id="edit-profile" brnDialogTrigger class="rounded-full w-80" hlmBtn>Ajouter un membre</button>
-      <hlm-dialog-content class="w-72 rounded-xl m-2" *brnDialogContent="let ctx">
-        <hlm-dialog-header>
-          <h3 hlmDialogTitle>Ajouter un membre</h3>
-          <p class="md:mr-28" hlmDialogDescription>Ajoutez un nouveau membre au projet de groupe ici. Cliquez sur
-            enregistrer lorsque vous avez terminé.</p>
-        </hlm-dialog-header>
+          <brn-popover [state]="state()" (stateChanged)="stateChanged($event)" sideOffset="5" closeDelay="100">
+            <button class="w-full justify-between" id="edit-profile" variant="outline" brnPopoverTrigger hlmBtn>
+              {{ currentUser() ? currentUser()?.email : 'Séléctionner un membre' }}
+              <hlm-icon size="sm" name="lucideChevronsUpDown"/>
+            </button>
+            <brn-cmd *brnPopoverContent="let ctx" hlmPopoverContent hlm class="p-0 w-full">
+              <hlm-cmd-input-wrapper>
+                <hlm-icon name="lucideSearch"/>
+                <input placeholder="Rechercher un membre" brnCmdInput hlm/>
+              </hlm-cmd-input-wrapper>
+              <div *brnCmdEmpty hlmCmdEmpty>No results found.</div>
+              <brn-cmd-list hlm>
+                <brn-cmd-group hlm>
 
-        <brn-select class="md:inline-block flex flex-col items-center" placeholder="Selectionner un utilisateur">
-          <hlm-select-trigger class="w-56 md:w-64">
-            <hlm-select-value/>
-          </hlm-select-trigger>
-          <hlm-select-content>
-            <hlm-option value="Refresh">Pierre Godfrin</hlm-option>
-            <hlm-option value="Settings">Manon</hlm-option>
-            <hlm-option value="Help">Ryan</hlm-option>
-            <hlm-option value="Signout">Dimagin</hlm-option>
-          </hlm-select-content>
-        </brn-select>
+                  @for (user of usersFromDB(); track user.email) {
+                    <button
+                      brnCmdItem
+                      [value]="user.email"
+                      (selected)="commandSelected(user)"
+                      hlm
+                    >
+                      <hlm-icon
+                        [class.opacity-0]="currentUser()?.email !== user.email"
+                        name="lucideCheck"
+                        hlmCmdIcon
+                      />
+                      {{ user.email }}
+                    </button>
+                  }
 
-        <hlm-dialog-footer>
-          <button class="rounded-full" hlmBtn type="submit">Enregistrer</button>
-        </hlm-dialog-footer>
-      </hlm-dialog-content>
-    </hlm-dialog>
+                </brn-cmd-group>
+              </brn-cmd-list>
+            </brn-cmd>
+          </brn-popover>
 
-    <hlm-table class="overflow-x-auto w-full p-4 bg-gray-sonar rounded-xl">
-      <hlm-trow class="flex flex-col sm:flex-row">
-        <hlm-th class="w-full sm:w-52">Date</hlm-th>
-        <hlm-th class="w-full sm:w-60">Personne invitée</hlm-th>
-        <hlm-th class="w-full sm:flex-1">Viewer</hlm-th>
-        <hlm-th class="w-full sm:flex-1">Admin</hlm-th>
+          <hlm-dialog-footer>
+            @if(errorMessage() !== undefined) {
+              <p class="text-xs text-red-500">{{errorMessage()}}</p>
+            }
+            <button (click)="addMemberToGroup(ctx)" class="rounded-full" hlmBtn type="submit"
+                    aria-label="Enregistrer les modifications">Ajouter
+            </button>
+          </hlm-dialog-footer>
+        </hlm-dialog-content>
+      </hlm-dialog>
 
-      </hlm-trow>
-      @for (invoice of _invoices; track invoice.invoice) {
+      <hlm-table class="overflow-x-auto w-full p-4 bg-gray-sonar rounded-xl" aria-label="Tableau des membres">
         <hlm-trow class="flex flex-col sm:flex-row">
-          <hlm-td class="font-medium w-full sm:w-52 truncate">{{ invoice.invoice }}</hlm-td>
-
-          <hlm-td class="w-full sm:w-60">{{ invoice.paymentStatus }}</hlm-td>
-
-          <hlm-td class="flex flex-col w-full gap-2 sm:flex-1">
-            <label class="flex items-center w-full" hlmLabel>
-              <hlm-checkbox class="mr-2 rounded-full"/>
-              Compte du groupe
-            </label>
-
-            <label class="flex items-center w-full" hlmLabel>
-              <hlm-checkbox class="mr-2 rounded-full"/>
-              Facturation
-            </label>
-
-            <label class="flex items-center w-full" hlmLabel>
-              <hlm-checkbox class="mr-2 rounded-full"/>
-              Gestion d'équipe
-            </label>
-
-            <label class="flex items-center w-full" hlmLabel>
-              <hlm-checkbox class="mr-2 rounded-full"/>
-              Agenda
-            </label>
-          </hlm-td>
-
-          <hlm-td class="flex flex-col w-full gap-2 sm:flex-1">
-            <label class="flex items-center w-full" hlmLabel>
-              <hlm-checkbox class="mr-2 rounded-full"/>
-              Compte du groupe
-            </label>
-
-            <label class="flex items-center w-full" hlmLabel>
-              <hlm-checkbox class="mr-2 rounded-full"/>
-              Facturation
-            </label>
-
-            <label class="flex items-center w-full" hlmLabel>
-              <hlm-checkbox class="mr-2 rounded-full"/>
-              Gestion d'équipe
-            </label>
-
-            <label class="flex items-center w-full" hlmLabel>
-              <hlm-checkbox class="mr-2 rounded-full"/>
-              Agenda
-            </label>
-          </hlm-td>
-
+          <hlm-th class="w-full sm:w-52" scope="col">Date</hlm-th>
+          <hlm-th class="w-full sm:w-60" scope="col">Personne invitée</hlm-th>
+          <hlm-th class="w-full sm:flex-1" scope="col">Viewer</hlm-th>
+          <hlm-th class="w-full sm:flex-1" scope="col">Admin</hlm-th>
         </hlm-trow>
-      }
-    </hlm-table>
-  </div>
+
+        @for (user of users(); track user.id) {
+          <hlm-trow class="flex flex-col sm:flex-row">
+            <hlm-td class="font-medium w-full sm:w-52 truncate">{{ currentDate | date }}</hlm-td>
+            <hlm-td class="w-full sm:w-60">{{ user.firstName }} {{ user.name }}</hlm-td>
+
+            <hlm-td class="flex flex-col w-full gap-2 sm:flex-1">
+              <label class="flex items-center w-full" hlmLabel>
+                <hlm-checkbox [checked]="checkViewerRole(user, 'treasury')"
+                              [disabled]="checkAdminRole(user, 'treasury')"
+                              (checkedChange)="changeViewerRole($event, 'treasury', user)"
+                              class="mr-2 rounded-full" aria-label="Compte du groupe"/>
+                Compte du groupe
+              </label>
+              <label class="flex items-center w-full" hlmLabel>
+                <hlm-checkbox [checked]="checkViewerRole(user, 'billing')" [disabled]="checkAdminRole(user, 'billing')"
+                              (checkedChange)="changeViewerRole($event, 'billing', user)"
+                              class="mr-2 rounded-full" aria-label="Facturation"/>
+                Facturation
+              </label>
+
+              <label class="flex items-center w-full" hlmLabel>
+                <hlm-checkbox [checked]="checkViewerRole(user, 'gestion')" [disabled]="checkAdminRole(user, 'gestion')"
+                              (checkedChange)="changeViewerRole($event, 'gestion', user)"
+                              class="mr-2 rounded-full" aria-label="Gestion d'équipe"/>
+                Gestion d'équipe
+              </label>
+
+              <label class="flex items-center w-full" hlmLabel>
+                <hlm-checkbox [checked]="checkViewerRole(user, 'agenda')" [disabled]="checkAdminRole(user, 'agenda')"
+                              (checkedChange)="changeViewerRole($event, 'agenda', user)"
+                              class="mr-2 rounded-full" aria-label="Agenda"/>
+                Agenda
+              </label>
+              <!-- Répétez pour les autres checkboxes -->
+            </hlm-td>
+
+            <hlm-td class="flex flex-col w-full gap-2 sm:flex-1">
+              <label class="flex items-center w-full" hlmLabel>
+                <hlm-checkbox [checked]="checkAdminRole(user, 'treasury')"
+                              [disabled]="checkViewerRole(user, 'treasury')"
+                              (checkedChange)="changeAdminRole($event, 'treasury', user)"
+                              class="mr-2 rounded-full" aria-label="Compte du groupe"/>
+                Compte du groupe
+              </label>
+              <label class="flex items-center w-full" hlmLabel>
+                <hlm-checkbox [checked]="checkAdminRole(user, 'billing')" [disabled]="checkViewerRole(user, 'billing')"
+                              (checkedChange)="changeAdminRole($event, 'billing', user)"
+                              class="mr-2 rounded-full" aria-label="Facturation"/>
+                Facturation
+              </label>
+
+              <label class="flex items-center w-full" hlmLabel>
+                <hlm-checkbox [checked]="checkAdminRole(user, 'gestion')" [disabled]="checkViewerRole(user, 'gestion')"
+                              (checkedChange)="changeAdminRole($event, 'gestion', user)"
+                              class="mr-2 rounded-full" aria-label="Gestion d'équipe"/>
+                Gestion d'équipe
+              </label>
+
+              <label class="flex items-center w-full" hlmLabel>
+                <hlm-checkbox [checked]="checkAdminRole(user, 'agenda')" [disabled]="checkViewerRole(user, 'agenda')"
+                              (checkedChange)="changeAdminRole($event, 'agenda', user)"
+                              class="mr-2 rounded-full" aria-label="Agenda"/>
+                Agenda
+              </label>
+              <!-- Répétez pour les autres checkboxes -->
+            </hlm-td>
+          </hlm-trow>
+        }
+      </hlm-table>
+    </div>
+
+  }
 
 } @loading (minimum 1s) {
-  <hlm-spinner class="flex mx-auto mt-2 "/>
+  <hlm-spinner class="flex mx-auto mt-2" aria-label="Chargement en cours"/>
 }
 

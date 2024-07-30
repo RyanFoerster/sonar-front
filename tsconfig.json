@@ -84,6 +84,9 @@
       ],
       "@spartan-ng/ui-spinner-helm": [
         ".\\components/ui-spinner-helm/src/index.ts"
+      ],
+      "@spartan-ng/ui-command-helm": [
+        ".\\components/ui-command-helm/src/index.ts"
       ]
     }
   },

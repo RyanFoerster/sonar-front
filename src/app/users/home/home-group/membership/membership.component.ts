@@ -42,14 +42,28 @@ import {UserSecondaryAccountEntity} from "../../../../shared/entities/user-secon
 import {provideIcons} from "@ng-icons/core";
 import {lucideCheck, lucideChevronsUpDown, lucideSearch} from "@ng-icons/lucide";
 import {delay, tap} from "rxjs";
-
-type Framework = { label: string; value: string };
+import { BrnAccordionContentComponent } from '@spartan-ng/ui-accordion-brain';
+import {
+  HlmAccordionContentDirective,
+  HlmAccordionDirective,
+  HlmAccordionIconDirective,
+  HlmAccordionItemDirective,
+  HlmAccordionTriggerDirective,
+} from '@spartan-ng/ui-accordion-helm';
+import {BrnSeparatorComponent} from "@spartan-ng/ui-separator-brain";
+import {HlmSeparatorDirective} from "@spartan-ng/ui-separator-helm";
 
 
 @Component({
   selector: 'app-membership',
   standalone: true,
   imports: [
+    HlmAccordionContentDirective,
+    HlmAccordionDirective,
+    HlmAccordionIconDirective,
+    HlmAccordionItemDirective,
+    HlmAccordionTriggerDirective,
+    BrnAccordionContentComponent,
     BrnSelectImports,
     HlmSelectImports,
     HlmCheckboxComponent,
@@ -83,7 +97,10 @@ type Framework = { label: string; value: string };
     HlmCommandImports,
     HlmIconComponent,
     HlmPopoverContentDirective,
-    HlmSpinnerComponent
+    HlmSpinnerComponent,
+    BrnSeparatorComponent,
+    HlmSeparatorDirective,
+    HlmIconComponent
   ],
   providers: [provideIcons({lucideChevronsUpDown, lucideSearch, lucideCheck})],
   templateUrl: './membership.component.html',
@@ -93,86 +110,17 @@ type Framework = { label: string; value: string };
 export class MembershipComponent implements AfterViewInit {
   protected id = input()
   protected typeOfProjet = input<string>()
-  protected _invoices = [
-    {
-      invoice: '01-07-2024',
-      paymentStatus: 'User',
-      totalAmount: '$250.00',
-      paymentMethod: 'Credit Card',
-    },
-    {
-      invoice: '01-07-2024',
-      paymentStatus: 'User',
-      totalAmount: '$150.00',
-      paymentMethod: 'PayPal',
-    },
-    {
-      invoice: '01-07-2024',
-      paymentStatus: 'User',
-      totalAmount: '$350.00',
-      paymentMethod: 'Bank Transfer',
-    },
-    {
-      invoice: '01-07-2024',
-      paymentStatus: 'User',
-      totalAmount: '$450.00',
-      paymentMethod: 'Credit Card',
-    },
-    {
-      invoice: '01-07-2024',
-      paymentStatus: 'User',
-      totalAmount: '$550.00',
-      paymentMethod: 'PayPal',
-    },
-    {
-      invoice: '01-07-2024',
-      paymentStatus: 'User',
-      totalAmount: '$200.00',
-      paymentMethod: 'Bank Transfer',
-    },
-    {
-      invoice: '01-07-2024',
-      paymentStatus: 'User',
-      totalAmount: '$300.00',
-      paymentMethod: 'Credit Card',
-    },
-  ];
   protected account = signal<CompteGroupeEntity | null>(null)
   protected users = signal<UserEntity[]>([])
-
+  protected connectedUser = signal<UserEntity | undefined>(undefined)
+  protected userGroup = signal<UserSecondaryAccountEntity | undefined>(undefined)
   protected currentDate = new Date()
 
   private readonly groupAccountService: CompteGroupeService = inject(CompteGroupeService)
   private readonly usersService: UsersService = inject(UsersService)
   private readonly userSecondaryAccountService: UserSecondaryAccountService = inject(UserSecondaryAccountService)
 
-  public frameworks = [
-    {
-      label: 'AnalogJs',
-      value: 'analogjs',
-    },
-    {
-      label: 'Angular',
-      value: 'angular',
-    },
-    {
-      label: 'Vue',
-      value: 'vue',
-    },
-    {
-      label: 'Nuxt',
-      value: 'nuxt',
-    },
-    {
-      label: 'React',
-      value: 'react',
-    },
-    {
-      label: 'NextJs',
-      value: 'nextjs',
-    },
-  ];
-  public currentFramework = signal<Framework | undefined>(undefined);
+
   public state = signal<'closed' | 'open'>('closed');
   protected usersFromDB = signal<UserEntity[]>([])
   public currentUser = signal<UserEntity | undefined>(undefined);
@@ -186,6 +134,12 @@ export class MembershipComponent implements AfterViewInit {
   }
 
   ngAfterViewInit() {
+
+    this.usersService.getInfo().subscribe(data => {
+      this.connectedUser.set(data)
+      const account = this.connectedUser()?.userSecondaryAccounts.find(account => account.secondary_account_id === +this.id()!)
+      this.userGroup.set(account)
+    })
 
     if (this.typeOfProjet() === "GROUP") {
       this.usersService.getAllUsersGroup(+this.id()!).subscribe(data => {

@@ -1,52 +1,135 @@
-<div class="p-10 flex flex-col items-center gap-4">
-    <hlm-table class="overflow-x-auto p-4 bg-gray-sonar rounded-xl">
+<div class="px-5 flex flex-col  gap-5 2xl:hidden">
+  <p class="font-bold text-lg px-3">Validation virements SEPA</p>
+  <hlm-table class="overflow-x-auto px-4 bg-gray-sonar rounded-xl shadow-lg">
+      <p class="font-bold text-sm p-3">Virements SEPA en attente de validation</p>
+      <div class="overflow-auto touch-none">
+      <hlm-trow class="flex ">
+        <hlm-th class="w-28 font-bold text-[10px]">Date </hlm-th>
+        <hlm-th class="w-36 font-bold  text-[10px]">Titulaire du compte</hlm-th>
+        <hlm-th class="w-44 font-bold text-[10px]">IBAN</hlm-th>
+        <hlm-th class="w-28 font-bold text-[10px]">Montant TVAC</hlm-th>
+        <hlm-th class="w-28 font-bold text-[10px]">Montant HTVA</hlm-th>
+        <hlm-th class="w-28 font-bold text-[10px]">Montant TVA</hlm-th>
+        <hlm-th class="w-36 font-bold text-[10px]">Communication libre</hlm-th>
+        <hlm-th class="w-44 font-bold text-[10px]">Communication structurée</hlm-th>
+        <hlm-th class="w-36 font-bold text-[10px]">Projet</hlm-th>
+      </hlm-trow>
+      @for (invoice of _invoices; track invoice.invoice) {
+        <hlm-trow class="flex border-none relative sm:flex-row">
+          <hlm-td class="w-28 text-[10px]">01-09-2024</hlm-td>
+          <hlm-td class="w-36 text-[10px]">Manon Aussems</hlm-td>
+          <hlm-td class="w-44 text-[10px]">BE95 1430 8568 5558</hlm-td>
+          <hlm-td class="w-28 text-[10px]">1 210€</hlm-td>
+          <hlm-td class="w-28 text-[10px]">1 000€</hlm-td>
+          <hlm-td class="w-28 text-[10px]">210€</hlm-td>
+          <hlm-td class="w-36 text-[10px]">Concert boverie</hlm-td>
+          <hlm-td class="w-44 text-[10px]">210-12345-123</hlm-td>
+          <hlm-td class="w-36 text-[10px]">Groupe de musique</hlm-td>
+          
+          
+        </hlm-trow>
+        <div class="mb-3 max-w-80 flex justify-between sticky bottom-0 left-0">
+            <button class="rounded-full pt-0 pb-0 h-auto text-[10px]" hlmBtn>Voir la facture</button>
+            <div class="flex gap-2">
+              <button class="rounded-full pt-0 pb-0 h-auto bg-red-600 text-[10px]" hlmBtn>Refuser</button>
+              <button class="rounded-full pt-0 pb-0 h-auto text-[10px]" hlmBtn>Accepter</button>
+            </div>
+        </div>
+      }
+    </div>
+  </hlm-table>
+
+  <hlm-table class="overflow-x-auto p-4 bg-gray-sonar rounded-xl shadow-lg">
+    <p class="font-bold text-sm p-3">Virements SEPA validés</p>
+    <div class="overflow-auto touch-none">
+    <hlm-trow class="flex ">
+      <hlm-th class="w-28 font-bold text-[10px]">Date </hlm-th>
+      <hlm-th class="w-36 font-bold  text-[10px]">Titulaire du compte</hlm-th>
+      <hlm-th class="w-44 font-bold text-[10px]">IBAN</hlm-th>
+      <hlm-th class="w-28 font-bold text-[10px]">Montant TVAC</hlm-th>
+      <hlm-th class="w-28 font-bold text-[10px]">Montant HTVA</hlm-th>
+      <hlm-th class="w-28 font-bold text-[10px]">Montant TVA</hlm-th>
+      <hlm-th class="w-36 font-bold text-[10px]">Communication libre</hlm-th>
+      <hlm-th class="w-44 font-bold text-[10px]">Communication structurée</hlm-th>
+      <hlm-th class="w-36 font-bold text-[10px]">Projet</hlm-th>
+    </hlm-trow>
+    @for (invoice of _invoices; track invoice.invoice) {
+      <hlm-trow class="flex sm:flex-row">
+        <hlm-td class="w-28 text-[10px]">01-09-2024</hlm-td>
+        <hlm-td class="w-36 text-[10px]">Manon Aussems</hlm-td>
+        <hlm-td class="w-44 text-[10px]">BE95 1430 8568 5558</hlm-td>
+        <hlm-td class="w-28 text-[10px]">1 210€</hlm-td>
+        <hlm-td class="w-28 text-[10px]">1 000€</hlm-td>
+        <hlm-td class="w-28 text-[10px]">210€</hlm-td>
+        <hlm-td class="w-36 text-[10px]">Concert boverie</hlm-td>
+        <hlm-td class="w-44 text-[10px]">210-12345-123</hlm-td>
+        <hlm-td class="w-36 text-[10px]">Groupe de musique</hlm-td>
+      </hlm-trow>
+    }
+  </div>
+        <button class="flex justify-center rounded-full text[10px] h-auto w-auto" hlmBtn>Initier le virement SEPA</button>
+  </hlm-table>
+</div>
+
+<div class="p-5 flex-col items-center gap-5 hidden 2xl:block">
+    <hlm-table class="overflow-x-auto p-4 bg-gray-sonar rounded-xl shadow-lg">
         <p class="font-bold text-lg p-3">Virements SEPA en attente de validation</p>
         <hlm-trow class="flex flex-col sm:flex-row">
-          <hlm-th class="w-full text-[10px] sm:flex-1">Date </hlm-th>
-          <hlm-th class="w-full text-[10px] sm:w-60">Titulaire du compte</hlm-th>
-          <hlm-th class="w-full text-[10px] sm:flex-1">IBAN</hlm-th>
-          <hlm-th class="w-full text-[10px] sm:flex-1">Montant TVAC</hlm-th>
-          <hlm-th class="w-full text-[10px] sm:flex-1">Montant HTVA</hlm-th>
-          <hlm-th class="w-full text-[10px] sm:flex-1">Montant TVA</hlm-th>
-          <hlm-th class="w-full text-[10px] sm:flex-1">Communication libre</hlm-th>
-          <hlm-th class="w-full text-[10px] sm:flex-1">Communication structurée</hlm-th>
-          <hlm-th class="w-full text-[10px] sm:flex-1">Projet</hlm-th>
+          <hlm-th class="w-28 font-bold text-[10px]">Date </hlm-th>
+          <hlm-th class="w-36 font-bold  text-[10px]">Titulaire du compte</hlm-th>
+          <hlm-th class="w-44 font-bold text-[10px]">IBAN</hlm-th>
+          <hlm-th class="w-28 font-bold text-[10px]">Montant TVAC</hlm-th>
+          <hlm-th class="w-28 font-bold text-[10px]">Montant HTVA</hlm-th>
+          <hlm-th class="w-28 font-bold text-[10px]">Montant TVA</hlm-th>
+          <hlm-th class="w-36 font-bold text-[10px]">Communication libre</hlm-th>
+          <hlm-th class="w-44 font-bold text-[10px]">Communication structurée</hlm-th>
+          <hlm-th class="w-36 font-bold text-[10px]">Projet</hlm-th>
           
         </hlm-trow>
         @for (invoice of _invoices; track invoice.invoice) {
-          <hlm-trow class="flex flex-col sm:flex-row">
-            <hlm-td class="font-medium w-full sm:w-52 truncate">{{ invoice.invoice }}</hlm-td>
-            <hlm-td class="w-full sm:w-60">{{ invoice.paymentStatus }}</hlm-td>
-            <hlm-td class="w-full sm:flex-1">{{ invoice.paymentMethod }}</hlm-td>
-            <hlm-td class="w-full sm:w-40 sm:justify-end gap-3">
-    
-                <button class="rounded-full" hlmBtn>Accepter</button>
-                <button class="rounded-full" hlmBtn>Refuser</button>
-    
+          <hlm-trow class="flex flex-col relative sm:flex-row">
+            <hlm-td class="w-28 text-[10px]">01-09-2024</hlm-td>
+            <hlm-td class="w-36 text-[10px]">Manon Aussems</hlm-td>
+            <hlm-td class="w-44 text-[10px]">BE95 1430 8568 5558</hlm-td>
+            <hlm-td class="w-28 text-[10px]">1 210€</hlm-td>
+            <hlm-td class="w-28 text-[10px]">1 000€</hlm-td>
+            <hlm-td class="w-28 text-[10px]">210€</hlm-td>
+            <hlm-td class="w-36 text-[10px]">Concert boverie</hlm-td>
+            <hlm-td class="w-44 text-[10px]">210-12345-123</hlm-td>
+            <hlm-td class="w-36 text-[10px]">Groupe de musique</hlm-td>
+            <hlm-td class="w-auto gap-3">
+              <button class="rounded-full h-auto text-[10px]" hlmBtn>Voir la facture</button>
+              <button class="rounded-full h-auto bg-red-800 text-[10px]" hlmBtn>Refuser</button>
+              <button class="rounded-full h-auto text-[10px]" hlmBtn>Accepter</button>
             </hlm-td>
           </hlm-trow>
         }
     </hlm-table>
 
-    <hlm-table class="overflow-x-auto p-4 bg-gray-sonar rounded-xl">
+    <hlm-table class="overflow-x-auto p-4 bg-gray-sonar rounded-xl shadow-lg">
         <hlm-trow class="flex flex-col sm:flex-row">
-          <hlm-th class="w-full sm:flex-1">Date </hlm-th>
-          <hlm-th class="w-full sm:w-60">Titulaire du compte</hlm-th>
-          <hlm-th class="w-full sm:flex-1">IBAN</hlm-th>
-          <hlm-th class="w-full sm:flex-1">Montant TVAC</hlm-th>
-          <hlm-th class="w-full sm:flex-1">Montant HTVA</hlm-th>
-          <hlm-th class="w-full sm:flex-1">Montant TVA</hlm-th>
-          <hlm-th class="w-full sm:flex-1">Communication libre</hlm-th>
-          <hlm-th class="w-full sm:flex-1">Communication structurée</hlm-th>
-          <hlm-th class="w-full sm:flex-1">Projet</hlm-th>
+          <hlm-th class="w-28 font-bold text-[10px]">Date </hlm-th>
+          <hlm-th class="w-36 font-bold  text-[10px]">Titulaire du compte</hlm-th>
+          <hlm-th class="w-44 font-bold text-[10px]">IBAN</hlm-th>
+          <hlm-th class="w-28 font-bold text-[10px]">Montant TVAC</hlm-th>
+          <hlm-th class="w-28 font-bold text-[10px]">Montant HTVA</hlm-th>
+          <hlm-th class="w-28 font-bold text-[10px]">Montant TVA</hlm-th>
+          <hlm-th class="w-36 font-bold text-[10px]">Communication libre</hlm-th>
+          <hlm-th class="w-44 font-bold text-[10px]">Communication structurée</hlm-th>
+          <hlm-th class="w-36 font-bold text-[10px]">Projet</hlm-th>
           
         </hlm-trow>
         @for (invoice of _invoices; track invoice.invoice) {
           <hlm-trow class="flex flex-col sm:flex-row">
-            <hlm-td class="font-medium w-full sm:w-52 truncate">{{ invoice.invoice }}</hlm-td>
-            <hlm-td class="w-full sm:w-60">{{ invoice.paymentStatus }}</hlm-td>
-            <hlm-td class="w-full sm:flex-1">{{ invoice.paymentMethod }}</hlm-td>
-            <hlm-td class="w-full sm:w-40 sm:justify-end gap-3"></hlm-td>
+            <hlm-td class="w-28 text-[10px]">01-09-2024</hlm-td>
+            <hlm-td class="w-36 text-[10px]">Manon Aussems</hlm-td>
+            <hlm-td class="w-44 text-[10px]">BE95 1430 8568 5558</hlm-td>
+            <hlm-td class="w-28 text-[10px]">1 210€</hlm-td>
+            <hlm-td class="w-28 text-[10px]">1 000€</hlm-td>
+            <hlm-td class="w-28 text-[10px]">210€</hlm-td>
+            <hlm-td class="w-36 text-[10px]">Concert boverie</hlm-td>
+            <hlm-td class="w-44 text-[10px]">210-12345-123</hlm-td>
+            <hlm-td class="w-36 text-[10px]">Groupe de musique</hlm-td>
           </hlm-trow>
         }
     </hlm-table>

@@ -1,4 +1,4 @@
-<div class="bg-gray-sonar p-5 mx-10 rounded-xl flex flex-col gap-5 ">
+<div class="bg-gray-sonar p-5 mx-5 rounded-xl flex flex-col gap-5 ">
 
     <div class="md:flex md:justify-between">
         <div class="flex justify-start w-full md:w-1/3">
@@ -101,76 +101,85 @@
     </div>
 
     <div class="md:flex md:gap-5 w-full flex flex-col gap-5">
-        <div class="bg-white rounded-xl w-full p-5">
-            <p class="font-bold">Transfert sortant</p>
-            <hlm-table class="overflow-x-auto w-full">
-                <hlm-trow class="flex flex-col sm:flex-row">
-                  <hlm-th class="w-full sm:w-52">Date </hlm-th>
-                  <hlm-th class="w-full sm:flex-1">Expéditeur</hlm-th>
-                  <hlm-th class="w-full sm:flex-1">Destinataire</hlm-th>
-                  <hlm-th class="w-full sm:flex-1">Communication</hlm-th>
-                  <hlm-th class="w-full sm:flex-1">Montant</hlm-th>
+        <div class=" flex flex-col gap-5">
+            <hlm-table class="overflow-x-auto p-4 bg-white rounded-xl shadow-lg">
+                <p class="font-bold px-4 text-sm">Transfert sortant</p>
+                <div class="overflow-auto touch-none">
+                <hlm-trow class="flex ">
+                  <hlm-th class="w-32 font-bold text-[10px]">Date</hlm-th>
+                  <hlm-th class="w-44 font-bold  text-[10px]">Expéditeur</hlm-th>
+                  <hlm-th class="w-48 font-bold text-[10px]">Destinataire</hlm-th>
+                  <hlm-th class="w-48 font-bold text-[10px]">Communication</hlm-th>
+                  <hlm-th class="w-32 font-bold text-[10px]">Montant</hlm-th>
                 </hlm-trow>
-    
                 @for (invoice of _invoices; track invoice.invoice) {
-                    <hlm-trow class="flex flex-col sm:flex-row">
-                          <hlm-td class="font-medium w-full sm:w-52 truncate">{{ invoice.invoice }}</hlm-td>
-                          <hlm-td class="w-full sm:flex-1">{{ invoice.paymentStatus }}</hlm-td>
-                          <hlm-td class="w-full sm:flex-1">{{ invoice.paymentMethod }}</hlm-td>
-                          <hlm-td class="w-full sm:flex-1">{{ invoice.totalAmount }}</hlm-td>
-                          <hlm-td class="w-full sm:flex-1">{{ invoice.totalAmount }}</hlm-td>
-                    </hlm-trow>
+                  <hlm-trow class="flex border-none relative sm:flex-row md:flex md:justify-between">
+                    <div class="flex">
+                        <hlm-th class="w-32 font-bold text-[10px]">01-09-2024</hlm-th>
+                        <hlm-th class="w-44 font-bold  text-[10px]">Les artistes de la boverie</hlm-th>
+                        <hlm-th class="w-48 font-bold text-[10px]">Un concert pour tous</hlm-th>
+                        <hlm-th class="w-48 font-bold text-[10px]">Concert du 06 juin 2024</hlm-th>
+                        <hlm-th class="w-32 font-bold text-[10px]">1 000€</hlm-th>
+                    </div>
+                  </hlm-trow>
                 }
-            </hlm-table>   
-        </div>
+              </div>
+            </hlm-table>
+          </div>
     
-        <div class="bg-white rounded-xl w-full p-5">
-            <p class="font-bold">Transfert entrant</p>
-            <hlm-table class="overflow-x-auto w-full">
-                <hlm-trow class="flex flex-col sm:flex-row">
-                    <hlm-th class="w-full sm:w-52">Date </hlm-th>
-                    <hlm-th class="w-full sm:flex-1">Expéditeur</hlm-th>
-                    <hlm-th class="w-full sm:flex-1">Destinataire</hlm-th>
-                    <hlm-th class="w-full sm:flex-1">Communication</hlm-th>
-                    <hlm-th class="w-full sm:flex-1">Montant</hlm-th>
+          <div class=" flex flex-col gap-5">
+            <hlm-table class="overflow-x-auto p-4 bg-white rounded-xl shadow-lg">
+                <p class="font-bold px-4 text-sm">Transfert entrant</p>
+                <div class="overflow-auto touch-none">
+                <hlm-trow class="flex ">
+                  <hlm-th class="w-32 font-bold text-[10px]">Date</hlm-th>
+                  <hlm-th class="w-44 font-bold  text-[10px]">Expéditeur</hlm-th>
+                  <hlm-th class="w-48 font-bold text-[10px]">Destinataire</hlm-th>
+                  <hlm-th class="w-48 font-bold text-[10px]">Communication</hlm-th>
+                  <hlm-th class="w-32 font-bold text-[10px]">Montant</hlm-th>
                 </hlm-trow>
-    
                 @for (invoice of _invoices; track invoice.invoice) {
-                    <hlm-trow class="flex flex-col sm:flex-row">
-                        <hlm-td class="font-medium w-full sm:w-52 truncate">{{ invoice.invoice }}</hlm-td>
-                        <hlm-td class="w-full sm:flex-1">{{ invoice.paymentStatus }}</hlm-td>
-                        <hlm-td class="w-full sm:flex-1">{{ invoice.paymentMethod }}</hlm-td>
-                        <hlm-td class="w-full sm:flex-1">{{ invoice.totalAmount }}</hlm-td>
-                        <hlm-td class="w-full sm:flex-1">{{ invoice.totalAmount }}</hlm-td>
-                    </hlm-trow>
+                  <hlm-trow class="flex border-none relative sm:flex-row md:flex md:justify-between">
+                    <div class="flex">
+                        <hlm-th class="w-32 font-bold text-[10px]">01-09-2024</hlm-th>
+                        <hlm-th class="w-44 font-bold  text-[10px]">Les artistes de la boverie</hlm-th>
+                        <hlm-th class="w-48 font-bold text-[10px]">Un concert pour tous</hlm-th>
+                        <hlm-th class="w-48 font-bold text-[10px]">Concert du 06 juin 2024</hlm-th>
+                        <hlm-th class="w-32 font-bold text-[10px]">1 000€</hlm-th>
+                    </div>
+                  </hlm-trow>
                 }
-            </hlm-table>   
-        </div>
+              </div>
+            </hlm-table>
+          </div>
     </div>
 
-    <div class="bg-white rounded-xl w-full p-5">
-        <p class="font-bold">Paiement SEPA</p>
-        <hlm-table class="overflow-x-auto w-full">
-            <hlm-trow class="flex flex-col sm:flex-row">
-              <hlm-th class="w-full sm:flex-1">Date </hlm-th>
-              <hlm-th class="w-full sm:flex-1">Titulaire du compte</hlm-th>
-              <hlm-th class="w-full sm:flex-1">IBAN</hlm-th>
-              <hlm-th class="w-full sm:flex-1">Communication</hlm-th>
-              <hlm-th class="w-full sm:flex-1">Montant total</hlm-th>
-              <hlm-th class="w-full sm:flex-1">Montant débité</hlm-th>
+    <div class=" flex flex-col gap-5">
+        <hlm-table class="overflow-x-auto p-4 bg-white rounded-xl shadow-lg">
+            <p class="font-bold text-sm p-3">Paiement SEPA</p>
+            <div class="overflow-auto touch-none">
+            <hlm-trow class="flex ">
+              <hlm-th class="w-28 font-bold text-[10px]">Date </hlm-th>
+              <hlm-th class="w-36 font-bold  text-[10px]">Titulaire du compte</hlm-th>
+              <hlm-th class="w-44 font-bold text-[10px]">IBAN</hlm-th>
+              <hlm-th class="w-36 font-bold text-[10px]">Communication libre</hlm-th>
+              <hlm-th class="w-44 font-bold text-[10px]">Communication structurée</hlm-th>
+              <hlm-th class="w-28 font-bold text-[10px]">Montant total</hlm-th>
+              <hlm-th class="w-28 font-bold text-[10px]">Montant débité</hlm-th>
             </hlm-trow>
-
             @for (invoice of _invoices; track invoice.invoice) {
-                <hlm-trow class="flex flex-col sm:flex-row">
-                    <hlm-td class="w-full sm:flex-1">{{ invoice.invoice }}</hlm-td>
-                    <hlm-td class="w-full sm:flex-1">{{ invoice.paymentStatus }}</hlm-td>
-                    <hlm-td class="w-full sm:flex-1">{{ invoice.paymentMethod }}</hlm-td>
-                    <hlm-td class="w-full sm:flex-1">{{ invoice.totalAmount }}</hlm-td>
-                    <hlm-td class="w-full sm:flex-1">{{ invoice.totalAmount }}</hlm-td>
-                    <hlm-td class="w-full sm:flex-1">{{ invoice.totalAmount }}</hlm-td>
-                </hlm-trow>
+              <hlm-trow class="flex sm:flex-row">
+                <hlm-td class="w-28 text-[10px]">01-09-2024</hlm-td>
+                <hlm-td class="w-36 text-[10px]">Manon Aussems</hlm-td>
+                <hlm-td class="w-44 text-[10px]">BE95 1430 8568 5558</hlm-td>
+                <hlm-td class="w-36 text-[10px]">Concert boverie</hlm-td>
+                <hlm-td class="w-44 text-[10px]">210-12345-123</hlm-td>
+                <hlm-td class="w-28 text-[10px]">1 210€</hlm-td>
+                <hlm-td class="w-28 text-[10px]">1 000€</hlm-td>
+              </hlm-trow>
             }
-        </hlm-table>   
-    </div>
+          </div>
+          </hlm-table>
+      </div>
 
 </div>

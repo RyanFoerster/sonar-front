@@ -18,7 +18,7 @@
 
           <brn-popover [state]="state()" (stateChanged)="stateChanged($event)" sideOffset="5" closeDelay="100">
             <button class="w-full justify-between" id="edit-profile" variant="outline" brnPopoverTrigger hlmBtn>
-              {{ currentUser() ? currentUser()?.email : 'Séléctionner un membre' }}
+              {{ currentUser() ? currentUser()?.username : 'Séléctionner un membre' }}
               <hlm-icon size="sm" name="lucideChevronsUpDown"/>
             </button>
             <brn-cmd *brnPopoverContent="let ctx" hlmPopoverContent hlm class="p-0 w-full">
@@ -30,11 +30,12 @@
               <brn-cmd-list hlm>
                 <brn-cmd-group hlm>
 
-                  @for (user of usersFromDB(); track user.email) {
+                  @for (user of usersFromDB(); track user.id) {
                     <button
                       brnCmdItem
-                      [value]="user.email"
+                      [value]="user.username"
                       (selected)="commandSelected(user)"
+                      class="flex gap-2 w-full"
                       hlm
                     >
                       <hlm-icon
@@ -42,7 +43,9 @@
                         name="lucideCheck"
                         hlmCmdIcon
                       />
-                      {{ user.email }}
+                      <p>{{ user.id }}</p>
+                      <p>{{ user.firstName }} {{user.name}}</p>
+                      <p>{{ user.username }}</p>
                     </button>
                   }
 
@@ -77,12 +80,12 @@
             <hlm-td class="w-full sm:w-60">{{ user.firstName }} {{ user.name }}</hlm-td>
 
             <hlm-td class="grid grid-cols-2 w-full sm:flex-1">
-              <label class="flex items-center w-full" hlmLabel>
-                <hlm-checkbox [checked]="checkViewerRole(user, 'treasury')"
-                              [disabled]="checkAdminRole(user, 'treasury') || connectedUser()?.role !== 'ADMIN' && userGroup()?.role_gestion !== 'ADMIN' "
-                              (checkedChange)="changeViewerRole($event, 'treasury', user)"
-                              class="mr-2 rounded-full" aria-label="Compte du groupe"/>
-                Compte du groupe
+                <label class="flex items-center w-full" hlmLabel>
+                  <hlm-checkbox [checked]="checkViewerRole(user, 'treasury')"
+                                [disabled]="checkAdminRole(user, 'treasury') || connectedUser()?.role !== 'ADMIN' && userGroup()?.role_gestion !== 'ADMIN' "
+                                (checkedChange)="changeViewerRole($event, 'treasury', user)"
+                                class="mr-2 rounded-full" aria-label="Compte du groupe"/>
+                  Compte du groupe
               </label>
               <label class="flex items-center w-full" hlmLabel>
                 <hlm-checkbox [checked]="checkViewerRole(user, 'billing')"

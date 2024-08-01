@@ -1,4 +1,4 @@
-import {AfterViewInit, Component, inject, input, signal} from '@angular/core';
+import {AfterViewInit, Component, importProvidersFrom, inject, input, signal} from '@angular/core';
 import {
   HlmCaptionComponent,
   HlmTableComponent,
@@ -21,7 +21,6 @@ import {
   BrnPopoverContentDirective,
   BrnPopoverTriggerDirective,
 } from '@spartan-ng/ui-popover-brain';
-import {BrnCommandImports} from '@spartan-ng/ui-command-brain';
 import {HlmCommandImports} from '@spartan-ng/ui-command-helm';
 import {HlmIconComponent} from '@spartan-ng/ui-icon-helm';
 import {HlmPopoverContentDirective} from '@spartan-ng/ui-popover-helm';
@@ -52,6 +51,7 @@ import {
 } from '@spartan-ng/ui-accordion-helm';
 import {BrnSeparatorComponent} from "@spartan-ng/ui-separator-brain";
 import {HlmSeparatorDirective} from "@spartan-ng/ui-separator-helm";
+import {BrnCommandImports} from "@spartan-ng/ui-command-brain";
 
 
 @Component({
@@ -93,14 +93,14 @@ import {HlmSeparatorDirective} from "@spartan-ng/ui-separator-helm";
     BrnPopoverComponent,
     BrnPopoverContentDirective,
     BrnPopoverTriggerDirective,
-    BrnCommandImports,
     HlmCommandImports,
     HlmIconComponent,
     HlmPopoverContentDirective,
     HlmSpinnerComponent,
     BrnSeparatorComponent,
     HlmSeparatorDirective,
-    HlmIconComponent
+    HlmIconComponent,
+    BrnCommandImports
   ],
   providers: [provideIcons({lucideChevronsUpDown, lucideSearch, lucideCheck})],
   templateUrl: './membership.component.html',
@@ -147,7 +147,6 @@ export class MembershipComponent implements AfterViewInit {
       });
     }
   }
-
 
   checkViewerRole(user: UserEntity, role: "billing" | "agenda" | "treasury" | "gestion" | "contract" | "document") {
     const account = user.userSecondaryAccounts.find(account => account.secondary_account_id === +this.id()!);

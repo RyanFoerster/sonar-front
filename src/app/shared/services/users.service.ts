@@ -42,4 +42,8 @@ export class UsersService {
   findAll() {
     return this.httpClient.get<UserEntity[]>(`${environments.API_URL}/users/all`)
   }
+
+  getProfilePicture(filename: string) {
+    return this.httpClient.get(`${environments.API_URL}/users/${filename}`, {responseType: "blob"})
+  }
 }

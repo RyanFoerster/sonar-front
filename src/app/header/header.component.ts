@@ -1,7 +1,7 @@
-import { Component, effect, inject, signal, WritableSignal } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
-import { HlmButtonDirective } from '@spartan-ng/ui-button-helm';
-import { BrnMenuTriggerDirective } from '@spartan-ng/ui-menu-brain';
+import {Component, effect, inject, signal, WritableSignal} from '@angular/core';
+import {Router, RouterLink} from '@angular/router';
+import {HlmButtonDirective} from '@spartan-ng/ui-button-helm';
+import {BrnMenuTriggerDirective} from '@spartan-ng/ui-menu-brain';
 import {
   HlmMenuBarComponent,
   HlmMenuBarItemDirective,
@@ -19,13 +19,16 @@ import {
   HlmMenuShortcutComponent,
   HlmSubMenuComponent,
 } from '@spartan-ng/ui-menu-helm';
+import {HlmAvatarComponent, HlmAvatarFallbackDirective, HlmAvatarImageDirective} from '@spartan-ng/ui-avatar-helm';
 
-
-import { HlmIconComponent, provideIcons } from '@spartan-ng/ui-icon-helm';
-import { lucideBell } from '@ng-icons/lucide';
-import { NgClass } from '@angular/common';
-import { HeaderMobileComponent } from "../header-mobile/header-mobile.component";
-import { AuthService } from '../shared/services/auth.service';
+import {HlmIconComponent, provideIcons} from '@spartan-ng/ui-icon-helm';
+import {lucideBell} from '@ng-icons/lucide';
+import {NgClass, NgOptimizedImage} from '@angular/common';
+import {HeaderMobileComponent} from "../header-mobile/header-mobile.component";
+import {AuthService} from '../shared/services/auth.service';
+import {UsersService} from "../shared/services/users.service";
+import {UserEntity} from "../shared/entities/user.entity";
+import {switchMap, tap} from "rxjs";
 
 @Component({
   selector: 'app-header',
@@ -51,19 +54,27 @@ import { AuthService } from '../shared/services/auth.service';
     BrnMenuTriggerDirective,
     HlmIconComponent,
     NgClass,
-    HeaderMobileComponent
-],
-  providers: [provideIcons({ lucideBell })],
+    HeaderMobileComponent,
+    HlmAvatarComponent,
+    HlmAvatarFallbackDirective,
+    HlmAvatarImageDirective,
+    NgOptimizedImage,
+  ],
+  providers: [provideIcons({lucideBell})],
   templateUrl: './header.component.html',
   styleUrl: './header.component.css'
-  
+
 })
 export class HeaderComponent {
 
   authService: AuthService = inject(AuthService)
-  userConnected = signal(false)
+  usersService: UsersService = inject(UsersService)
+
+  isUserConnected = signal(false)
+  connectedUser = signal<UserEntity | undefined>(undefined)
+  profilePicture = signal<any>('')
   userConnectedCondition = effect(() => {
-    this.userConnected.set(this.authService.getToken() !== null)
+    this.isUserConnected.set(this.authService.getToken() !== null)
   }, {
     allowSignalWrites: true
   })
@@ -71,12 +82,14 @@ export class HeaderComponent {
   router: Router = inject(Router)
 
 
-    constructor(){
-    }
+  constructor() {
 
-    logout() {
-      this.authService.removeToken()
-      this.router.navigate(["/login"])
-    }
+
+  }
+
+  logout() {
+    this.authService.removeToken()
+    this.router.navigate(["/login"])
+  }
 
 }

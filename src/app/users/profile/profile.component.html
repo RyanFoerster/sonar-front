@@ -1,167 +1,117 @@
 <div class="flex flex-col justify-center gap-5">
-    <div class="background-div h-40 max-w-full md:h-60 relative mx-10 overflow-hidden rounded-3xl shadow">
-      
-      <div class="flex justify-center items-center py-6 px-2 md:flex md:w-3/5 md:py-10 md:pl-10">
-        <div class="flex justify-center items-center">
-          <img class="size-28 md:size-40 rounded-full" src="/assets/images/IMG_3149.jpg" alt="photo de profil">
-        </div>
 
-        <div class="flex flex-col mx-2 w-1/2">
-          <p class="flex text-[8px] md:text-sm text-white font-light">Le groupe de musique</p>
-          <p class="flex text-lg leading-none md:text-3xl text-white font-bold">Manon</p>
-          <p class="flex text-lg leading-none md:text-3xl text-white font-bold">Aussems</p>
-          <p class="flex text-[8px] md:text-lg text-white font-light">manonaussems&#64;hotmail.be</p>
-        </div>
-      </div>
-      
-      <div class="absolute bottom-2 right-2 size-5 bg-white rounded-full flex justify-center items-center">
-        <hlm-icon class="w-3" name="lucideEdit"/>
+
+  <div class="background-div h-40 max-w-full md:h-60 relative mx-10 overflow-hidden rounded-3xl shadow">
+
+    <div class="flex justify-center items-center py-6 px-2 md:flex md:w-3/5 md:py-10 md:pl-10">
+      <div class="flex justify-center items-center">
+        <img class="size-28 md:size-40 rounded-full" src="/assets/images/manon.jpg" alt="photo de profil">
       </div>
 
+      <div class="flex flex-col mx-2 w-1/2">
+        <p class="flex text-[8px] md:text-sm text-white font-light">{{ connectedUser()?.comptePrincipal?.username }}</p>
+        <p class="flex text-lg leading-none md:text-3xl text-white font-bold">{{ connectedUser()?.firstName }} </p>
+        <p class="flex text-lg leading-none md:text-3xl text-white font-bold">{{ connectedUser()?.name }}</p>
+        <p class="flex text-[8px] md:text-lg text-white font-light">{{ connectedUser()?.email }}</p>
+      </div>
     </div>
 
-    <div class="bg-gray-sonar mx-10 md:w-3/5 rounded-3xl">
+    <div class="absolute bottom-2 right-2 size-5 bg-white rounded-full flex justify-center items-center">
+      <hlm-icon class="w-3" name="lucideEdit"/>
+    </div>
 
-      <div class="flex justify-between pt-5 px-5">
-          <p class="text-xl font-bold">Informations</p>
-        <div class="hidden md:block flex-col justify-center">
-          <hlm-dialog class="flex flex-col justify-start w-auto">
-              <button class="flex rounded-full w-auto" id="edit-profile" brnDialogTrigger hlmBtn>Modifier le profil</button>
-              <hlm-dialog-content class="p-5 rounded-xl m-4 w-11/12" *brnDialogContent="let ctx">
-                <hlm-dialog-header>
-                  <h3 hlmDialogTitle>Modifier le profil</h3>
-                  <p hlmDialogDescription>Apportez des modifications à votre profil ici. Cliquez sur "Enregistrer" lorsque vous avez terminé.</p>
-                </hlm-dialog-header>
-                <div class="py-4 grid gap-4">
-                  <div class="items-center grid grid-cols-4 gap-4">
-                      <label hlmLabel for="username" class="text-left font-bold">Username</label>
-                      <input hlmInput id="username" value="@peduarte" class="col-span-3 m-2" />
-                  </div>
+  </div>
 
-                  <div class="items-center grid grid-cols-4 gap-4">
-                    <label hlmLabel for="lastname" class="text-left font-bold">Nom</label>
-                    <input hlmInput id="lastname" value="Dupont" class="col-span-3 m-2" />
-                  </div>
+  <div class="bg-gray-sonar flex flex-col-reverse md:flex-col mx-10 md:w-3/5 rounded-3xl">
 
-                  <div class="items-center grid grid-cols-4 gap-4">
-                      <label hlmLabel for="firstname" class="text-left font-bold">Prénom</label>
-                      <input hlmInput id="firstname" value="Olivier" class="col-span-3 m-2" />
-                  </div>
-
-                  <div class="items-center grid grid-cols-4 gap-4">
-                      <label hlmLabel for="number" class="text-left font-bold">Numéro national</label>
-                      <input hlmInput id="number" value="83051212345" class="col-span-3 m-2" />
-                  </div>
-
-                  <div class="items-center grid grid-cols-4 gap-4">
-                      <label hlmLabel for="phone" class="text-left font-bold">Téléphone</label>
-                      <input hlmInput id="phone" value="+32 478 13 92 87" class="col-span-3 m-2" />
-                  </div>
-
-                  <div class="items-center grid grid-cols-4 gap-4">
-                    <label hlmLabel for="email" class="text-left font-bold">E-mail</label>
-                    <input hlmInput id="email" value="test@tes.be" class="col-span-3 m-2" />
-                  </div>
-
-                  <div class="items-center grid grid-cols-4 gap-4">
-                      <label hlmLabel for="number" class="text-left font-bold">Compte bancaire</label>
-                      <input hlmInput id="number" value="BE95 1430 8568 5558" class="col-span-3 m-2" />
-                  </div>
-
-                  <div class="items-center grid grid-cols-4 gap-4">
-                      <label hlmLabel for="adress" class="text-left font-bold">Adresse</label>
-                      <input hlmInput id="adress" value="Place des arts 1, 4020 Liège" class="col-span-3 m-2" />
-                  </div>
-
-                </div>
-                <hlm-dialog-footer>
-                  <button class="rounded-full" hlmBtn type="submit">Enregistrer</button>
-                </hlm-dialog-footer>
-              </hlm-dialog-content>
-          </hlm-dialog>
-        </div>
-      </div>
-      
-
-      <div class="p-5">
-        <div class="flex">
-          <p class="font-bold text-[9px] md:text-sm w-28 md:w-56">Adresse</p>
-          <p class="text-[9px] md:text-sm">rue du moulin 78 4020 Liège</p>
-        </div>
-  
-        <div class="flex">
-          <p class="font-bold text-[9px] md:text-sm w-28 md:w-56">Numéro de téléphone</p>
-          <p class="text-[9px] md:text-sm">0478 13 92 18</p>
-        </div>
-  
-        <div class="flex">
-          <p class="font-bold text-[9px] md:text-sm w-28 md:w-56">Numéro national</p>
-          <p class="text-[9px] md:text-sm">01012821074</p>
-        </div>
-  
-        <div class="flex">
-          <p class="font-bold text-[9px] md:text-sm w-28 md:w-56">Compte bancaire</p>
-          <p class="text-[9px] md:text-sm">BE95 14306 558 5558</p>
-        </div>
-      </div>
-
-      <div class="flex md:hidden flex-col px-5 pb-5 justify-center">
-        <hlm-dialog class="flex flex-col justify-start w-auto">
-            <button class="flex rounded-full text-xs h-auto w-auto" id="edit-profile" brnDialogTrigger hlmBtn>Modifier le profil</button>
-            <hlm-dialog-content class="p-5 rounded-xl m-4 w-11/12" *brnDialogContent="let ctx">
-              <hlm-dialog-header>
-                <h3 hlmDialogTitle>Modifier le profil</h3>
-                <p class="text-xs" hlmDialogDescription>Apportez des modifications à votre profil ici. Cliquez sur "Enregistrer" lorsque vous avez terminé.</p>
-              </hlm-dialog-header>
-              <div class="py-1 grid gap-1">
-                <div class="items-center grid grid-cols-4 gap-4">
-                    <label hlmLabel for="username" class="text-left font-bold text-xs">Username</label>
-                    <input hlmInput id="username" value="@peduarte" class="col-span-3 m-2 text-xs" />
-                </div>
-    
-                <div class="items-center grid grid-cols-4 gap-4">
-                  <label hlmLabel for="lastname" class="text-left font-bold text-xs">Nom</label>
-                  <input hlmInput id="lastname" value="Dupont" class="col-span-3 m-2 text-xs" />
-                </div>
-    
-                <div class="items-center grid grid-cols-4 gap-4">
-                    <label hlmLabel for="firstname" class="text-left font-bold text-xs">Prénom</label>
-                    <input hlmInput id="firstname" value="Olivier" class="col-span-3 m-2 text-xs" />
-                </div>
-    
-                <div class="items-center grid grid-cols-4 gap-4">
-                    <label hlmLabel for="number" class="text-left font-bold text-xs">Numéro national</label>
-                    <input hlmInput id="number" value="83051212345" class="col-span-3 m-2 text-xs" />
-                </div>
-    
-                <div class="items-center grid grid-cols-4 gap-4">
-                    <label hlmLabel for="phone" class="text-left font-bold text-xs">Téléphone</label>
-                    <input hlmInput id="phone" value="+32 478 13 92 87" class="col-span-3 m-2 text-xs" />
-                </div>
-    
-                <div class="items-center grid grid-cols-4 gap-4">
-                  <label hlmLabel for="email" class="text-left font-bold text-xs">E-mail</label>
-                  <input hlmInput id="email" value="test@tes.be" class="col-span-3 m-2 text-xs" />
-                </div>
-    
-                <div class="items-center grid grid-cols-4 gap-4">
-                    <label hlmLabel for="number" class="text-left font-bold text-xs">Compte bancaire</label>
-                    <input hlmInput id="number" value="BE95 1430 8568 5558" class="col-span-3 m-2 text-xs" />
-                </div>
-    
-                <div class="items-center grid grid-cols-4 gap-4">
-                    <label hlmLabel for="adress" class="text-left font-bold text-xs">Adresse</label>
-                    <input hlmInput id="adress" value="Place des arts 1, 4020 Liège" class="col-span-3 m-2 text-xs" />
-                </div>
-    
+    <div class="flex justify-between md:pt-5 px-5">
+      <p class="text-xl font-bold hidden md:block">Informations</p>
+      <div class="flex flex-col md:px-0 md:pb-0 justify-center w-full md:w-fit">
+        <hlm-dialog class="flex  pb-2 justify-start w-full">
+          <button class="rounded-full text-xs w-auto hidden md:flex md:text-base justify-end" id="edit-profile" brnDialogTrigger hlmBtn>Modifier le profil</button>
+          <hlm-dialog-content class="p-5 rounded-xl m-4 w-11/12" *brnDialogContent="let ctx">
+            <hlm-dialog-header>
+              <h3 hlmDialogTitle>Modifier le profil</h3>
+              <p class="text-xs md:text-base" hlmDialogDescription>Apportez des modifications à votre profil ici. Cliquez sur "Enregistrer" lorsque
+                vous avez terminé.</p>
+            </hlm-dialog-header>
+            <form [formGroup]="updateUserForm" class="py-1 grid gap-1 md:py-4 md:gap-4" (ngSubmit)="updateUser(ctx)">
+              <div class="items-center grid grid-cols-4 gap-4 *:text-xs *:md:text-base">
+                <label hlmLabel for="username" class="text-left font-bold">Username</label>
+                <input formControlName="username" hlmInput id="username" [value]="connectedUser()?.comptePrincipal?.username" class="col-span-3 m-2 shadow-lg border rounded-full px-2"/>
               </div>
-              <hlm-dialog-footer>
-                <button class="rounded-full text-xs h-auto" hlmBtn type="submit">Enregistrer</button>
-              </hlm-dialog-footer>
-            </hlm-dialog-content>
+
+              <div class="items-center grid grid-cols-4 gap-4 *:text-xs *:md:text-base">
+                <label hlmLabel for="lastname" class="text-left font-bold">Nom</label>
+                <input formControlName="name" hlmInput id="lastname" [value]="connectedUser()?.name" class="col-span-3 m-2 shadow-lg border rounded-full px-2"/>
+              </div>
+
+              <div class="items-center grid grid-cols-4 gap-4 *:text-xs *:md:text-base">
+                <label hlmLabel for="firstname" class="text-left font-bold">Prénom</label>
+                <input formControlName="firstName" hlmInput id="firstname" [value]="connectedUser()?.firstName" class="col-span-3 m-2 shadow-lg border rounded-full px-2"/>
+              </div>
+
+              <div class="items-center grid grid-cols-4 gap-4 *:text-xs *:md:text-base">
+                <label hlmLabel for="number" class="text-left font-bold">Numéro national</label>
+                <input formControlName="numeroNational" hlmInput id="number" [value]="connectedUser()?.numeroNational" class="col-span-3 m-2 shadow-lg border rounded-full px-2"/>
+              </div>
+
+              <div class="items-center grid grid-cols-4 gap-4 *:text-xs *:md:text-base">
+                <label hlmLabel for="phone" class="text-left font-bold">Téléphone</label>
+                <input formControlName="telephone" hlmInput id="phone" [value]="connectedUser()?.telephone" class="col-span-3 m-2 shadow-lg border rounded-full px-2"/>
+              </div>
+
+              <div class="items-center grid grid-cols-4 gap-4 *:text-xs *:md:text-base">
+                <label hlmLabel for="email" class="text-left font-bold">E-mail</label>
+                <input formControlName="email" hlmInput id="email" [value]="connectedUser()?.email" class="col-span-3 m-2 shadow-lg border rounded-full px-2"/>
+              </div>
+
+              <div class="items-center grid grid-cols-4 gap-4 *:text-xs *:md:text-base">
+                <label hlmLabel for="number" class="text-left font-bold">Compte bancaire</label>
+                <input formControlName="iban" hlmInput id="number" [value]="connectedUser()?.iban" class="col-span-3 m-2 shadow-lg border rounded-full px-2"/>
+              </div>
+
+              <div class="items-center grid grid-cols-4 gap-4 *:text-xs *:md:text-base">
+                <label hlmLabel for="address" class="text-left font-bold">Adresse</label>
+                <input formControlName="address" hlmInput id="address" [value]="connectedUser()?.address" class="col-span-3 m-2 shadow-lg border rounded-full px-2"/>
+              </div>
+              <button class="rounded-full text-xs md:text-base" hlmBtn type="submit">Enregistrer</button>
+
+            </form>
+
+          </hlm-dialog-content>
+          <button class="rounded-full text-xs w-full flex md:hidden md:text-base" id="edit-profile" brnDialogTrigger hlmBtn>Modifier le profil</button>
         </hlm-dialog>
       </div>
     </div>
-      
-</div>    
+
+
+    <div class="p-5 flex flex-col gap-2">
+      <div class="flex">
+        <p class="font-bold text-[9px] md:text-sm w-28 md:w-56">Adresse</p>
+        @if (!connectedUser()?.address) {
+          <p class="text-[9px] md:text-sm text-red-500">Aucune adresse enregistrer cliquer sur le bouton modifier le
+            profil afin d'en définir une</p>
+        }
+        <p class="text-[9px] md:text-sm">{{ connectedUser()?.address }}</p>
+      </div>
+
+      <div class="flex">
+        <p class="font-bold text-[9px] md:text-sm w-28 md:w-56">Numéro de téléphone</p>
+        <p class="text-[9px] md:text-sm">{{ connectedUser()?.telephone }}</p>
+      </div>
+
+      <div class="flex">
+        <p class="font-bold text-[9px] md:text-sm w-28 md:w-56">Numéro national</p>
+        <p class="text-[9px] md:text-sm">{{ connectedUser()?.numeroNational }}</p>
+      </div>
+
+      <div class="flex">
+        <p class="font-bold text-[9px] md:text-sm w-28 md:w-56">Compte bancaire</p>
+        <p class="text-[9px] md:text-sm">{{ connectedUser()?.iban }}</p>
+      </div>
+    </div>
+  </div>
+
+</div>
 

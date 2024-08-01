@@ -5,6 +5,7 @@ import {environments} from '../../../environments/environments';
 import {SignInDto} from '../dtos/sign-in.dto';
 import {LoggedUser} from '../entities/logged-user.entity';
 import {UserEntity} from "../entities/user.entity";
+import {UpdateUserDto} from "../dtos/update-user.dto";
 
 @Injectable({
   providedIn: 'root'
@@ -29,5 +30,20 @@ export class UsersService {
     return this.httpClient.get<UserEntity>(`${environments.API_URL}/users`)
   }
 
-  
+  update(updteUserDto: UpdateUserDto) {
+    return this.httpClient.patch<UserEntity>(`${environments.API_URL}/users`, updteUserDto)
+  }
+
+
+  getAllUsersGroup(id: number) {
+    return this.httpClient.get<UserEntity[]>(`${environments.API_URL}/users/groups`, {params: {id}})
+  }
+
+  findAll() {
+    return this.httpClient.get<UserEntity[]>(`${environments.API_URL}/users/all`)
+  }
+
+  getProfilePicture(filename: string) {
+    return this.httpClient.get(`${environments.API_URL}/users/${filename}`, {responseType: "blob"})
+  }
 }

@@ -10,20 +10,27 @@
       <p> {{ projet()?.username }}</p>
     </div>
 
-    <div class="grid justify-between md:justify-center">
+    <div class="grid justify-between md:justify-start">
       <div class="grid grid-cols-2 gap-2 md:gap-4 w-full">
-        <button
-          class="rounded-full w-full text-[10px] font-semibold h-auto  bg-gray-sonar text-black md:flex md:justify-center md:items-center md:gap-2 md:min-w-4/5 md:px-10 md:text-lg "
-          hlmBtn>
-          Gérer les membres
-          <hlm-icon class="hidden md:block md:text-center w-4"  name="lucideChevronRight"/>
-        </button>
+        @if(typeOfProjet() === "GROUP") {
+          <a
+            routerLink="membership"
+            [queryParams]="{ typeOfProjet: typeOfProjet()}"
+            class="rounded-full w-full text-[10px] font-semibold h-auto  bg-gray-sonar text-black md:flex md:justify-center md:items-center md:gap-2 md:min-w-4/5 md:px-10 md:text-lg "
+            hlmBtn>
+            Gérer les membres
+            <hlm-icon class="hidden md:block md:text-center w-4"  name="lucideChevronRight"/>
+          </a>
+        }
+
         <button
           class="rounded-full w-full text-[10px] font-semibold h-auto  bg-gray-sonar text-black md:flex md:justify-center md:items-center md:gap-2 md:min-w-4/5 md:px-10 md:text-lg"
           hlmBtn>Agenda du projet
           <hlm-icon class="hidden md:block md:text-center w-4"  name="lucideChevronRight"/>
         </button>
         <button
+          routerLink="project-account"
+          [queryParams]="{ typeOfProjet: typeOfProjet()}"
           class="rounded-full w-full text-[10px] font-semibold h-auto  bg-gray-sonar text-black md:flex md:justify-center md:items-center md:gap-2 md:min-w-4/5 md:px-10 md:text-lg"
           hlmBtn>Compte du projet
           <hlm-icon class="hidden md:block md:text-center w-4"  name="lucideChevronRight"/>

@@ -17,5 +17,15 @@ export default [
     loadComponent: () => import('./facturation/new-quote/new-quote.component').then((m) => m.NewQuoteComponent),
     canActivate: [authGuard]
   },
+  {
+    path: ":id/membership",
+    loadComponent: () => import('./membership/membership.component').then((m) => m.MembershipComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: ":id/project-account",
+    loadComponent: () => import('./project-account/project-account.component').then((m) => m.ProjectAccountComponent),
+    canActivate: [authGuard]
+  },
 
 ] as Routes

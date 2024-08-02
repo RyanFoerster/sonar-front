@@ -40,12 +40,7 @@
       "@spartan-ng/ui-badge-helm": [
         "./components/ui-badge-helm/src/index.ts"
       ],
-      "@spartan-ng/ui-avatar-helm": [
-        ".\\components/ui-avatar-helm/src/index.ts"
-      ],
-      "@spartan-ng/ui-badge-helm": [
-        ".\\components/ui-badge-helm/src/index.ts"
-      ],
+
       "@spartan-ng/ui-button-helm": [
         "./components/ui-button-helm/src/index.ts"
       ],
@@ -55,12 +50,7 @@
       "@spartan-ng/ui-command-helm": [
         "./components/ui-command-helm/src/index.ts"
       ],
-      "@spartan-ng/ui-card-helm": [
-        ".\\components/ui-card-helm/src/index.ts"
-      ],
-      "@spartan-ng/ui-command-helm": [
-        ".\\components/ui-command-helm/src/index.ts"
-      ],
+
       "@spartan-ng/ui-dialog-helm": [
         "./components/ui-dialog-helm/src/index.ts"
       ],
@@ -79,15 +69,7 @@
       "@spartan-ng/ui-popover-helm": [
         "./components/ui-popover-helm/src/index.ts"
       ],
-      "@spartan-ng/ui-progress-helm": [
-        "./components/ui-progress-helm/src/index.ts"
-      ],
-      "@spartan-ng/ui-radiogroup-helm": [
-        "./components/ui-radiogroup-helm/src/index.ts"
-      ],
-      "@spartan-ng/ui-scrollarea-helm": [
-        "./components/ui-scrollarea-helm/src/index.ts"
-      ],
+
       "@spartan-ng/ui-progress-helm": [
         ".\\components/ui-progress-helm/src/index.ts"
       ],
@@ -112,27 +94,14 @@
       "@spartan-ng/ui-switch-helm": [
         "./components/ui-switch-helm/src/index.ts"
       ],
-      "@spartan-ng/ui-sheet-helm": [
-        ".\\components/ui-sheet-helm/src/index.ts"
-      ],
-      "@spartan-ng/ui-skeleton-helm": [
-        ".\\components/ui-skeleton-helm/src/index.ts"
-      ],
-      "@spartan-ng/ui-spinner-helm": [
-        ".\\components/ui-spinner-helm/src/index.ts"
-      ],
-      "@spartan-ng/ui-switch-helm": [
-        ".\\components/ui-switch-helm/src/index.ts"
-      ],
+
       "@spartan-ng/ui-tabs-helm": [
         "./components/ui-tabs-helm/src/index.ts"
       ],
       "@spartan-ng/ui-toggle-helm": [
         "./components/ui-toggle-helm/src/index.ts"
       ],
-      "@spartan-ng/ui-toggle-helm": [
-        ".\\components/ui-toggle-helm/src/index.ts"
-      ],
+
       "@spartan-ng/ui-typography-helm": [
         "./components/ui-typography-helm/src/index.ts"
       ],
@@ -142,9 +111,7 @@
       "@spartan-ng/ui-hovercard-helm": [
         "./components/ui-hovercard-helm/src/index.ts"
       ],
-      "@spartan-ng/ui-hovercard-helm": [
-        ".\\components/ui-hovercard-helm/src/index.ts"
-      ],
+
       "@spartan-ng/ui-checkbox-helm": [
         "./components/ui-checkbox-helm/src/index.ts"
       ],
@@ -154,9 +121,7 @@
       "@spartan-ng/ui-pagination-helm": [
         "./components/ui-pagination-helm/src/index.ts"
       ],
-      "@spartan-ng/ui-pagination-helm": [
-        ".\\components/ui-pagination-helm/src/index.ts"
-      ],
+
       "@spartan-ng/ui-carousel-helm": [
         "./components/ui-carousel-helm/src/index.ts"
       ],
@@ -166,9 +131,7 @@
       "@spartan-ng/ui-sonner-helm": [
         "./components/ui-sonner-helm/src/index.ts"
       ],
-      "@spartan-ng/ui-sonner-helm": [
-        ".\\components/ui-sonner-helm/src/index.ts"
-      ],
+
       "@spartan-ng/ui-helm-helm": [
         "./components/ui-helm-helm/src/index.ts"
       ]

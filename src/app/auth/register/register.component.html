@@ -4,7 +4,7 @@
     <p class="text-sm md:text-xl">
       Entrez votre e-mail et votre mot de passe pour vous connecter.
     </p>
-  
+
 
   <form [formGroup]="registerForm" class="flex flex-col justify-center mx-auto w-full gap-3 md:gap-4" (ngSubmit)="register()">
     <label class="w-full text-xs md:text-lg" hlmLabel
@@ -76,6 +76,17 @@
         hlmInput
         type="text"
         placeholder="+32 2 374 XX XX"
+      />
+    </label>
+
+    <label class="w-full text-xs md:text-lg" hlmLabel
+    >Adresse
+      <input
+        formControlName="address"
+        class="rounded-full w-full h-auto text-xs md:text-lg"
+        hlmInput
+        type="text"
+        placeholder="Place des Arts 1, 4020 Liège"
       />
     </label>
 

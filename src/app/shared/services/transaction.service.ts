@@ -23,6 +23,13 @@ export class TransactionService {
 
   getSenderPrincipalTransactionById(id: number) {
     return this.httpClient.get<TransactionEntity[]>(`${environments.API_URL}/transaction/sender-principal/${id}`)
+  }
 
+  getRecipientGroupTransactionById(id: number) {
+    return this.httpClient.get<TransactionEntity[]>(`${environments.API_URL}/transaction/recipient-group/${id}`)
+  }
+
+  getSenderGroupTransactionById(id: number) {
+    return this.httpClient.get<TransactionEntity[]>(`${environments.API_URL}/transaction/sender-group/${id}`)
   }
 }

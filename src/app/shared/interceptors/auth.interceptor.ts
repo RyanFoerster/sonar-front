@@ -17,20 +17,22 @@ export function authInterceptor(req: HttpRequest<unknown>, next: HttpHandlerFn) 
   return next(req).pipe(
     catchError(error => {
       if (error.status === 401) {
-        return authService.refreshToken().pipe(
-          switchMap(tokens => {
-            const newAuthToken = tokens.access_token;
-            const newHeaders = new HttpHeaders().set('Authorization', `Bearer ${newAuthToken}`);
-            const newReq = req.clone({headers: newHeaders});
-            return next(newReq);
-          }),
-          catchError( err => {
-            // Si le rafraîchissement échoue, déconnectez l'utilisateur
-            authService.removeToken();
-            router.navigate(['/login']);
-            return throwError(err);
-          })
-        );
+        if (authService.getToken() !== null && authService.getRefreshToken() !== null) {
+          return authService.refreshToken().pipe(
+            switchMap(tokens => {
+              const newAuthToken = tokens.access_token;
+              const newHeaders = new HttpHeaders().set('Authorization', `Bearer ${newAuthToken}`);
+              const newReq = req.clone({headers: newHeaders});
+              return next(newReq);
+            }),
+            catchError(err => {
+              // Si le rafraîchissement échoue, déconnectez l'utilisateur
+              authService.removeToken();
+              router.navigate(['/login']);
+              return throwError(err);
+            })
+          );
+        }
       }
       return throwError(error);
     })

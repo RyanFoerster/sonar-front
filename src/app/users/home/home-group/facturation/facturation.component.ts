@@ -34,6 +34,7 @@ import {
   HlmAlertDialogTitleDirective,
 } from '@spartan-ng/ui-alertdialog-helm';
 import {CompteGroupeEntity} from "../../../../shared/entities/compte-groupe.entity";
+import {AuthService} from "../../../../shared/services/auth.service";
 
 @Component({
   selector: 'app-facturation',
@@ -72,11 +73,14 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
 
   private usersService: UsersService = inject(UsersService);
   private invoiceService: InvoiceService = inject(InvoiceService);
+  private authService: AuthService = inject(AuthService)
 
   id = input<number>()
   typeOfProjet = input<string>()
   protected connectedUser = signal<UserEntity | null>(null);
   protected groupAccount = signal<CompteGroupeEntity | undefined>(undefined)
+
+
 
   async ngAfterViewInit() {
     await this.getConnectedUser()

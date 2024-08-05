@@ -7,7 +7,9 @@
       <div class="gap-2 justify-center items-center hidden md:flex">
         <hlm-menu-bar class="w-fit border-none">
             <a routerLink="/home" hlmMenuBarItem >Accueil</a>
+          @if(connectedUser()?.role === "ADMIN") {
             <a hlmMenuBarItem [brnMenuTriggerFor]="admin">Admin</a>
+          }
         </hlm-menu-bar>
 
         <hlm-icon size='sm' name="lucideBell" />
@@ -32,18 +34,18 @@
 
   <ng-template #admin>
     <hlm-menu variant="menubar" class="w-64 flex flex-col p-0 items-center justify-start">
-      <button class="" hlmMenuItemRadio>
+      <a routerLink="user-validation" class="" hlmMenuItemRadio>
         <hlm-menu-item-radio />
         Validation utilisateur
-      </button>
-      <button hlmMenuItemRadio>
+      </a>
+      <a routerLink="sepa-validation" hlmMenuItemRadio>
         <hlm-menu-item-radio />
         Validation virement SEPA
-      </button>
-      <button hlmMenuItemRadio>
+      </a>
+      <a routerLink="creating-new-users" hlmMenuItemRadio>
         <hlm-menu-item-radio />
         Création nouveau membre
-      </button>
+      </a>
       <button hlmMenuItemRadio>
         <hlm-menu-item-radio />
         Rendez-vous Visio

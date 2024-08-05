@@ -1,0 +1,126 @@
+<form [formGroup]="registerForm" class="flex flex-col justify-center mx-auto w-3/5 gap-3 md:gap-4"
+      (ngSubmit)="register()">
+  <h1 class="text-lg text-black font-bold md:text-3xl">Nouvel utilisateur</h1>
+
+  <p class="text-xs md:text-lg">
+    Entrez les données du nouvel utilisateur pour l'inscrire sur la platerforme Sonar Artists.
+  </p>
+
+  <label class="w-full text-xs md:text-lg" hlmLabel
+  >Email
+    <input
+      formControlName="email"
+      class="rounded-full w-full h-auto text-xs md:text-lg"
+      hlmInput
+      type="email"
+      placeholder="exemple@exemple.be"
+    />
+  </label>
+
+  <label class="w-full text-xs md:text-lg" hlmLabel
+  >Nom
+    <input
+      formControlName="name"
+      class="rounded-full w-full h-auto text-xs md:text-lg"
+      hlmInput
+      type="text"
+      placeholder="Dupont"
+    />
+  </label>
+
+  <label class="w-full text-xs md:text-lg" hlmLabel
+  >Prénom
+    <input
+      formControlName="firstName"
+      class="rounded-full w-full h-auto text-xs md:text-lg"
+      hlmInput
+      type="text"
+      placeholder="Jacques"
+    />
+  </label>
+
+  <label class="w-full text-xs md:text-lg" hlmLabel
+  >Projet
+    <input
+      formControlName="username"
+      class="rounded-full w-full h-auto text-xs md:text-lg"
+      hlmInput
+      type="text"
+      placeholder="Jacques Dupont"
+    />
+  </label>
+
+  <label class="w-full text-xs md:text-lg" hlmLabel
+  >Numéro National
+    <input
+      formControlName="numeroNational"
+      class="rounded-full w-full h-auto text-xs md:text-lg"
+      hlmInput
+      type="text"
+      placeholder="42.01.22.051-81"
+    />
+  </label>
+
+  <label class="w-full text-xs md:text-lg" hlmLabel
+  >Téléphone
+    <input
+      formControlName="telephone"
+      class="rounded-full w-full h-auto text-xs md:text-lg"
+      hlmInput
+      type="text"
+      placeholder="+32 2 374 XX XX"
+    />
+  </label>
+
+  <label class="w-full text-xs md:text-lg" hlmLabel
+  >Adresse
+    <input
+      formControlName="address"
+      class="rounded-full w-full h-auto text-xs md:text-lg"
+      hlmInput
+      type="text"
+      placeholder="Place des Arts 1, 4020 Liège"
+    />
+  </label>
+
+  <label class="w-full text-xs md:text-lg" hlmLabel
+  >Numéro de compte bancaire
+    <input
+      formControlName="iban"
+      class="rounded-full w-full h-auto text-xs md:text-lg"
+      hlmInput
+      type="text"
+      placeholder="BE68 5390 0754 7034"
+    />
+  </label>
+
+  <label class="w-full text-xs md:text-lg" hlmLabel
+  >Mot de passe
+    <input
+      formControlName="password"
+      class="rounded-full w-full h-auto text-xs md:text-lg"
+      hlmInput
+      type="password"
+      placeholder="**********"
+    />
+  </label>
+
+  <label class="w-full text-xs md:text-lg" hlmLabel
+  >Confirmer le mot de passe
+    <input
+      formControlName="confirmPassword"
+      class="rounded-full w-full h-auto text-xs md:text-lg"
+      hlmInput
+      type="password"
+      placeholder="**********"
+    />
+  </label>
+
+  <button
+    type="submit"
+    class="rounded-full cursor-pointer px-6 w-full hover:bg-white hover:text-black hover:border hover:border-black transition-all md:text-lg "
+    hlmBtn>
+    Inscription
+  </button>
+</form>
+<hlm-toaster />

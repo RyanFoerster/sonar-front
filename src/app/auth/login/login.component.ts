@@ -51,6 +51,7 @@ export class LoginComponent {
         tap((data) => {
           console.log(data)
           this.authService.saveToken(data.access_token, data.refresh_token)
+          this.authService.saveUser(data.user)
           if(data.user.isActive) {
             this.router.navigate(['/home'])
           } else {

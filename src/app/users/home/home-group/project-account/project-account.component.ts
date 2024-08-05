@@ -181,7 +181,29 @@ export class ProjectAccountComponent implements AfterViewInit{
           }
         );
     } else if(this.typeOfProjet() === "GROUP") {
-      this.groupAccountService.getGroupById(+this.id()!).subscribe(data => this.accountGroup.set(data))
+      this.groupAccountService.getGroupById(+this.id()!)
+        .pipe(
+          switchMap(data => {
+            this.accountGroup.set(data);
+
+            return forkJoin({
+              recipientTransactions: this.transactionService.getRecipientGroupTransactionById(this.accountGroup()?.id!),
+              senderTransactions: this.transactionService.getSenderGroupTransactionById(this.accountGroup()?.id!)
+            });
+          })
+        )
+        .subscribe(
+          ({ recipientTransactions, senderTransactions }) => {
+            console.log(recipientTransactions)
+            console.log(senderTransactions)
+            this.transactionRecipient.set(recipientTransactions);
+
+            this.transactionSender.set(senderTransactions);
+          },
+          error => {
+            console.error('Erreur lors de la récupération des données :', error);
+          }
+        );
 
     } else {
       this.router.navigate(['/home'])

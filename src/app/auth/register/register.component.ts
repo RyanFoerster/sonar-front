@@ -65,6 +65,7 @@ export class RegisterComponent {
         ],
       ],
       telephone: ['', [Validators.required]],
+      address: ['', [Validators.required]],
       iban: ['', [Validators.required]],
     });
   }
@@ -82,8 +83,9 @@ export class RegisterComponent {
         firstName: this.firstName,
         numeroNational: this.numeroNational,
         telephone: this.telephone,
+        address: this.address,
         iban: this.iban
-      } 
+      }
 
       return this.usersService.signUp(user).pipe(
         tap((data) => console.log(data))
@@ -125,6 +127,10 @@ export class RegisterComponent {
 
   get telephone() {
     return this.registerForm.controls['telephone'].value
+  }
+
+  get address() {
+    return this.registerForm.controls['address'].value
   }
 
   get iban() {

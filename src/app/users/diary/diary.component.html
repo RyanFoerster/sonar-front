@@ -1,0 +1,1004 @@
+<div class="xl:hidden">
+    <p class="font-bold text-xl px-5 mb-1">Agenda</p>
+    <div class="flex flex-col px-5 gap-5">
+        <div class="bg-gray-sonar w-full rounded-3xl flex flex-col items-center p-5 gap-5">
+            <div class="w-full">
+                <p class="font-bold px-2">Listes des évènements</p>
+                <div class="bg-white w-full rounded-xl flex flex-col h-full gap-2 p-2">
+
+                    <div class="flex gap-2 justify-center">
+                        <button class="rounded-full w-full text-[8px] h-auto" hlmBtn>À venir</button>
+                        <button class="rounded-full w-full text-[8px] h-auto" hlmBtn>Passé(s)</button>
+                        <button class="rounded-full w-full text-[8px] h-auto" hlmBtn>Masqué(s)</button>
+                    </div>
+    
+                    <a class="pb-2 text-[10px]">Concert de la troupe zouzou</a>
+                    <a class="pb-2 text-[10px]">Concert de la troupe zouzou</a>
+                    <a class="pb-2 text-[10px]">Concert de la troupe zouzou</a>
+                    <a class="pb-2 text-[10px]">Concert de la troupe zouzou</a>
+                    <a class="pb-2 text-[10px]">Concert de la troupe zouzou</a>
+                </div>
+            </div>
+
+            <hlm-dialog class="w-full">
+                <button class="rounded-full w-full text-[10px] h-auto" id="edit-profile" brnDialogTrigger hlmBtn>Créer un nouvel évènement</button>
+                <hlm-dialog-content class="w-80 rounded-xl" *brnDialogContent="let ctx">
+                  <hlm-dialog-header>
+                    <h3 hlmDialogTitle>Nouvel évènement</h3>
+                    <p class="text-[10px]" hlmDialogDescription>Créez votre nouvel événement ici. Cliquez sur “Créer” lorsque vous avez terminé.</p>
+                  </hlm-dialog-header>
+                  <div class="py-2 grid gap-4">
+                    <div class="items-center grid grid-cols-4 gap-4">
+                        <label class="w-60 text-[10px]" hlmLabel>Nom de l'évènement
+                            <input class='w-60 text-[10px] rounded-full h-auto' hlmInput type='email' placeholder='Le concert des zouzou'/>
+                        </label>
+                    </div>
+
+                    <div class="items-center grid grid-cols-4 gap-4">
+                        <label class="text-[10px]" hlmLabel>Description
+                            <textarea class='w-60 h-36 text-[10px] rounded-xl' hlmInput type='email' placeholder='Concert à ciel ouvert ouvert avec les artiste de la troupe des lions'></textarea>
+                        </label>
+                    </div>
+
+                    <div class="items-center grid grid-cols-4 gap-4">
+                        <label class="text-[10px]" hlmLabel>Adresse
+                            <input class='w-60 text-[10px] rounded-full h-auto' hlmInput type='email' placeholder='Place des arts 1, 4020 Liège'/>
+                        </label>
+                    </div>
+
+                    <div class="items-center grid grid-cols-4 gap-4">
+                        <label class="text-[10px]" hlmLabel>Organisateur(s)
+                            <brn-select class="inline-block" placeholder="Selectionner un/des organisateurs" [multiple]="true">
+                                <hlm-select-trigger class="w-60 text-[10px] rounded-full h-auto">
+                                  <hlm-select-value />
+                                </hlm-select-trigger>
+                                <hlm-select-content>
+                                  <hlm-option class="text-[10px]" value="Apples">Ryan Foerster</hlm-option>
+                                  <hlm-option class="text-[10px]"  value="Bananas">Pierre Godfrin</hlm-option>
+                                  <hlm-option class="text-[10px]"  value="Pears">Manon Aussems</hlm-option>
+                                  <hlm-option class="text-[10px]"  value="Strawberries">Kevin Igo</hlm-option>
+                                </hlm-select-content>
+                              </brn-select>
+                        </label>
+                    </div>
+
+                    <div class="items-center grid grid-cols-4 gap-4">
+                        <label class="text-[10px]" hlmLabel>Invitation(s)
+                            <brn-select class="inline-block" placeholder="Selectionner un/des invité(s)" [multiple]="true">
+                                <hlm-select-trigger class="w-60 text-[10px] rounded-full h-auto">
+                                  <hlm-select-value />
+                                </hlm-select-trigger>
+                                <hlm-select-content>
+                                  <hlm-option class="text-[10px]"  value="Apples">Ryan Foerster</hlm-option>
+                                  <hlm-option class="text-[10px]"  value="Bananas">Pierre Godfrin</hlm-option>
+                                  <hlm-option class="text-[10px]"  value="Pears">Manon Aussems</hlm-option>
+                                  <hlm-option class="text-[10px]"  value="Strawberries">Kevin Igo</hlm-option>
+                                </hlm-select-content>
+                              </brn-select>
+                        </label>
+                    </div>
+
+                  </div>
+                  <hlm-dialog-footer>
+                    <button class="rounded-full text-[10px] h-auto " hlmBtn type="submit">Créer</button>
+                  </hlm-dialog-footer>
+                </hlm-dialog-content>
+            </hlm-dialog>
+        </div>
+
+        <div class="flex flex-col gap-5 w-full">
+            <div class="flex gap-5 justify-between">
+                <p class="flex items-center text-[10px]">Confirmer l'évènement/le devis</p>
+                <div class="flex gap-3">
+                    <button class="rounded-full w-auto bg-red-600 text-[10px] h-auto" hlmBtn>Non</button>
+                    <button class="rounded-full w-auto text-[10px] h-auto" hlmBtn>Oui</button>
+                </div>
+            </div>
+            <div class="bg-gray-sonar rounded-3xl flex flex-col p-5 gap-4">
+    
+                <div class="background-div min-h-44 w-full md:h-60 relative overflow-hidden rounded-3xl shadow">
+                    <div class="flex w-full h-full">
+                        <p class="p-4 flex text-lg leading-none md:text-xl font-bold text-white items-end h-44">Concert de la troupe zouzou</p>
+                    </div>
+                </div>
+    
+                <div class="flex gap-3 border-b-2 border-gray-950 pb-4">
+                    <button class="rounded-full w-auto bg-red-600 text-[10px] h-auto" hlmBtn>Refuser</button>
+                    <button class="rounded-full w-auto text-[10px] h-auto" hlmBtn>Accepter</button>
+                </div>
+
+                <div class="flex gap-5 w-full">
+    
+                    <div class="flex flex-wrap gap-3">
+                        
+                            <hlm-dialog>
+                                <button class="rounded-full w-full text-[10px] h-auto" id="edit-profile" brnDialogTrigger hlmBtn>Invitation(s)</button>
+                                <hlm-dialog-content class="w-80 rounded-xl" *brnDialogContent="let ctx">
+                                  <hlm-dialog-header>
+                                    <h3 hlmDialogTitle>Nouvelle(s) invitation(s)</h3>
+                                    <p hlmDialogDescription>Inviter un/des membre(s) du groupe ici. Cliquez sur “Inviter” lorsque vous avez terminé.</p>
+                                  </hlm-dialog-header>
+                                  <div class="py-4 grid gap-4">
+                
+                                    <div class="items-center grid grid-cols-4 gap-4">
+                                        <label hlmLabel>Invitation(s)
+                                            <brn-select class="inline-block" placeholder="Selectionner un/des invité(s)" [multiple]="true">
+                                                <hlm-select-trigger class="w-60">
+                                                  <hlm-select-value />
+                                                </hlm-select-trigger>
+                                                <hlm-select-content>
+                                                  <hlm-option value="Apples">Ryan Foerster</hlm-option>
+                                                  <hlm-option value="Bananas">Pierre Godfrin</hlm-option>
+                                                  <hlm-option value="Pears">Manon Aussems</hlm-option>
+                                                  <hlm-option value="Strawberries">Kevin Igo</hlm-option>
+                                                </hlm-select-content>
+                                              </brn-select>
+                                        </label>
+                                    </div>
+                
+                                  </div>
+                                  <hlm-dialog-footer class="border-b-2 pb-5">
+                                    <button class="rounded-full text-[10px] h-auto" hlmBtn type="submit">Inviter</button>
+                                  </hlm-dialog-footer>
+        
+                                <hlm-dialog-header>
+                                    <h3 hlmDialogTitle>Inviter une personne externe</h3>
+                                    <p hlmDialogDescription>Inviter une personne externe ici. Cliquez sur “Inviter une personne externe” lorsque vous avez terminé.</p>
+                                </hlm-dialog-header>
+        
+                                <div class="py-4 grid gap-4">
+                                    <div class="items-center grid grid-cols-4 gap-4">
+                                        <label class="w-60" hlmLabel>E-mail
+                                            <input class='w-60' hlmInput type='email' placeholder='test@test.be'/>
+                                        </label>
+                                    </div>
+                                </div>
+        
+                                <hlm-dialog-footer>
+                                    <button class="rounded-full text-[10px] h-auto" hlmBtn type="submit">Inviter une personne externe</button>
+                                </hlm-dialog-footer>
+                                
+                                </hlm-dialog-content>
+                            </hlm-dialog>
+    
+                            <div>
+                                <button hlmBtn class="rounded-full w-auto text-[10px] h-auto" [brnMenuTriggerFor]="menu">Dupliquer</button>
+                              </div>
+                              <ng-template #menu>
+                                <hlm-menu class="w-full">
+                                  <hlm-menu-group>
+                                    <hlm-menu-label>Dans le même projet</hlm-menu-label>
+                          
+                                    <button hlmMenuItemCheckbox>
+                                      <hlm-menu-item-check />
+                                      <span>Avec les mêmes participants</span>
+                                    </button>
+    
+                                    <button hlmMenuItemCheckbox>
+                                        <hlm-menu-item-check />
+                                        <span>Avec des participants différents</span>
+                                      </button>
+                                  </hlm-menu-group>
+                          
+                                  <hlm-menu-separator />
+                          
+                                  <hlm-menu-label>Dans un autre projet</hlm-menu-label>
+                                  <button hlmMenuItem [brnMenuTriggerFor]="invite">
+                                    <hlm-icon name="lucideSmile" hlmMenuIcon />
+                                    <span>Choisir un projet</span>
+                                    <hlm-menu-item-sub-indicator />
+                                  </button>
+    
+                                <ng-template #invite>
+                                    <hlm-sub-menu>
+                                      <button hlmMenuItem>
+                                        <hlm-icon name="lucideMail" hlmMenuIcon />
+                                        Projet 1
+                                      </button>
+                                      <button hlmMenuItem>
+                                        <hlm-icon name="lucideMail" hlmMenuIcon />
+                                        Projet 2
+                                      </button>
+                                      <button hlmMenuItem>
+                                        <hlm-icon name="lucideMail" hlmMenuIcon />
+                                        Projet 2
+                                      </button>
+                                    </hlm-sub-menu>
+                                </ng-template> 
+                                </hlm-menu>
+                              </ng-template>
+        
+                            <hlm-dialog>
+                                <button class="rounded-full w-full text-[10px] h-auto" id="edit-profile" brnDialogTrigger hlmBtn>Modifier</button>
+                                <hlm-dialog-content class="w-80 rounded-xl" *brnDialogContent="let ctx">
+                                  <hlm-dialog-header>
+                                    <h3 hlmDialogTitle>Modifier l'évènement</h3>
+                                    <p class="text-[10px]" hlmDialogDescription>Modifier l'événement ici. Cliquez sur “Enregistrer” lorsque vous avez terminé.</p>
+                                  </hlm-dialog-header>
+                                    <div class="py-4 grid gap-4">
+                                        <div class="items-center grid grid-cols-4 gap-4">
+                                            <label class="w-60 text-[10px]" hlmLabel>Nom de l'évènement
+                                                <input class="w-60 text-[10px]" hlmInput type='email' placeholder='Le concert des zouzou'/>
+                                            </label>
+                                        </div>
+                    
+                                        <div class="items-center grid grid-cols-4 gap-4">
+                                            <label class="w-60 text-[10px]" hlmLabel>Description
+                                                <textarea class="w-60 text-[10px] h-20" hlmInput type='email' placeholder='Concert à ciel ouvert ouvert avec les artiste de la troupe des lions'></textarea>
+                                            </label>
+                                        </div>
+                    
+                                        <div class="items-center grid grid-cols-4 gap-4">
+                                            <label class="w-60 text-[10px]" hlmLabel>Adresse
+                                                <input class="w-60 text-[10px]" hlmInput type='email' placeholder='Place des arts 1, 4020 Liège'/>
+                                            </label>
+                                        </div>
+                    
+                                        <div class="items-center grid grid-cols-4 gap-4">
+                                            <label class="w-60 text-[10px]" hlmLabel>Organisateur(s)
+                                                <brn-select class="inline-block" placeholder="Selectionner un/des organisateurs" [multiple]="true">
+                                                    <hlm-select-trigger class="w-60 text-[10px]">
+                                                    <hlm-select-value />
+                                                    </hlm-select-trigger>
+                                                    <hlm-select-content>
+                                                    <hlm-option class="text-[10px]" value="Apples">Ryan Foerster</hlm-option>
+                                                    <hlm-option class="text-[10px]" value="Bananas">Pierre Godfrin</hlm-option>
+                                                    <hlm-option class="text-[10px]" value="Pears">Manon Aussems</hlm-option>
+                                                    <hlm-option class="text-[10px]" value="Strawberries">Kevin Igo</hlm-option>
+                                                    </hlm-select-content>
+                                                </brn-select>
+                                            </label>
+                                        </div>
+                                    </div>
+                                  <hlm-dialog-footer>
+                                    <button class="rounded-full text-[10px] h-auto" hlmBtn type="submit">Enregistrer</button>
+                                  </hlm-dialog-footer>
+                                </hlm-dialog-content>
+                              </hlm-dialog>
+                        
+    
+                            <hlm-dialog>
+                                <button class="rounded-full w-auto text-[10px] h-auto" id="edit-profile" brnDialogTrigger hlmBtn>Envoyer un rappel</button>
+                                <hlm-dialog-content class="w-80 rounded-xl" *brnDialogContent="let ctx">
+                                <hlm-dialog-header>
+                                    <h3  hlmDialogTitle>Rappel</h3>
+                                    <p class="text-[10px]" hlmDialogDescription>Envoyer un rappel pour que les invités répondent à leur invitation ici. Cliquez sur “Envoyer” lorsque vous avez terminé.</p>
+                                </hlm-dialog-header>
+                                <div class="py-4 grid gap-4">
+                
+                                    <div class="items-center grid grid-cols-4 gap-4">
+                                        <label class="w-60 text-[10px]" hlmLabel>Invité(s)
+                                            <brn-select class="inline-block" placeholder="Selectionner un/des invité(s)" [multiple]="true">
+                                                <hlm-select-trigger class="w-60 text-[10px]">
+                                                <hlm-select-value />
+                                                </hlm-select-trigger>
+                                                <hlm-select-content>
+                                                <hlm-option class="text-[10px]" value="Apples">Ryan Foerster</hlm-option>
+                                                <hlm-option class="text-[10px]" value="Bananas">Pierre Godfrin</hlm-option>
+                                                <hlm-option class="text-[10px]" value="Pears">Manon Aussems</hlm-option>
+                                                <hlm-option class="text-[10px]" value="Strawberries">Kevin Igo</hlm-option>
+                                                </hlm-select-content>
+                                            </brn-select>
+                                        </label>
+                                    </div>
+                
+                                </div>
+                                <hlm-dialog-footer>
+                                    <button class="rounded-full text-[10px] h-auto" hlmBtn type="submit">Envoyer</button>
+                                </hlm-dialog-footer>
+                                </hlm-dialog-content>
+                            </hlm-dialog>
+        
+                            <hlm-dialog>
+                                <button class="rounded-full w-auto text-[10px] h-auto" id="edit-profile" brnDialogTrigger hlmBtn>Rappel au(x) participant(s)</button>
+                                <hlm-dialog-content class="w-80 rounded-xl" *brnDialogContent="let ctx">
+                                <hlm-dialog-header>
+                                    <h3 hlmDialogTitle>Programmation de l'envoi</h3>
+                                    <p class="text-[10px]" hlmDialogDescription>Programmer l'envoi d'un rappel de l'évènement aux particiapnts ici. Cliquez sur “Enregistrer” lorsque vous avez terminé.</p>
+                                </hlm-dialog-header>
+                                <div class="py-4 grid gap-4">
+                
+                                    <div class="items-center grid grid-cols-4 gap-4">
+                                        <label class="w-60" hlmLabel>
+                                            <div class="card flex flex-wrap gap-3 p-fluid">
+                                                <div class="flex-auto">
+                                                    <label for="buttondisplay" class="text-[10px] font-bold block mb-2">Date</label>
+                                                    <p-calendar 
+                                                        [(ngModel)]="date2" 
+                                                        [showIcon]="true" 
+                                                        inputId="buttondisplay" 
+                                                        [showOnFocus]="false" />
+                                                </div> 
+                                                
+                                                <div class="flex-auto">
+                                                    <label for="templatedisplay" class="text-[10px] font-bold block mb-2">Heure</label>
+                                                        <p-calendar 
+                                                            [(ngModel)]="date3" 
+                                                            [iconDisplay]="'input'" 
+                                                            [showIcon]="true" 
+                                                            [timeOnly]="true" 
+                                                            inputId="templatedisplay">
+                                                                <ng-template pTemplate="inputicon" let-clickCallBack="clickCallBack">
+                                                                    <i 
+                                                                        class="pi pi-clock pointer-events-none" 
+                                                                        (click)="clickCallBack($event)"></i>
+                                                                </ng-template>
+                                                        </p-calendar>
+                                                </div>
+                                                </div>
+                                        </label>
+                                    </div>
+                
+                                </div>
+                                <hlm-dialog-footer>
+                                    <button class="rounded-full text-[10px] h-auto" hlmBtn type="submit">Enregistrer</button>
+                                </hlm-dialog-footer>
+                                </hlm-dialog-content>
+                            </hlm-dialog>
+                    </div>
+                </div>
+    
+                <div class="rounded-xl flex flex-wrap w-full h-full gap-5">
+                    <div class="bg-white w-full md:w-5/12 rounded-xl p-4">
+                        <p class="font-bold text-xs">Groupe de Médéric</p>
+                        <p class="text-[10px]">Organisateur : Manon Aussems</p>
+                        <p class="text-[10px]">09/08/2024 - 09/09/2024</p>
+                        <p class="text-[10px]">Place des arts 1, 4020 Liège</p>
+                        <p class="font-bold text-[12px]">Description</p>
+                        <p class="text-[10px]">texte de la description</p>
+                    </div>
+    
+                    <div class="bg-white w-full h-full md:w-6/12 rounded-xl p-4 flex flex-col justify-between md:flex">
+                        <p class="font-bold text-xs h-full">Fil de discussion</p>
+                        <label class="font-bold h-auto text-xs" hlmLabel> Manon Aussems
+                            <input class="rounded-full w-full h-auto text-xs" hlmInput placeholder="Ecrivez ici..." />
+                      </label>`
+                    </div>
+    
+                    <div class="bg-white w-full md:w-1/3 rounded-xl p-4 flex flex-col gap-5">
+                        <p class="font-bold text-xs">Participation(s)</p>
+                        <hlm-dialog class="">
+                            <button class="rounded-full w-full text-[10px] h-auto" id="edit-profile" brnDialogTrigger hlmBtn>Sans réponse(s)</button>
+                            <hlm-dialog-content class="w-80 rounded-xl" *brnDialogContent="let ctx">
+                              <hlm-dialog-header>
+                                <h3 hlmDialogTitle>Participation(s)</h3>
+                                <p hlmDialogDescription>Réponses des invitations à l'évènement.</p>
+                              </hlm-dialog-header>
+                              <div class="py-4 grid gap-4">
+            
+                                <div class="items-center grid grid-cols-3 gap-1">
+                                    <button class="rounded-full w-auto text-[8px] p-2 h-auto" hlmBtn>Sans réponse(s)</button>
+                                    <button class="rounded-full w-auto text-[8px] p-2 h-auto" hlmBtn>Acceptée(s)</button>
+                                    <button class="rounded-full w-auto text-[8px] p-2 h-auto" hlmBtn>Refusée(s)</button>
+                                </div>
+    
+                                <div>
+                                    <hlm-table class="w-full">
+                                        <hlm-caption class="text-[10px]">Liste des invitations sans réponses.</hlm-caption>
+                                        <hlm-trow class="flex justify-between">
+                                          <hlm-th class="w-30 text-[10px]">Prénom & Nom</hlm-th>
+                                          <hlm-th class="w-30 text-[10px]">Réponse</hlm-th>
+                                        </hlm-trow>
+                                        @for (invoice of _invoices; track invoice.invoice) {
+                                          <hlm-trow class="flex justify-between">
+                                            <hlm-td truncate class="font-medium w-30 text-[10px]">Manon Aussems</hlm-td>
+                                            <hlm-td class="w-30">
+                                                <div class="flex flex-col gap-1">
+                                                    <label class="flex items-center text-[10px]" hlmLabel>
+                                                        <hlm-checkbox class="mr-1 rounded-full w-3 h-3" />
+                                                        Acceptée
+                                                    </label>
+    
+                                                    <label class="flex items-center text-[10px]" hlmLabel>
+                                                        <hlm-checkbox class="mr-1 rounded-full w-3 h-3" />
+                                                        Refusée
+                                                    </label>
+                                                </div>
+                                            </hlm-td>
+                                          </hlm-trow>
+                                        }
+                                      </hlm-table>
+                                </div>
+                              </div>
+                            </hlm-dialog-content>
+                        </hlm-dialog>
+    
+                        <hlm-dialog>
+                            <button class="rounded-full w-full text-[10px] h-auto" id="edit-profile" brnDialogTrigger hlmBtn>Acceptée(s)</button>
+                            <hlm-dialog-content class="w-80 rounded-xl" *brnDialogContent="let ctx">
+                                <hlm-dialog-header>
+                                  <h3 hlmDialogTitle>Participation(s)</h3>
+                                  <p hlmDialogDescription>Réponses des invitations à l'évènement.</p>
+                                </hlm-dialog-header>
+                                <div class="py-4 grid gap-4">
+              
+                                  <div class="items-center grid grid-cols-3 gap-1">
+                                      <button class="rounded-full w-auto text-[8px] p-2 h-auto" hlmBtn>Sans réponse(s)</button>
+                                      <button class="rounded-full w-auto text-[8px] p-2 h-auto" hlmBtn>Acceptée(s)</button>
+                                      <button class="rounded-full w-auto text-[8px] p-2 h-auto" hlmBtn>Refusée(s)</button>
+                                  </div>
+      
+                                  <div>
+                                      <hlm-table class="w-full">
+                                          <hlm-caption class="text-[10px]">Liste des participants.</hlm-caption>
+                                          <hlm-trow class="flex justify-between">
+                                            <hlm-th class="w-30 text-[10px]">Prénom & Nom</hlm-th>
+                                            <hlm-th class="w-30 text-[10px]">Réponse</hlm-th>
+                                          </hlm-trow>
+                                          @for (invoice of _invoices; track invoice.invoice) {
+                                            <hlm-trow class="flex justify-between">
+                                              <hlm-td truncate class="font-medium w-30 text-[10px]">Manon Aussems</hlm-td>
+                                              <hlm-td class="w-30">
+                                                  <div class="flex flex-col gap-1">
+                                                      <label class="flex items-center text-[10px]" hlmLabel>
+                                                          <hlm-checkbox class="mr-1 rounded-full w-3 h-3" />
+                                                          Acceptée
+                                                      </label>
+      
+                                                      <label class="flex items-center text-[10px]" hlmLabel>
+                                                          <hlm-checkbox class="mr-1 rounded-full w-3 h-3" />
+                                                          Refusée
+                                                      </label>
+                                                  </div>
+                                              </hlm-td>
+                                            </hlm-trow>
+                                          }
+                                        </hlm-table>
+                                  </div>
+                                </div>
+                              </hlm-dialog-content>
+                        </hlm-dialog>
+    
+                        <hlm-dialog>
+                            <button class="rounded-full w-full text-[10px] bg-red-600  h-auto" id="edit-profile" brnDialogTrigger hlmBtn>Refusée(s)</button>
+                            <hlm-dialog-content class="w-80 rounded-xl" *brnDialogContent="let ctx">
+                                <hlm-dialog-header>
+                                  <h3 hlmDialogTitle>Participation(s)</h3>
+                                  <p hlmDialogDescription>Réponses des invitations à l'évènement.</p>
+                                </hlm-dialog-header>
+                                <div class="py-4 grid gap-4">
+              
+                                  <div class="items-center grid grid-cols-3 gap-1">
+                                      <button class="rounded-full w-auto text-[8px] p-2 h-auto" hlmBtn>Sans réponse(s)</button>
+                                      <button class="rounded-full w-auto text-[8px] p-2 h-auto" hlmBtn>Acceptée(s)</button>
+                                      <button class="rounded-full w-auto text-[8px] p-2 h-auto" hlmBtn>Refusée(s)</button>
+                                  </div>
+      
+                                  <div>
+                                      <hlm-table class="w-full">
+                                          <hlm-caption class="text-[10px]">Liste des invitations refusées.</hlm-caption>
+                                          <hlm-trow class="flex justify-between">
+                                            <hlm-th class="w-30 text-[10px]">Prénom & Nom</hlm-th>
+                                            <hlm-th class="w-30 text-[10px]">Réponse</hlm-th>
+                                          </hlm-trow>
+                                          @for (invoice of _invoices; track invoice.invoice) {
+                                            <hlm-trow class="flex justify-between">
+                                              <hlm-td truncate class="font-medium w-30 text-[10px]">Manon Aussems</hlm-td>
+                                              <hlm-td class="w-30">
+                                                  <div class="flex flex-col gap-1">
+                                                      <label class="flex items-center text-[10px]" hlmLabel>
+                                                          <hlm-checkbox class="mr-1 rounded-full w-3 h-3" />
+                                                          Acceptée
+                                                      </label>
+      
+                                                      <label class="flex items-center text-[10px]" hlmLabel>
+                                                          <hlm-checkbox class="mr-1 rounded-full w-3 h-3" />
+                                                          Refusée
+                                                      </label>
+                                                  </div>
+                                              </hlm-td>
+                                            </hlm-trow>
+                                          }
+                                        </hlm-table>
+                                  </div>
+                                </div>
+                              </hlm-dialog-content>
+                        </hlm-dialog>
+                    </div>
+                </div>
+            </div>
+        </div>
+       
+    </div>
+</div>
+
+<!-- Responsive ordinateur -->
+<div class="hidden xl:block">
+    <p class="font-bold text-3xl px-12 mb-5">Agenda</p>
+    <div class="flex px-5 gap-5">
+        <div class="bg-gray-sonar w-1/4 rounded-3xl flex flex-col items-center p-5 gap-5">
+            <hlm-dialog class="w-full">
+                <button class="rounded-full w-full text-[10px] h-auto" id="edit-profile" brnDialogTrigger hlmBtn>Créer un nouvel évènement</button>
+                <hlm-dialog-content class="sm:max-w-[425px]" *brnDialogContent="let ctx">
+                  <hlm-dialog-header>
+                    <h3 hlmDialogTitle>Nouvel évènement</h3>
+                    <p hlmDialogDescription>Créez votre nouvel événement ici. Cliquez sur “Créer” lorsque vous avez terminé.</p>
+                  </hlm-dialog-header>
+                  <div class="py-4 grid gap-4">
+                    <div class="items-center grid grid-cols-4 gap-4">
+                        <label class="w-80" hlmLabel>Nom de l'évènement
+                            <input class='w-80' hlmInput type='email' placeholder='Le concert des zouzou'/>
+                        </label>
+                    </div>
+
+                    <div class="items-center grid grid-cols-4 gap-4">
+                        <label hlmLabel>Description
+                            <textarea class='w-80 h-40' hlmInput type='email' placeholder='Concert à ciel ouvert ouvert avec les artiste de la troupe des lions'></textarea>
+                        </label>
+                    </div>
+
+                    <div class="items-center grid grid-cols-4 gap-4">
+                        <label hlmLabel>Adresse
+                            <input class='w-80' hlmInput type='email' placeholder='Place des arts 1, 4020 Liège'/>
+                        </label>
+                    </div>
+
+                    <div class="items-center grid grid-cols-4 gap-4">
+                        <label hlmLabel>Organisateur(s)
+                            <brn-select class="inline-block" placeholder="Selectionner un/des organisateurs" [multiple]="true">
+                                <hlm-select-trigger class="w-80">
+                                  <hlm-select-value />
+                                </hlm-select-trigger>
+                                <hlm-select-content>
+                                  <hlm-option value="Apples">Ryan Foerster</hlm-option>
+                                  <hlm-option value="Bananas">Pierre Godfrin</hlm-option>
+                                  <hlm-option value="Pears">Manon Aussems</hlm-option>
+                                  <hlm-option value="Strawberries">Kevin Igo</hlm-option>
+                                </hlm-select-content>
+                              </brn-select>
+                        </label>
+                    </div>
+
+                    <div class="items-center grid grid-cols-4 gap-4">
+                        <label hlmLabel>Invitation(s)
+                            <brn-select class="inline-block" placeholder="Selectionner un/des invité(s)" [multiple]="true">
+                                <hlm-select-trigger class="w-80">
+                                  <hlm-select-value />
+                                </hlm-select-trigger>
+                                <hlm-select-content>
+                                  <hlm-option value="Apples">Ryan Foerster</hlm-option>
+                                  <hlm-option value="Bananas">Pierre Godfrin</hlm-option>
+                                  <hlm-option value="Pears">Manon Aussems</hlm-option>
+                                  <hlm-option value="Strawberries">Kevin Igo</hlm-option>
+                                </hlm-select-content>
+                              </brn-select>
+                        </label>
+                    </div>
+
+                  </div>
+                  <hlm-dialog-footer>
+                    <button class="rounded-full text-[10px] h-auto" hlmBtn type="submit">Créer</button>
+                  </hlm-dialog-footer>
+                </hlm-dialog-content>
+            </hlm-dialog>
+
+            <div class="bg-white w-full rounded-xl flex flex-col h-full gap-4">
+                <p class="font-bold px-4 pt-2">Listes des évènements</p>
+
+                <div class="flex gap-2 justify-center">
+                    <button class="rounded-full w-auto text-[10px] h-auto" hlmBtn>À venir</button>
+                    <button class="rounded-full w-auto text-[10px] h-auto" hlmBtn>Passé(s)</button>
+                    <button class="rounded-full w-auto text-[10px] h-auto" hlmBtn>Masqué(s)</button>
+                </div>
+
+                <a class="px-4 pb-2 text-[10px]">Concert de la troupe zouzou</a>
+                <a class="px-4 pb-2 text-[10px]">Concert de la troupe zouzou</a>
+                <a class="px-4 pb-2 text-[10px]">Concert de la troupe zouzou</a>
+                <a class="px-4 pb-2 text-[10px]">Concert de la troupe zouzou</a>
+                <a class="px-4 pb-2 text-[10px]">Concert de la troupe zouzou</a>
+            </div>
+        </div>
+
+        <div class="flex flex-col gap-5 w-3/4">
+            <div class="flex gap-5 justify-end">
+                <p class="flex items-center text-xl">Confirmer l'évènement/le devis</p>
+                <div class="flex gap-3">
+                    <button class="rounded-full w-auto text-[10px] h-auto" hlmBtn>Oui</button>
+                    <button class="rounded-full w-auto bg-red-600 text-[10px] h-auto" hlmBtn>Non</button>
+                </div>
+            </div>
+            <div class="bg-gray-sonar rounded-3xl flex flex-col p-5 gap-5">
+    
+                <div class="background-div min-h-44 w-full md:h-60 relative overflow-hidden rounded-3xl shadow">
+                    <div class="flex w-full h-full">
+                        <p class="p-4 flex text-lg leading-none md:text-xl font-bold text-white self-end">Concert de la troupe zouzou</p>
+                    </div>
+                </div>
+    
+                <div class="flex justify-between gap-5 w-full">
+                    <div class="flex gap-3">
+                        <button class="rounded-full w-auto text-[10px] h-auto" hlmBtn>Accepter</button>
+                        <button class="rounded-full w-auto bg-red-600 text-[10px] h-auto" hlmBtn>Refuser</button>
+                    </div>
+    
+                    <div class="flex justify-end gap-3">
+                        
+                        <hlm-dialog>
+                            <button class="rounded-full w-full text-[10px] h-auto" id="edit-profile" brnDialogTrigger hlmBtn>Invitation(s)</button>
+                            <hlm-dialog-content class="sm:max-w-[425px]" *brnDialogContent="let ctx">
+                              <hlm-dialog-header>
+                                <h3 hlmDialogTitle>Nouvelle(s) invitation(s)</h3>
+                                <p hlmDialogDescription>Inviter un/des membre(s) du groupe ici. Cliquez sur “Inviter” lorsque vous avez terminé.</p>
+                              </hlm-dialog-header>
+                              <div class="py-4 grid gap-4">
+            
+                                <div class="items-center grid grid-cols-4 gap-4">
+                                    <label hlmLabel>Invitation(s)
+                                        <brn-select class="inline-block" placeholder="Selectionner un/des invité(s)" [multiple]="true">
+                                            <hlm-select-trigger class="w-80">
+                                              <hlm-select-value />
+                                            </hlm-select-trigger>
+                                            <hlm-select-content>
+                                              <hlm-option value="Apples">Ryan Foerster</hlm-option>
+                                              <hlm-option value="Bananas">Pierre Godfrin</hlm-option>
+                                              <hlm-option value="Pears">Manon Aussems</hlm-option>
+                                              <hlm-option value="Strawberries">Kevin Igo</hlm-option>
+                                            </hlm-select-content>
+                                          </brn-select>
+                                    </label>
+                                </div>
+            
+                              </div>
+                              <hlm-dialog-footer class="border-b-2 pb-5">
+                                <button class="rounded-full text-[10px] h-auto" hlmBtn type="submit">Inviter</button>
+                              </hlm-dialog-footer>
+    
+                            <hlm-dialog-header>
+                                <h3 hlmDialogTitle>Inviter une personne externe</h3>
+                                <p hlmDialogDescription>Inviter une personne externe ici. Cliquez sur “Inviter une personne externe” lorsque vous avez terminé.</p>
+                            </hlm-dialog-header>
+    
+                            <div class="py-4 grid gap-4">
+                                <div class="items-center grid grid-cols-4 gap-4">
+                                    <label class="w-80" hlmLabel>E-mail
+                                        <input class='w-80' hlmInput type='email' placeholder='test@test.be'/>
+                                    </label>
+                                </div>
+                            </div>
+    
+                            <hlm-dialog-footer>
+                                <button class="rounded-full text-[10px] h-auto" hlmBtn type="submit">Inviter une personne externe</button>
+                            </hlm-dialog-footer>
+                            
+                            </hlm-dialog-content>
+                        </hlm-dialog>
+
+                        <div>
+                            <button hlmBtn class="rounded-full w-auto text-[10px] h-auto" [brnMenuTriggerFor]="menu">Dupliquer</button>
+                          </div>
+                          <ng-template #menu>
+                            <hlm-menu class="w-full">
+                              <hlm-menu-group>
+                                <hlm-menu-label>Dans le même projet</hlm-menu-label>
+                      
+                                <button hlmMenuItemCheckbox>
+                                  <hlm-menu-item-check />
+                                  <span>Avec les mêmes participants</span>
+                                </button>
+
+                                <button hlmMenuItemCheckbox>
+                                    <hlm-menu-item-check />
+                                    <span>Avec des participants différents</span>
+                                  </button>
+                              </hlm-menu-group>
+                      
+                              <hlm-menu-separator />
+                      
+                              <hlm-menu-label>Dans un autre projet</hlm-menu-label>
+                              <button hlmMenuItem [brnMenuTriggerFor]="invite">
+                                <hlm-icon name="lucideSmile" hlmMenuIcon />
+                                <span>Choisir un projet</span>
+                                <hlm-menu-item-sub-indicator />
+                              </button>
+
+                            <ng-template #invite>
+                                <hlm-sub-menu>
+                                  <button hlmMenuItem>
+                                    <hlm-icon name="lucideMail" hlmMenuIcon />
+                                    Projet 1
+                                  </button>
+                                  <button hlmMenuItem>
+                                    <hlm-icon name="lucideMail" hlmMenuIcon />
+                                    Projet 2
+                                  </button>
+                                  <button hlmMenuItem>
+                                    <hlm-icon name="lucideMail" hlmMenuIcon />
+                                    Projet 2
+                                  </button>
+                                </hlm-sub-menu>
+                            </ng-template> 
+                            </hlm-menu>
+                          </ng-template>
+    
+                        <hlm-dialog>
+                            <button class="rounded-full w-full text-[10px] h-auto" id="edit-profile" brnDialogTrigger hlmBtn>Modifier</button>
+                            <hlm-dialog-content class="sm:max-w-[425px]" *brnDialogContent="let ctx">
+                              <hlm-dialog-header>
+                                <h3 hlmDialogTitle>Modifier l'évènement</h3>
+                                <p hlmDialogDescription>Modifier l'événement ici. Cliquez sur “Enregistrer” lorsque vous avez terminé.</p>
+                              </hlm-dialog-header>
+                                <div class="py-4 grid gap-4">
+                                    <div class="items-center grid grid-cols-4 gap-4">
+                                        <label class="w-80" hlmLabel>Nom de l'évènement
+                                            <input class='w-80' hlmInput type='email' placeholder='Le concert des zouzou'/>
+                                        </label>
+                                    </div>
+                
+                                    <div class="items-center grid grid-cols-4 gap-4">
+                                        <label hlmLabel>Description
+                                            <textarea class='w-80 h-40' hlmInput type='email' placeholder='Concert à ciel ouvert ouvert avec les artiste de la troupe des lions'></textarea>
+                                        </label>
+                                    </div>
+                
+                                    <div class="items-center grid grid-cols-4 gap-4">
+                                        <label hlmLabel>Adresse
+                                            <input class='w-80' hlmInput type='email' placeholder='Place des arts 1, 4020 Liège'/>
+                                        </label>
+                                    </div>
+                
+                                    <div class="items-center grid grid-cols-4 gap-4">
+                                        <label hlmLabel>Organisateur(s)
+                                            <brn-select class="inline-block" placeholder="Selectionner un/des organisateurs" [multiple]="true">
+                                                <hlm-select-trigger class="w-80">
+                                                <hlm-select-value />
+                                                </hlm-select-trigger>
+                                                <hlm-select-content>
+                                                <hlm-option value="Apples">Ryan Foerster</hlm-option>
+                                                <hlm-option value="Bananas">Pierre Godfrin</hlm-option>
+                                                <hlm-option value="Pears">Manon Aussems</hlm-option>
+                                                <hlm-option value="Strawberries">Kevin Igo</hlm-option>
+                                                </hlm-select-content>
+                                            </brn-select>
+                                        </label>
+                                    </div>
+                                </div>
+                              <hlm-dialog-footer>
+                                <button class="rounded-full text-[10px] h-auto" hlmBtn type="submit">Enregistrer</button>
+                              </hlm-dialog-footer>
+                            </hlm-dialog-content>
+                          </hlm-dialog>
+    
+                          <hlm-dialog>
+                            <button class="rounded-full w-full text-[10px] h-auto" id="edit-profile" brnDialogTrigger hlmBtn>Envoyer un rappel</button>
+                            <hlm-dialog-content class="sm:max-w-[425px]" *brnDialogContent="let ctx">
+                              <hlm-dialog-header>
+                                <h3 hlmDialogTitle>Rappel</h3>
+                                <p hlmDialogDescription>Envoyer un rappel pour que les invités répondent à leur invitation ici. Cliquez sur “Envoyer” lorsque vous avez terminé.</p>
+                              </hlm-dialog-header>
+                              <div class="py-4 grid gap-4">
+            
+                                <div class="items-center grid grid-cols-4 gap-4">
+                                    <label hlmLabel>Invité(s)
+                                        <brn-select class="inline-block" placeholder="Selectionner un/des invité(s)" [multiple]="true">
+                                            <hlm-select-trigger class="w-80">
+                                              <hlm-select-value />
+                                            </hlm-select-trigger>
+                                            <hlm-select-content>
+                                              <hlm-option value="Apples">Ryan Foerster</hlm-option>
+                                              <hlm-option value="Bananas">Pierre Godfrin</hlm-option>
+                                              <hlm-option value="Pears">Manon Aussems</hlm-option>
+                                              <hlm-option value="Strawberries">Kevin Igo</hlm-option>
+                                            </hlm-select-content>
+                                          </brn-select>
+                                    </label>
+                                </div>
+            
+                              </div>
+                              <hlm-dialog-footer>
+                                <button class="rounded-full text-[10px] h-auto" hlmBtn type="submit">Envoyer</button>
+                              </hlm-dialog-footer>
+                            </hlm-dialog-content>
+                        </hlm-dialog>
+    
+                        <hlm-dialog>
+                            <button class="rounded-full w-full text-[10px] h-auto" id="edit-profile" brnDialogTrigger hlmBtn>Rappel au(x) participant(s)</button>
+                            <hlm-dialog-content class="sm:max-w-[425px]" *brnDialogContent="let ctx">
+                              <hlm-dialog-header>
+                                <h3 hlmDialogTitle>Programmation de l'envoi</h3>
+                                <p hlmDialogDescription>Programmer l'envoi d'un rappel de l'évènement aux particiapnts ici. Cliquez sur “Enregistrer” lorsque vous avez terminé.</p>
+                              </hlm-dialog-header>
+                              <div class="py-4 grid gap-4">
+            
+                                <div class="items-center grid grid-cols-4 gap-4">
+                                    <label class="w-80" hlmLabel>
+                                        <div class="card flex flex-wrap gap-3 p-fluid">
+                                            <div class="flex-auto">
+                                                <label for="buttondisplay" class="font-bold block mb-2">Date</label>
+                                                <p-calendar 
+                                                    [(ngModel)]="date2" 
+                                                    [showIcon]="true" 
+                                                    inputId="buttondisplay" 
+                                                    [showOnFocus]="false" />
+                                            </div> 
+                                            
+                                            <div class="flex-auto">
+                                                <label for="templatedisplay" class="font-bold block mb-2">Heure</label>
+                                                    <p-calendar 
+                                                        [(ngModel)]="date3" 
+                                                        [iconDisplay]="'input'" 
+                                                        [showIcon]="true" 
+                                                        [timeOnly]="true" 
+                                                        inputId="templatedisplay">
+                                                            <ng-template pTemplate="inputicon" let-clickCallBack="clickCallBack">
+                                                                <i 
+                                                                    class="pi pi-clock pointer-events-none" 
+                                                                    (click)="clickCallBack($event)"></i>
+                                                            </ng-template>
+                                                    </p-calendar>
+                                            </div>
+                                            </div>
+                                    </label>
+                                </div>
+            
+                              </div>
+                              <hlm-dialog-footer>
+                                <button class="rounded-full text-[10px] h-auto" hlmBtn type="submit">Enregistrer</button>
+                              </hlm-dialog-footer>
+                            </hlm-dialog-content>
+                        </hlm-dialog>
+                    </div>
+                </div>
+    
+                <div class="rounded-xl flex w-full h-full gap-5">
+                    <div class="bg-white w-1/4 rounded-xl p-4">
+                        <p class="font-bold text-xs">Groupe de Médéric</p>
+                        <p class="text-[10px]">Organisateur : Manon Aussems</p>
+                        <p class="text-[10px]">09/08/2024 - 09/09/2024</p>
+                        <p class="text-[10px]">Place des arts 1, 4020 Liège</p>
+                        <p class="font-bold text-[12px]">Description</p>
+                        <p class="text-[10px]">texte de la description</p>
+                    </div>
+    
+                    <div class="bg-white w-2/4 h-full rounded-xl p-4 flex flex-col justify-between">
+                        <p class="font-bold text-xs h-full">Fil de discussion</p>
+                        <label class="font-bold h-auto text-xs" hlmLabel> Manon Aussems
+                            <input class="rounded-full w-full text-xs" hlmInput placeholder="Ecrivez ici..." />
+                      </label>`
+                    </div>
+    
+                    <div class="bg-white w-1/4 rounded-xl p-4 flex flex-col gap-5">
+                        <p class="font-bold text-xs">Participation(s)</p>
+                        <hlm-dialog>
+                            <button class="rounded-full w-full text-[10px] h-auto" id="edit-profile" brnDialogTrigger hlmBtn>Sans réponse(s)</button>
+                            <hlm-dialog-content class="sm:max-w-[425px]" *brnDialogContent="let ctx">
+                              <hlm-dialog-header>
+                                <h3 hlmDialogTitle>Participation(s)</h3>
+                                <p hlmDialogDescription>Réponses des invitations à l'évènement.</p>
+                              </hlm-dialog-header>
+                              <div class="py-4 grid gap-4">
+            
+                                <div class="items-center grid grid-cols-3 gap-4">
+                                    <button class="rounded-full w-auto text-[10px] h-auto" hlmBtn>Sans réponse(s)</button>
+                                    <button class="rounded-full w-auto text-[10px] h-auto" hlmBtn>Acceptée(s)</button>
+                                    <button class="rounded-full w-auto text-[10px] h-auto" hlmBtn>Refusée(s)</button>
+                                </div>
+    
+                                <div>
+                                    <hlm-table class="w-full">
+                                        <hlm-caption>Liste des invitation(s) sans réponse(s).</hlm-caption>
+                                        <hlm-trow class="flex justify-between">
+                                          <hlm-th class="w-40">Prénom & Nom</hlm-th>
+                                          <hlm-th class="w-32">Réponse</hlm-th>
+                                        </hlm-trow>
+                                        @for (invoice of _invoices; track invoice.invoice) {
+                                          <hlm-trow class="flex justify-between">
+                                            <hlm-td truncate class="font-medium w-40">Manon Aussems</hlm-td>
+                                            <hlm-td class="w-32">
+                                                <div class="flex flex-col gap-2">
+                                                    <label class="flex items-center text-xs" hlmLabel>
+                                                        <hlm-checkbox class="mr-2 rounded-full" />
+                                                        Acceptée
+                                                    </label>
+    
+                                                    <label class="flex items-center text-xs" hlmLabel>
+                                                        <hlm-checkbox class="mr-2 rounded-full" />
+                                                        Refusée
+                                                    </label>
+                                                </div>
+                                            </hlm-td>
+                                          </hlm-trow>
+                                        }
+                                      </hlm-table>
+                                </div>
+                              </div>
+                            </hlm-dialog-content>
+                        </hlm-dialog>
+    
+                        <hlm-dialog>
+                            <button class="rounded-full w-full text-[10px] h-auto" id="edit-profile" brnDialogTrigger hlmBtn>Acceptée(s)</button>
+                            <hlm-dialog-content class="sm:max-w-[425px]" *brnDialogContent="let ctx">
+                              <hlm-dialog-header>
+                                <h3 hlmDialogTitle>Participation(s)</h3>
+                                <p hlmDialogDescription>Réponses des invitations à l'évènement.</p>
+                              </hlm-dialog-header>
+                              <div class="py-4 grid gap-4">
+            
+                                <div class="items-center grid grid-cols-3 gap-4">
+                                    <button class="rounded-full w-auto text-[10px] h-auto" hlmBtn>Sans réponse(s)</button>
+                                    <button class="rounded-full w-auto text-[10px] h-auto" hlmBtn>Acceptée(s)</button>
+                                    <button class="rounded-full w-auto text-[10px] h-auto" hlmBtn>Refusée(s)</button>
+                                </div>
+    
+                                <div>
+                                    <hlm-table class="w-full">
+                                        <hlm-caption>Liste des participants.</hlm-caption>
+                                        <hlm-trow class="flex justify-between">
+                                          <hlm-th class="w-40">Prénom & Nom</hlm-th>
+                                          <hlm-th class="w-32">Réponse</hlm-th>
+                                        </hlm-trow>
+                                        @for (invoice of _invoices; track invoice.invoice) {
+                                          <hlm-trow class="flex justify-between">
+                                            <hlm-td truncate class="font-medium w-40">Manon Aussems</hlm-td>
+                                            <hlm-td class="w-32">
+                                                <div class="flex flex-col gap-2">
+                                                    <label class="flex items-center text-xs" hlmLabel>
+                                                        <hlm-checkbox class="mr-2 rounded-full" />
+                                                        Acceptée
+                                                    </label>
+    
+                                                    <label class="flex items-center text-xs" hlmLabel>
+                                                        <hlm-checkbox class="mr-2 rounded-full" />
+                                                        Refusée
+                                                    </label>
+                                                </div>
+                                            </hlm-td>
+                                          </hlm-trow>
+                                        }
+                                      </hlm-table>
+                                </div>
+                              </div>
+                            </hlm-dialog-content>
+                        </hlm-dialog>
+    
+                        <hlm-dialog>
+                            <button class="rounded-full w-full text-[10px] bg-red-600  h-auto" id="edit-profile" brnDialogTrigger hlmBtn>Refusée(s)</button>
+                            <hlm-dialog-content class="sm:max-w-[425px]" *brnDialogContent="let ctx">
+                              <hlm-dialog-header>
+                                <h3 hlmDialogTitle>Participation(s)</h3>
+                                <p hlmDialogDescription>Réponses des invitations à l'évènement.</p>
+                              </hlm-dialog-header>
+                              <div class="py-4 grid gap-4">
+    
+                                <div class="items-center grid grid-cols-3 gap-4">
+                                    <button class="rounded-full w-auto text-[10px] h-auto" hlmBtn>Sans réponse(s)</button>
+                                    <button class="rounded-full w-auto text-[10px] h-auto" hlmBtn>Acceptée(s)</button>
+                                    <button class="rounded-full w-auto text-[10px] h-auto" hlmBtn>Refusée(s)</button>
+                                </div>
+    
+                                <div>
+                                    <hlm-table class="w-full">
+                                        <hlm-caption>Liste des invitation(s) refusée(s).</hlm-caption>
+                                        <hlm-trow class="flex justify-between">
+                                          <hlm-th class="w-40">Prénom & Nom</hlm-th>
+                                          <hlm-th class="w-32">Réponse</hlm-th>
+                                        </hlm-trow>
+                                        @for (invoice of _invoices; track invoice.invoice) {
+                                          <hlm-trow class="flex justify-between">
+                                            <hlm-td truncate class="font-medium w-40">Manon Aussems</hlm-td>
+                                            <hlm-td class="w-32">
+                                                <div class="flex flex-col gap-2">
+                                                    <label class="flex items-center text-xs" hlmLabel>
+                                                        <hlm-checkbox class="mr-2 rounded-full" />
+                                                        Acceptée
+                                                    </label>
+    
+                                                    <label class="flex items-center text-xs" hlmLabel>
+                                                        <hlm-checkbox class="mr-2 rounded-full" />
+                                                        Refusée
+                                                    </label>
+                                                </div>
+                                            </hlm-td>
+                                          </hlm-trow>
+                                        }
+                                      </hlm-table>
+                                </div>
+                              </div>
+                            </hlm-dialog-content>
+                        </hlm-dialog>
+                    </div>
+                </div>
+            </div>
+        </div>
+       
+    </div>
+</div>

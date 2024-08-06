@@ -47,6 +47,11 @@ export const routes: Routes = [
     loadComponent: () => import('./sepa-validation/sepa-validation.component').then((m) => m.SepaValidationComponent),
     canActivate: [authGuard]
   },
+{
+  path: "diary",
+  loadComponent: () => import('./users/diary/diary.component').then((m) => m.DiaryComponent),
+  canActivate: [authGuard]
+},
 
 
 ];

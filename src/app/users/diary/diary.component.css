@@ -1,0 +1,6 @@
+.background-div {
+    background-image: url('/assets/images/image-couverture-group.jpg');
+    background-repeat: no-repeat;
+    background-position: bottom center;
+    background-size: cover;
+  }

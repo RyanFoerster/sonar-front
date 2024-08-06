@@ -40,7 +40,7 @@ import {UserSecondaryAccountService} from "../../../../shared/services/user-seco
 import {UserSecondaryAccountEntity} from "../../../../shared/entities/user-secondary-account.entity";
 import {provideIcons} from "@ng-icons/core";
 import {lucideCheck, lucideChevronsUpDown, lucideSearch} from "@ng-icons/lucide";
-import {delay, tap} from "rxjs";
+import {delay, map, tap} from "rxjs";
 import { BrnAccordionContentComponent } from '@spartan-ng/ui-accordion-brain';
 import {
   HlmAccordionContentDirective,
@@ -259,9 +259,11 @@ export class MembershipComponent implements AfterViewInit {
   }
 
   async fetchAllUsers() {
-    this.usersService.findAll().subscribe(data => {
-      this.usersFromDB.set(data)
-    })
+    this.usersService.findAll().pipe(
+      map(users => users.sort((a, b) => a.name.localeCompare(b.name))) // Tri par ordre alphabétique
+    ).subscribe(sortedUsers => {
+      this.usersFromDB.set(sortedUsers)
+    });
   }
 
   addMemberToGroup(ctx: any) {

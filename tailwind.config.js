@@ -16,7 +16,9 @@ module.exports = {
       },
       backgroundColor: {
         "gray-sonar": "#EEEEEE"
-      }
+      },
+
+
     },
   },
   plugins: [],

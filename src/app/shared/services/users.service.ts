@@ -22,6 +22,10 @@ export class UsersService {
     return this.httpClient.post<boolean>(`${environments.API_URL}/auth/register`, createuserDto)
   }
 
+  signUpFromAdmin(createuserDto: CreateUserDto) {
+    return this.httpClient.post<boolean>(`${environments.API_URL}/auth/register-from-admin`, createuserDto)
+  }
+
   signIn(credentials: SignInDto) {
     return this.httpClient.post<LoggedUser>(`${environments.API_URL}/auth/login`, credentials)
   }
@@ -43,7 +47,19 @@ export class UsersService {
     return this.httpClient.get<UserEntity[]>(`${environments.API_URL}/users/all`)
   }
 
+  findAllPendingUser() {
+    return this.httpClient.get<UserEntity[]>(`${environments.API_URL}/users/pending`)
+  }
+
   getProfilePicture(filename: string) {
     return this.httpClient.get(`${environments.API_URL}/users/${filename}`, {responseType: "blob"})
+  }
+
+  toggleActiveUser(user: UserEntity) {
+    return this.httpClient.patch(`${environments.API_URL}/users/toggleActive`, user)
+  }
+
+  deleteUser(id: number) {
+    return this.httpClient.delete(`${environments.API_URL}/users/${id}`)
   }
 }

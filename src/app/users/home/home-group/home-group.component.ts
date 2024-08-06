@@ -1,4 +1,4 @@
-import {AfterViewInit, Component, inject, input, signal, WritableSignal} from '@angular/core';
+import {AfterViewInit, Component, effect, inject, input, signal, WritableSignal} from '@angular/core';
 import {lucideChevronRight, lucideEdit} from '@ng-icons/lucide';
 import {HlmAspectRatioDirective} from '@spartan-ng/ui-aspectratio-helm';
 import {HlmButtonDirective} from '@spartan-ng/ui-button-helm';
@@ -11,6 +11,7 @@ import {UsersService} from "../../../shared/services/users.service";
 import {UserEntity} from "../../../shared/entities/user.entity";
 import {EMPTY, switchMap, tap} from "rxjs";
 import {RouterLink} from "@angular/router";
+import {AuthService} from "../../../shared/services/auth.service";
 
 @Component({
   selector: 'app-home-group',
@@ -32,8 +33,15 @@ export class HomeGroupComponent implements AfterViewInit {
   projet: WritableSignal<CompteGroupeEntity | PrincipalAccountEntity | null> = signal(null)
   connectedUser: WritableSignal<UserEntity | null> = signal(null)
 
+  userEffect = effect(() => {
+    this.connectedUser.set(this.authService.getUser())
+  }, {
+    allowSignalWrites: true
+  });
+
   private compteGroupeService: CompteGroupeService = inject(CompteGroupeService)
   private comptePrincipalService: ComptePrincipalService = inject(ComptePrincipalService)
+  private authService: AuthService = inject(AuthService)
   private usersService: UsersService = inject(UsersService);
 
   async ngAfterViewInit() {
@@ -42,7 +50,6 @@ export class HomeGroupComponent implements AfterViewInit {
 
   async fetchUserProjectInfo() {
     this.usersService.getInfo().pipe(
-      tap((data) => this.connectedUser.set(data)),
       switchMap(() => {
         // Une fois que les données de l'utilisateur sont récupérées, vérifiez le type de projet
         if (this.typeOfProjet() === "PRINCIPAL") {

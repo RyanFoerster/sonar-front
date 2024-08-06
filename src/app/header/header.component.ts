@@ -1,4 +1,4 @@
-import {Component, effect, inject, signal, WritableSignal} from '@angular/core';
+import {AfterViewInit, Component, effect, inject, signal} from '@angular/core';
 import {Router, RouterLink} from '@angular/router';
 import {HlmButtonDirective} from '@spartan-ng/ui-button-helm';
 import {BrnMenuTriggerDirective} from '@spartan-ng/ui-menu-brain';
@@ -27,7 +27,6 @@ import {HeaderMobileComponent} from "../header-mobile/header-mobile.component";
 import {AuthService} from '../shared/services/auth.service';
 import {UsersService} from "../shared/services/users.service";
 import {UserEntity} from "../shared/entities/user.entity";
-import {switchMap, tap} from "rxjs";
 
 @Component({
   selector: 'app-header',
@@ -61,7 +60,7 @@ import {switchMap, tap} from "rxjs";
   styleUrl: './header.component.css'
 
 })
-export class HeaderComponent {
+export class HeaderComponent implements AfterViewInit {
 
   authService: AuthService = inject(AuthService)
   usersService: UsersService = inject(UsersService)
@@ -77,14 +76,14 @@ export class HeaderComponent {
 
   router: Router = inject(Router)
 
-
-  constructor() {
-
-
+  ngAfterViewInit() {
+    this.usersService.getInfo().subscribe(data => this.connectedUser.set(data))
   }
+
 
   logout() {
     this.authService.removeToken()
+    this.authService.removeUser()
     this.router.navigate(["/login"])
   }
 

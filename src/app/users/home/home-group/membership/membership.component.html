@@ -18,7 +18,7 @@
 
           <brn-popover [state]="state()" (stateChanged)="stateChanged($event)" sideOffset="5" closeDelay="100">
             <button class="w-full justify-between" id="edit-profile" variant="outline" brnPopoverTrigger hlmBtn>
-              {{ currentUser() ? currentUser()?.username : 'Séléctionner un membre' }}
+              {{ currentUser() ? currentUser()?.firstName + ' ' + currentUser()?.name : 'Séléctionner un membre' }}
               <hlm-icon size="sm" name="lucideChevronsUpDown"/>
             </button>
             <brn-cmd *brnPopoverContent="let ctx" hlmPopoverContent hlm class="p-0 w-full">
@@ -33,9 +33,9 @@
                   @for (user of usersFromDB(); track user.id) {
                     <button
                       brnCmdItem
-                      [value]="user.username"
+                      [value]="user.name"
                       (selected)="commandSelected(user)"
-                      class="flex gap-2 w-full"
+                      class="flex justify-between w-full"
                       hlm
                     >
                       <hlm-icon
@@ -43,9 +43,9 @@
                         name="lucideCheck"
                         hlmCmdIcon
                       />
-                      <p>{{ user.id }}</p>
                       <p>{{ user.firstName }} {{user.name}}</p>
                       <p>{{ user.username }}</p>
+                      <p>{{ user.id }}</p>
                     </button>
                   }
 

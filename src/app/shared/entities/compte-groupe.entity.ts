@@ -1,6 +1,7 @@
 import {QuoteEntity} from "./quote.entity";
 import {InvoiceEntity} from "./invoice.entity";
 import {TransactionEntity} from "./transaction.entity";
+import {VirementSepaEntity} from "./virement-sepa.entity";
 
 export interface CompteGroupeEntity {
   id: number;
@@ -9,4 +10,6 @@ export interface CompteGroupeEntity {
   quote: QuoteEntity[]
   invoice: InvoiceEntity[]
   transactions: TransactionEntity[]
+  virementSepa: VirementSepaEntity[]
+
 }

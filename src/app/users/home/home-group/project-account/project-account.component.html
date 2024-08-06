@@ -105,36 +105,35 @@
                   Celui-ci ne sera pas d&eacute;biter de votre compte de projet.</p>
               </hlm-dialog-header>
 
-              <div class="flex flex-col gap-2 w-full">
+              <form [formGroup]="virementSepaForm" class="flex flex-col gap-2 w-full" (ngSubmit)="createVirementSepa(ctx)">
                 <div>
-                  <input class="flex w-full rounded-full" hlmInput placeholder='Titulaire du compte' type='text'/>
+                  <input formControlName="account_owner" class="flex w-full rounded-full" hlmInput placeholder='Titulaire du compte' type='text'/>
                 </div>
                 <div>
-                  <input class="flex w-full rounded-full" hlmInput placeholder='IBAN' type='text'/>
+                  <input formControlName="iban" class="flex w-full rounded-full" hlmInput placeholder='IBAN' type='text'/>
                 </div>
                 <div>
-                  <input class="flex w-full rounded-full" hlmInput placeholder='Montant TVAC' type='number'/>
+                  <input formControlName="amount_htva" class="flex w-full rounded-full" (input)="setAmountHtva($event)"  hlmInput placeholder='Montant HTVA' type='number'/>
                 </div>
                 <div>
-                  <input class=" flex w-full rounded-full" hlmInput placeholder='Montant TVA' type='number'/>
+                  <input formControlName="amount_tva" class=" flex w-full rounded-full" (input)="setAmountTva($event)" hlmInput placeholder='Montant TVA' type='number'/>
                 </div>
                 <div>
-                  <input class="flex font-bold w-full rounded-full" hlmInput disabled placeholder="0€" type="number"/>
+                  <input class="flex font-bold w-full rounded-full" [value]="amount_total()"  hlmInput disabled placeholder="0€" type="number"/>
                 </div>
                 <div>
-                  <input class="flex w-full rounded-full" hlmInput placeholder='Communication' type='text'/>
+                  <input formControlName="communication" class="flex w-full rounded-full" hlmInput placeholder='Communication' type='text'/>
                 </div>
                 <div>
-                  <input class="flex w-full rounded-full" hlmInput placeholder='Communication Structurée' type='text'/>
+                  <input formControlName="structured_communication" class="flex w-full rounded-full" hlmInput placeholder='Communication Structurée' type='text'/>
                 </div>
                 <div>
                   <input class="flex w-full rounded-full" hlmInput type="file"/>
                 </div>
-              </div>
-
-              <hlm-dialog-footer>
                 <button class="rounded-full" hlmBtn type="submit">Envoyer</button>
-              </hlm-dialog-footer>
+
+              </form>
+
             </hlm-dialog-content>
           </hlm-dialog>
         </div>
@@ -157,7 +156,7 @@
                   <div class="flex lg:justify-between lg:w-full">
                     <hlm-th class="w-2/12 font-bold text-[10px]">{{ transaction.date | date }}</hlm-th>
                     <hlm-th
-                      class="w-2/12 font-bold  text-[10px]">{{ transaction.senderPrincipal?.username || transaction.senderGroup?.username }}
+                      class="w-2/12 font-bold  text-[10px]">{{ transaction.senderPrincipal.username || transaction.senderGroup.username }}
                     </hlm-th>
                     @if (transaction.recipientGroup.length > 1 || transaction.recipientPrincipal.length > 1) {
                       <div class="w-2/12 px-4" hlmAccordion>
@@ -182,7 +181,7 @@
                       </div>
                     } @else {
                       <hlm-th
-                        class="w-2/12 font-bold text-[10px]">{{ transaction.recipientGroup[0]?.username || transaction.recipientPrincipal[0]?.username }}
+                        class="w-2/12 font-bold text-[10px]">{{ transaction.recipientGroup[0].username || transaction.recipientPrincipal[0].username }}
                       </hlm-th>
                     }
 
@@ -215,7 +214,7 @@
                   <div class="flex lg:justify-between lg:w-full">
                     <hlm-th class="w-2/12 font-bold text-[10px]">{{ transaction.date | date }}</hlm-th>
                     <hlm-th
-                      class="w-2/12 font-bold  text-[10px]">{{ transaction.senderGroup?.username || transaction.senderPrincipal?.username }}
+                      class="w-2/12 font-bold  text-[10px]">{{ transaction.senderGroup.username || transaction.senderPrincipal.username }}
                     </hlm-th>
                     <hlm-th
                       class="w-2/12 font-bold  text-[10px]">{{ accountPrincipal()?.username || accountGroup()?.username }}
@@ -247,15 +246,34 @@
               <hlm-th class="w-28 font-bold text-[10px]">Montant total</hlm-th>
               <hlm-th class="w-28 font-bold text-[10px]">Montant débité</hlm-th>
             </hlm-trow>
-            <hlm-trow class="flex sm:flex-row lg:justify-between lg:w-full">
-              <hlm-td class="w-28 text-[10px]">01-09-2024</hlm-td>
-              <hlm-td class="w-36 text-[10px]">Manon Aussems</hlm-td>
-              <hlm-td class="w-44 text-[10px]">BE95 1430 8568 5558</hlm-td>
-              <hlm-td class="w-36 text-[10px]">Concert boverie</hlm-td>
-              <hlm-td class="w-44 text-[10px]">210-12345-123</hlm-td>
-              <hlm-td class="w-28 text-[10px]">1 210€</hlm-td>
-              <hlm-td class="w-28 text-[10px]">1 000€</hlm-td>
-            </hlm-trow>
+
+
+            @if(accountPrincipal()) {
+              @for(virement of accountPrincipal()?.virementSepa; track virement.id) {
+                <hlm-trow class="flex sm:flex-row lg:justify-between lg:w-full">
+                  <hlm-td class="w-28 text-[10px]">{{virement.created_at | date}}</hlm-td>
+                  <hlm-td class="w-36 text-[10px]">{{virement.account_owner}}</hlm-td>
+                  <hlm-td class="w-44 text-[10px]">{{virement.iban}}</hlm-td>
+                  <hlm-td class="w-36 text-[10px]">{{virement.communication}}</hlm-td>
+                  <hlm-td class="w-44 text-[10px]">{{virement.structured_communication}}</hlm-td>
+                  <hlm-td class="w-28 text-[10px]">{{virement.amount_total | euroFormat}}</hlm-td>
+                  <hlm-td class="w-28 text-[10px]">{{virement.amount_htva | euroFormat}}</hlm-td>
+                </hlm-trow>
+              }
+            } @else if (accountGroup()) {
+              @for(virement of accountGroup()?.virementSepa; track virement.id) {
+                <hlm-trow class="flex sm:flex-row lg:justify-between lg:w-full">
+                  <hlm-td class="w-28 text-[10px]">{{virement.created_at | date}}</hlm-td>
+                  <hlm-td class="w-36 text-[10px]">{{virement.account_owner}}</hlm-td>
+                  <hlm-td class="w-44 text-[10px]">{{virement.iban}}</hlm-td>
+                  <hlm-td class="w-36 text-[10px]">{{virement.communication}}</hlm-td>
+                  <hlm-td class="w-44 text-[10px]">{{virement.structured_communication}}</hlm-td>
+                  <hlm-td class="w-28 text-[10px]">{{virement.amount_total | euroFormat}}</hlm-td>
+                  <hlm-td class="w-28 text-[10px]">{{virement.amount_htva | euroFormat}}</hlm-td>
+                </hlm-trow>
+              }
+            }
+
           </div>
         </hlm-table>
       </div>

@@ -1,7 +1,7 @@
 import {HttpHandlerFn, HttpHeaders, HttpRequest} from '@angular/common/http';
 import {inject} from '@angular/core';
 import {AuthService} from '../services/auth.service';
-import {catchError, switchMap, throwError} from "rxjs";
+import {catchError, delay, switchMap, throwError} from "rxjs";
 import {Router} from "@angular/router";
 
 export function authInterceptor(req: HttpRequest<unknown>, next: HttpHandlerFn) {

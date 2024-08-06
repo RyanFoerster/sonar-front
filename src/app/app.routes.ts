@@ -1,5 +1,7 @@
 import {Routes} from '@angular/router';
 import {authGuard} from './shared/guards/auth.guard';
+import {activatedUserGuard} from "./shared/guards/activated-user.guard";
+import {adminGuard} from "./shared/guards/admin.guard";
 
 export const routes: Routes = [
   {
@@ -21,6 +23,7 @@ export const routes: Routes = [
   {
     path: "home",
     loadChildren: () => import('./users/home/home.routes'),
+    canActivate: [authGuard, activatedUserGuard]
   },
   {
     path: "rendez-vous",
@@ -30,22 +33,22 @@ export const routes: Routes = [
   {
     path: "profile",
     loadComponent: () => import('./users/profile/profile.component').then((m) => m.ProfileComponent),
-    canActivate: [authGuard]
+    canActivate: [authGuard, activatedUserGuard]
   },
   {
     path: "user-validation",
-    loadComponent: () => import('./user-validation/user-validation.component').then((m) => m.UserValidationComponent),
-    canActivate: [authGuard]
+    loadComponent: () => import('./admin/user-validation/user-validation.component').then((m) => m.UserValidationComponent),
+    canActivate: [authGuard, activatedUserGuard, adminGuard]
   },
   {
     path: "creating-new-users",
-    loadComponent: () => import('./creating-new-users/creating-new-users.component').then((m) => m.CreatingNewUsersComponent),
-    canActivate: [authGuard]
+    loadComponent: () => import('./admin/creating-new-users/creating-new-users.component').then((m) => m.CreatingNewUsersComponent),
+    canActivate: [authGuard, activatedUserGuard, adminGuard]
   },
   {
     path: "sepa-validation",
-    loadComponent: () => import('./sepa-validation/sepa-validation.component').then((m) => m.SepaValidationComponent),
-    canActivate: [authGuard]
+    loadComponent: () => import('./admin/sepa-validation/sepa-validation.component').then((m) => m.SepaValidationComponent),
+    canActivate: [authGuard, activatedUserGuard, adminGuard]
   },
 
 

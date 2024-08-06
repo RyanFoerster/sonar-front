@@ -1,6 +1,7 @@
 import {PrincipalAccountEntity} from "./principal-account.entity";
 import {UserSecondaryAccountEntity} from "./user-secondary-account.entity";
 import {ClientEntity} from "./client.entity";
+import {VirementSepaEntity} from "./virement-sepa.entity";
 
 export interface UserEntity {
   id: number

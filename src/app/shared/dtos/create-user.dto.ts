@@ -16,4 +16,6 @@ export interface CreateUserDto {
   telephone: string;
 
   iban: string;
+
+  address: string
 }

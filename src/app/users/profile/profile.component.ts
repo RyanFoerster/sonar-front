@@ -64,12 +64,6 @@ export class ProfileComponent implements AfterViewInit {
       address: [''],
     })
 
-    this.usersService.getInfo().subscribe(data => {
-      this.connectedUser.set(data)
-    });
-
-
-
     effect(() => {
       const user = this.connectedUser();
       if (user) {
@@ -87,7 +81,9 @@ export class ProfileComponent implements AfterViewInit {
 
   ngAfterViewInit() {
 
-
+    this.usersService.getInfo().subscribe(data => {
+      this.connectedUser.set(data)
+    });
   }
 
   updateUser(ctx: any) {

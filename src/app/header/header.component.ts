@@ -19,7 +19,6 @@ import {
   HlmMenuShortcutComponent,
   HlmSubMenuComponent,
 } from '@spartan-ng/ui-menu-helm';
-import {HlmAvatarComponent, HlmAvatarFallbackDirective, HlmAvatarImageDirective} from '@spartan-ng/ui-avatar-helm';
 
 import {HlmIconComponent, provideIcons} from '@spartan-ng/ui-icon-helm';
 import {lucideBell} from '@ng-icons/lucide';
@@ -54,9 +53,6 @@ import {UserEntity} from "../shared/entities/user.entity";
     HlmIconComponent,
     NgClass,
     HeaderMobileComponent,
-    HlmAvatarComponent,
-    HlmAvatarFallbackDirective,
-    HlmAvatarImageDirective,
     NgOptimizedImage,
   ],
   providers: [provideIcons({lucideBell})],

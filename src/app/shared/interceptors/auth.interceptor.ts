@@ -8,9 +8,9 @@ export function authInterceptor(req: HttpRequest<unknown>, next: HttpHandlerFn) 
   const authService = inject(AuthService);
   const router = inject(Router);
   const authToken = authService.getToken();
-
+  let headers = new HttpHeaders().set('apikey', "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImluZnBscXNjaWZubmpmYmF0c2ZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjMwNTA3MjcsImV4cCI6MjAzODYyNjcyN30.jINf2PmZklBFMcSjHeO0c2GY3nGRdwQ4YSA4T5bJxok");
   if (authToken) {
-    const headers = new HttpHeaders().set('Authorization', `Bearer ${authToken}`);
+    headers = headers.set('Authorization', `Bearer ${authToken}`);
     req = req.clone({headers});
   }
 

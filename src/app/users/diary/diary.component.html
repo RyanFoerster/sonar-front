@@ -1,3 +1,4 @@
+<!-- Responsive mobile & tablette -->
 <div class="xl:hidden">
     <p class="font-bold text-xl px-5 mb-1">Agenda</p>
     <div class="flex flex-col px-5 gap-5">
@@ -21,68 +22,154 @@
             </div>
 
             <hlm-dialog class="w-full">
-                <button class="rounded-full w-full text-[10px] h-auto" id="edit-profile" brnDialogTrigger hlmBtn>Créer un nouvel évènement</button>
-                <hlm-dialog-content class="w-80 rounded-xl" *brnDialogContent="let ctx">
-                  <hlm-dialog-header>
-                    <h3 hlmDialogTitle>Nouvel évènement</h3>
-                    <p class="text-[10px]" hlmDialogDescription>Créez votre nouvel événement ici. Cliquez sur “Créer” lorsque vous avez terminé.</p>
-                  </hlm-dialog-header>
-                  <div class="py-2 grid gap-4">
-                    <div class="items-center grid grid-cols-4 gap-4">
-                        <label class="w-60 text-[10px]" hlmLabel>Nom de l'évènement
-                            <input class='w-60 text-[10px] rounded-full h-auto' hlmInput type='email' placeholder='Le concert des zouzou'/>
-                        </label>
-                    </div>
-
-                    <div class="items-center grid grid-cols-4 gap-4">
-                        <label class="text-[10px]" hlmLabel>Description
-                            <textarea class='w-60 h-36 text-[10px] rounded-xl' hlmInput type='email' placeholder='Concert à ciel ouvert ouvert avec les artiste de la troupe des lions'></textarea>
-                        </label>
-                    </div>
-
-                    <div class="items-center grid grid-cols-4 gap-4">
-                        <label class="text-[10px]" hlmLabel>Adresse
-                            <input class='w-60 text-[10px] rounded-full h-auto' hlmInput type='email' placeholder='Place des arts 1, 4020 Liège'/>
-                        </label>
-                    </div>
-
-                    <div class="items-center grid grid-cols-4 gap-4">
-                        <label class="text-[10px]" hlmLabel>Organisateur(s)
-                            <brn-select class="inline-block" placeholder="Selectionner un/des organisateurs" [multiple]="true">
-                                <hlm-select-trigger class="w-60 text-[10px] rounded-full h-auto">
-                                  <hlm-select-value />
-                                </hlm-select-trigger>
-                                <hlm-select-content>
-                                  <hlm-option class="text-[10px]" value="Apples">Ryan Foerster</hlm-option>
-                                  <hlm-option class="text-[10px]"  value="Bananas">Pierre Godfrin</hlm-option>
-                                  <hlm-option class="text-[10px]"  value="Pears">Manon Aussems</hlm-option>
-                                  <hlm-option class="text-[10px]"  value="Strawberries">Kevin Igo</hlm-option>
-                                </hlm-select-content>
-                              </brn-select>
-                        </label>
-                    </div>
-
-                    <div class="items-center grid grid-cols-4 gap-4">
-                        <label class="text-[10px]" hlmLabel>Invitation(s)
-                            <brn-select class="inline-block" placeholder="Selectionner un/des invité(s)" [multiple]="true">
-                                <hlm-select-trigger class="w-60 text-[10px] rounded-full h-auto">
-                                  <hlm-select-value />
-                                </hlm-select-trigger>
-                                <hlm-select-content>
-                                  <hlm-option class="text-[10px]"  value="Apples">Ryan Foerster</hlm-option>
-                                  <hlm-option class="text-[10px]"  value="Bananas">Pierre Godfrin</hlm-option>
-                                  <hlm-option class="text-[10px]"  value="Pears">Manon Aussems</hlm-option>
-                                  <hlm-option class="text-[10px]"  value="Strawberries">Kevin Igo</hlm-option>
-                                </hlm-select-content>
-                              </brn-select>
-                        </label>
-                    </div>
-
+              <button class="rounded-full w-full text-[10px] h-auto" id="edit-profile" brnDialogTrigger hlmBtn>Créer un nouvel évènement</button>
+              <hlm-dialog-content class="w-80 rounded-xl" *brnDialogContent="let ctx">
+                <hlm-dialog-header>
+                  <h3 hlmDialogTitle>Nouvel évènement</h3>
+                  <p class="text-[10px]" hlmDialogDescription>Créez votre nouvel événement ici. Cliquez sur “Créer” lorsque vous avez terminé.</p>
+                </hlm-dialog-header>
+                <div class="py-2 grid gap-4 max-h-[60vh] overflow-y-auto">
+                  <div class="items-center grid grid-cols-4 gap-4">
+                    <label class="w-60 text-[10px]" hlmLabel>Nom de l'évènement
+                      <input class='w-60 text-[10px] rounded-full h-auto' hlmInput type='email' placeholder='Le concert des zouzou'/>
+                    </label>
                   </div>
-                  <hlm-dialog-footer>
-                    <button class="rounded-full text-[10px] h-auto " hlmBtn type="submit">Créer</button>
-                  </hlm-dialog-footer>
-                </hlm-dialog-content>
+            
+                  <div class="items-center grid grid-cols-4 gap-4">
+                    <label class="text-[10px]" hlmLabel>Description
+                      <textarea class='w-60 h-36 text-[10px] rounded-xl' hlmInput type='email' placeholder='Concert à ciel ouvert ouvert avec les artiste de la troupe des lions'></textarea>
+                    </label>
+                  </div>
+            
+                  <div class="items-center grid grid-cols-4 gap-4">
+                    <label class="text-[10px]" hlmLabel>Adresse
+                      <input class='w-60 text-[10px] rounded-full h-auto' hlmInput type='email' placeholder='Place des arts 1, 4020 Liège'/>
+                    </label>
+                  </div>
+            
+                  <div>
+                    <label class="w-60 text-[10px]" hlmLabel> Date de début
+                      <div class="card flex flex-wrap gap-3 p-fluid">
+                        <div class="flex-auto">
+                          <label for="buttondisplay" class="text-[10px] font-bold block mb-2 mt-2">Date</label>
+                          <p-calendar 
+                            [(ngModel)]="date2" 
+                            [showIcon]="true" 
+                            inputId="buttondisplay" 
+                            [showOnFocus]="false" />
+                        </div> 
+                        
+                        <div class="flex-auto">
+                          <label for="templatedisplay" class="text-[10px] font-bold block mb-2 mt-2">Heure</label>
+                          <p-calendar 
+                            [(ngModel)]="date3" 
+                            [iconDisplay]="'input'" 
+                            [showIcon]="true" 
+                            [timeOnly]="true" 
+                            inputId="templatedisplay">
+                            <ng-template pTemplate="inputicon" let-clickCallBack="clickCallBack">
+                              <i class="pi pi-clock pointer-events-none" (click)="clickCallBack($event)"></i>
+                            </ng-template>
+                          </p-calendar>
+                        </div>
+                      </div>
+                    </label>
+                  </div>
+            
+                  <div>
+                    <label class="w-60 text-[10px]" hlmLabel> Date de fin
+                      <div class="card flex flex-wrap gap-3 p-fluid">
+                        <div class="flex-auto">
+                          <label for="buttondisplay" class="text-[10px] font-bold block mb-2 mt-2">Date</label>
+                          <p-calendar 
+                            [(ngModel)]="date2" 
+                            [showIcon]="true" 
+                            inputId="buttondisplay" 
+                            [showOnFocus]="false" />
+                        </div> 
+                        
+                        <div class="flex-auto">
+                          <label for="templatedisplay" class="text-[10px] font-bold block mb-2 mt-2">Heure</label>
+                          <p-calendar 
+                            [(ngModel)]="date3" 
+                            [iconDisplay]="'input'" 
+                            [showIcon]="true" 
+                            [timeOnly]="true" 
+                            inputId="templatedisplay">
+                            <ng-template pTemplate="inputicon" let-clickCallBack="clickCallBack">
+                              <i class="pi pi-clock pointer-events-none" (click)="clickCallBack($event)"></i>
+                            </ng-template>
+                          </p-calendar>
+                        </div>
+                      </div>
+                    </label>
+                  </div>
+            
+                  <div>
+                    <label class="w-60 text-[10px]" hlmLabel> Date de rendez-vous
+                      <div class="card flex flex-wrap gap-3 p-fluid">
+                        <div class="flex-auto">
+                          <label for="buttondisplay" class="text-[10px] font-bold block mb-2 mt-2">Date</label>
+                          <p-calendar 
+                            [(ngModel)]="date2" 
+                            [showIcon]="true" 
+                            inputId="buttondisplay" 
+                            [showOnFocus]="false" />
+                        </div> 
+                        
+                        <div class="flex-auto">
+                          <label for="templatedisplay" class="text-[10px] font-bold block mb-2 mt-2">Heure</label>
+                          <p-calendar
+                            [(ngModel)]="date3" 
+                            [iconDisplay]="'input'" 
+                            [showIcon]="true" 
+                            [timeOnly]="true" 
+                            inputId="templatedisplay">
+                            <ng-template pTemplate="inputicon" let-clickCallBack="clickCallBack">
+                              <i class="pi pi-clock pointer-events-none" (click)="clickCallBack($event)"></i>
+                            </ng-template>
+                          </p-calendar>
+                        </div>
+                      </div>
+                    </label>
+                  </div>
+            
+                  <div class="items-center grid grid-cols-4 gap-4">
+                    <label class="text-[10px]" hlmLabel>Organisateur(s)
+                      <brn-select class="inline-block" placeholder="Sélectionner un/des organisateurs" [multiple]="true">
+                        <hlm-select-trigger class="w-60 text-[10px] rounded-full h-auto">
+                          <hlm-select-value />
+                        </hlm-select-trigger>
+                        <hlm-select-content>
+                          <hlm-option class="text-[10px]" value="Apples">Ryan Foerster</hlm-option>
+                          <hlm-option class="text-[10px]" value="Bananas">Pierre Godfrin</hlm-option>
+                          <hlm-option class="text-[10px]" value="Pears">Manon Aussems</hlm-option>
+                          <hlm-option class="text-[10px]" value="Strawberries">Kevin Igo</hlm-option>
+                        </hlm-select-content>
+                      </brn-select>
+                    </label>
+                  </div>
+            
+                  <div class="items-center grid grid-cols-4 gap-4">
+                    <label class="text-[10px]" hlmLabel>Invitation(s)
+                      <brn-select class="inline-block" placeholder="Sélectionner un/des invité(s)" [multiple]="true">
+                        <hlm-select-trigger class="w-60 text-[10px] rounded-full h-auto">
+                          <hlm-select-value />
+                        </hlm-select-trigger>
+                        <hlm-select-content>
+                          <hlm-option class="text-[10px]" value="Apples">Ryan Foerster</hlm-option>
+                          <hlm-option class="text-[10px]" value="Bananas">Pierre Godfrin</hlm-option>
+                          <hlm-option class="text-[10px]" value="Pears">Manon Aussems</hlm-option>
+                          <hlm-option class="text-[10px]" value="Strawberries">Kevin Igo</hlm-option>
+                        </hlm-select-content>
+                      </brn-select>
+                    </label>
+                  </div>
+                </div>
+                <hlm-dialog-footer>
+                  <button class="rounded-full text-[10px] h-auto " hlmBtn type="submit">Créer</button>
+                </hlm-dialog-footer>
+              </hlm-dialog-content>
             </hlm-dialog>
         </div>
 
@@ -208,48 +295,135 @@
                                 </hlm-menu>
                               </ng-template>
         
-                            <hlm-dialog>
+                              <hlm-dialog>
                                 <button class="rounded-full w-full text-[10px] h-auto" id="edit-profile" brnDialogTrigger hlmBtn>Modifier</button>
                                 <hlm-dialog-content class="w-80 rounded-xl" *brnDialogContent="let ctx">
                                   <hlm-dialog-header>
                                     <h3 hlmDialogTitle>Modifier l'évènement</h3>
                                     <p class="text-[10px]" hlmDialogDescription>Modifier l'événement ici. Cliquez sur “Enregistrer” lorsque vous avez terminé.</p>
                                   </hlm-dialog-header>
-                                    <div class="py-4 grid gap-4">
-                                        <div class="items-center grid grid-cols-4 gap-4">
-                                            <label class="w-60 text-[10px]" hlmLabel>Nom de l'évènement
-                                                <input class="w-60 text-[10px]" hlmInput type='email' placeholder='Le concert des zouzou'/>
-                                            </label>
-                                        </div>
-                    
-                                        <div class="items-center grid grid-cols-4 gap-4">
-                                            <label class="w-60 text-[10px]" hlmLabel>Description
-                                                <textarea class="w-60 text-[10px] h-20" hlmInput type='email' placeholder='Concert à ciel ouvert ouvert avec les artiste de la troupe des lions'></textarea>
-                                            </label>
-                                        </div>
-                    
-                                        <div class="items-center grid grid-cols-4 gap-4">
-                                            <label class="w-60 text-[10px]" hlmLabel>Adresse
-                                                <input class="w-60 text-[10px]" hlmInput type='email' placeholder='Place des arts 1, 4020 Liège'/>
-                                            </label>
-                                        </div>
-                    
-                                        <div class="items-center grid grid-cols-4 gap-4">
-                                            <label class="w-60 text-[10px]" hlmLabel>Organisateur(s)
-                                                <brn-select class="inline-block" placeholder="Selectionner un/des organisateurs" [multiple]="true">
-                                                    <hlm-select-trigger class="w-60 text-[10px]">
-                                                    <hlm-select-value />
-                                                    </hlm-select-trigger>
-                                                    <hlm-select-content>
-                                                    <hlm-option class="text-[10px]" value="Apples">Ryan Foerster</hlm-option>
-                                                    <hlm-option class="text-[10px]" value="Bananas">Pierre Godfrin</hlm-option>
-                                                    <hlm-option class="text-[10px]" value="Pears">Manon Aussems</hlm-option>
-                                                    <hlm-option class="text-[10px]" value="Strawberries">Kevin Igo</hlm-option>
-                                                    </hlm-select-content>
-                                                </brn-select>
-                                            </label>
-                                        </div>
+                                  <div class="py-4 grid gap-4 max-h-[60vh] overflow-y-auto">
+                                    <div class="items-center grid grid-cols-4 gap-4">
+                                      <label class="w-60 text-[10px]" hlmLabel>Nom de l'évènement
+                                        <input class="w-60 text-[10px]" hlmInput type='email' placeholder='Le concert des zouzou'/>
+                                      </label>
                                     </div>
+                              
+                                    <div class="items-center grid grid-cols-4 gap-4">
+                                      <label class="w-60 text-[10px]" hlmLabel>Description
+                                        <textarea class="w-60 text-[10px] h-20" hlmInput type='email' placeholder='Concert à ciel ouvert avec les artistes de la troupe des lions'></textarea>
+                                      </label>
+                                    </div>
+                              
+                                    <div class="items-center grid grid-cols-4 gap-4">
+                                      <label class="w-60 text-[10px]" hlmLabel>Adresse
+                                        <input class="w-60 text-[10px]" hlmInput type='email' placeholder='Place des arts 1, 4020 Liège'/>
+                                      </label>
+                                    </div>
+                              
+                                    <div>
+                                      <label class="w-60 text-[10px]" hlmLabel> Date de début
+                                        <div class="card flex flex-wrap gap-3 p-fluid">
+                                          <div class="flex-auto">
+                                            <label for="buttondisplay" class="text-[10px] font-bold block mb-2 mt-2">Date</label>
+                                            <p-calendar 
+                                                [(ngModel)]="date2" 
+                                                [showIcon]="true" 
+                                                inputId="buttondisplay" 
+                                                [showOnFocus]="false" />
+                                          </div> 
+                                          
+                                          <div class="flex-auto">
+                                            <label for="templatedisplay" class="text-[10px] font-bold block mb-2 mt-2">Heure</label>
+                                            <p-calendar 
+                                                [(ngModel)]="date3" 
+                                                [iconDisplay]="'input'" 
+                                                [showIcon]="true" 
+                                                [timeOnly]="true" 
+                                                inputId="templatedisplay">
+                                                <ng-template pTemplate="inputicon" let-clickCallBack="clickCallBack">
+                                                  <i class="pi pi-clock pointer-events-none" (click)="clickCallBack($event)"></i>
+                                                </ng-template>
+                                            </p-calendar>
+                                          </div>
+                                        </div>
+                                      </label>
+                                    </div>
+                              
+                                    <div>
+                                      <label class="w-60 text-[10px]" hlmLabel> Date de fin
+                                        <div class="card flex flex-wrap gap-3 p-fluid">
+                                          <div class="flex-auto">
+                                            <label for="buttondisplay" class="text-[10px] font-bold block mb-2 mt-2">Date</label>
+                                            <p-calendar 
+                                                [(ngModel)]="date2" 
+                                                [showIcon]="true" 
+                                                inputId="buttondisplay" 
+                                                [showOnFocus]="false" />
+                                          </div> 
+                                          
+                                          <div class="flex-auto">
+                                            <label for="templatedisplay" class="text-[10px] font-bold block mb-2 mt-2">Heure</label>
+                                            <p-calendar 
+                                                [(ngModel)]="date3" 
+                                                [iconDisplay]="'input'" 
+                                                [showIcon]="true" 
+                                                [timeOnly]="true" 
+                                                inputId="templatedisplay">
+                                                <ng-template pTemplate="inputicon" let-clickCallBack="clickCallBack">
+                                                  <i class="pi pi-clock pointer-events-none" (click)="clickCallBack($event)"></i>
+                                                </ng-template>
+                                            </p-calendar>
+                                          </div>
+                                        </div>
+                                      </label>
+                                    </div>
+                              
+                                    <div>
+                                      <label class="w-60 text-[10px]" hlmLabel> Date de rendez-vous
+                                        <div class="card flex flex-wrap gap-3 p-fluid">
+                                          <div class="flex-auto">
+                                            <label for="buttondisplay" class="text-[10px] font-bold block mb-2 mt-2">Date</label>
+                                            <p-calendar 
+                                                [(ngModel)]="date2" 
+                                                [showIcon]="true" 
+                                                inputId="buttondisplay" 
+                                                [showOnFocus]="false" />
+                                          </div> 
+                                          
+                                          <div class="flex-auto">
+                                            <label for="templatedisplay" class="text-[10px] font-bold block mb-2 mt-2">Heure</label>
+                                            <p-calendar
+                                                [(ngModel)]="date3" 
+                                                [iconDisplay]="'input'" 
+                                                [showIcon]="true" 
+                                                [timeOnly]="true" 
+                                                inputId="templatedisplay">
+                                                <ng-template pTemplate="inputicon" let-clickCallBack="clickCallBack">
+                                                  <i class="pi pi-clock pointer-events-none" (click)="clickCallBack($event)"></i>
+                                                </ng-template>
+                                            </p-calendar>
+                                          </div>
+                                        </div>
+                                      </label>
+                                    </div>
+                              
+                                    <div class="items-center grid grid-cols-2 gap-4">
+                                      <label class="w-60 text-[10px]" hlmLabel>Organisateur(s)
+                                        <brn-select class="inline-block" placeholder="Sélectionner un/des organisateurs" [multiple]="true">
+                                          <hlm-select-trigger class="w-60 text-[10px]">
+                                            <hlm-select-value />
+                                          </hlm-select-trigger>
+                                          <hlm-select-content>
+                                            <hlm-option class="text-[10px]" value="Apples">Ryan Foerster</hlm-option>
+                                            <hlm-option class="text-[10px]" value="Bananas">Pierre Godfrin</hlm-option>
+                                            <hlm-option class="text-[10px]" value="Pears">Manon Aussems</hlm-option>
+                                            <hlm-option class="text-[10px]" value="Strawberries">Kevin Igo</hlm-option>
+                                          </hlm-select-content>
+                                        </brn-select>
+                                      </label>
+                                    </div>
+                                  </div>
                                   <hlm-dialog-footer>
                                     <button class="rounded-full text-[10px] h-auto" hlmBtn type="submit">Enregistrer</button>
                                   </hlm-dialog-footer>
@@ -533,6 +707,93 @@
                         </label>
                     </div>
 
+                    <div>
+                      <label class="w-60 text-[10px]" hlmLabel> Date de début
+                        <div class="card flex flex-wrap gap-3 p-fluid">
+                          <div class="flex-auto">
+                            <label for="buttondisplay" class="text-[10px] font-bold block mb-2 mt-2">Date</label>
+                            <p-calendar 
+                                [(ngModel)]="date2" 
+                                [showIcon]="true" 
+                                inputId="buttondisplay" 
+                                [showOnFocus]="false" />
+                          </div> 
+                          
+                          <div class="flex-auto">
+                            <label for="templatedisplay" class="text-[10px] font-bold block mb-2 mt-2">Heure</label>
+                            <p-calendar 
+                                [(ngModel)]="date3" 
+                                [iconDisplay]="'input'" 
+                                [showIcon]="true" 
+                                [timeOnly]="true" 
+                                inputId="templatedisplay">
+                                <ng-template pTemplate="inputicon" let-clickCallBack="clickCallBack">
+                                  <i class="pi pi-clock pointer-events-none" (click)="clickCallBack($event)"></i>
+                                </ng-template>
+                            </p-calendar>
+                          </div>
+                        </div>
+                      </label>
+                    </div>
+              
+                    <div>
+                      <label class="w-60 text-[10px]" hlmLabel> Date de fin
+                        <div class="card flex flex-wrap gap-3 p-fluid">
+                          <div class="flex-auto">
+                            <label for="buttondisplay" class="text-[10px] font-bold block mb-2 mt-2">Date</label>
+                            <p-calendar 
+                                [(ngModel)]="date2" 
+                                [showIcon]="true" 
+                                inputId="buttondisplay" 
+                                [showOnFocus]="false" />
+                          </div> 
+                          
+                          <div class="flex-auto">
+                            <label for="templatedisplay" class="text-[10px] font-bold block mb-2 mt-2">Heure</label>
+                            <p-calendar 
+                                [(ngModel)]="date3" 
+                                [iconDisplay]="'input'" 
+                                [showIcon]="true" 
+                                [timeOnly]="true" 
+                                inputId="templatedisplay">
+                                <ng-template pTemplate="inputicon" let-clickCallBack="clickCallBack">
+                                  <i class="pi pi-clock pointer-events-none" (click)="clickCallBack($event)"></i>
+                                </ng-template>
+                            </p-calendar>
+                          </div>
+                        </div>
+                      </label>
+                    </div>
+              
+                    <div>
+                      <label class="w-60 text-[10px]" hlmLabel> Date de rendez-vous
+                        <div class="card flex flex-wrap gap-3 p-fluid">
+                          <div class="flex-auto">
+                            <label for="buttondisplay" class="text-[10px] font-bold block mb-2 mt-2">Date</label>
+                            <p-calendar 
+                                [(ngModel)]="date2" 
+                                [showIcon]="true" 
+                                inputId="buttondisplay" 
+                                [showOnFocus]="false" />
+                          </div> 
+                          
+                          <div class="flex-auto">
+                            <label for="templatedisplay" class="text-[10px] font-bold block mb-2 mt-2">Heure</label>
+                            <p-calendar
+                                [(ngModel)]="date3" 
+                                [iconDisplay]="'input'" 
+                                [showIcon]="true" 
+                                [timeOnly]="true" 
+                                inputId="templatedisplay">
+                                <ng-template pTemplate="inputicon" let-clickCallBack="clickCallBack">
+                                  <i class="pi pi-clock pointer-events-none" (click)="clickCallBack($event)"></i>
+                                </ng-template>
+                            </p-calendar>
+                          </div>
+                        </div>
+                      </label>
+                    </div>
+
                     <div class="items-center grid grid-cols-4 gap-4">
                         <label hlmLabel>Organisateur(s)
                             <brn-select class="inline-block" placeholder="Selectionner un/des organisateurs" [multiple]="true">
@@ -734,6 +995,93 @@
                                         <label hlmLabel>Adresse
                                             <input class='w-80' hlmInput type='email' placeholder='Place des arts 1, 4020 Liège'/>
                                         </label>
+                                    </div>
+
+                                    <div>
+                                      <label class="w-60 text-[10px]" hlmLabel> Date de début
+                                        <div class="card flex flex-wrap gap-3 p-fluid">
+                                          <div class="flex-auto">
+                                            <label for="buttondisplay" class="text-[10px] font-bold block mb-2 mt-2">Date</label>
+                                            <p-calendar 
+                                                [(ngModel)]="date2" 
+                                                [showIcon]="true" 
+                                                inputId="buttondisplay" 
+                                                [showOnFocus]="false" />
+                                          </div> 
+                                          
+                                          <div class="flex-auto">
+                                            <label for="templatedisplay" class="text-[10px] font-bold block mb-2 mt-2">Heure</label>
+                                            <p-calendar 
+                                                [(ngModel)]="date3" 
+                                                [iconDisplay]="'input'" 
+                                                [showIcon]="true" 
+                                                [timeOnly]="true" 
+                                                inputId="templatedisplay">
+                                                <ng-template pTemplate="inputicon" let-clickCallBack="clickCallBack">
+                                                  <i class="pi pi-clock pointer-events-none" (click)="clickCallBack($event)"></i>
+                                                </ng-template>
+                                            </p-calendar>
+                                          </div>
+                                        </div>
+                                      </label>
+                                    </div>
+                              
+                                    <div>
+                                      <label class="w-60 text-[10px]" hlmLabel> Date de fin
+                                        <div class="card flex flex-wrap gap-3 p-fluid">
+                                          <div class="flex-auto">
+                                            <label for="buttondisplay" class="text-[10px] font-bold block mb-2 mt-2">Date</label>
+                                            <p-calendar 
+                                                [(ngModel)]="date2" 
+                                                [showIcon]="true" 
+                                                inputId="buttondisplay" 
+                                                [showOnFocus]="false" />
+                                          </div> 
+                                          
+                                          <div class="flex-auto">
+                                            <label for="templatedisplay" class="text-[10px] font-bold block mb-2 mt-2">Heure</label>
+                                            <p-calendar 
+                                                [(ngModel)]="date3" 
+                                                [iconDisplay]="'input'" 
+                                                [showIcon]="true" 
+                                                [timeOnly]="true" 
+                                                inputId="templatedisplay">
+                                                <ng-template pTemplate="inputicon" let-clickCallBack="clickCallBack">
+                                                  <i class="pi pi-clock pointer-events-none" (click)="clickCallBack($event)"></i>
+                                                </ng-template>
+                                            </p-calendar>
+                                          </div>
+                                        </div>
+                                      </label>
+                                    </div>
+                              
+                                    <div>
+                                      <label class="w-60 text-[10px]" hlmLabel> Date de rendez-vous
+                                        <div class="card flex flex-wrap gap-3 p-fluid">
+                                          <div class="flex-auto">
+                                            <label for="buttondisplay" class="text-[10px] font-bold block mb-2 mt-2">Date</label>
+                                            <p-calendar 
+                                                [(ngModel)]="date2" 
+                                                [showIcon]="true" 
+                                                inputId="buttondisplay" 
+                                                [showOnFocus]="false" />
+                                          </div> 
+                                          
+                                          <div class="flex-auto">
+                                            <label for="templatedisplay" class="text-[10px] font-bold block mb-2 mt-2">Heure</label>
+                                            <p-calendar
+                                                [(ngModel)]="date3" 
+                                                [iconDisplay]="'input'" 
+                                                [showIcon]="true" 
+                                                [timeOnly]="true" 
+                                                inputId="templatedisplay">
+                                                <ng-template pTemplate="inputicon" let-clickCallBack="clickCallBack">
+                                                  <i class="pi pi-clock pointer-events-none" (click)="clickCallBack($event)"></i>
+                                                </ng-template>
+                                            </p-calendar>
+                                          </div>
+                                        </div>
+                                      </label>
                                     </div>
                 
                                     <div class="items-center grid grid-cols-4 gap-4">

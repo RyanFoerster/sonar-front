@@ -56,5 +56,14 @@ export const routes: Routes = [
   canActivate: [authGuard]
 },
 
-
+{
+  path: "usage-policy",
+  loadComponent: () => import('./usage-policy/usage-policy.component').then((m) => m.UsagePolicyComponent),
+  canActivate: [authGuard]
+},
+{
+  path: "privacy-policy",
+  loadComponent: () => import('./privacy-policy/privacy-policy.component').then((m) => m.PrivacyPolicyComponent),
+  canActivate: [authGuard]
+},
 ];

@@ -14,6 +14,7 @@ export function authInterceptor(req: HttpRequest<unknown>, next: HttpHandlerFn) 
     req = req.clone({headers});
   }
 
+
   return next(req).pipe(
     catchError(error => {
       if (error.status === 401) {

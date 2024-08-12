@@ -2,7 +2,7 @@ import {inject, Injectable} from '@angular/core';
 import {HttpClient} from "@angular/common/http";
 import {ClientEntity} from "../entities/client.entity";
 import {ClientDto} from "../dtos/client.dto";
-import {environments} from "../../../environments/environments";
+import {environment} from "../../../environments/environment";
 
 @Injectable({
   providedIn: 'root'
@@ -14,10 +14,10 @@ export class ClientService {
   constructor() { }
 
   create(clientDto: ClientDto) {
-    return this.httpClient.post<ClientEntity>(`${environments.API_URL}/clients`, clientDto)
+    return this.httpClient.post<ClientEntity>(`${environment.API_URL}/clients`, clientDto)
   }
 
   getOneById(id: number) {
-    return this.httpClient.get<ClientEntity>(`${environments.API_URL}/clients/${id}`)
+    return this.httpClient.get<ClientEntity>(`${environment.API_URL}/clients/${id}`)
   }
 }

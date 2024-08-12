@@ -1,7 +1,7 @@
 import {inject, Injectable} from '@angular/core';
 import {HttpClient} from "@angular/common/http";
 import {VirementSepaDto} from "../dtos/virement-sepa.dto";
-import {environments} from "../../../environments/environments";
+import {environment} from "../../../environments/environment";
 import {VirementSepaEntity} from "../entities/virement-sepa.entity";
 
 @Injectable({
@@ -14,7 +14,7 @@ export class VirementSepaService {
   constructor() { }
 
   createVirementSepa(createVirementSepaDto: VirementSepaDto, id: number, typeOfProjet: string) {
-    return this.httpClient.post<VirementSepaEntity>(`${environments.API_URL}/virement-sepa`, createVirementSepaDto, {
+    return this.httpClient.post<VirementSepaEntity>(`${environment.API_URL}/virement-sepa`, createVirementSepaDto, {
       params: {
         id: id,
         typeOfProjet: typeOfProjet
@@ -23,14 +23,14 @@ export class VirementSepaService {
   }
 
   getAll() {
-    return this.httpClient.get<VirementSepaEntity[]>(`${environments.API_URL}/virement-sepa`)
+    return this.httpClient.get<VirementSepaEntity[]>(`${environment.API_URL}/virement-sepa`)
   }
 
   acceptVirement(id: number) {
-    return this.httpClient.patch(`${environments.API_URL}/virement-sepa/${id}/accept`, {})
+    return this.httpClient.patch(`${environment.API_URL}/virement-sepa/${id}/accept`, {})
   }
 
   rejectVirement(id: number) {
-    return this.httpClient.patch(`${environments.API_URL}/virement-sepa/${id}/reject`, {})
+    return this.httpClient.patch(`${environment.API_URL}/virement-sepa/${id}/reject`, {})
   }
 }

@@ -1,7 +1,7 @@
 import {inject, Injectable} from '@angular/core';
 import {HttpClient} from "@angular/common/http";
 import {QuoteDto} from "../dtos/quote.dto";
-import {environments} from "../../../environments/environments";
+import {environment} from "../../../environments/environment";
 import {QuoteEntity} from "../entities/quote.entity";
 
 @Injectable({
@@ -14,6 +14,6 @@ export class QuoteService {
   constructor() { }
 
   createQuote(quoteDto: QuoteDto) {
-    return this.httpClient.post<QuoteEntity>(`${environments.API_URL}/quote`, quoteDto);
+    return this.httpClient.post<QuoteEntity>(`${environment.API_URL}/quote`, quoteDto);
   }
 }

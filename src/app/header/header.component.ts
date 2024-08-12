@@ -1,4 +1,4 @@
-import {AfterViewInit, Component, effect, inject, signal} from '@angular/core';
+import {AfterViewInit, Component, effect, inject, PLATFORM_ID, signal} from '@angular/core';
 import {Router, RouterLink} from '@angular/router';
 import {HlmButtonDirective} from '@spartan-ng/ui-button-helm';
 import {BrnMenuTriggerDirective} from '@spartan-ng/ui-menu-brain';
@@ -22,7 +22,7 @@ import {
 
 import {HlmIconComponent, provideIcons} from '@spartan-ng/ui-icon-helm';
 import {lucideBell} from '@ng-icons/lucide';
-import {NgClass, NgOptimizedImage} from '@angular/common';
+import {isPlatformBrowser, JsonPipe, NgClass, NgOptimizedImage} from '@angular/common';
 import {HeaderMobileComponent} from "../header-mobile/header-mobile.component";
 import {AuthService} from '../shared/services/auth.service';
 import {UsersService} from "../shared/services/users.service";
@@ -54,6 +54,7 @@ import {UserEntity} from "../shared/entities/user.entity";
     NgClass,
     HeaderMobileComponent,
     NgOptimizedImage,
+    JsonPipe,
   ],
   providers: [provideIcons({lucideBell})],
   templateUrl: './header.component.html',
@@ -64,6 +65,8 @@ export class HeaderComponent implements AfterViewInit {
 
   authService: AuthService = inject(AuthService)
   usersService: UsersService = inject(UsersService)
+  private readonly platformId = inject(PLATFORM_ID);
+
 
   isUserConnected = signal(false)
   connectedUser = signal<UserEntity | undefined>(undefined)
@@ -77,7 +80,11 @@ export class HeaderComponent implements AfterViewInit {
   router: Router = inject(Router)
 
   ngAfterViewInit() {
-    this.usersService.getInfo().subscribe(data => this.connectedUser.set(data))
+    if (isPlatformBrowser(this.platformId)) {
+      if (localStorage.getItem("user")) {
+        this.connectedUser.set(JSON.parse(localStorage.getItem("user") ?? "{}"))
+      }
+    }
   }
 
 

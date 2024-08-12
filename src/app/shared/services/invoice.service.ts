@@ -1,7 +1,7 @@
 import {inject, Injectable} from '@angular/core';
 import {HttpClient} from "@angular/common/http";
 import {QuoteEntity} from "../entities/quote.entity";
-import {environments} from "../../../environments/environments";
+import {environment} from "../../../environments/environment";
 import {InvoiceEntity} from "../entities/invoice.entity";
 
 @Injectable({
@@ -15,7 +15,7 @@ export class InvoiceService {
   }
 
   createInvoice(quote: QuoteEntity, type: string, account_id: number) {
-    return this.httpClient.post<InvoiceEntity>(`${environments.API_URL}/invoice`, {quote}, {
+    return this.httpClient.post<InvoiceEntity>(`${environment.API_URL}/invoice`, {quote}, {
       params: {
         account_id: account_id,
         type: type,

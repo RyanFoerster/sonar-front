@@ -1,7 +1,7 @@
 import {inject, Injectable} from '@angular/core';
 import {HttpClient} from "@angular/common/http";
 import {ProductDto} from "../dtos/product.dto";
-import {environments} from "../../../environments/environments";
+import {environment} from "../../../environments/environment";
 import {ProductEntity} from "../entities/product.entity";
 
 @Injectable({
@@ -14,6 +14,6 @@ export class ProductService {
   constructor() { }
 
   createProduct(productDto: ProductDto) {
-    return this.httpClient.post<ProductEntity>(`${environments.API_URL}/product`, productDto)
+    return this.httpClient.post<ProductEntity>(`${environment.API_URL}/product`, productDto)
   }
 }

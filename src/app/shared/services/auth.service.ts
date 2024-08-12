@@ -1,6 +1,6 @@
 import {isPlatformBrowser} from '@angular/common';
 import {inject, Injectable, PLATFORM_ID, signal} from '@angular/core';
-import {environments} from '../../../environments/environments';
+import {environment} from '../../../environments/environment';
 import {HttpClient} from "@angular/common/http";
 import {tap} from "rxjs";
 import {UserEntity} from "../entities/user.entity";
@@ -20,24 +20,25 @@ export class AuthService {
 
   constructor() {
     if (isPlatformBrowser(this.platformId)) {
-      const tokenInStorage = localStorage.getItem(environments.TOKEN_KEY);
-      const refreshTokenInStorage = localStorage.getItem(environments.REFRESH_TOKEN_KEY);
+      const tokenInStorage = localStorage.getItem(environment.TOKEN_KEY);
+      const refreshTokenInStorage = localStorage.getItem(environment.REFRESH_TOKEN_KEY);
 
       if (tokenInStorage && refreshTokenInStorage) {
         this.token.set(tokenInStorage);
         this.refreshTokenFromStorage.set(refreshTokenInStorage);
+        sessionStorage.setItem("userLogin", String(true))
       } else {
         this.token.set(null);
         this.refreshTokenFromStorage.set(null);
-
+        sessionStorage.setItem("userLogin", String(false))
       }
     }
   }
 
   async saveToken(token: string, refreshToken: string) {
-    console.log('Saving tokens:', token, refreshToken);
-    localStorage.setItem(environments.TOKEN_KEY, token);
-    localStorage.setItem(environments.REFRESH_TOKEN_KEY, refreshToken);
+    localStorage.setItem(environment.TOKEN_KEY, token);
+    localStorage.setItem(environment.REFRESH_TOKEN_KEY, refreshToken);
+    sessionStorage.setItem("userLogin", String(true))
     this.token.set(token);
     this.refreshTokenFromStorage.set(refreshToken);
   }
@@ -51,36 +52,35 @@ export class AuthService {
   }
 
   removeToken() {
-    console.log('Removing tokens');
-    localStorage.removeItem(environments.TOKEN_KEY);
-    localStorage.removeItem(environments.REFRESH_TOKEN_KEY);
+    localStorage.removeItem(environment.TOKEN_KEY);
+    localStorage.removeItem(environment.REFRESH_TOKEN_KEY);
+    sessionStorage.setItem("userLogin", String(false))
     this.token.set(null);
     this.refreshTokenFromStorage.set(null);
   }
 
   refreshToken() {
-    const refreshToken = localStorage.getItem(environments.REFRESH_TOKEN_KEY);
+    const refreshToken = localStorage.getItem(environment.REFRESH_TOKEN_KEY);
     return this.httpClient.post<{ access_token: string, refresh_token: string }>(
-      `${environments.API_URL}/auth/refresh`,
+      `${environment.API_URL}/auth/refresh`,
       { refreshToken }
     ).pipe(
       tap(async tokens => {
-        console.log('Refreshing tokens:', tokens);
         await this.saveToken(tokens.access_token, tokens.refresh_token);
       })
     );
   }
 
   saveUser(user: UserEntity) {
-    if(localStorage.getItem(environments.USER_KEY)) {
-      localStorage.removeItem(environments.USER_KEY)
+    if(localStorage.getItem(environment.USER_KEY)) {
+      localStorage.removeItem(environment.USER_KEY)
     }
-    localStorage.setItem(environments.USER_KEY, JSON.stringify(user))
+    localStorage.setItem(environment.USER_KEY, JSON.stringify(user))
     this.userFromStorage.set(user)
   }
 
   removeUser() {
-    localStorage.removeItem(environments.USER_KEY)
+    localStorage.removeItem(environment.USER_KEY)
     this.userFromStorage.set(null)
 
   }

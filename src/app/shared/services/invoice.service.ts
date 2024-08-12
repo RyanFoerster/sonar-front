@@ -1,8 +1,8 @@
 import {inject, Injectable} from '@angular/core';
 import {HttpClient} from "@angular/common/http";
 import {QuoteEntity} from "../entities/quote.entity";
-import {environment} from "../../../environments/environment";
 import {InvoiceEntity} from "../entities/invoice.entity";
+import {environment} from "../../../environments/environment";
 
 @Injectable({
   providedIn: 'root'

@@ -22,14 +22,16 @@ export class AuthService {
     if (isPlatformBrowser(this.platformId)) {
       const tokenInStorage = localStorage.getItem(environment.TOKEN_KEY);
       const refreshTokenInStorage = localStorage.getItem(environment.REFRESH_TOKEN_KEY);
-
+      const userInStorage = localStorage.getItem(environment.USER_KEY);
       if (tokenInStorage && refreshTokenInStorage) {
         this.token.set(tokenInStorage);
         this.refreshTokenFromStorage.set(refreshTokenInStorage);
+        this.userFromStorage.set(JSON.parse(userInStorage ?? "{}"))
         sessionStorage.setItem("userLogin", String(true))
       } else {
         this.token.set(null);
         this.refreshTokenFromStorage.set(null);
+        this.userFromStorage.set(null)
         sessionStorage.setItem("userLogin", String(false))
       }
     }

@@ -1,6 +1,6 @@
 <div class="py-5 px-10 h-20 flex gap-5 rounded justify-between items-center relative">
 
-    <img [src]='connectedUser()?.profilePicture' alt='oui' class="w-10 h-10 rounded-full" />
+    <img class="w-36" src='assets/images/Groupe-30.png' alt='Logo de sonar'  />
 
     @if (isUserConnected()) {
       <div class="gap-2 justify-center items-center hidden md:flex">
@@ -12,6 +12,10 @@
         </hlm-menu-bar>
 
         <hlm-icon size='sm' name="lucideBell" />
+        <a href="/profile">
+          <img class="size-10 rounded-full ring ring-black" [src]="connectedUser()?.profilePicture" [alt]="connectedUser()?.firstName">
+
+        </a>
         <a (click)="logout()" class="cursor-pointer rounded-full" hlmBtn>Déconnexion</a>
     </div>
     <app-header-mobile class="md:hidden" />

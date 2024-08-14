@@ -28,6 +28,7 @@ import {HeaderMobileComponent} from "../header-mobile/header-mobile.component";
 import {AuthService} from '../shared/services/auth.service';
 import {UsersService} from "../shared/services/users.service";
 import {UserEntity} from "../shared/entities/user.entity";
+import {environment} from "../../environments/environment";
 
 @Component({
   selector: 'app-header',
@@ -70,7 +71,7 @@ export class HeaderComponent implements AfterViewInit {
 
 
   isUserConnected = signal(false)
-  connectedUser = signal<UserEntity | undefined>(undefined)
+  connectedUser = signal<UserEntity | null>(null)
   profilePicture = signal<any>('')
   userConnectedCondition = effect(() => {
     this.isUserConnected.set(this.authService.getToken() !== null)
@@ -79,6 +80,14 @@ export class HeaderComponent implements AfterViewInit {
   })
 
   router: Router = inject(Router)
+
+  constructor() {
+      effect(() => {
+        this.connectedUser.set(this.authService.getUser())
+    }, {
+        allowSignalWrites: true
+      })
+  }
 
   ngAfterViewInit() {
     if (isPlatformBrowser(this.platformId)) {

@@ -25,6 +25,7 @@
             <hlm-td truncate class="font-medium w-52">{{ quote.id }}</hlm-td>
             <hlm-td class="w-60">{{ quote.quote_date | date : 'dd/MM/YYYY' }}</hlm-td>
             <hlm-td class="flex-1">{{ quote.client.name }}</hlm-td>
+            <hlm-td class="flex-1">{{ quote.client.name }}</hlm-td>
             <hlm-td class="justify-end w-40">{{ quote.total | euroFormat }}</hlm-td>
             <hlm-td class="flex-1">
               <button (click)="generateQuotePDF(quote)">

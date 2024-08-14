@@ -2,6 +2,7 @@ import {Routes} from '@angular/router';
 import {authGuard} from './shared/guards/auth.guard';
 import {activatedUserGuard} from "./shared/guards/activated-user.guard";
 import {adminGuard} from "./shared/guards/admin.guard";
+import {AccountBalanceComponent} from "./account-balance/account-balance.component";
 
 export const routes: Routes = [
   {
@@ -50,20 +51,21 @@ export const routes: Routes = [
     loadComponent: () => import('./admin/sepa-validation/sepa-validation.component').then((m) => m.SepaValidationComponent),
     canActivate: [authGuard, activatedUserGuard, adminGuard]
   },
-{
-  path: "diary",
-  loadComponent: () => import('./users/diary/diary.component').then((m) => m.DiaryComponent),
-  canActivate: [authGuard]
-},
+  {
+    path: "diary",
+    loadComponent: () => import('./users/diary/diary.component').then((m) => m.DiaryComponent),
+    canActivate: [authGuard]
+  },
 
-{
-  path: "usage-policy",
-  loadComponent: () => import('./usage-policy/usage-policy.component').then((m) => m.UsagePolicyComponent),
-  canActivate: [authGuard]
-},
-{
-  path: "privacy-policy",
-  loadComponent: () => import('./privacy-policy/privacy-policy.component').then((m) => m.PrivacyPolicyComponent),
-  canActivate: [authGuard]
-},
+  {
+    path: "usage-policy",
+    loadComponent: () => import('./usage-policy/usage-policy.component').then((m) => m.UsagePolicyComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: "privacy-policy",
+    loadComponent: () => import('./privacy-policy/privacy-policy.component').then((m) => m.PrivacyPolicyComponent),
+    canActivate: [authGuard]
+  },
+  {path: 'callback', component: AccountBalanceComponent},
 ];

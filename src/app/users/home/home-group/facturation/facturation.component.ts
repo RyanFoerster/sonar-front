@@ -73,7 +73,6 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
 
   private usersService: UsersService = inject(UsersService);
   private invoiceService: InvoiceService = inject(InvoiceService);
-  private authService: AuthService = inject(AuthService)
 
   id = input<number>()
   typeOfProjet = input<string>()

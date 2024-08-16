@@ -1,52 +1,56 @@
 <div class="py-5 px-10 h-20 flex gap-5 rounded justify-between items-center relative">
 
-    <img class="w-36" src='assets/images/Groupe-30.png' alt='Logo de sonar'  />
+  <a href="/home">
+    <img class="w-36" src='assets/images/Groupe-30.png' alt='Logo de sonar'/>
+  </a>
 
-    @if (isUserConnected()) {
-      <div class="gap-2 justify-center items-center hidden md:flex">
-        <hlm-menu-bar class="w-fit border-none">
-            <a routerLink="/home" hlmMenuBarItem >Accueil</a>
-          @if(connectedUser()?.role === "ADMIN") {
-            <a hlmMenuBarItem [brnMenuTriggerFor]="admin">Admin</a>
-          }
-        </hlm-menu-bar>
+  @if (isUserConnected()) {
+    <div class="gap-2 justify-center items-center hidden md:flex">
+      <hlm-menu-bar class="w-fit border-none">
+        <a routerLink="/home" hlmMenuBarItem>Accueil</a>
+        @if (connectedUser()?.role === "ADMIN") {
+          <a hlmMenuBarItem [brnMenuTriggerFor]="admin">Admin</a>
+        }
+      </hlm-menu-bar>
 
-        <hlm-icon size='sm' name="lucideBell" />
-        <a href="/profile">
-          <img class="size-10 rounded-full ring ring-black" [src]="connectedUser()?.profilePicture" [alt]="connectedUser()?.firstName">
+      <hlm-icon size='sm' name="lucideBell"/>
+      <a href="/profile">
+        <img class="size-10 rounded-full ring ring-black" [src]="connectedUser()?.profilePicture"
+             [alt]="connectedUser()?.firstName">
 
-        </a>
-        <a (click)="logout()" class="cursor-pointer rounded-full" hlmBtn>Déconnexion</a>
+      </a>
+      <a (click)="logout()" class="cursor-pointer rounded-full" hlmBtn>Déconnexion</a>
     </div>
-    <app-header-mobile class="md:hidden" />
-    } @else {
-      <div class="flex gap-2 justify-center items-center">
-        <a routerLink="login" hlmBtn class="cursor-pointer hidden md:block rounded-full" [ngClass]="{'md:hidden': router.url === '/login'}">Connexion</a>
-        <a routerLink="register" hlmBtn class="cursor-pointer hidden rounded-full" [ngClass]="{'md:block': router.url === '/login'}">Inscription</a>
-      </div>
-    }
-
+    <app-header-mobile class="md:hidden"/>
+  } @else {
+    <div class="flex gap-2 justify-center items-center">
+      <a routerLink="login" hlmBtn class="cursor-pointer hidden md:block rounded-full"
+         [ngClass]="{'md:hidden': router.url === '/login'}">Connexion</a>
+      <a routerLink="register" hlmBtn class="cursor-pointer hidden rounded-full"
+         [ngClass]="{'md:block': router.url === '/login'}">Inscription</a>
+    </div>
+  }
 
 
 </div>
 
-  <ng-template #admin>
-    <hlm-menu variant="menubar" class="w-64 flex flex-col p-0 items-center justify-start">
-      <a routerLink="user-validation" class="" hlmMenuItemRadio>
-        <hlm-menu-item-radio />
-        Validation utilisateur
-      </a>
-      <a routerLink="sepa-validation" hlmMenuItemRadio>
-        <hlm-menu-item-radio />
-        Validation virement SEPA
-      </a>
-      <a routerLink="creating-new-users" hlmMenuItemRadio>
-        <hlm-menu-item-radio />
-        Création nouveau membre
-      </a>
-      <button hlmMenuItemRadio>
-        <hlm-menu-item-radio />
-        Rendez-vous Visio
-      </button>
-    </hlm-menu>
-  </ng-template>
+<ng-template #admin>
+  <hlm-menu variant="menubar" class="w-64 flex flex-col p-0 items-center justify-start">
+    <a routerLink="user-validation" class="" hlmMenuItemRadio>
+      <hlm-menu-item-radio/>
+      Validation utilisateur
+    </a>
+    <a routerLink="sepa-validation" hlmMenuItemRadio>
+      <hlm-menu-item-radio/>
+      Validation virement SEPA
+    </a>
+    <a routerLink="creating-new-users" hlmMenuItemRadio>
+      <hlm-menu-item-radio/>
+      Création nouveau membre
+    </a>
+    <button hlmMenuItemRadio>
+      <hlm-menu-item-radio/>
+      Rendez-vous Visio
+    </button>
+  </hlm-menu>
+</ng-template>

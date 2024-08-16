@@ -2,7 +2,6 @@ import {Routes} from '@angular/router';
 import {authGuard} from './shared/guards/auth.guard';
 import {activatedUserGuard} from "./shared/guards/activated-user.guard";
 import {adminGuard} from "./shared/guards/admin.guard";
-import {AccountBalanceComponent} from "./account-balance/account-balance.component";
 
 export const routes: Routes = [
   {
@@ -67,5 +66,4 @@ export const routes: Routes = [
     loadComponent: () => import('./privacy-policy/privacy-policy.component').then((m) => m.PrivacyPolicyComponent),
     canActivate: [authGuard]
   },
-  {path: 'callback', component: AccountBalanceComponent},
 ];

@@ -22,4 +22,19 @@ export class InvoiceService {
       }
     });
   }
+
+  getInvoiceById(id: number) {
+    return this.httpClient.get<InvoiceEntity>(`${environment.API_URL}/invoice/${id}`);
+  }
+
+  createCreditNote({linkedInvoiceId, creditNoteAmount}: {linkedInvoiceId: number, creditNoteAmount: number}) {
+    return this.httpClient.post<InvoiceEntity>(`${environment.API_URL}/invoice/credit-note`, {
+      linkedInvoiceId,
+      creditNoteAmount
+    });
+  }
+
+  getCreditNoteByInvoiceId(invoice_id: number) {
+    return this.httpClient.get<InvoiceEntity>(`${environment.API_URL}/invoice/credit-note/${invoice_id}`);
+  }
 }

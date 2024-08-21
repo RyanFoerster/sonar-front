@@ -11,7 +11,7 @@
     </div>
 
 
-    <form  class="flex flex-col gap-5" (ngSubmit)="createCreditNote()">
+    <form class="flex flex-col gap-5" (ngSubmit)="createCreditNote()">
       <div class="flex flex-col justify-center items-center  md:flex-row">
         <label class="w-full font-semibold text-base rounded-full md:text-lg md:w-1/2" hlmLabel
         >Date
@@ -34,7 +34,7 @@
 
       <label class="w-full font-semibold text-base rounded-full md:text-lg md:w-1/2" hlmLabel
       >Délais de paiement
-        <input  class="w-full bg-white shadow-lg text-xs rounded-full md:text-base"
+        <input class="w-full bg-white shadow-lg text-xs rounded-full md:text-base"
                hlmInput type="number" [value]="invoice()?.payment_deadline"
                min="10" max="30" placeholder="10"/>
       </label>
@@ -62,7 +62,6 @@
             <hlm-th class="w-1/12">TVA %</hlm-th>
             <hlm-th class="w-1/12">TVAC</hlm-th>
             <hlm-th class="w-1/12 flex justify-end gap-3">
-              <hlm-icon size='xs' name="lucideTrash"/>
             </hlm-th>
           </hlm-trow>
           @for (product of invoice()?.products; track product.id) {
@@ -81,14 +80,25 @@
 
         </hlm-table>
 
-
-
-
-
       </div>
 
       <div class="w-3/5 md:w-1/5 flex flex-col self-end gap-3 text-xs md:text-lg">
         <div class="flex flex-col gap-1">
+
+          <div class="flex flex-col text-xs">
+            <p>Remise</p>
+            <div class="flex flex-col gap-2 w-full">
+              <input [disabled]="totalHtva() === 0" class="bg-white" hlmInput min="0" [max]="total()" type="number"
+                     (input)="setRemise($event)">
+              <div class="flex gap-1">
+                Pourcentage
+                <hlm-checkbox [disabled]="totalHtva() === 0"
+                              (checkedChange)="isPercentage.set(!isPercentage())"></hlm-checkbox>
+              </div>
+            </div>
+
+          </div>
+
           <div class="flex justify-between text-xs">
             <p>Total HTVA</p>
             <p>{{ totalHtva() | euroFormat }}</p>
@@ -103,17 +113,38 @@
             <p>TVA 6%</p>
             <p>{{ tva6()! | euroFormat }}</p>
           </div>
+
+          @if (remise() > 0) {
+            <div class="flex flex-col gap-1 text-xs">
+              <div class="flex justify-between">
+                <p>Remise</p>
+                @if (isPercentage()) {
+                  <p>{{ remise()! | percent }}</p>
+                } @else {
+                  <p>{{ remise()! | euroFormat }}</p>
+                }
+              </div>
+              @if (remise() > total()) {
+                <p class="text-red-400">Remise supérieure au total</p>
+              } @else if (isPercentage() && remise() > 100) {
+                <p class="text-red-400">Remise supérieure à 100%</p>
+              }
+            </div>
+          }
+
         </div>
 
 
         <div class="flex justify-between text-lg font-bold">
           <p>Total</p>
-          <p>{{ total()! | euroFormat }}</p>
+          @if (remise() > 0) {
+            <p>{{ totalWithRemise()! | euroFormat }}</p>
+          } @else {
+            <p>{{ total()! | euroFormat }}</p>
+          }
         </div>
 
       </div>
-
-
 
 
       <button class="rounded-full flex justify-center items-center gap-2 md:w-1/3 md:self-end mt-3" hlmBtn

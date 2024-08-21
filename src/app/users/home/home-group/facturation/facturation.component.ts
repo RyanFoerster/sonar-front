@@ -321,7 +321,8 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
         ['Total HTVA', `${this.creditNote()?.price_htva.toFixed(2)!} €`],
         ['Total TVA 6%', `${this.creditNote()?.total_vat_6.toFixed(2)!} €`],
         ['Total TVA 21%', `${this.creditNote()?.total_vat_21.toFixed(2)!} €`],
-        ['Total TTC', `${this.creditNote()?.total.toFixed(2)!} €`],
+        ['Total note de crédit', `${this.creditNote()?.creditNoteAmount.toFixed(2)!} €`],
+        ['Total TTC', `${(this.creditNote()?.total! - this.creditNote()?.creditNoteAmount!).toFixed(2)} €`],
       ];
 
       autoTable(doc, {

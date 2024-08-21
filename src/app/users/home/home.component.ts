@@ -15,12 +15,10 @@ import {InputIconModule} from 'primeng/inputicon';
 import {InputTextModule} from 'primeng/inputtext';
 import {HlmButtonDirective} from '@spartan-ng/ui-button-helm';
 import {AccountComponentComponent} from './account-component/account-component.component';
-import {AuthService} from '../../shared/services/auth.service';
 import {UserEntity} from '../../shared/entities/user.entity';
 import {UsersService} from '../../shared/services/users.service';
 import {tap} from 'rxjs';
 import {CompteGroupeEntity} from '../../shared/entities/compte-groupe.entity';
-import {sign} from 'crypto';
 import {CompteGroupeService} from '../../shared/services/compte-groupe.service';
 import {ComptePrincipalService} from '../../shared/services/compte-principal.service';
 import {PrincipalAccountEntity} from '../../shared/entities/principal-account.entity';
@@ -91,7 +89,7 @@ export class HomeComponent {
   }
 
   createGroupProject() {
-    if(this.createGroupProjectForm.valid) {
+    if (this.createGroupProjectForm.valid) {
       this.groupAccountService.createGroupeProject(this.createGroupProjectForm.value).pipe(
         tap(() => this.setConnectedUser())
       ).subscribe()

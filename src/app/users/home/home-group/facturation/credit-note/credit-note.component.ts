@@ -1,4 +1,4 @@
-import {Component, effect, inject, input, signal} from '@angular/core';
+import {Component, effect, importProvidersFrom, inject, input, signal} from '@angular/core';
 import {BrnSelectComponent, BrnSelectContentComponent, BrnSelectValueComponent} from "@spartan-ng/ui-select-brain";
 import {BrnSeparatorComponent} from "@spartan-ng/ui-separator-brain";
 import {EuroFormatPipe} from "../../../../../shared/pipes/euro-format.pipe";
@@ -24,7 +24,7 @@ import {
 import {HlmSeparatorDirective} from "@spartan-ng/ui-separator-helm";
 import {PaginatorModule} from "primeng/paginator";
 import {DatePipe, JsonPipe, Location, NgClass, PercentPipe} from "@angular/common";
-import {FormGroup, ReactiveFormsModule} from "@angular/forms";
+import {FormGroup, NgModel, ReactiveFormsModule} from "@angular/forms";
 import {InvoiceService} from "../../../../../shared/services/invoice.service";
 import {InvoiceEntity} from "../../../../../shared/entities/invoice.entity";
 import {ClientEntity} from "../../../../../shared/entities/client.entity";
@@ -71,7 +71,7 @@ import {Router} from "@angular/router";
     ReactiveFormsModule,
     DatePipe,
     JsonPipe,
-    NgClass
+    NgClass,
   ],
   providers: [
     provideIcons({
@@ -84,7 +84,7 @@ import {Router} from "@angular/router";
       lucideXCircle,
       lucideAlertTriangle,
       lucideUndo2
-    })
+    }),
   ],
   templateUrl: './credit-note.component.html',
   styleUrl: './credit-note.component.css'
@@ -93,12 +93,15 @@ export class CreditNoteComponent {
   invoice_id = input<string>()
   invoice = signal<InvoiceEntity | null>(null)
   client = signal<ClientEntity | null>(null)
+  protected remise = signal(0)
   protected totalHtva = signal(0)
   protected tva21 = signal(0)
   protected tva6 = signal(0)
   protected total = signal(0)
+  protected totalWithRemise = signal(0)
   protected creditNoteAmount = signal(0)
   protected disabledList = signal<number[]>([])
+  protected isPercentage = signal<Boolean>(false)
   createCreditNoteForm!: FormGroup
 
   private invoiceService: InvoiceService = inject(InvoiceService)
@@ -115,6 +118,7 @@ export class CreditNoteComponent {
           this.tva6.set(data.total_vat_6)
           this.tva21.set(data.total_vat_21)
           this.total.set(data.total)
+          this.totalWithRemise.set(data.total)
         }),
       ).subscribe()
     }, {
@@ -127,7 +131,11 @@ export class CreditNoteComponent {
   }
 
   createCreditNote() {
-    this.creditNoteAmount.set(this.invoice()?.total! - this.total())
+    if(this.remise() > 0) {
+      this.creditNoteAmount.set(this.invoice()?.total! - this.totalWithRemise())
+    } else {
+      this.creditNoteAmount.set(this.invoice()?.total! - this.total())
+    }
     this.invoiceService.createCreditNote({linkedInvoiceId: +this.invoice_id()!, creditNoteAmount: this.creditNoteAmount()}).subscribe(
       () => this.goBack()
     )
@@ -176,8 +184,6 @@ export class CreditNoteComponent {
       }
     }
 
-
-
   }
 
   addPrice(product_id: number) {
@@ -208,5 +214,24 @@ export class CreditNoteComponent {
     console.log(this.totalHtva())
     console.log(this.total())
 
+  }
+
+  setRemiseToTotal() {
+    if(this.remise() > 0) {
+      if(!this.isPercentage()) {
+        this.totalWithRemise.set(this.total() - this.remise())
+      }
+
+      if(this.isPercentage()) {
+        this.totalWithRemise.set(this.total() - (this.total() * (this.remise() / 100)))
+      }
+    } else {
+      this.totalWithRemise.set(this.total() + this.remise())
+    }
+  }
+
+  setRemise(event: any) {
+    this.remise.set(event.target.value)
+    this.setRemiseToTotal()
   }
 }

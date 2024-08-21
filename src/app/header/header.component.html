@@ -13,7 +13,41 @@
         }
       </hlm-menu-bar>
 
-      <hlm-icon size='sm' name="lucideBell"/>
+
+      <brn-popover>
+        <button brnPopoverTrigger class="relative flex items-center mr-2">
+          <hlm-icon size='sm' name="lucideBell"/>
+          <div hlmBadge
+               class="absolute bottom-2 -right-3 text-[12px] size-2 p-2 mx-auto bg-blue-500 text-white flex items-center justify-center rounded-full">
+            <span>{{ invitationCount() }}</span>
+          </div>
+        </button>
+        <div class="w-96" hlmPopoverContent *brnPopoverContent="let ctx">
+          @if(invitations().length > 0) {
+            @for (invitation of invitations(); track invitation.id) {
+              <div class="flex flex-col gap-2 ">
+                <p class="text-lg font-bold">{{ invitation.event.title }}</p>
+                <p class="text-sm">Date de commencement : {{ invitation.event.start_time | date: 'dd/MM/yyyy hh:mm' }}</p>
+                <p class="text-sm">Date de fin : {{ invitation.event.end_time | date: 'dd/MM/yyyy hh:mm' }}</p>
+                <button (click)="updateInvitation(invitation, 'accepted', ctx)" variant="outline"
+                        class="rounded-full w-full text-[10px] h-auto border-2 border-black hover:bg-black hover:text-white"
+                        hlmBtn>Accepter
+                </button>
+                <button (click)="updateInvitation(invitation, 'refused', ctx)" variant="outline"
+                        class="rounded-full w-full text-[10px] h-auto border-2 border-black hover:bg-black hover:text-white"
+                        hlmBtn>Refuser
+                </button>
+              </div>
+              <brn-separator hlmSeparator />
+            }
+          } @else {
+            <div class="flex flex-col gap-2 ">
+              <p class="text-lg font-bold">Vous n'avez pas d'invitation</p>
+              <p class="text-sm">Cliquez sur le bouton "Inviter" pour inviter des personnes à participer à des évènements</p>
+            </div>
+          }
+        </div>
+      </brn-popover>
       <a href="/profile">
         <img class="size-10 rounded-full ring ring-black" [src]="connectedUser()?.profilePicture"
              [alt]="connectedUser()?.firstName">

@@ -1,4 +1,4 @@
-import {AfterViewInit, Component, effect, inject, PLATFORM_ID, signal} from '@angular/core';
+import {Component, effect, inject, PLATFORM_ID, signal} from '@angular/core';
 import {Router, RouterLink} from '@angular/router';
 import {HlmButtonDirective} from '@spartan-ng/ui-button-helm';
 import {BrnMenuTriggerDirective} from '@spartan-ng/ui-menu-brain';
@@ -20,15 +20,26 @@ import {
   HlmSubMenuComponent,
 } from '@spartan-ng/ui-menu-helm';
 
+import {HlmBadgeDirective} from '@spartan-ng/ui-badge-helm';
 
 import {HlmIconComponent, provideIcons} from '@spartan-ng/ui-icon-helm';
 import {lucideBell} from '@ng-icons/lucide';
-import {isPlatformBrowser, JsonPipe, NgClass, NgOptimizedImage} from '@angular/common';
+import {DatePipe, JsonPipe, NgClass, NgOptimizedImage} from '@angular/common';
 import {HeaderMobileComponent} from "../header-mobile/header-mobile.component";
 import {AuthService} from '../shared/services/auth.service';
 import {UsersService} from "../shared/services/users.service";
 import {UserEntity} from "../shared/entities/user.entity";
-import {environment} from "../../environments/environment";
+import {InvitationService} from "../shared/services/invitation.service";
+import {
+  BrnPopoverCloseDirective,
+  BrnPopoverComponent,
+  BrnPopoverContentDirective,
+  BrnPopoverTriggerDirective,
+} from '@spartan-ng/ui-popover-brain';
+import {HlmPopoverCloseDirective, HlmPopoverContentDirective} from '@spartan-ng/ui-popover-helm';
+import {InvitationEntity} from "../shared/entities/invitation.entity";
+import {BrnSeparatorComponent} from "@spartan-ng/ui-separator-brain";
+import {HlmSeparatorDirective} from "@spartan-ng/ui-separator-helm";
 
 @Component({
   selector: 'app-header',
@@ -57,22 +68,33 @@ import {environment} from "../../environments/environment";
     HeaderMobileComponent,
     NgOptimizedImage,
     JsonPipe,
+    HlmBadgeDirective,
+    HlmPopoverCloseDirective, HlmPopoverContentDirective,
+    BrnPopoverCloseDirective,
+    BrnPopoverComponent,
+    BrnPopoverContentDirective,
+    BrnPopoverTriggerDirective, DatePipe, BrnSeparatorComponent, HlmSeparatorDirective,
   ],
   providers: [provideIcons({lucideBell})],
   templateUrl: './header.component.html',
   styleUrl: './header.component.css'
 
 })
-export class HeaderComponent implements AfterViewInit {
+export class HeaderComponent {
 
   authService: AuthService = inject(AuthService)
   usersService: UsersService = inject(UsersService)
+  invitationService: InvitationService = inject(InvitationService)
   private readonly platformId = inject(PLATFORM_ID);
 
 
   isUserConnected = signal(false)
   connectedUser = signal<UserEntity | null>(null)
   profilePicture = signal<any>('')
+  invitations = signal<InvitationEntity[]>([])
+  invitationCount = signal(0)
+
+
   userConnectedCondition = effect(() => {
     this.isUserConnected.set(this.authService.getToken() !== null)
   }, {
@@ -82,19 +104,15 @@ export class HeaderComponent implements AfterViewInit {
   router: Router = inject(Router)
 
   constructor() {
-      effect(() => {
-        this.connectedUser.set(this.authService.getUser())
-    }, {
-        allowSignalWrites: true
+    effect(async () => {
+      this.connectedUser.set(this.authService.getUser())
+      this.invitationService.getByUserId(+this.connectedUser()?.id!).subscribe(data => {
+        this.invitations.set(data)
+        this.invitationCount.set(data.length)
       })
-  }
-
-  ngAfterViewInit() {
-    if (isPlatformBrowser(this.platformId)) {
-      if (localStorage.getItem("user")) {
-        this.connectedUser.set(JSON.parse(localStorage.getItem("user") ?? "{}"))
-      }
-    }
+    }, {
+      allowSignalWrites: true
+    })
   }
 
 
@@ -103,5 +121,16 @@ export class HeaderComponent implements AfterViewInit {
     this.authService.removeUser()
     this.router.navigate(["/login"])
   }
+
+  updateInvitation(invitation: InvitationEntity, status: "accepted" | "refused", ctx: any) {
+    invitation.status = status
+    this.invitationService.update(invitation.id, invitation).subscribe(() => {
+      const newInvitations = this.invitations().filter(invit => invit.id !== invitation.id)
+      this.invitations.set(newInvitations)
+      this.invitationCount.set(newInvitations.length)
+      ctx.close()
+    })
+  }
+
 
 }

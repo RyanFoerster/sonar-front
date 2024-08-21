@@ -18,6 +18,7 @@ import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from "@angular/
 import {UpdateUserDto} from "../../shared/dtos/update-user.dto";
 import {switchMap} from "rxjs";
 import {NgOptimizedImage} from "@angular/common";
+import {AuthService} from "../../shared/services/auth.service";
 
 
 @Component({
@@ -42,13 +43,13 @@ import {NgOptimizedImage} from "@angular/common";
   styleUrl: './profile.component.css',
   providers: [provideIcons({lucideEdit})]
 })
-export class ProfileComponent implements AfterViewInit {
+export class ProfileComponent {
 
   protected connectedUser = signal<UserEntity | null>(null)
-  protected profilePicture = signal<any>(null)
   protected updateUserForm!: FormGroup
 
   private usersService: UsersService = inject(UsersService)
+  private authService: AuthService = inject(AuthService)
   private formBuilder: FormBuilder = inject(FormBuilder)
 
   constructor() {
@@ -65,26 +66,24 @@ export class ProfileComponent implements AfterViewInit {
     })
 
     effect(() => {
-      const user = this.connectedUser();
-      if (user) {
-        this.updateUserForm.patchValue({iban: user.iban});
-        this.updateUserForm.patchValue({username: user.comptePrincipal.username});
-        this.updateUserForm.patchValue({name: user.name});
-        this.updateUserForm.patchValue({firstName: user.firstName});
-        this.updateUserForm.patchValue({numeroNational: user.numeroNational});
-        this.updateUserForm.patchValue({telephone: user.telephone});
-        this.updateUserForm.patchValue({email: user.email});
-        this.updateUserForm.patchValue({address: user.address});
+      this.connectedUser.set(this.authService.getUser())
+      if (this.connectedUser()) {
+        const user = this.connectedUser()!;
+        this.updateUserForm.patchValue({iban: this.connectedUser()?.iban});
+        this.updateUserForm.patchValue({username: this.connectedUser()?.comptePrincipal.username});
+        this.updateUserForm.patchValue({name: this.connectedUser()?.name});
+        this.updateUserForm.patchValue({firstName: this.connectedUser()?.firstName});
+        this.updateUserForm.patchValue({numeroNational: this.connectedUser()?.numeroNational});
+        this.updateUserForm.patchValue({telephone: this.connectedUser()?.telephone});
+        this.updateUserForm.patchValue({email: this.connectedUser()?.email});
+        this.updateUserForm.patchValue({address: this.connectedUser()?.address});
       }
+    }, {
+      allowSignalWrites: true
     });
   }
 
-  ngAfterViewInit() {
 
-    this.usersService.getInfo().subscribe(data => {
-      this.connectedUser.set(data)
-    });
-  }
 
   updateUser(ctx: any) {
 

@@ -32,5 +32,10 @@ export default [
     loadComponent: () => import('./project-account/project-account.component').then((m) => m.ProjectAccountComponent),
     canActivate: [authGuard]
   },
+  {
+    path: ":id/diary",
+    loadComponent: () => import('./diary/diary.component').then((m) => m.DiaryComponent),
+    canActivate: [authGuard]
+  },
 
 ] as Routes

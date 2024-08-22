@@ -1,8 +1,0 @@
-<div *ngIf="!accessToken">
-  <button (click)="connectPonto()">Connecter à Ponto</button>
-</div>
-<div *ngIf="accessToken">
-  <h2>Votre solde</h2>
-  <p *ngIf="balance">{{ balance | currency }}</p>
-  <p *ngIf="!balance">Chargement...</p>
-</div>

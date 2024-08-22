@@ -1,0 +1,121 @@
+<div class="px-5 flex flex-col  gap-5">
+
+
+    <p class="font-bold text-lg px-3">Réunions visioconférences</p>
+    <hlm-table class="overflow-x-auto px-4 bg-gray-sonar rounded-xl shadow-lg">
+        <p class="font-bold text-sm p-3">Participants</p>
+        <div class="overflow-auto touch-none">
+        <hlm-trow class="flex ">
+          <hlm-th class="w-28 font-bold text-[10px]">Nom </hlm-th>
+          <hlm-th class="w-36 font-bold  text-[10px]">Prénom</hlm-th>
+          <hlm-th class="w-44 font-bold text-[10px]">E-mail</hlm-th>
+          <hlm-th class="w-44 font-bold text-[10px]">Projet</hlm-th>
+          <hlm-th class="w-44 font-bold text-[10px]">Date & heure de début</hlm-th>
+          <hlm-th class="w-44 font-bold text-[10px]">Lien</hlm-th>
+        </hlm-trow>
+        @for (invoice of _invoices; track invoice.invoice) {
+          <hlm-trow class="flex border-none relative sm:flex-row">
+            <hlm-td class="w-28 font-bold text-[10px]">{{ invoice.invoice }}</hlm-td>
+            <hlm-td class="w-36 font-bold  text-[10px]">{{ invoice.paymentStatus }}</hlm-td>
+            <hlm-td class="w-44 font-bold text-[10px]">{{ invoice.paymentMethod }}</hlm-td>
+            <hlm-td class="w-44 font-bold text-[10px]">{{ invoice.totalAmount }}</hlm-td>
+            <hlm-td class="w-44 font-bold text-[10px]">{{ invoice.totalAmount }}</hlm-td>
+            <hlm-td class="w-44 font-bold text-[10px]">{{ invoice.totalAmount }}</hlm-td>
+          </hlm-trow>
+        }
+      </div>
+    </hlm-table>
+  
+    <hlm-table class="overflow-x-auto p-4 bg-gray-sonar rounded-xl shadow-lg">
+      <p class="font-bold text-sm p-3">Listes des visioconférences</p>
+        <div class="overflow-auto touch-none">
+            <hlm-trow class="flex ">
+                <hlm-th class="w-44 font-bold text-[10px]">Date & heure de début</hlm-th>
+                <hlm-th class="w-44 font-bold  text-[10px]">Date & heure de fin</hlm-th>
+                <hlm-th class="w-44 font-bold text-[10px]">Titre</hlm-th>
+                <hlm-th class="w-44 font-bold text-[10px]">Lien</hlm-th>
+            </hlm-trow>
+            @for (invoice of _invoices; track invoice.invoice) {
+                <hlm-trow class="flex border-none relative sm:flex-row">
+                <hlm-td class="w-44 font-bold text-[10px]">{{ invoice.invoice }}</hlm-td>
+                <hlm-td class="w-44 font-bold  text-[10px]">{{ invoice.paymentStatus }}</hlm-td>
+                <hlm-td class="w-44 font-bold text-[10px]">{{ invoice.paymentMethod }}</hlm-td>
+                <hlm-td class="w-44 font-bold text-[10px]">{{ invoice.totalAmount }}</hlm-td>
+                </hlm-trow>
+                }
+        </div>
+        <hlm-dialog>
+            <button class="rounded-full pt-0 pb-0 h-auto w-2/3 md:w-48 text-[10px]" id="edit-profile" brnDialogTrigger hlmBtn>Créer une visioconférences</button>
+            
+            <hlm-dialog-content class="w-80 md:min-w-[600px] rounded-xl" *brnDialogContent="let ctx">
+                <hlm-dialog-header>
+                    <h3 class="text-xs md:text-lg" hlmDialogTitle>Créer une visioconférence</h3>
+                    <p class="text-[8px] md:text-sm" hlmDialogDescription>Sélectionnez une date de début, une date de fin, une heure de début et une heure de fin pour créer un créneau de visioconférence. Cliquez sur “Enregistrer” pour ajouter ce créneau à l’agenda des participants.</p>
+                </hlm-dialog-header>
+                <div class="py-4 grid gap-4">
+                    <div class="items-center grid grid-cols-4 gap-4">
+                        <label class="w-60 text-[10px] md:text-lg" hlmLabel> Date de début
+                          <div class="card flex flex-wrap gap-3 p-fluid">
+                            <div class="flex-auto">
+                              <label for="buttondisplay" class="text-[10px] md:text-lg font-bold block mb-2 mt-2">Date</label>
+                              <p-calendar 
+                                  [(ngModel)]="date2" 
+                                  [showIcon]="true" 
+                                  inputId="buttondisplay" 
+                                  [showOnFocus]="false" />
+                            </div> 
+                            
+                            <div class="flex-auto">
+                              <label for="templatedisplay" class="text-[10px] md:text-lg font-bold block mb-2 mt-2">Heure</label>
+                              <p-calendar 
+                                  [(ngModel)]="date3" 
+                                  [iconDisplay]="'input'" 
+                                  [showIcon]="true" 
+                                  [timeOnly]="true" 
+                                  inputId="templatedisplay">
+                                  <ng-template pTemplate="inputicon" let-clickCallBack="clickCallBack">
+                                    <i class="pi pi-clock pointer-events-none" (click)="clickCallBack($event)"></i>
+                                  </ng-template>
+                              </p-calendar>
+                            </div>
+                          </div>
+                        </label>
+                    </div>
+                
+                    <div class="items-center grid grid-cols-4 gap-4">
+                            <label class="w-60 text-[10px] md:text-lg" hlmLabel> Date de fin
+                            <div class="card flex flex-wrap gap-3 p-fluid">
+                                <div class="flex-auto">
+                                <label for="buttondisplay" class="text-[10px] md:text-lg font-bold block mb-2 mt-2">Date</label>
+                                <p-calendar 
+                                    [(ngModel)]="date2" 
+                                    [showIcon]="true" 
+                                    inputId="buttondisplay" 
+                                    [showOnFocus]="false" />
+                                </div> 
+                                
+                                <div class="flex-auto">
+                                <label for="templatedisplay" class="text-[10px] md:text-lg font-bold block mb-2 mt-2">Heure</label>
+                                <p-calendar 
+                                    [(ngModel)]="date3" 
+                                    [iconDisplay]="'input'" 
+                                    [showIcon]="true" 
+                                    [timeOnly]="true" 
+                                    inputId="templatedisplay">
+                                    <ng-template pTemplate="inputicon" let-clickCallBack="clickCallBack">
+                                        <i class="pi pi-clock pointer-events-none" (click)="clickCallBack($event)"></i>
+                                    </ng-template>
+                                </p-calendar>
+                                </div>
+                            </div>
+                            </label>
+                    </div>
+                </div>
+                <hlm-dialog-footer>
+                    <button class="rounded-full w-auto h-auto text-[10px] md:text-lg" hlmBtn type="submit">Enregistrer</button>
+                </hlm-dialog-footer>
+            </hlm-dialog-content>
+        </hlm-dialog>
+
+    </hlm-table>
+</div>

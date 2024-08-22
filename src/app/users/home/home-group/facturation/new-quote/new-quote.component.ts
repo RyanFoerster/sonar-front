@@ -179,9 +179,7 @@ export class NewQuoteComponent implements AfterViewInit {
       quantity: ['', [Validators.required]],
     })
 
-    effect(() => {
-      console.log(this.products())
-    })
+
 
   }
 
@@ -256,11 +254,11 @@ export class NewQuoteComponent implements AfterViewInit {
           this.totalHtva.set(this.products().reduce((a, b) => a + b.price_htva!, 0))
 
           if (data.vat === 0.21) {
-            this.tva21.set(this.setTva(this.products()))
+            this.tva21.set(this.setTva21(this.products()))
           }
 
           if (data.vat === 0.06) {
-            this.tva6.set(this.setTva(this.products()))
+            this.tva6.set(this.setTva6(this.products()))
           }
 
           this.total.set(this.totalHtva() + this.tva21() + this.tva6())
@@ -283,8 +281,8 @@ export class NewQuoteComponent implements AfterViewInit {
 
     if (updatedProducts.length > 0) {
       for (let product of updatedProducts) {
-        if (product.vat === 0.21) this.tva21.set(this.setTva(updatedProducts))
-        if (product.vat === 0.06) this.tva6.set(this.setTva(updatedProducts))
+        if (product.vat === 0.21) this.tva21.set(this.setTva21(updatedProducts))
+        if (product.vat === 0.06) this.tva6.set(this.setTva6(updatedProducts))
 
       }
     } else {
@@ -298,8 +296,14 @@ export class NewQuoteComponent implements AfterViewInit {
 
   }
 
-  setTva(products: ProductEntity[]) {
-    return products.reduce((a, b) => a + b.tva_amount!, 0)
+  setTva21(products: ProductEntity[]) {
+    const products_tva_21 = products.filter((product) => product.vat === 0.21)
+    return products_tva_21.reduce((a, b) => a + b.tva_amount!, 0)
+  }
+
+  setTva6(products: ProductEntity[]) {
+    const products_tva_6 = products.filter((product) => product.vat === 0.06)
+    return products_tva_6.reduce((a, b) => a + b.tva_amount!, 0)
   }
 
   createQuote() {

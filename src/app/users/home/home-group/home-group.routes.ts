@@ -18,6 +18,11 @@ export default [
     canActivate: [authGuard]
   },
   {
+    path: ":id/facturation/:invoice_id/credit-note",
+    loadComponent: () => import('./facturation/credit-note/credit-note.component').then((m) => m.CreditNoteComponent),
+    canActivate: [authGuard]
+  },
+  {
     path: ":id/membership",
     loadComponent: () => import('./membership/membership.component').then((m) => m.MembershipComponent),
     canActivate: [authGuard]
@@ -25,6 +30,11 @@ export default [
   {
     path: ":id/project-account",
     loadComponent: () => import('./project-account/project-account.component').then((m) => m.ProjectAccountComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: ":id/diary",
+    loadComponent: () => import('./diary/diary.component').then((m) => m.DiaryComponent),
     canActivate: [authGuard]
   },
 

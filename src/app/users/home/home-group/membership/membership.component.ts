@@ -100,6 +100,7 @@ import {BrnCommandImports} from "@spartan-ng/ui-command-brain";
     BrnSeparatorComponent,
     HlmSeparatorDirective,
     HlmIconComponent,
+    BrnCommandImports
   ],
   providers: [provideIcons({lucideChevronsUpDown, lucideSearch, lucideCheck})],
   templateUrl: './membership.component.html',

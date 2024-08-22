@@ -1,0 +1,136 @@
+<div class="px-10 flex flex-col gap-4">
+    <div class="bg-gray-sonar rounded-xl flex flex-col gap-4 p-5">
+        <p class="text-[8px] md:text-lg">Bienvenue sur la plateforme Sonar dédiée aux artistes, techniciens du spectacles et métiers accompagnants. Votre profil doit être validé par un administrateur Sonar. Ceci se fait à la fin d’une réunion collective ou individuelle en visio-conférence dont les dates sont disponibles dans l’agenda ci-dessous.</p>
+        <p class="text-[8px] md:text-lg">Si vous devez nous joindre de façon urgente ou ne pouvez pas être présent lors d’une des dates proposées, vous pouvez nous appeler au 0498 62 45 65 aux horaires suivants :</p>
+        
+        <div class="flex flex-wrap gap-4 justify-between items-end">
+            <div class="flex flex-col justify-start">
+                <p class="w-40 text-[8px] md:text-lg"><strong>Lundi : 9H - 15H</strong></p>
+                <p class="w-40 text-[8px] md:text-lg"><strong>Mardi : 9H - 15H</strong></p>
+                <p class="w-52 text-[8px] md:text-lg"><strong>Mercredi : 9H - 11H30</strong></p>
+                <p class="w-40 text-[8px] md:text-lg"><strong>Jeudi : 9H - 15H</strong></p>
+                <p class="w-52 text-[8px] md:text-lg"><strong>Vendredi : 9H - 15H</strong></p>
+            </div>
+
+            <hlm-dialog>
+                <button class="rounded-full h-auto text-[8px] md:text-lg" id="edit-profile" brnDialogTrigger hlmBtn>Réserver une visio conférence</button>
+                <hlm-dialog-content class="w-80 md:min-w-[600px] rounded-xl" *brnDialogContent="let ctx">
+                  <hlm-dialog-header>
+                    <h3 class="text-xs md:text-lg" hlmDialogTitle>Prendre un rendez-vous.</h3>
+                    <p class="text-[8px] md:text-sm" hlmDialogDescription>Sélectionnez une date pour la visioconférence dans le menu déroulant ci-dessous, puis cliquez sur “Enregistrer” pour confirmer votre choix.</p>
+                  </hlm-dialog-header>
+                  <div class="py-4 grid gap-4">
+                    <div class="items-center grid grid-cols-4 gap-4">
+                        <brn-select class="inline-block text-[8px] md:text-lg" placeholder="Choisir une visio-conférence">
+                            <hlm-select-trigger class="w-60 md:w-96 h-auto rounded-full text-[8px] md:text-lg">
+                              <hlm-select-value />
+                            </hlm-select-trigger>
+                            <hlm-select-content>
+                              <hlm-option class="text-[8px] md:text-lg" value="Refresh">Lundi 04/08/2024 10:30</hlm-option>
+                              <hlm-option class="text-[8px] md:text-lg" value="Settings">Lundi 04/08/2024 11:30</hlm-option>
+                              <hlm-option class="text-[8px] md:text-lg" value="Help">Lundi 04/08/2024 12:30</hlm-option>
+                              <hlm-option class="text-[8px] md:text-lg" value="Signout">Lundi 04/08/2024 13:30</hlm-option>
+                            </hlm-select-content>
+                          </brn-select>
+                    </div>
+
+                  </div>
+                  <hlm-dialog-footer>
+                    <button class="rounded-full h-auto w-auto text-[8px] md:text-lg" hlmBtn type="submit">Enregistrer</button>
+                  </hlm-dialog-footer>
+                </hlm-dialog-content>
+              </hlm-dialog>
+        </div>
+    </div>
+
+    <div class="bg-gray-sonar rounded-xl flex flex-col gap-4 p-5">
+        <p class="text-xs md:text-xl font-bold">Vérification des informations</p>
+        <label class="w-full text-[8px] md:text-lg" hlmLabel
+      >Nom
+      <input
+        formControlName="name"
+        class="rounded-full w-full h-auto text-[8px] md:text-lg border-black"
+        hlmInput
+        type="text"
+        placeholder="Dupont"
+      />
+        </label>
+
+        <label class="w-full text-[8px] md:text-lg" hlmLabel
+        >Prénom
+        <input
+            formControlName="firstName"
+            class="rounded-full w-full h-auto text-[8px] md:text-lg border-black"
+            hlmInput
+            type="text"
+            placeholder="Jacques"
+        />
+        </label>
+
+        <label class="w-full text-[8px] md:text-lg" hlmLabel
+        >Projet
+        <p class="text-[6px] md:text-xs">
+            Bonjour ! Le projet est individuel ! Ce n’est pas le nom d’un projet que
+            vous rejoignez ou qui est déjà hébergé sur la plateforme Sonar, mais
+            bien votre propre projet auquel vous donnez un nom (surnom, projet
+            artistique individuel, etc…)
+        </p>
+        <input
+            formControlName="username"
+            class="rounded-full w-full h-auto text-[8px] md:text-lg border-black"
+            hlmInput
+            type="text"
+            placeholder="Jacques Dupont"
+        />
+        </label>
+
+        <label class="w-full text-[8px] md:text-lg" hlmLabel
+        >Numéro National
+        <input
+            formControlName="numeroNational"
+            class="rounded-full w-full h-auto text-[8px] md:text-lg border-black"
+            hlmInput
+            type="text"
+            placeholder="42.01.22.051-81"
+        />
+        </label>
+
+        <label class="w-full text-[8px] md:text-lg" hlmLabel
+        >Téléphone
+        <input
+            formControlName="telephone"
+            class="rounded-full w-full h-auto text-[8px] md:text-lg border-black"
+            hlmInput
+            type="text"
+            placeholder="+32 2 374 XX XX"
+        />
+        </label>
+
+        <label class="w-full text-[8px] md:text-lg" hlmLabel
+        >Adresse
+        <input
+            formControlName="address"
+            class="rounded-full w-full h-auto text-[8px] md:text-lg border-black"
+            hlmInput
+            type="text"
+            placeholder="Place des Arts 1, 4020 Liège"
+        />
+        </label>
+
+        <label class="w-full text-[8px] md:text-lg" hlmLabel
+        >Numéro de compte bancaire
+        <input
+            formControlName="iban"
+            class="rounded-full w-full h-auto text-[8px] md:text-lg border-black"
+            hlmInput
+            type="text"
+            placeholder="BE68 5390 0754 7034"
+        />
+        </label>
+        <div class="flex justify-end">
+            <button class="rounded-full w-auto h-auto text-[8px] md:text-lg" hlmBtn>Enregistrer</button>
+        </div>
+ 
+    </div>
+
+</div>

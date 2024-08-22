@@ -2,6 +2,9 @@ import {inject, Injectable} from '@angular/core';
 import {HttpClient} from "@angular/common/http";
 import {EventDto} from "../dtos/event.dto";
 import {EventEntity} from "../entities/event.entity";
+import {InvitationEntity} from "../entities/invitation.entity";
+import {CommentDto} from "../dtos/comment.dto";
+import {CommentEntity} from "../entities/comment.entity";
 
 @Injectable({
   providedIn: 'root'
@@ -35,5 +38,18 @@ export class EventService {
 
   userStatus(id: number, user_id: number, status: "accepted" | "refused") {
     return this.httpClient.patch<EventEntity>(`http://localhost:3000/events/${id}/userStatus`, {user_id, status});
+  }
+
+  invite({eventId, userId}: {eventId: number, userId: number}) {
+    return this.httpClient.post<InvitationEntity>(`http://localhost:3000/invitations`, {eventId, userId});
+
+  }
+
+  update(id: number, eventDto: EventDto) {
+    return this.httpClient.patch<EventEntity>(`http://localhost:3000/events/${id}`, eventDto);
+  }
+
+  createComment(commentDto: CommentDto) {
+    return this.httpClient.post<CommentEntity>(`http://localhost:3000/comments`, commentDto);
   }
 }

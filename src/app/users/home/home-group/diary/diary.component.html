@@ -1,5 +1,5 @@
 <!-- Responsive mobile & tablette -->
-<div class="xl:hidden">
+<div class="xl:hidden" xmlns="http://www.w3.org/1999/html">
   <p class="font-bold text-xl px-5 mb-1">Agenda</p>
   <div class="flex flex-col px-5 gap-5">
     <div class="bg-gray-sonar w-full rounded-3xl flex flex-col items-center p-5 gap-5">
@@ -771,7 +771,7 @@
                   <hlm-select-content formControlName="organisateurs_ids">
                     @for (user of usersGroup(); track user.id) {
                       <hlm-option
-                                  value="{{ user.id }}">{{ user.firstName }} {{ user.name }}
+                        value="{{ user.id }}">{{ user.firstName }} {{ user.name }}
                       </hlm-option>
                     }
                   </hlm-select-content>
@@ -787,7 +787,7 @@
                   </hlm-select-trigger>
                   <hlm-select-content formControlName="invitations_ids">
                     @for (user of usersGroup(); track user.id) {
-                        <hlm-option value="{{ user.id }}">{{ user.firstName }} {{ user.name }}</hlm-option>
+                      <hlm-option value="{{ user.id }}">{{ user.firstName }} {{ user.name }}</hlm-option>
                     }
                   </hlm-select-content>
                 </brn-select>
@@ -830,7 +830,7 @@
               {{ event.title }}
 
               <div hlmBadge
-                   [ngClass]="{'bg-red-600': event.status === 'canceled', 'bg-green-600': event.status === 'confirmed', 'bg-purple-600': event.status === 'hidden', 'bg-yellow-600': event.status === 'pending'}"
+                   [ngClass]="{'bg-red-600': event.status === 'canceled', 'bg-green-600': event.status === 'confirmed', 'bg-purple-600': event.status === 'hidden', 'bg-yellow-400': event.status === 'pending'}"
                    class=" text-[8px] rounded-full">
                 {{ event.status === 'canceled' ? 'Annulé' : event.status === 'hidden' ? 'Masqué' : event.status === 'pending' ? 'En attente' : event.status === 'confirmed' ? 'Confirmé' : '' }}
               </div>
@@ -845,7 +845,7 @@
               {{ event.title }}
 
               <div hlmBadge
-                   [ngClass]="{'bg-red-600': event.status === 'canceled', 'bg-green-600': event.status === 'confirmed', 'bg-purple-600': event.status === 'hidden', 'bg-yellow-600': event.status === 'pending'}"
+                   [ngClass]="{'bg-red-600': event.status === 'canceled', 'bg-green-600': event.status === 'confirmed', 'bg-purple-600': event.status === 'hidden', 'bg-yellow-400': event.status === 'pending'}"
                    class=" text-[8px] rounded-full">
                 {{ event.status === 'canceled' ? 'Annulé' : event.status === 'hidden' ? 'Masqué' : event.status === 'pending' ? 'En attente' : event.status === 'confirmed' ? 'Confirmé' : '' }}
               </div>
@@ -911,10 +911,10 @@
 
         <div class="flex justify-between gap-5 w-full">
           <div class="flex gap-3">
-            <button [disabled]="isUserAccepted()" (click)="userConfirmEvent()"
+            <button [disabled]="isUserAccepted() === true" (click)="userConfirmEvent(connectedUser()!)"
                     class="rounded-full w-auto text-[10px] h-auto" hlmBtn>Accepter
             </button>
-            <button [disabled]="!isUserAccepted()" (click)="userRefuseEvent()"
+            <button [disabled]="isUserAccepted() === false" (click)="userRefuseEvent(connectedUser()!)"
                     class="rounded-full w-auto bg-red-600 text-[10px] h-auto" hlmBtn>Refuser
             </button>
           </div>
@@ -942,7 +942,11 @@
                         <hlm-select-content>
 
                           @for (user of usersGroup(); track user.id) {
-                            <hlm-option value="{{ user.id }}">{{ user.firstName }} {{ user.name }}</hlm-option>
+                            @if (!isUserInvolved(user)) {
+                              <hlm-option (click)="setInvitation(user)"
+                                          value="{{ user.id }}">{{ user.firstName }} {{ user.name }}
+                              </hlm-option>
+                            }
                           }
 
                         </hlm-select-content>
@@ -952,7 +956,9 @@
 
                 </div>
                 <hlm-dialog-footer class="border-b-2 pb-5">
-                  <button class="rounded-full text-[10px] h-auto" hlmBtn type="submit">Inviter</button>
+                  <button (click)="createInvitation(ctx)" class="rounded-full text-[10px] h-auto" hlmBtn type="submit">
+                    Inviter
+                  </button>
                 </hlm-dialog-footer>
 
                 <hlm-dialog-header>
@@ -977,191 +983,208 @@
               </hlm-dialog-content>
             </hlm-dialog>
 
-            <div>
-              <button hlmBtn class="rounded-full w-auto text-[10px] h-auto" [brnMenuTriggerFor]="menu">Dupliquer
+            <hlm-dialog>
+              <button hlmBtn class="rounded-full w-full text-[10px] h-auto" id="create-event" brnDialogTrigger
+                      (click)="setDuplicateInfoForm()">Dupliquer
               </button>
-            </div>
-            <ng-template #menu>
-              <hlm-menu class="w-full">
-                <hlm-menu-group>
-                  <hlm-menu-label>Dans le même projet</hlm-menu-label>
+              <hlm-dialog-content class="sm:max-w-[600px] h-fit flex flex-col" *brnDialogContent="let ctx">
+                <hlm-dialog-header>
+                  <h3 hlmDialogTitle>Nouvel évènement</h3>
+                  <p hlmDialogDescription>Créez votre nouvel événement ici. Cliquez sur “Créer” lorsque vous avez
+                    terminé.</p>
 
-                  <button hlmMenuItemCheckbox>
-                    <hlm-menu-item-check/>
-                    <span>Avec les mêmes participants</span>
-                  </button>
+                </hlm-dialog-header>
 
-                  <button hlmMenuItemCheckbox>
-                    <hlm-menu-item-check/>
-                    <span>Avec des participants différents</span>
-                  </button>
-                </hlm-menu-group>
+                <div class="grid grid-cols-2 gap-1">
+                  <div class="flex gap-2 items-center">
+                    <p>Avec les mêmes participants</p>
+                    <hlm-checkbox (checkedChange)="isSameParticipants.set(!isSameParticipants())"
+                                  class="text-[10px]"/>
+                  </div>
+                  <div class="flex gap-2 items-center">
+                    <p>Avec les mêmes dates</p>
+                    <hlm-checkbox (checkedChange)="isSameDate.set(!isSameDate())"
+                                  class="text-[10px]"/>
+                  </div>
 
-                <hlm-menu-separator/>
+                </div>
 
-                <hlm-menu-label>Dans un autre projet</hlm-menu-label>
-                <button hlmMenuItem [brnMenuTriggerFor]="invite">
-                  <hlm-icon name="lucideSmile" hlmMenuIcon/>
-                  <span>Choisir un projet</span>
-                  <hlm-menu-item-sub-indicator/>
-                </button>
+                <form [formGroup]="duplicateEventForm" class="py-4 grid gap-2" (ngSubmit)="createEvent(ctx)">
+                  <div class="w-full">
+                    <label class="w-full" hlmLabel>Nom de l'évènement
+                      <input formControlName="title" class='w-full' hlmInput type='text'
+                             placeholder='Le concert des zouzou'/>
+                    </label>
+                  </div>
 
-                <ng-template #invite>
-                  <hlm-sub-menu>
-                    <button hlmMenuItem>
-                      <hlm-icon name="lucideMail" hlmMenuIcon/>
-                      Projet 1
-                    </button>
-                    <button hlmMenuItem>
-                      <hlm-icon name="lucideMail" hlmMenuIcon/>
-                      Projet 2
-                    </button>
-                    <button hlmMenuItem>
-                      <hlm-icon name="lucideMail" hlmMenuIcon/>
-                      Projet 2
-                    </button>
-                  </hlm-sub-menu>
-                </ng-template>
-              </hlm-menu>
-            </ng-template>
+                  <div class="w-full">
+                    <label class="w-full" hlmLabel>Description
+                      <textarea formControlName="description" class='w-full h-40' hlmInput type='text'
+                                placeholder='Concert à ciel ouvert ouvert avec les artiste de la troupe des lions'></textarea>
+                    </label>
+                  </div>
+
+                  <div class="grid grid-cols-1 gap-1 w-full">
+                    <div class="w-full">
+                      <label hlmLabel class="w-full">Adresse
+                        <input formControlName="location" class='w-full' hlmInput type='text'
+                               placeholder='Place des arts 1, 4020 Liège'/>
+                      </label>
+                    </div>
+
+
+                  </div>
+
+
+                  <div class="grid grid-cols-1 gap-1 w-full">
+                    <div class="w-full">
+                      @if (!isSameDate()) {
+                        <label class="w-full" hlmLabel
+                        >Heure de début
+                          <input formControlName="start_time" class="w-full" hlmInput type="datetime-local"/>
+                        </label>
+                      } @else {
+                        <p class="">Début : {{ selectedEvent()?.start_time | date: 'dd/MM/yyyy hh:mm' : 'UTC' }}</p>
+                      }
+
+                    </div>
+                    <div class="w-full">
+                      @if (!isSameDate()) {
+                        <label class="w-full" hlmLabel
+                        >Heure de fin
+                          <input formControlName="end_time" class="w-full" hlmInput type="datetime-local"/>
+                        </label>
+                      } @else {
+                        <p>Fin : {{ selectedEvent()?.end_time | date: 'dd/MM/yyyy hh:mm' }}</p>
+                      }
+
+                    </div>
+
+                    <div class="w-full">
+                      @if (!isSameDate()) {
+                        <label class="w-full" hlmLabel
+                        >Heure de rendez-vous
+                          <input formControlName="rendez_vous_date" class="w-full" hlmInput type="datetime-local"/>
+                        </label>
+                      } @else {
+                        <p>Rendez-vous : {{ selectedEvent()?.rendez_vous_date | date: 'dd/MM/yyyy hh:mm' }}</p>
+                      }
+
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-2 gap-1 w-full">
+                    <div class="w-full">
+                      <label class="w-full" hlmLabel>Organisateur(s)
+                        @if (!isSameParticipants()) {
+                          <brn-select class="inline-block w-full" placeholder="Selectionner un/des organisateurs"
+                                      [multiple]="true">
+                            <hlm-select-trigger class="w-full">
+                              <hlm-select-value/>
+                            </hlm-select-trigger>
+                            <hlm-select-content class="w-full" formControlName="organisateurs_ids">
+                              @for (user of usersGroup(); track user.id) {
+                                <hlm-option class="w-full"
+                                            value="{{ user.id }}">{{ user.firstName }} {{ user.name }}
+                                </hlm-option>
+                              }
+                            </hlm-select-content>
+                          </brn-select>
+                        } @else {
+                          @for (user of selectedEvent()!.organisateurs; track user.id) {
+                            <p>{{ user.firstName }} {{ user.name }}</p>
+                          }
+                        }
+                      </label>
+                    </div>
+
+                    <div class="w-full">
+                      <label class="w-full" hlmLabel>Invitation(s)
+                        @if (!isSameParticipants()) {
+                          <brn-select class="inline-block w-full" placeholder="Selectionner un/des invité(s)"
+                                      [multiple]="true">
+                            <hlm-select-trigger class="w-full">
+                              <hlm-select-value/>
+                            </hlm-select-trigger>
+                            <hlm-select-content class="w-full" formControlName="invitations_ids">
+                              @for (user of usersGroup(); track user.id) {
+                                <hlm-option value="{{ user.id }}">{{ user.firstName }} {{ user.name }}</hlm-option>
+                              }
+                            </hlm-select-content>
+                          </brn-select>
+                        } @else {
+                          @for (user of selectedEvent()!.participants; track user.id) {
+                            <p>{{ user.firstName }} {{ user.name }}</p>
+                          }
+                        }
+                      </label>
+                    </div>
+                  </div>
+                  <button class="rounded-full text-[10px]" hlmBtn type="submit">Créer</button>
+
+                </form>
+
+              </hlm-dialog-content>
+            </hlm-dialog>
 
             <hlm-dialog>
-              <button class="rounded-full w-full text-[10px] h-auto" id="edit-profile" brnDialogTrigger hlmBtn>
+              <button (click)="setInfoForm()" class="rounded-full w-auto text-[10px] h-auto" id="create-event"
+                      brnDialogTrigger hlmBtn>
                 Modifier
               </button>
-              <hlm-dialog-content class="sm:max-w-[425px]" *brnDialogContent="let ctx">
+              <hlm-dialog-content class="sm:max-w-[425px] h-screen" *brnDialogContent="let ctx">
                 <hlm-dialog-header>
-                  <h3 hlmDialogTitle>Modifier l'évènement</h3>
-                  <p hlmDialogDescription>Modifier l'événement ici. Cliquez sur “Enregistrer” lorsque vous avez
+                  <h3 hlmDialogTitle>Modification de l'évènement</h3>
+                  <p hlmDialogDescription>Modifier votre événement ici. Cliquez sur “Enregistrer” lorsque vous avez
                     terminé.</p>
                 </hlm-dialog-header>
-                <div class="py-4 grid gap-4">
+                <form [formGroup]="updateEventForm" class="py-4 grid gap-4" (ngSubmit)="updateEvent(ctx)">
                   <div class="items-center grid grid-cols-4 gap-4">
                     <label class="w-80" hlmLabel>Nom de l'évènement
-                      <input class='w-80' hlmInput type='email' placeholder='Le concert des zouzou'/>
+                      <input formControlName="title" class='w-80' hlmInput type='text'
+                             placeholder='Le concert des zouzou'/>
                     </label>
                   </div>
 
                   <div class="items-center grid grid-cols-4 gap-4">
                     <label hlmLabel>Description
-                      <textarea class='w-80 h-40' hlmInput type='email'
+                      <textarea formControlName="description" class='w-80 h-40' hlmInput type='text'
                                 placeholder='Concert à ciel ouvert ouvert avec les artiste de la troupe des lions'></textarea>
                     </label>
                   </div>
 
                   <div class="items-center grid grid-cols-4 gap-4">
                     <label hlmLabel>Adresse
-                      <input class='w-80' hlmInput type='email' placeholder='Place des arts 1, 4020 Liège'/>
+                      <input formControlName="location" class='w-80' hlmInput type='text'
+                             placeholder='Place des arts 1, 4020 Liège'/>
                     </label>
                   </div>
 
                   <div>
-                    <label class="w-60 text-[10px]" hlmLabel> Date de début
-                      <div class="card flex flex-wrap gap-3 p-fluid">
-                        <div class="flex-auto">
-                          <label for="buttondisplay" class="text-[10px] font-bold block mb-2 mt-2">Date</label>
-                          <p-calendar
-                            [(ngModel)]="date2"
-                            [showIcon]="true"
-                            inputId="buttondisplay"
-                            [showOnFocus]="false"/>
-                        </div>
-
-                        <div class="flex-auto">
-                          <label for="templatedisplay" class="text-[10px] font-bold block mb-2 mt-2">Heure</label>
-                          <p-calendar
-                            [(ngModel)]="date3"
-                            [iconDisplay]="'input'"
-                            [showIcon]="true"
-                            [timeOnly]="true"
-                            inputId="templatedisplay">
-                            <ng-template pTemplate="inputicon" let-clickCallBack="clickCallBack">
-                              <i class="pi pi-clock pointer-events-none" (click)="clickCallBack($event)"></i>
-                            </ng-template>
-                          </p-calendar>
-                        </div>
-                      </div>
+                    <label hlmLabel
+                    >Heure de début
+                      <input formControlName="start_time" class="w-80" hlmInput type="datetime-local"/>
                     </label>
                   </div>
 
                   <div>
-                    <label class="w-60 text-[10px]" hlmLabel> Date de fin
-                      <div class="card flex flex-wrap gap-3 p-fluid">
-                        <div class="flex-auto">
-                          <label for="buttondisplay" class="text-[10px] font-bold block mb-2 mt-2">Date</label>
-                          <p-calendar
-                            [(ngModel)]="date2"
-                            [showIcon]="true"
-                            inputId="buttondisplay"
-                            [showOnFocus]="false"/>
-                        </div>
-
-                        <div class="flex-auto">
-                          <label for="templatedisplay" class="text-[10px] font-bold block mb-2 mt-2">Heure</label>
-                          <p-calendar
-                            [(ngModel)]="date3"
-                            [iconDisplay]="'input'"
-                            [showIcon]="true"
-                            [timeOnly]="true"
-                            inputId="templatedisplay">
-                            <ng-template pTemplate="inputicon" let-clickCallBack="clickCallBack">
-                              <i class="pi pi-clock pointer-events-none" (click)="clickCallBack($event)"></i>
-                            </ng-template>
-                          </p-calendar>
-                        </div>
-                      </div>
+                    <label hlmLabel
+                    >Heure de fin
+                      <input formControlName="end_time" class="w-80" hlmInput type="datetime-local"/>
                     </label>
                   </div>
 
                   <div>
-                    <label class="w-60 text-[10px]" hlmLabel> Date de rendez-vous
-                      <div class="card flex flex-wrap gap-3 p-fluid">
-                        <div class="flex-auto">
-                          <label for="buttondisplay" class="text-[10px] font-bold block mb-2 mt-2">Date</label>
-                          <p-calendar
-                            [(ngModel)]="date2"
-                            [showIcon]="true"
-                            inputId="buttondisplay"
-                            [showOnFocus]="false"/>
-                        </div>
-
-                        <div class="flex-auto">
-                          <label for="templatedisplay" class="text-[10px] font-bold block mb-2 mt-2">Heure</label>
-                          <p-calendar
-                            [(ngModel)]="date3"
-                            [iconDisplay]="'input'"
-                            [showIcon]="true"
-                            [timeOnly]="true"
-                            inputId="templatedisplay">
-                            <ng-template pTemplate="inputicon" let-clickCallBack="clickCallBack">
-                              <i class="pi pi-clock pointer-events-none" (click)="clickCallBack($event)"></i>
-                            </ng-template>
-                          </p-calendar>
-                        </div>
-                      </div>
+                    <label hlmLabel
+                    >Heure de rendez-vous
+                      <input formControlName="rendez_vous_date" class="w-80" hlmInput type="datetime-local"/>
                     </label>
                   </div>
 
-                  <div class="items-center grid grid-cols-4 gap-4">
-                    <label hlmLabel>Organisateur(s)
-                      <brn-select class="inline-block" placeholder="Selectionner un/des organisateurs"
-                                  [multiple]="true">
-                        <hlm-select-trigger class="w-80">
-                          <hlm-select-value/>
-                        </hlm-select-trigger>
-                        <hlm-select-content>
-                          <hlm-option value="Apples">Ryan Foerster</hlm-option>
-                          <hlm-option value="Bananas">Pierre Godfrin</hlm-option>
-                          <hlm-option value="Pears">Manon Aussems</hlm-option>
-                          <hlm-option value="Strawberries">Kevin Igo</hlm-option>
-                        </hlm-select-content>
-                      </brn-select>
-                    </label>
-                  </div>
-                </div>
-                <hlm-dialog-footer>
                   <button class="rounded-full text-[10px] h-auto" hlmBtn type="submit">Enregistrer</button>
-                </hlm-dialog-footer>
+
+                </form>
+
               </hlm-dialog-content>
             </hlm-dialog>
 
@@ -1249,6 +1272,7 @@
                 </hlm-dialog-footer>
               </hlm-dialog-content>
             </hlm-dialog>
+
           </div>
         </div>
 
@@ -1270,17 +1294,42 @@
 
           <div class="bg-white w-2/4 h-full rounded-xl p-4 flex flex-col justify-between">
             <p class="font-bold text-xs h-full">Fil de discussion</p>
-            <label class="font-bold h-auto text-xs"
-                   hlmLabel> {{ connectedUser()?.firstName }} {{ connectedUser()?.name }}
-              <input class="rounded-full w-full text-xs" hlmInput placeholder="Ecrivez ici..."/>
-            </label>`
+            @if (selectedEvent()?.comments) {
+              @for (comment of selectedEvent()?.comments; track comment.id) {
+                <div class="flex flex-col mb-2">
+                  <div class="flex justify-between items-center gap-1">
+                    <div class="flex items-center gap-2">
+                      <img src="{{ comment.user.profilePicture }}" alt="Avatar de l'utilisateur"
+                           class="w-6 h-6 rounded-full">
+                      <p class="font-semibold text-sm">{{ comment.user.firstName }} {{ comment.user.name }}</p>
+                    </div>
+                    <p class="text-gray-500 text-xs">{{ comment.created_at | date: 'dd/MM/yyyy hh:mm' }}</p>
+                  </div>
+                  <!-- Contenu du commentaire -->
+                  <p class="text-gray-700 text-sm whitespace-pre-line">{{ comment.content }}</p>
+                </div>
+
+              }
+            }
+
+            <div class="relative flex items-center gap-2">
+              <input #commentInput (keydown)="handleKeydown($event)" (input)="setComment($event)"
+                     class=" rounded-full w-full text-xs" hlmInput
+                     placeholder="Ecrivez ici..."/>
+              <hlm-icon (click)="sendComment()"
+                        class="absolute right-1 top-1 cursor-pointer bg-blue-400 rounded-full p-2 size-8 text-white"
+                        name="lucideSend"/>
+            </div>
+
+
           </div>
 
           <div class="bg-white w-1/4 rounded-xl p-4 flex flex-col gap-5">
             <p class="font-bold text-xs">Participation(s)</p>
+
             <hlm-dialog>
-              <button class="rounded-full w-full text-[10px] h-auto" id="edit-profile" brnDialogTrigger hlmBtn>Sans
-                réponse(s)
+              <button class="rounded-full w-full text-[10px]" id="edit-profile" brnDialogTrigger
+                      hlmBtn>Liste des participants
               </button>
               <hlm-dialog-content class="sm:max-w-[425px]" *brnDialogContent="let ctx">
                 <hlm-dialog-header>
@@ -1290,132 +1339,124 @@
                 <div class="py-4 grid gap-4">
 
                   <div class="items-center grid grid-cols-3 gap-4">
-                    <button class="rounded-full w-auto text-[10px] h-auto" hlmBtn>Sans réponse(s)</button>
-                    <button class="rounded-full w-auto text-[10px] h-auto" hlmBtn>Acceptée(s)</button>
-                    <button class="rounded-full w-auto text-[10px] h-auto" hlmBtn>Refusée(s)</button>
+                    <button (click)="filterUserInvited('invited')" variant="outline"
+                            class="rounded-full w-auto text-[10px] border border-yellow-400"
+                            [ngClass]="{'bg-yellow-400': userInvitedFilter() === 'invited'}" hlmBtn>Sans réponse(s)
+                    </button>
+                    <button (click)="filterUserInvited('accepted')" variant="outline"
+                            class="rounded-full w-auto text-[10px] border border-emerald-400"
+                            [ngClass]="{'bg-emerald-400': userInvitedFilter() === 'accepted'}" hlmBtn>Acceptée(s)
+                    </button>
+                    <button (click)="filterUserInvited('refused')" variant="outline"
+                            class="rounded-full w-auto text-[10px] border border-red-400"
+                            [ngClass]="{'bg-red-400': userInvitedFilter() === 'refused'}" hlmBtn>Refusée(s)
+                    </button>
                   </div>
 
                   <div>
                     <hlm-table class="w-full">
-                      <hlm-caption>Liste des invitation(s) sans réponse(s).</hlm-caption>
                       <hlm-trow class="flex justify-between">
                         <hlm-th class="w-40">Prénom & Nom</hlm-th>
                         <hlm-th class="w-32">Réponse</hlm-th>
                       </hlm-trow>
-                      @for (invoice of _invoices; track invoice.invoice) {
-                        <hlm-trow class="flex justify-between">
-                          <hlm-td truncate class="font-medium w-40">Manon Aussems</hlm-td>
-                          <hlm-td class="w-32">
-                            <div class="flex flex-col gap-2">
-                              <label class="flex items-center text-xs" hlmLabel>
-                                <hlm-checkbox class="mr-2 rounded-full"/>
-                                Acceptée
-                              </label>
+                      @for (invitation of selectedEvent()?.invitation; track invitation.id) {
+                        @if (invitation.status === 'invited') {
+                          <hlm-trow class="flex justify-between">
+                            <hlm-td truncate
+                                    class="font-medium w-40">{{ invitation.user.firstName }} {{ invitation.user.name }}
+                            </hlm-td>
+                            <hlm-td class="w-32">
+                              <div class="flex flex-col gap-2">
+                                <label class="flex items-center text-xs text-emerald-400" hlmLabel>
+                                  <hlm-checkbox disabled class="mr-2 rounded-full"/>
+                                  Acceptée
+                                </label>
 
-                              <label class="flex items-center text-xs" hlmLabel>
-                                <hlm-checkbox class="mr-2 rounded-full"/>
-                                Refusée
-                              </label>
-                            </div>
-                          </hlm-td>
-                        </hlm-trow>
+                                <label class="flex items-center text-xs text-red-400" hlmLabel>
+                                  <hlm-checkbox disabled class="mr-2 rounded-full"/>
+                                  Refusée
+                                </label>
+                              </div>
+                            </hlm-td>
+                          </hlm-trow>
+                        }
                       }
-                    </hlm-table>
-                  </div>
-                </div>
-              </hlm-dialog-content>
-            </hlm-dialog>
 
-            <hlm-dialog>
-              <button class="rounded-full w-full text-[10px] h-auto" id="edit-profile" brnDialogTrigger hlmBtn>
-                Acceptée(s)
-              </button>
-              <hlm-dialog-content class="sm:max-w-[425px]" *brnDialogContent="let ctx">
-                <hlm-dialog-header>
-                  <h3 hlmDialogTitle>Participation(s)</h3>
-                  <p hlmDialogDescription>Réponses des invitations à l'évènement.</p>
-                </hlm-dialog-header>
-                <div class="py-4 grid gap-4">
+                      @if (userInvitedFilter() === "all") {
+                        @for (participant of selectedEvent()?.participants; track participant.id) {
+                          <hlm-trow class="flex justify-between">
+                            <hlm-td truncate class="font-medium w-40">{{ participant.firstName }} {{ participant.name }}
+                            </hlm-td>
+                            <hlm-td class="w-32">
+                              <div class="flex flex-col gap-2">
+                                <label class="flex items-center text-xs" hlmLabel>
+                                  <hlm-checkbox (checkedChange)="userConfirmEvent(participant)"
+                                                [disabled]="isUserAcceptedEvent(participant)"
+                                                [checked]="isUserAcceptedEvent(participant)" class="mr-2 rounded-full"/>
+                                  Acceptée
+                                </label>
 
-                  <div class="items-center grid grid-cols-3 gap-4">
-                    <button class="rounded-full w-auto text-[10px] h-auto" hlmBtn>Sans réponse(s)</button>
-                    <button class="rounded-full w-auto text-[10px] h-auto" hlmBtn>Acceptée(s)</button>
-                    <button class="rounded-full w-auto text-[10px] h-auto" hlmBtn>Refusée(s)</button>
-                  </div>
+                                <label class="flex items-center text-xs" hlmLabel>
+                                  <hlm-checkbox (checkedChange)="userRefuseEvent(participant)"
+                                                [disabled]="isUserRefusedEvent(participant)"
+                                                [checked]="isUserRefusedEvent(participant)" class="mr-2 rounded-full"/>
+                                  Refusée
+                                </label>
+                              </div>
+                            </hlm-td>
+                          </hlm-trow>
+                        }
 
-                  <div>
-                    <hlm-table class="w-full">
-                      <hlm-caption>Liste des participants.</hlm-caption>
-                      <hlm-trow class="flex justify-between">
-                        <hlm-th class="w-40">Prénom & Nom</hlm-th>
-                        <hlm-th class="w-32">Réponse</hlm-th>
-                      </hlm-trow>
-                      @for (invoice of _invoices; track invoice.invoice) {
-                        <hlm-trow class="flex justify-between">
-                          <hlm-td truncate class="font-medium w-40">Manon Aussems</hlm-td>
-                          <hlm-td class="w-32">
-                            <div class="flex flex-col gap-2">
-                              <label class="flex items-center text-xs" hlmLabel>
-                                <hlm-checkbox class="mr-2 rounded-full"/>
-                                Acceptée
-                              </label>
+                        @for (participant of selectedEvent()?.organisateurs; track participant.id) {
+                          <hlm-trow class="flex justify-between">
+                            <hlm-td truncate class="font-medium w-40">{{ participant.firstName }} {{ participant.name }}
+                            </hlm-td>
+                            <hlm-td class="w-32">
+                              <div class="flex flex-col gap-2">
+                                <label class="flex items-center text-xs" hlmLabel>
+                                  <hlm-checkbox (checkedChange)="userConfirmEvent(participant)"
+                                                [disabled]="isUserAcceptedEvent(participant)"
+                                                [checked]="isUserAcceptedEvent(participant)" class="mr-2 rounded-full"/>
+                                  Acceptée
+                                </label>
 
-                              <label class="flex items-center text-xs" hlmLabel>
-                                <hlm-checkbox class="mr-2 rounded-full"/>
-                                Refusée
-                              </label>
-                            </div>
-                          </hlm-td>
-                        </hlm-trow>
+                                <label class="flex items-center text-xs" hlmLabel>
+                                  <hlm-checkbox (checkedChange)="userRefuseEvent(participant)"
+                                                [disabled]="isUserRefusedEvent(participant)"
+                                                [checked]="isUserRefusedEvent(participant)" class="mr-2 rounded-full"/>
+                                  Refusée
+                                </label>
+                              </div>
+                            </hlm-td>
+                          </hlm-trow>
+                        }
+
+                      } @else {
+                        @for (participant of filteredUserInvited(); track participant.id) {
+                          <hlm-trow class="flex justify-between">
+                            <hlm-td truncate class="font-medium w-40">{{ participant.firstName }} {{ participant.name }}
+                            </hlm-td>
+                            <hlm-td class="w-32">
+                              <div class="flex flex-col gap-2">
+                                <label class="flex items-center text-xs" hlmLabel>
+                                  <hlm-checkbox (checkedChange)="userConfirmEvent(participant)"
+                                                [disabled]="isUserAcceptedEvent(participant)"
+                                                [checked]="isUserAcceptedEvent(participant)" class="mr-2 rounded-full"/>
+                                  Acceptée
+                                </label>
+
+                                <label class="flex items-center text-xs" hlmLabel>
+                                  <hlm-checkbox (checkedChange)="userRefuseEvent(participant)"
+                                                [disabled]="isUserRefusedEvent(participant)"
+                                                [checked]="isUserRefusedEvent(participant)" class="mr-2 rounded-full"/>
+                                  Refusée
+                                </label>
+                              </div>
+                            </hlm-td>
+                          </hlm-trow>
+                        }
                       }
-                    </hlm-table>
-                  </div>
-                </div>
-              </hlm-dialog-content>
-            </hlm-dialog>
 
-            <hlm-dialog>
-              <button class="rounded-full w-full text-[10px] bg-red-600  h-auto" id="edit-profile" brnDialogTrigger
-                      hlmBtn>Refusée(s)
-              </button>
-              <hlm-dialog-content class="sm:max-w-[425px]" *brnDialogContent="let ctx">
-                <hlm-dialog-header>
-                  <h3 hlmDialogTitle>Participation(s)</h3>
-                  <p hlmDialogDescription>Réponses des invitations à l'évènement.</p>
-                </hlm-dialog-header>
-                <div class="py-4 grid gap-4">
-
-                  <div class="items-center grid grid-cols-3 gap-4">
-                    <button class="rounded-full w-auto text-[10px] h-auto" hlmBtn>Sans réponse(s)</button>
-                    <button class="rounded-full w-auto text-[10px] h-auto" hlmBtn>Acceptée(s)</button>
-                    <button class="rounded-full w-auto text-[10px] h-auto" hlmBtn>Refusée(s)</button>
-                  </div>
-
-                  <div>
-                    <hlm-table class="w-full">
-                      <hlm-caption>Liste des invitation(s) refusée(s).</hlm-caption>
-                      <hlm-trow class="flex justify-between">
-                        <hlm-th class="w-40">Prénom & Nom</hlm-th>
-                        <hlm-th class="w-32">Réponse</hlm-th>
-                      </hlm-trow>
-                      @for (invoice of _invoices; track invoice.invoice) {
-                        <hlm-trow class="flex justify-between">
-                          <hlm-td truncate class="font-medium w-40">Manon Aussems</hlm-td>
-                          <hlm-td class="w-32">
-                            <div class="flex flex-col gap-2">
-                              <label class="flex items-center text-xs" hlmLabel>
-                                <hlm-checkbox class="mr-2 rounded-full"/>
-                                Acceptée
-                              </label>
-
-                              <label class="flex items-center text-xs" hlmLabel>
-                                <hlm-checkbox class="mr-2 rounded-full"/>
-                                Refusée
-                              </label>
-                            </div>
-                          </hlm-td>
-                        </hlm-trow>
-                      }
                     </hlm-table>
                   </div>
                 </div>

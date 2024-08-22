@@ -106,7 +106,8 @@ export class HeaderComponent {
   constructor() {
     effect(async () => {
       this.connectedUser.set(this.authService.getUser())
-      this.invitationService.getByUserId(+this.connectedUser()?.id!).subscribe(data => {
+      this.invitationService.getByUserId().subscribe(data => {
+        console.log(data)
         this.invitations.set(data)
         this.invitationCount.set(data.length)
       })

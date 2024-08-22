@@ -10,8 +10,8 @@ export class InvitationService {
   private httpClient: HttpClient = inject(HttpClient)
   constructor() { }
 
-  getByUserId(userId: number) {
-    return this.httpClient.get<InvitationEntity[]>(`${environment.API_URL}/invitations/user/${userId}`)
+  getByUserId() {
+    return this.httpClient.get<InvitationEntity[]>(`${environment.API_URL}/invitations`)
   }
 
   update(id: number, invitation: InvitationEntity) {

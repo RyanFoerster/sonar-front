@@ -1,7 +1,7 @@
 import {UserEntity} from "./user.entity";
-import {CommentDto} from "./comment.entity";
 import {CompteGroupeEntity} from "./compte-groupe.entity";
 import {InvitationEntity} from "./invitation.entity";
+import {CommentEntity} from "./comment.entity";
 
 export interface EventEntity {
   id: number;
@@ -17,6 +17,6 @@ export interface EventEntity {
   organisateurs: UserEntity[];
   participants: UserEntity[];
   invitation: InvitationEntity[];
-  comments: CommentDto[]
+  comments: CommentEntity[]
 
 }

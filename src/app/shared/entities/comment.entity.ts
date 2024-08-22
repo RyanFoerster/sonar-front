@@ -1,7 +1,8 @@
 import {UserEntity} from "./user.entity";
 
-export interface CommentDto {
+export interface CommentEntity {
   id: number;
   content: string;
   user: UserEntity;
+  created_at: Date;
 }

@@ -37,9 +37,9 @@ import {
   BrnPopoverTriggerDirective,
 } from '@spartan-ng/ui-popover-brain';
 import {HlmPopoverCloseDirective, HlmPopoverContentDirective} from '@spartan-ng/ui-popover-helm';
-import {InvitationEntity} from "../shared/entities/invitation.entity";
 import {BrnSeparatorComponent} from "@spartan-ng/ui-separator-brain";
 import {HlmSeparatorDirective} from "@spartan-ng/ui-separator-helm";
+import {InvitationEntity} from "../shared/entities/invitation.entity";
 
 @Component({
   selector: 'app-header',
@@ -106,11 +106,13 @@ export class HeaderComponent {
   constructor() {
     effect(async () => {
       this.connectedUser.set(this.authService.getUser())
-      this.invitationService.getByUserId().subscribe(data => {
-        console.log(data)
-        this.invitations.set(data)
-        this.invitationCount.set(data.length)
-      })
+      if(this.connectedUser()) {
+        this.invitationService.getByUserId().subscribe(data => {
+          this.invitations.set(data)
+          this.invitationCount.set(data.length)
+        })
+      }
+
     }, {
       allowSignalWrites: true
     })

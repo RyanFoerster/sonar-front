@@ -74,4 +74,9 @@ export const routes: Routes = [
     loadComponent: () => import('./privacy-policy/privacy-policy.component').then((m) => m.PrivacyPolicyComponent),
     canActivate: [authGuard]
   },
+  {
+    path: "ponto-connect",
+    loadComponent: () => import('./ponto-connect/ponto-connect.component').then((m) => m.PontoConnectComponent),
+    canActivate: [authGuard]
+  }
 ];

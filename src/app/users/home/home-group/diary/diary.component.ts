@@ -356,7 +356,7 @@ export class DiaryComponent {
       this.filteredEvents.set(this.events().filter(event => {
         if (filter === "upcoming") {
           eventDate = new Date(event.start_time);
-          return event.status === "pending" || event.status === 'confirmed' && eventDate.getTime() > currentDate.getTime();
+          return eventDate.getTime() > currentDate.getTime() && event.status === "pending" || event.status === 'confirmed'
         } else if (filter === "past") {
           eventEndDate = new Date(event.end_time!);
           return eventEndDate.getTime() < currentDate.getTime() && event.status !== "hidden";

@@ -28,7 +28,7 @@
           </a>
         }
 
-        @if (typeOfProjet() === "GROUP") {
+        <!-- @if (typeOfProjet() === "GROUP") {
           <a
             routerLink="diary"
             [queryParams]="{ typeOfProjet: typeOfProjet()}"
@@ -36,7 +36,7 @@
             hlmBtn>Agenda du projet
             <hlm-icon class="hidden md:block md:text-center w-4" name="lucideChevronRight"/>
           </a>
-        }
+        } -->
         <a
           routerLink="project-account"
           [queryParams]="{ typeOfProjet: typeOfProjet()}"
@@ -44,13 +44,13 @@
           hlmBtn>Compte du projet
           <hlm-icon class="hidden md:block md:text-center w-4" name="lucideChevronRight"/>
         </a>
-        <a
+        <!--<a
           routerLink="facturation"
           [queryParams]="{ typeOfProjet: typeOfProjet()}"
           class="rounded-full w-full text-[10px] font-semibold h-auto  bg-gray-sonar text-black md:flex md:justify-center md:items-center md:gap-2 md:min-w-4/5 md:px-10 md:text-lg"
           hlmBtn>Facturation
           <hlm-icon class="hidden md:block md:text-center w-4" name="lucideChevronRight"/>
-        </a>
+        </a>-->
       </div>
     </div>
   </div>

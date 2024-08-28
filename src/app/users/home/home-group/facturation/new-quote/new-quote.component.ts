@@ -169,15 +169,15 @@ export class NewQuoteComponent implements AfterViewInit {
       city: ['', [Validators.required]],
       country: ['', [Validators.required]],
       postalCode: ['', [Validators.required]],
-      company_number: ['', [Validators.required]],
-      company_vat_number: ['', [Validators.required]],
+      company_number: [null],
+      company_vat_number: [null],
     })
 
     this.createProductForm = this.formBuilder.group({
       description: ['', [Validators.required]],
       price: ['', [Validators.required]],
       vat: [false, [Validators.required]],
-      quantity: ['', [Validators.required]],
+      quantity: [1, [Validators.required]],
     })
 
 

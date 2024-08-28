@@ -99,7 +99,7 @@
       <hlm-dialog>
         <button id="paie" brnDialogTrigger class="rounded-full w-full mt-5 px-10" hlmBtn>Paiement SEPA</button>
         <hlm-dialog-content class="w-72 rounded-xl m-2" *brnDialogContent="let ctx">
-          <hlm-dialog-header>
+          <hlm-dialog-header class="*:text-red-600">
             <h3 hlmDialogTitle>Paiement SEPA</h3>
             <p hlmDialogDescription class="text-[10px]">Si le virement effectu&eacute; concerne une facture adress&eacute;e
               &agrave; Sonar Artists ASBL</p>
@@ -146,6 +146,9 @@
             <button class="rounded-full" hlmBtn type="submit">Envoyer</button>
 
           </form>
+          @if(errorMessage() !== '') {
+            <p class="text-red-600">{{ errorMessage() }}</p>
+          }
 
         </hlm-dialog-content>
       </hlm-dialog>
@@ -276,8 +279,8 @@
           <hlm-td class="w-44 text-[10px]">{{ virement.iban }}</hlm-td>
           <hlm-td class="w-36 text-[10px]">{{ virement.communication }}</hlm-td>
           <hlm-td class="w-44 text-[10px]">{{ virement.structured_communication }}</hlm-td>
-          <hlm-td class="w-28 text-[10px]">{{ virement.amount_total | euroFormat }}</hlm-td>
           <hlm-td class="w-28 text-[10px]">{{ virement.amount_htva | euroFormat }}</hlm-td>
+          <hlm-td class="w-28 text-[10px]">{{ virement.amount_total | euroFormat }}</hlm-td>
         </hlm-trow>
         }
         } @else if (accountGroup()) {
@@ -288,8 +291,8 @@
           <hlm-td class="w-44 text-[10px]">{{ virement.iban }}</hlm-td>
           <hlm-td class="w-36 text-[10px]">{{ virement.communication }}</hlm-td>
           <hlm-td class="w-44 text-[10px]">{{ virement.structured_communication }}</hlm-td>
-          <hlm-td class="w-28 text-[10px]">{{ virement.amount_total | euroFormat }}</hlm-td>
           <hlm-td class="w-28 text-[10px]">{{ virement.amount_htva | euroFormat }}</hlm-td>
+          <hlm-td class="w-28 text-[10px]">{{ virement.amount_total | euroFormat }}</hlm-td>
         </hlm-trow>
         }
         }

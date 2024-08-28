@@ -33,8 +33,8 @@
         <div class="mb-3 max-w-80 flex justify-between sticky bottom-0 left-0">
             <button class="rounded-full pt-0 pb-0 h-auto text-[10px]" hlmBtn>Voir la facture</button>
             <div class="flex gap-2">
-              <button class="rounded-full pt-0 pb-0 h-auto bg-red-600 text-[10px]" hlmBtn>Refuser</button>
-              <button class="rounded-full pt-0 pb-0 h-auto text-[10px]" hlmBtn>Accepter</button>
+              <button class="rounded-full pt-0 pb-0 h-auto bg-red-600 text-[10px]" (click)="rejectVirement(virement.id)" hlmBtn>Refuser</button>
+              <button class="rounded-full pt-0 pb-0 h-auto text-[10px]" (click)="acceptVirement(virement.id)" hlmBtn>Accepter</button>
             </div>
         </div>
       }

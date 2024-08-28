@@ -74,7 +74,9 @@
               <p class="font-bold">{{ client()?.name }}</p>
               <p>{{ client()?.street }} {{ client()?.number }}</p>
               <p>{{ client()?.city }} {{ client()?.postalCode }} {{ client()?.country }}</p>
-              <p>TVA: BE {{ client()?.company_vat_number }}</p>
+              @if(client()?.company_number) {
+                <p>TVA: BE {{ client()?.company_vat_number }}</p>
+              }
             </div>
           </div>
         }
@@ -133,7 +135,7 @@
                   </hlm-th>
 
                   <hlm-th class="w-1/12">
-                    <input formControlName="quantity" class="w-full bg-white rounded-full shadow-lg" hlmInput
+                    <input [value]="1" formControlName="quantity" class="w-full bg-white rounded-full shadow-lg" hlmInput
                            type="text"/>
                   </hlm-th>
 
@@ -270,7 +272,7 @@
 
         </label>
 
-        <label class="w-full" hlmLabel for="bce_number">Numéro BCE
+        <label class="w-full" hlmLabel for="bce_number">Numéro d'entreprise
           <input formControlName="company_number" hlmInput id="bce_number" placeholder="987 XXX XXX"
                  class="col-span-3 w-full rounded-full"/>
         </label>
@@ -285,7 +287,7 @@
 
         </label>
 
-        <input formControlName="city" hlmInput id="city" placeholder="Liège" class="rounded-full"/>
+        <input formControlName="city" hlmInput id="city" placeholder="Commune" class="rounded-full"/>
         <div class="flex justify-between items-center gap-5">
           <input formControlName="postalCode" hlmInput id="postal_code" placeholder="CP" class="w-1/2 rounded-full"/>
           <input formControlName="number" hlmInput id="number" placeholder="N°" class="w-1/2 rounded-full"/>

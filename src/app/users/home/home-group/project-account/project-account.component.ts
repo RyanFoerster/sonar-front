@@ -111,9 +111,10 @@ export class ProjectAccountComponent implements AfterViewInit {
   protected groupAccounts = signal<CompteGroupeEntity[] | undefined>(undefined)
   protected amountHtva = signal(0)
   protected amountTva = signal(0)
+  protected errorMessage = signal('')
 
 
-  protected amount_total = computed(() => +this.amountHtva() + +this.amountTva())
+  protected amount_total = computed(() => +this.amountHtva() - +this.amountTva())
 
   protected transactionForm!: FormGroup
   protected virementSepaForm!: FormGroup
@@ -246,7 +247,6 @@ export class ProjectAccountComponent implements AfterViewInit {
 
   createVirementSepa(ctx: any) {
     if (this.virementSepaForm.valid) {
-      console.log(this.virementSepaForm.value)
       const virementSepa: VirementSepaDto = this.virementSepaForm.value
       virementSepa.amount_total = this.amount_total()
       this.virementSepaService
@@ -261,7 +261,7 @@ export class ProjectAccountComponent implements AfterViewInit {
           tap(() => this.isSpinner.set(false)),
           catchError((err) => {
             this.isSpinner.set(false); // Assurez-vous d'arrêter le spinner en cas d'erreur
-            console.log(err.error.message) // Affichez un message d'erreur
+            this.errorMessage.set(err.error.message)// Affichez un message d'erreur
             return of(null); // Retournez une valeur par défaut pour éviter la propagation de l'erreur
           })
         )

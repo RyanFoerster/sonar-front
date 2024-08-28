@@ -32,14 +32,14 @@ import {HlmSelectImports} from '@spartan-ng/ui-select-helm';
 import {CompteGroupeEntity} from "../../../../shared/entities/compte-groupe.entity";
 import {CompteGroupeService} from "../../../../shared/services/compte-groupe.service";
 import {HlmSpinnerComponent} from "@spartan-ng/ui-spinner-helm";
-import {DatePipe, JsonPipe} from "@angular/common";
+import {DatePipe, JsonPipe, Location} from "@angular/common";
 import {UsersService} from "../../../../shared/services/users.service";
 import {UserEntity} from "../../../../shared/entities/user.entity";
 import {Meta, Title} from "@angular/platform-browser";
 import {UserSecondaryAccountService} from "../../../../shared/services/user-secondary-account.service";
 import {UserSecondaryAccountEntity} from "../../../../shared/entities/user-secondary-account.entity";
 import {provideIcons} from "@ng-icons/core";
-import {lucideCheck, lucideChevronsUpDown, lucideSearch} from "@ng-icons/lucide";
+import {lucideCheck, lucideChevronsUpDown, lucideCornerDownLeft, lucideSearch} from "@ng-icons/lucide";
 import {delay, map, tap} from "rxjs";
 import { BrnAccordionContentComponent } from '@spartan-ng/ui-accordion-brain';
 import {
@@ -102,7 +102,7 @@ import {BrnCommandImports} from "@spartan-ng/ui-command-brain";
     HlmIconComponent,
     BrnCommandImports
   ],
-  providers: [provideIcons({lucideChevronsUpDown, lucideSearch, lucideCheck})],
+  providers: [provideIcons({lucideChevronsUpDown, lucideSearch, lucideCheck, lucideCornerDownLeft})],
   templateUrl: './membership.component.html',
   styleUrl: './membership.component.css'
 })
@@ -127,7 +127,7 @@ export class MembershipComponent implements AfterViewInit {
   protected isSpinner = signal<boolean>(false)
   protected errorMessage = signal<string | undefined>(undefined)
 
-  constructor(private titleService: Title, private metaService: Meta) {
+  constructor(private titleService: Title, private metaService: Meta, private location: Location) {
     this.titleService.setTitle('Gestion des membres');
     this.metaService.updateTag({name: 'description', content: 'Ajoutez un nouveau membre à votre projet de groupe.'});
 
@@ -282,6 +282,10 @@ export class MembershipComponent implements AfterViewInit {
         error: err => this.errorMessage.set(err.error.message)
       })
     }
+  }
+
+  goBack() {
+    this.location.back()
   }
 
 

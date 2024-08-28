@@ -1,82 +1,86 @@
 @defer () {
-  @if (isSpinner()) {
-    <hlm-spinner class="flex mx-auto mt-2" aria-label="Chargement en cours"/>
-  } @else if (userGroup()?.role_gestion !== "NONE" || connectedUser()?.role === "ADMIN") {
-    <div class="m-10 hidden flex-col items-center md:items-end gap-2 lg:flex" role="main">
-      <hlm-dialog aria-labelledby="dialog-title" aria-describedby="dialog-description">
-        <button id="edit-profile" brnDialogTrigger class="rounded-full w-80" hlmBtn aria-haspopup="dialog"
-                aria-controls="dialog-content" (click)="fetchAllUsers(); errorMessage.set(undefined)">Ajouter un membre
+@if (isSpinner()) {
+<hlm-spinner class="flex mx-auto mt-2" aria-label="Chargement en cours"/>
+} @else if (userGroup()?.role_gestion !== "NONE" || connectedUser()?.role === "ADMIN") {
+<button (click)="goBack()" class="w-fit mx-10 mb-5 rounded-full flex items-center gap-3" hlmBtn>
+  <hlm-icon size="sm" name="lucideCornerDownLeft"/>
+  Retour
+</button>
+<div class="m-10 hidden flex-col items-center md:items-end gap-2 lg:flex" role="main">
+  <hlm-dialog aria-labelledby="dialog-title" aria-describedby="dialog-description">
+    <button id="edit-profile" brnDialogTrigger class="rounded-full w-80" hlmBtn aria-haspopup="dialog"
+            aria-controls="dialog-content" (click)="fetchAllUsers(); errorMessage.set(undefined)">Ajouter un membre
+    </button>
+
+    <hlm-dialog-content id="dialog-content" class="w-72 rounded-xl m-2" *brnDialogContent="let ctx">
+      <hlm-dialog-header>
+        <h3 id="dialog-title" hlmDialogTitle>Ajouter un membre</h3>
+        <p id="dialog-description" class="md:mr-28" hlmDialogDescription>Ajoutez un nouveau membre au projet de
+          groupe
+          ici. Cliquez sur enregistrer lorsque vous avez terminé.</p>
+      </hlm-dialog-header>
+
+      <brn-popover [state]="state()" (stateChanged)="stateChanged($event)" sideOffset="5" closeDelay="100">
+        <button class="w-full justify-between" id="edit-profile" variant="outline" brnPopoverTrigger hlmBtn>
+          {{ currentUser() ? currentUser()?.firstName + ' ' + currentUser()?.name : 'Séléctionner un membre' }}
+          <hlm-icon size="sm" name="lucideChevronsUpDown"/>
         </button>
+        <brn-cmd *brnPopoverContent="let ctx" hlmPopoverContent hlm class="p-0 w-full">
+          <hlm-cmd-input-wrapper>
+            <hlm-icon name="lucideSearch"/>
+            <input placeholder="Rechercher un membre" brnCmdInput hlm/>
+          </hlm-cmd-input-wrapper>
+          <div *brnCmdEmpty hlmCmdEmpty>No results found.</div>
+          <brn-cmd-list hlm>
+            <brn-cmd-group hlm>
 
-        <hlm-dialog-content id="dialog-content" class="w-72 rounded-xl m-2" *brnDialogContent="let ctx">
-          <hlm-dialog-header>
-            <h3 id="dialog-title" hlmDialogTitle>Ajouter un membre</h3>
-            <p id="dialog-description" class="md:mr-28" hlmDialogDescription>Ajoutez un nouveau membre au projet de
-              groupe
-              ici. Cliquez sur enregistrer lorsque vous avez terminé.</p>
-          </hlm-dialog-header>
-
-          <brn-popover [state]="state()" (stateChanged)="stateChanged($event)" sideOffset="5" closeDelay="100">
-            <button class="w-full justify-between" id="edit-profile" variant="outline" brnPopoverTrigger hlmBtn>
-              {{ currentUser() ? currentUser()?.firstName + ' ' + currentUser()?.name : 'Séléctionner un membre' }}
-              <hlm-icon size="sm" name="lucideChevronsUpDown"/>
-            </button>
-            <brn-cmd *brnPopoverContent="let ctx" hlmPopoverContent hlm class="p-0 w-full">
-              <hlm-cmd-input-wrapper>
-                <hlm-icon name="lucideSearch"/>
-                <input placeholder="Rechercher un membre" brnCmdInput hlm/>
-              </hlm-cmd-input-wrapper>
-              <div *brnCmdEmpty hlmCmdEmpty>No results found.</div>
-              <brn-cmd-list hlm>
-                <brn-cmd-group hlm>
-
-                  @for (user of usersFromDB(); track user.id) {
-                    <button
-                      brnCmdItem
-                      [value]="user.name"
-                      (selected)="commandSelected(user)"
-                      class="flex justify-between w-full"
-                      hlm
-                    >
-                      <hlm-icon
-                        [class.opacity-0]="currentUser()?.email !== user.email"
-                        name="lucideCheck"
-                        hlmCmdIcon
-                      />
-                      <p>{{ user.firstName }} {{user.name}}</p>
+              @for (user of usersFromDB(); track user.id) {
+              <button
+                brnCmdItem
+                [value]="user.name"
+                (selected)="commandSelected(user)"
+                class="flex justify-between w-full"
+                hlm
+              >
+                <hlm-icon
+                  [class.opacity-0]="currentUser()?.email !== user.email"
+                  name="lucideCheck"
+                  hlmCmdIcon
+                />
+                <p>{{ user.firstName }} {{user.name}}</p>
                       <p>{{ user.username }}</p>
                       <p>{{ user.id }}</p>
                     </button>
-                  }
+              }
 
-                </brn-cmd-group>
-              </brn-cmd-list>
-            </brn-cmd>
-          </brn-popover>
+            </brn-cmd-group>
+          </brn-cmd-list>
+        </brn-cmd>
+      </brn-popover>
 
-          <hlm-dialog-footer>
-            @if (errorMessage() !== undefined) {
-              <p class="text-xs text-red-500">{{ errorMessage() }}</p>
-            }
-            <button (click)="addMemberToGroup(ctx)" class="rounded-full" hlmBtn type="submit"
-                    aria-label="Enregistrer les modifications">Ajouter
-            </button>
-          </hlm-dialog-footer>
-        </hlm-dialog-content>
-      </hlm-dialog>
+      <hlm-dialog-footer>
+        @if (errorMessage() !== undefined) {
+        <p class="text-xs text-red-500">{{ errorMessage() }}</p>
+        }
+        <button (click)="addMemberToGroup(ctx)" class="rounded-full" hlmBtn type="submit"
+                aria-label="Enregistrer les modifications">Ajouter
+        </button>
+      </hlm-dialog-footer>
+    </hlm-dialog-content>
+  </hlm-dialog>
 
 
-      <hlm-table class="overflow-x-auto w-full p-4 bg-gray-sonar rounded-xl" aria-label="Tableau des membres">
-        <hlm-trow class="flex flex-col sm:flex-row">
-          <hlm-th class="w-full sm:w-52" scope="col">Date</hlm-th>
-          <hlm-th class="w-full sm:w-60" scope="col">Personne invitée</hlm-th>
-          <hlm-th class="w-full sm:flex-1" scope="col">Viewer</hlm-th>
-          <hlm-th class="w-full sm:flex-1" scope="col">Admin</hlm-th>
-        </hlm-trow>
+  <hlm-table class="overflow-x-auto w-full p-4 bg-gray-sonar rounded-xl" aria-label="Tableau des membres">
+    <hlm-trow class="flex flex-col sm:flex-row">
+      <hlm-th class="w-full sm:w-52" scope="col">Date</hlm-th>
+      <hlm-th class="w-full sm:w-60" scope="col">Personne invitée</hlm-th>
+      <hlm-th class="w-full sm:flex-1" scope="col">Viewer</hlm-th>
+      <hlm-th class="w-full sm:flex-1" scope="col">Admin</hlm-th>
+    </hlm-trow>
 
-        @for (user of users(); track user.id) {
-          <hlm-trow class="flex flex-col sm:flex-row">
-            <hlm-td class="font-medium w-full sm:w-52 truncate">{{ currentDate | date }}</hlm-td>
+    @for (user of users(); track user.id) {
+    <hlm-trow class="flex flex-col sm:flex-row">
+      <hlm-td class="font-medium w-full sm:w-52 truncate">{{ currentDate | date }}</hlm-td>
             <hlm-td class="w-full sm:w-60">{{ user.firstName }} {{ user.name }}</hlm-td>
 
             <hlm-td class="grid grid-cols-2 w-full sm:flex-1">
@@ -147,85 +151,85 @@
               <!-- Répétez pour les autres checkboxes -->
             </hlm-td>
           </hlm-trow>
-        }
-      </hlm-table>
-    </div>
+    }
+  </hlm-table>
+</div>
 
-    <div class="p-4 mx-2 rounded-xl flex flex-col  bg-gray-sonar  gap-4 lg:hidden" role="main">
+<div class="p-4 mx-2 rounded-xl flex flex-col  bg-gray-sonar  gap-4 lg:hidden" role="main">
 
-      <h2 class="text-lg font-bold">Gestion des membres</h2>
+  <h2 class="text-lg font-bold">Gestion des membres</h2>
 
-      <hlm-dialog aria-labelledby="dialog-title" aria-describedby="dialog-description">
-        <button id="edit-profile" brnDialogTrigger class="rounded-full w-full h-10" hlmBtn aria-haspopup="dialog"
-                aria-controls="dialog-content" (click)="fetchAllUsers(); errorMessage.set(undefined)">Ajouter un membre
+  <hlm-dialog aria-labelledby="dialog-title" aria-describedby="dialog-description">
+    <button id="edit-profile" brnDialogTrigger class="rounded-full w-full h-10" hlmBtn aria-haspopup="dialog"
+            aria-controls="dialog-content" (click)="fetchAllUsers(); errorMessage.set(undefined)">Ajouter un membre
+    </button>
+
+    <hlm-dialog-content id="dialog-content" class="w-72 rounded-xl m-2" *brnDialogContent="let ctx">
+      <hlm-dialog-header>
+        <h3 id="dialog-title" hlmDialogTitle>Ajouter un membre</h3>
+        <p id="dialog-description" class="md:mr-28" hlmDialogDescription>Ajoutez un nouveau membre au projet de
+          groupe
+          ici. Cliquez sur enregistrer lorsque vous avez terminé.</p>
+      </hlm-dialog-header>
+
+      <brn-popover [state]="state()" (stateChanged)="stateChanged($event)" sideOffset="5" closeDelay="100">
+        <button class="w-full justify-between" id="edit-profile" variant="outline" brnPopoverTrigger hlmBtn>
+          {{ currentUser() ? currentUser()?.email : 'Séléctionner un membre' }}
+          <hlm-icon size="sm" name="lucideChevronsUpDown"/>
         </button>
+        <brn-cmd *brnPopoverContent="let ctx" hlmPopoverContent hlm class="p-0 w-full">
+          <hlm-cmd-input-wrapper>
+            <hlm-icon name="lucideSearch"/>
+            <input placeholder="Rechercher un membre" brnCmdInput hlm/>
+          </hlm-cmd-input-wrapper>
+          <div *brnCmdEmpty hlmCmdEmpty>No results found.</div>
+          <brn-cmd-list hlm>
+            <brn-cmd-group hlm>
 
-        <hlm-dialog-content id="dialog-content" class="w-72 rounded-xl m-2" *brnDialogContent="let ctx">
-          <hlm-dialog-header>
-            <h3 id="dialog-title" hlmDialogTitle>Ajouter un membre</h3>
-            <p id="dialog-description" class="md:mr-28" hlmDialogDescription>Ajoutez un nouveau membre au projet de
-              groupe
-              ici. Cliquez sur enregistrer lorsque vous avez terminé.</p>
-          </hlm-dialog-header>
+              @for (user of usersFromDB(); track user.email) {
+              <button
+                brnCmdItem
+                [value]="user.email"
+                (selected)="commandSelected(user)"
+                hlm
+              >
+                <hlm-icon
+                  [class.opacity-0]="currentUser()?.email !== user.email"
+                  name="lucideCheck"
+                  hlmCmdIcon
+                />
+              {{ user.email }}
+              </button>
+              }
 
-          <brn-popover [state]="state()" (stateChanged)="stateChanged($event)" sideOffset="5" closeDelay="100">
-            <button class="w-full justify-between" id="edit-profile" variant="outline" brnPopoverTrigger hlmBtn>
-              {{ currentUser() ? currentUser()?.email : 'Séléctionner un membre' }}
-              <hlm-icon size="sm" name="lucideChevronsUpDown"/>
-            </button>
-            <brn-cmd *brnPopoverContent="let ctx" hlmPopoverContent hlm class="p-0 w-full">
-              <hlm-cmd-input-wrapper>
-                <hlm-icon name="lucideSearch"/>
-                <input placeholder="Rechercher un membre" brnCmdInput hlm/>
-              </hlm-cmd-input-wrapper>
-              <div *brnCmdEmpty hlmCmdEmpty>No results found.</div>
-              <brn-cmd-list hlm>
-                <brn-cmd-group hlm>
+            </brn-cmd-group>
+          </brn-cmd-list>
+        </brn-cmd>
+      </brn-popover>
 
-                  @for (user of usersFromDB(); track user.email) {
-                    <button
-                      brnCmdItem
-                      [value]="user.email"
-                      (selected)="commandSelected(user)"
-                      hlm
-                    >
-                      <hlm-icon
-                        [class.opacity-0]="currentUser()?.email !== user.email"
-                        name="lucideCheck"
-                        hlmCmdIcon
-                      />
-                      {{ user.email }}
-                    </button>
-                  }
+      <hlm-dialog-footer>
+        @if (errorMessage() !== undefined) {
+        <p class="text-xs text-red-500">{{ errorMessage() }}</p>
+        }
+        <button (click)="addMemberToGroup(ctx)" class="rounded-full" hlmBtn type="submit"
+                aria-label="Enregistrer les modifications">Ajouter
+        </button>
+      </hlm-dialog-footer>
+    </hlm-dialog-content>
+  </hlm-dialog>
 
-                </brn-cmd-group>
-              </brn-cmd-list>
-            </brn-cmd>
-          </brn-popover>
-
-          <hlm-dialog-footer>
-            @if (errorMessage() !== undefined) {
-              <p class="text-xs text-red-500">{{ errorMessage() }}</p>
-            }
-            <button (click)="addMemberToGroup(ctx)" class="rounded-full" hlmBtn type="submit"
-                    aria-label="Enregistrer les modifications">Ajouter
-            </button>
-          </hlm-dialog-footer>
-        </hlm-dialog-content>
-      </hlm-dialog>
-
-      @for (user of users(); track user.id) {
-        <div class=" bg-white shadow-lg p-5 rounded-2xl" hlmAccordion>
-          <div class="flex flex-col gap-2" hlmAccordionItem>
-            <button class="flex flex-col gap-3 hover:no-underline py-0" hlmAccordionTrigger>
-              <span class="flex justify-between items-center w-full">
-                <p class="w-6/12 text-left text-sm font-bold md:text-lg">Personne invitée</p>
-                <p class="w-4/12 text-left text-sm font-bold md:text-lg">Date</p>
-                <hlm-icon class="w-4"  hlmAccIcon/>
-              </span>
-              <brn-separator class="bg-black" hlmSeparator/>
-              <span class="flex justify-between w-full">
-                <p class="w-6/12 text-left text-sm md:text-lg">{{ user.email }}</p>
+  @for (user of users(); track user.id) {
+  <div class=" bg-white shadow-lg p-5 rounded-2xl" hlmAccordion>
+    <div class="flex flex-col gap-2" hlmAccordionItem>
+      <button class="flex flex-col gap-3 hover:no-underline py-0" hlmAccordionTrigger>
+        <span class="flex justify-between items-center w-full">
+          <p class="w-6/12 text-left text-sm font-bold md:text-lg">Personne invitée</p>
+          <p class="w-4/12 text-left text-sm font-bold md:text-lg">Date</p>
+          <hlm-icon class="w-4"  hlmAccIcon/>
+        </span>
+        <brn-separator class="bg-black" hlmSeparator/>
+        <span class="flex justify-between w-full">
+          <p class="w-6/12 text-left text-sm md:text-lg">{{ user.email }}</p>
                 <p class="w-4/12 text-left text-sm md:text-lg">{{ currentDate |date }}</p>
                 <hlm-icon class="w-4 text-transparent" size="sm" hlmAccIcon/>
               </span>
@@ -310,14 +314,14 @@
             </brn-accordion-content>
           </div>
         </div>
-      }
-
-    </div>
-
-
   }
 
-} @loading (minimum 1s) {
-  <hlm-spinner class="flex mx-auto mt-2" aria-label="Chargement en cours"/>
+</div>
+
+
+}
+
+  } @loading (minimum 1s) {
+<hlm-spinner class="flex mx-auto mt-2" aria-label="Chargement en cours"/>
 }
 

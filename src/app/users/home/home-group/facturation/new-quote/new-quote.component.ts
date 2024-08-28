@@ -17,7 +17,7 @@ import {HlmIconComponent} from "@spartan-ng/ui-icon-helm";
 import {provideIcons} from "@ng-icons/core";
 import {
   lucideAlertTriangle,
-  lucideCheck,
+  lucideCheck, lucideCornerDownLeft,
   lucideEdit,
   lucideFileDown,
   lucidePlus,
@@ -115,7 +115,8 @@ import { Location } from '@angular/common';
     lucideCheck,
     lucideXCircle,
     lucideAlertTriangle,
-    lucideUndo2
+    lucideUndo2,
+    lucideCornerDownLeft
   })],
   templateUrl: './new-quote.component.html',
   styleUrl: './new-quote.component.css'

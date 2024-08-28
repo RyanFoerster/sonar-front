@@ -5,7 +5,7 @@ import {RouterLink} from "@angular/router";
 import {UsersService} from "../../../../shared/services/users.service";
 import {map, tap} from "rxjs";
 import {UserEntity} from "../../../../shared/entities/user.entity";
-import {DatePipe, JsonPipe} from "@angular/common";
+import {DatePipe, JsonPipe, Location} from "@angular/common";
 import {
   HlmCaptionComponent,
   HlmTableComponent,
@@ -45,7 +45,7 @@ import {
 import {CompteGroupeEntity} from "../../../../shared/entities/compte-groupe.entity";
 import {InvoiceEntity} from "../../../../shared/entities/invoice.entity";
 import {provideIcons} from "@ng-icons/core";
-import {lucideFileDown} from "@ng-icons/lucide";
+import {lucideCornerDownLeft, lucideFileDown} from "@ng-icons/lucide";
 
 @Component({
   selector: 'app-facturation',
@@ -86,7 +86,8 @@ import {lucideFileDown} from "@ng-icons/lucide";
   ],
   providers: [
     provideIcons({
-      lucideFileDown
+      lucideFileDown,
+      lucideCornerDownLeft
     })
   ],
   templateUrl: './facturation.component.html',
@@ -104,6 +105,13 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
   protected creditNote = signal<InvoiceEntity | null>(null)
   protected isCreditNote = signal<Boolean | null>(null)
 
+
+  constructor(private location: Location) {
+  }
+
+  goBack() {
+    this.location.back()
+  }
 
   async ngAfterViewInit() {
     await this.getConnectedUser()

@@ -1,15 +1,15 @@
 <div class="container">
+  <button (click)="goBack()" class="w-fit  mb-5 rounded-full flex items-center gap-3" hlmBtn>
+  <hlm-icon size="sm" name="lucideCornerDownLeft"/>
+  Retour
+</button>
   <div class="container p-5 flex flex-col gap-2 bg-gray-sonar rounded-2xl md:p-10"
        [ngClass]="{'bg-white justify-center items-center': isToggleClientForm()}">
 
     @if (!isToggleClientForm()) {
       <div class="flex justify-between items-center ">
         <h2 class="text-lg md:text-3xl font-bold">Nouveau devis</h2>
-        <button (click)="goBack()" class="rounded-full text-xs p-0 px-5 h-6 flex items-center justify-center gap-3 lg:text-lg lg:h-10"
-                hlmBtn>
-          <hlm-icon size="xs" name="lucideUndo2"/>
-          Retour
-        </button>
+
       </div>
 
 

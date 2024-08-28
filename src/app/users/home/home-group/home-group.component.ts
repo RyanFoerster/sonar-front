@@ -1,5 +1,5 @@
 import {AfterViewInit, Component, computed, effect, inject, input, signal, WritableSignal} from '@angular/core';
-import {lucideChevronRight, lucideEdit} from '@ng-icons/lucide';
+import {lucideChevronRight, lucideCornerDownLeft, lucideEdit} from '@ng-icons/lucide';
 import {HlmAspectRatioDirective} from '@spartan-ng/ui-aspectratio-helm';
 import {HlmButtonDirective} from '@spartan-ng/ui-button-helm';
 import {HlmIconComponent, provideIcons} from '@spartan-ng/ui-icon-helm';
@@ -12,6 +12,7 @@ import {UserEntity} from "../../../shared/entities/user.entity";
 import {EMPTY, switchMap, tap} from "rxjs";
 import {RouterLink} from "@angular/router";
 import {AuthService} from "../../../shared/services/auth.service";
+import {Location} from "@angular/common";
 
 @Component({
   selector: 'app-home-group',
@@ -24,7 +25,7 @@ import {AuthService} from "../../../shared/services/auth.service";
   ],
   templateUrl: './home-group.component.html',
   styleUrl: './home-group.component.css',
-  providers: [provideIcons({lucideEdit, lucideChevronRight})]
+  providers: [provideIcons({lucideEdit, lucideChevronRight, lucideCornerDownLeft})]
 })
 export class HomeGroupComponent implements AfterViewInit {
 
@@ -39,6 +40,9 @@ export class HomeGroupComponent implements AfterViewInit {
   private comptePrincipalService: ComptePrincipalService = inject(ComptePrincipalService)
   private authService: AuthService = inject(AuthService)
   private usersService: UsersService = inject(UsersService);
+
+  constructor(private location: Location) {
+  }
 
   async ngAfterViewInit() {
     await this.fetchUserProjectInfo()
@@ -72,4 +76,8 @@ export class HomeGroupComponent implements AfterViewInit {
     ).subscribe();
   }
 
+
+  goBack() {
+    this.location.back()
+  }
 }

@@ -29,8 +29,8 @@ import {EuroFormatPipe} from "../../../../shared/pipes/euro-format.pipe";
 import {TransactionService} from "../../../../shared/services/transaction.service";
 import {TransactionEntity} from "../../../../shared/entities/transaction.entity";
 import {catchError, delay, forkJoin, of, switchMap, tap} from "rxjs";
-import {DatePipe, JsonPipe, NgClass} from "@angular/common";
-import {HlmIconComponent} from "@spartan-ng/ui-icon-helm";
+import {DatePipe, JsonPipe, Location, NgClass} from "@angular/common";
+import {HlmIconComponent, provideIcons} from "@spartan-ng/ui-icon-helm";
 import {
   HlmAccordionContentDirective,
   HlmAccordionDirective,
@@ -45,6 +45,7 @@ import {HlmSpinnerComponent} from "@spartan-ng/ui-spinner-helm";
 import {atLeastOneRequired} from "../../../../shared/validators/at-least-one-required.validator";
 import {VirementSepaService} from "../../../../shared/services/virement-sepa.service";
 import {VirementSepaDto} from "../../../../shared/dtos/virement-sepa.dto";
+import { lucideCornerDownLeft } from '@ng-icons/lucide';
 
 
 @Component({
@@ -86,6 +87,7 @@ import {VirementSepaDto} from "../../../../shared/dtos/virement-sepa.dto";
     HlmSpinnerComponent,
     JsonPipe
   ],
+  providers: [provideIcons({lucideCornerDownLeft})],
   templateUrl: './project-account.component.html',
   styleUrl: './project-account.component.css'
 })
@@ -116,7 +118,7 @@ export class ProjectAccountComponent implements AfterViewInit {
   protected transactionForm!: FormGroup
   protected virementSepaForm!: FormGroup
 
-  constructor() {
+  constructor(private location: Location) {
 
     this.transactionForm = this.formBuilder.group({
       communication: ['', [Validators.required]],
@@ -265,6 +267,10 @@ export class ProjectAccountComponent implements AfterViewInit {
         )
         .subscribe();
     }
+  }
+
+  goBack() {
+    this.location.back()
   }
 
 

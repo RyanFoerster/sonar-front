@@ -28,7 +28,7 @@ import {
 
 import {HlmCheckboxComponent} from '@spartan-ng/ui-checkbox-helm';
 import {provideIcons} from '@ng-icons/core';
-import {lucideAlertTriangle, lucideSend, lucideUndo2} from '@ng-icons/lucide';
+import {lucideAlertTriangle, lucideCornerDownLeft, lucideSend, lucideUndo2} from '@ng-icons/lucide';
 import {HlmIconComponent} from '@spartan-ng/ui-icon-helm';
 import {BrnMenuTriggerDirective} from '@spartan-ng/ui-menu-brain';
 import {
@@ -56,7 +56,7 @@ import {map, switchMap, take, tap} from "rxjs";
 import {EventService} from "../../../../shared/services/event.service";
 import {BrnSeparatorComponent} from "@spartan-ng/ui-separator-brain";
 import {HlmSeparatorDirective} from "@spartan-ng/ui-separator-helm";
-import {DatePipe, JsonPipe, NgClass} from "@angular/common";
+import {DatePipe, JsonPipe, Location, NgClass} from "@angular/common";
 import {UserEntity} from "../../../../shared/entities/user.entity";
 import {AuthService} from "../../../../shared/services/auth.service";
 
@@ -134,7 +134,7 @@ import {CommentDto} from "../../../../shared/dtos/comment.dto";
     HlmAlertIconDirective,
     HlmAlertTitleDirective, BrnDialogTitleDirective,
   ],
-  providers: [provideIcons({lucideUndo2, lucideAlertTriangle, lucideSend})],
+  providers: [provideIcons({lucideUndo2, lucideAlertTriangle, lucideSend, lucideCornerDownLeft})],
   templateUrl: './diary.component.html',
   styleUrl: './diary.component.css',
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
@@ -176,7 +176,7 @@ export class DiaryComponent {
 
   @ViewChild('commentInput') commentInput!: ElementRef;
 
-  constructor() {
+  constructor(private location: Location) {
     effect(() => {
       this.connectedUser.set(this.authService.getUser())
       if (this.typeOfProjet() === "PRINCIPAL") {
@@ -274,32 +274,9 @@ export class DiaryComponent {
     })
   }
 
-  date1: Date | undefined;
-
-  date2: Date | undefined;
-
-  date3: Date | undefined;
-
-  protected _invoices = [
-    {
-      invoice: 'INV001',
-      paymentStatus: 'Paid',
-      totalAmount: '$250.00',
-      paymentMethod: 'Credit Card',
-    },
-    {
-      invoice: 'INV002',
-      paymentStatus: 'Pending',
-      totalAmount: '$150.00',
-      paymentMethod: 'PayPal',
-    },
-    {
-      invoice: 'INV003',
-      paymentStatus: 'Unpaid',
-      totalAmount: '$350.00',
-      paymentMethod: 'Bank Transfer',
-    },
-  ]
+  goBack() {
+    this.location.back()
+  }
 
   setSelectedEvent(event: EventEntity) {
     this.selectedEvent.set(event);

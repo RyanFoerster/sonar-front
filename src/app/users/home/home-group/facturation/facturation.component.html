@@ -1,4 +1,8 @@
 <div class="flex flex-col container gap-10">
+  <button (click)="goBack()" class="w-fit  mb-5 rounded-full flex items-center gap-3" hlmBtn>
+  <hlm-icon size="sm" name="lucideCornerDownLeft"/>
+  Retour
+</button>
   <a
     routerLink="new-quote"
     [queryParams]="{ typeOfProjet: typeOfProjet()}"

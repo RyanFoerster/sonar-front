@@ -514,36 +514,7 @@
                 </hlm-dialog-header>
                 <div class="py-4 grid gap-4">
 
-                  <div class="items-center grid grid-cols-4 gap-4">
-                    <label class="w-60" hlmLabel>
-                      <div class="card flex flex-wrap gap-3 p-fluid">
-                        <div class="flex-auto">
-                          <label for="buttondisplay" class="text-[10px] font-bold block mb-2">Date</label>
-                          <p-calendar
-                            [(ngModel)]="date2"
-                            [showIcon]="true"
-                            inputId="buttondisplay"
-                            [showOnFocus]="false"/>
-                        </div>
 
-                        <div class="flex-auto">
-                          <label for="templatedisplay" class="text-[10px] font-bold block mb-2">Heure</label>
-                          <p-calendar
-                            [(ngModel)]="date3"
-                            [iconDisplay]="'input'"
-                            [showIcon]="true"
-                            [timeOnly]="true"
-                            inputId="templatedisplay">
-                            <ng-template pTemplate="inputicon" let-clickCallBack="clickCallBack">
-                              <i
-                                class="pi pi-clock pointer-events-none"
-                                (click)="clickCallBack($event)"></i>
-                            </ng-template>
-                          </p-calendar>
-                        </div>
-                      </div>
-                    </label>
-                  </div>
 
                 </div>
                 <hlm-dialog-footer>
@@ -745,6 +716,10 @@
 
 <!-- Responsive ordinateur -->
 <div class="hidden xl:block">
+  <button (click)="goBack()" class="w-fit  mx-5 mb-5 rounded-full flex items-center gap-3" hlmBtn>
+  <hlm-icon size="sm" name="lucideCornerDownLeft"/>
+  Retour
+</button>
   <p class="font-bold text-3xl px-12 mb-5">Agenda</p>
   <div class="flex px-5 gap-5">
     <div class="bg-gray-sonar w-1/4 rounded-3xl flex flex-col items-center p-5 gap-5">
@@ -1259,36 +1234,7 @@
                 </hlm-dialog-header>
                 <div class="py-4 grid gap-4">
 
-                  <div class="items-center grid grid-cols-4 gap-4">
-                    <label class="w-80" hlmLabel>
-                      <div class="card flex flex-wrap gap-3 p-fluid">
-                        <div class="flex-auto">
-                          <label for="buttondisplay" class="font-bold block mb-2">Date</label>
-                          <p-calendar
-                            [(ngModel)]="date2"
-                            [showIcon]="true"
-                            inputId="buttondisplay"
-                            [showOnFocus]="false"/>
-                        </div>
 
-                        <div class="flex-auto">
-                          <label for="templatedisplay" class="font-bold block mb-2">Heure</label>
-                          <p-calendar
-                            [(ngModel)]="date3"
-                            [iconDisplay]="'input'"
-                            [showIcon]="true"
-                            [timeOnly]="true"
-                            inputId="templatedisplay">
-                            <ng-template pTemplate="inputicon" let-clickCallBack="clickCallBack">
-                              <i
-                                class="pi pi-clock pointer-events-none"
-                                (click)="clickCallBack($event)"></i>
-                            </ng-template>
-                          </p-calendar>
-                        </div>
-                      </div>
-                    </label>
-                  </div>
 
                 </div>
                 <hlm-dialog-footer>

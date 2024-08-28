@@ -62,4 +62,8 @@ export class UsersService {
   deleteUser(id: number) {
     return this.httpClient.delete(`${environment.API_URL}/users/${id}`)
   }
+
+  forgotPassword(email: string) {
+    return this.httpClient.post(`${environment.API_URL}/auth/forgot-password`, {email})
+  }
 }

@@ -209,12 +209,13 @@
                 <hlm-th class="w-2/12 font-bold text-[10px]">Communication</hlm-th>
                 <hlm-th class="w-1/12 font-bold text-[10px]">Montant</hlm-th>
               </hlm-trow>
+
               @for (transaction of transactionRecipient(); track transaction.id) {
                 <hlm-trow class="flex border-none relative sm:flex-row md:flex md:justify-between">
                   <div class="flex lg:justify-between lg:w-full">
                     <hlm-th class="w-2/12 font-bold text-[10px]">{{ transaction.date | date }}</hlm-th>
                     <hlm-th
-                      class="w-2/12 font-bold  text-[10px]">{{ transaction.senderGroup.username || transaction.senderPrincipal.username }}
+                      class="w-2/12 font-bold  text-[10px]">{{ transaction.senderGroup !== null ? transaction.senderGroup.username : transaction.senderPrincipal.username }}
                     </hlm-th>
                     <hlm-th
                       class="w-2/12 font-bold  text-[10px]">{{ accountPrincipal()?.username || accountGroup()?.username }}
@@ -228,6 +229,7 @@
                   </div>
                 </hlm-trow>
               }
+
             </div>
           </hlm-table>
         </div>

@@ -139,6 +139,7 @@ export class ProjectAccountComponent implements AfterViewInit {
 
   async ngAfterViewInit() {
     await this.fetchTransaction()
+    console.log("transaction", JSON.stringify(this.transactionRecipient()))
   }
 
   getAllPrincipalAccount() {
@@ -219,8 +220,9 @@ export class ProjectAccountComponent implements AfterViewInit {
             console.log(recipientTransactions)
             console.log(senderTransactions)
             this.transactionRecipient.set(recipientTransactions);
-
             this.transactionSender.set(senderTransactions);
+
+            console.log("transaction", this.transactionRecipient())
           },
           error => {
             console.error('Erreur lors de la récupération des données :', error);

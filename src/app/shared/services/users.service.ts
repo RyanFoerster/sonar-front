@@ -66,4 +66,8 @@ export class UsersService {
   forgotPassword(email: string) {
     return this.httpClient.post(`${environment.API_URL}/auth/forgot-password`, {email})
   }
+
+  resetPassword(token: string, password: string) {
+    return this.httpClient.put(`${environment.API_URL}/auth/reset-password`, {resetToken: token, newPassword: password})
+  }
 }

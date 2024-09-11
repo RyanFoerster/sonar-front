@@ -27,18 +27,17 @@
       @if(typeOfProjet() === "PRINCIPAL") {
         @for (quote of connectedUser()?.comptePrincipal?.quote!; track quote.id) {
           <hlm-trow>
-            <hlm-td truncate class="font-medium w-52">{{ quote.id }}</hlm-td>
-            <hlm-td class="w-60">{{ quote.quote_date | date : 'dd/MM/YYYY' }}</hlm-td>
-            <hlm-td class="flex-1">{{ quote.client.name }}</hlm-td>
-            <hlm-td class="flex-1">{{ quote.client.name }}</hlm-td>
-            <hlm-td class="justify-end w-40">{{ quote.total | euroFormat }}</hlm-td>
-            <hlm-td class="flex-1">
+            <hlm-td truncate class="font-medium w-1/12">{{ quote.id }}</hlm-td>
+            <hlm-td class="w-1/12">{{ quote.quote_date | date : 'dd/MM/YYYY' }}</hlm-td>
+            <hlm-td class="w-2/12">{{ quote.client.name }}</hlm-td>
+            <hlm-td class="w-2/12">{{ quote.total | euroFormat }}</hlm-td>
+            <hlm-td class="w-2/12">
               <button class="flex gap-1 items-center" (click)="generateQuotePDF(quote)">
                 Générer le devis
                 <hlm-icon size='xs' name="lucideFileDown"/>
               </button>
             </hlm-td>
-            <hlm-td>
+            <hlm-td class="w-2/12">
               @if (quote.invoice) {
                 <button (click)="generateInvoicePDF(quote)">
                   Générer le PDF de la facture
@@ -61,7 +60,7 @@
                 </hlm-alert-dialog>
               }
             </hlm-td>
-            <hlm-td>
+            <hlm-td class="w-2/12">
               @if (quote.invoice){
                 <hlm-dialog>
                   <button brnDialogTrigger hlmBtn (click)="checkCreditNote(quote.invoice.id)">Voir si il existe une note de crédit</button>

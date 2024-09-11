@@ -158,6 +158,7 @@ export class NewQuoteComponent implements AfterViewInit {
       quote_date: [new Date(), [Validators.required]],
       service_date: [new Date(), [Validators.required]],
       payment_deadline: ['', [Validators.required]],
+      validation_deadline: ['', [Validators.required]],
     })
 
     this.createClientForm = this.formBuilder.group({

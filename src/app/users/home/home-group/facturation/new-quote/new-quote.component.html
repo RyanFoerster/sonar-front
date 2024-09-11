@@ -1,8 +1,8 @@
 <div class="container">
   <button (click)="goBack()" class="w-fit  mb-5 rounded-full flex items-center gap-3" hlmBtn>
-  <hlm-icon size="sm" name="lucideCornerDownLeft"/>
-  Retour
-</button>
+    <hlm-icon size="sm" name="lucideCornerDownLeft"/>
+    Retour
+  </button>
   <div class="container p-5 flex flex-col gap-2 bg-gray-sonar rounded-2xl md:p-10"
        [ngClass]="{'bg-white justify-center items-center': isToggleClientForm()}">
 
@@ -30,13 +30,23 @@
           </label>
         </div>
 
-        <label class="w-full font-semibold text-base rounded-full md:text-lg md:w-1/2" hlmLabel
-        >Délais de paiement
-          <input formControlName="payment_deadline" class="w-full bg-white shadow-lg text-xs rounded-full md:text-base"
-                 hlmInput type="number"
-                 min="10" max="30" placeholder="10"/>
-        </label>
+        <div class="flex flex-col justify-center items-center  md:flex-row">
+          <label class="w-full font-semibold text-base rounded-full md:text-lg md:w-1/2" hlmLabel
+          >Délais de paiement
+            <input formControlName="payment_deadline"
+                   class="w-full bg-white shadow-lg text-xs rounded-full md:text-base"
+                   hlmInput type="number"
+                   min="10" max="30" placeholder="10"/>
+          </label>
 
+          <label class="w-full font-semibold text-base rounded-full md:text-lg md:w-1/2" hlmLabel
+          >Devis valable jusqu'au :
+            <input formControlName="validation_deadline"
+                   class="w-full bg-white shadow-lg text-xs rounded-full md:text-base"
+                   hlmInput type="date"
+            />
+          </label>
+        </div>
         <div class="flex flex-col justify-center w-full">
           <h3 class="font-semibold text-base md:text-lg">Rechercher un client</h3>
 
@@ -74,7 +84,7 @@
               <p class="font-bold">{{ client()?.name }}</p>
               <p>{{ client()?.street }} {{ client()?.number }}</p>
               <p>{{ client()?.city }} {{ client()?.postalCode }} {{ client()?.country }}</p>
-              @if(client()?.company_number) {
+              @if (client()?.company_number) {
                 <p>TVA: BE {{ client()?.company_vat_number }}</p>
               }
             </div>
@@ -135,7 +145,8 @@
                   </hlm-th>
 
                   <hlm-th class="w-1/12">
-                    <input [value]="1" formControlName="quantity" class="w-full bg-white rounded-full shadow-lg" hlmInput
+                    <input [value]="1" formControlName="quantity" class="w-full bg-white rounded-full shadow-lg"
+                           hlmInput
                            type="text"/>
                   </hlm-th>
 

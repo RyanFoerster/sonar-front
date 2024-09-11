@@ -33,11 +33,11 @@ export class RegisterComponent {
 
   constructor() {
     this.registerForm = this.formBuilder.group({
-      username: ['', [Validators.required]],
+      username: [''],
       password: [
         '',
         [
-          Validators.required,
+
           Validators.minLength(8),
 
         ],
@@ -45,25 +45,25 @@ export class RegisterComponent {
       confirmPassword: [
         '',
         [
-          Validators.required,
+
           Validators.minLength(8),
 
         ],
       ],
-      email: ['', [Validators.email, Validators.required]],
-      name: ['', [Validators.required]],
-      firstName: ['', [Validators.required]],
+      email: [''],
+      name: [''],
+      firstName: ['' ],
       numeroNational: [
         '',
         [
-          Validators.required,
+
           Validators.minLength(11),
           Validators.maxLength(11),
         ],
       ],
-      telephone: ['', [Validators.required]],
-      address: ['', [Validators.required]],
-      iban: ['', [Validators.required]],
+      telephone: [''],
+      address: [''],
+      iban: [''],
     });
   }
 

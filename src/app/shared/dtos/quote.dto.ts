@@ -5,6 +5,8 @@ export interface QuoteDto {
 
   payment_deadline: number;
 
+  validation_deadline: number;
+
   main_account_id?: number;
 
   group_account_id?: number;

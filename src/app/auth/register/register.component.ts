@@ -5,7 +5,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import {Router, RouterLink} from '@angular/router';
 import { HlmButtonDirective } from '@spartan-ng/ui-button-helm';
 import { HlmInputDirective } from '@spartan-ng/ui-input-helm';
 import { CreateUserDto } from '../../shared/dtos/create-user.dto';
@@ -27,6 +27,7 @@ import { tap } from 'rxjs';
 export class RegisterComponent {
   formBuilder: FormBuilder = inject(FormBuilder);
   usersService: UsersService = inject(UsersService)
+  router: Router = inject(Router)
 
   registerForm!: FormGroup;
 
@@ -38,9 +39,7 @@ export class RegisterComponent {
         [
           Validators.required,
           Validators.minLength(8),
-          Validators.pattern(
-            '^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$=%^&*-]).{8,}$'
-          ),
+
         ],
       ],
       confirmPassword: [
@@ -48,9 +47,7 @@ export class RegisterComponent {
         [
           Validators.required,
           Validators.minLength(8),
-          Validators.pattern(
-            '^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$=%^&*-]).{8,}$'
-          ),
+
         ],
       ],
       email: ['', [Validators.email, Validators.required]],
@@ -88,7 +85,9 @@ export class RegisterComponent {
       }
 
       return this.usersService.signUp(user).pipe(
-        tap((data) => console.log(data))
+        tap((data) => {
+          this.router.navigate(['/login'])
+        })
       ).subscribe()
 
     }

@@ -1,4 +1,4 @@
-import {AfterViewInit, Component, effect, inject, input, signal} from '@angular/core';
+import {AfterViewInit, Component, computed, effect, inject, input, signal} from '@angular/core';
 import {HlmInputDirective} from '@spartan-ng/ui-input-helm';
 import {HlmLabelDirective} from "@spartan-ng/ui-label-helm";
 import {
@@ -55,7 +55,30 @@ import {ProductEntity} from "../../../../../shared/entities/product.entity";
 import {QuoteDto} from "../../../../../shared/dtos/quote.dto";
 import {QuoteService} from "../../../../../shared/services/quote.service";
 import {Router} from "@angular/router";
-import { Location } from '@angular/common';
+import {Location} from '@angular/common';
+import {
+  BrnCommandComponent,
+  BrnCommandGroupComponent,
+  BrnCommandInputDirective,
+  BrnCommandItemDirective, BrnCommandListComponent
+} from "@spartan-ng/ui-command-brain";
+import {
+  BrnPopoverComponent,
+  BrnPopoverContentDirective,
+  BrnPopoverTriggerDirective
+} from "@spartan-ng/ui-popover-brain";
+import {
+  HlmCommandDirective,
+  HlmCommandEmptyDirective,
+  HlmCommandGroupDirective,
+  HlmCommandInputDirective,
+  HlmCommandInputWrapperComponent,
+  HlmCommandItemDirective,
+  HlmCommandItemIconDirective,
+  HlmCommandListDirective
+} from "@spartan-ng/ui-command-helm";
+import {HlmPopoverContentDirective} from "@spartan-ng/ui-popover-helm";
+
 @Component({
   selector: 'app-new-quote',
   standalone: true,
@@ -105,6 +128,23 @@ import { Location } from '@angular/common';
     HlmThComponent,
     HlmTrowComponent,
     HlmThComponent,
+    BrnCommandComponent,
+    BrnCommandGroupComponent,
+    BrnCommandInputDirective,
+    BrnCommandItemDirective,
+    BrnCommandListComponent,
+    BrnPopoverComponent,
+    BrnPopoverContentDirective,
+    BrnPopoverTriggerDirective,
+    HlmCommandDirective,
+    HlmCommandEmptyDirective,
+    HlmCommandGroupDirective,
+    HlmCommandInputDirective,
+    HlmCommandInputWrapperComponent,
+    HlmCommandItemDirective,
+    HlmCommandItemIconDirective,
+    HlmCommandListDirective,
+    HlmPopoverContentDirective,
   ],
   providers: [provideIcons({
     lucidePlusCircle,
@@ -137,8 +177,13 @@ export class NewQuoteComponent implements AfterViewInit {
   protected tva21 = signal(0)
   protected tva6 = signal(0)
   protected total = signal(0)
+  public state = signal<'closed' | 'open'>('closed');
+  public currentClient = signal<ClientEntity | undefined>(undefined);
   protected id = input<number>()
   protected typeOfProjet = input<string>()
+  protected currentDate = new Date()
+  protected notPastDate = computed(() => this.currentDate.toISOString().split('T')[0])
+  protected startDate = computed(() => this.currentDate.toISOString().slice(0, 10))
 
   protected isToggleClientForm = signal(false)
   protected isToggleProductForm = signal(false)
@@ -182,12 +227,24 @@ export class NewQuoteComponent implements AfterViewInit {
     })
 
 
-
   }
 
   async ngAfterViewInit() {
     await this.getConnectedUser()
 
+  }
+
+  stateChanged(state: 'open' | 'closed') {
+    this.state.set(state);
+  }
+
+  commandSelected(client: ClientEntity) {
+    this.state.set('closed');
+    if (this.currentClient()?.email === client.email) {
+      this.currentClient.set(undefined);
+    } else {
+      this.currentClient.set(client);
+    }
   }
 
   async getConnectedUser() {
@@ -221,16 +278,23 @@ export class NewQuoteComponent implements AfterViewInit {
   }
 
   setClient(id: number) {
-    this.clientService.getOneById(id).pipe(
-      tap((data) => {
-        this.client.set(data)
-        this.products.set([])
-        this.tva6.set(0)
-        this.tva21.set(0)
-        this.totalHtva.set(0)
-        this.total.set(0)
-      })
-    ).subscribe()
+
+    if(!this.client()) {
+      this.clientService.getOneById(id).pipe(
+        tap((data) => {
+          this.client.set(data)
+          this.products.set([])
+          this.tva6.set(0)
+          this.tva21.set(0)
+          this.totalHtva.set(0)
+          this.total.set(0)
+        })
+      ).subscribe()
+    } else {
+      this.client.set(null)
+    }
+
+
   }
 
   createProduct() {
@@ -247,7 +311,6 @@ export class NewQuoteComponent implements AfterViewInit {
       } else {
         productToAdd.vat = 0
       }
-
 
 
       this.productService.createProduct(productToAdd).pipe(
@@ -319,12 +382,11 @@ export class NewQuoteComponent implements AfterViewInit {
       }
 
 
-      if(this.typeOfProjet() === 'PRINCIPAL') {
+      if (this.typeOfProjet() === 'PRINCIPAL') {
         quote.main_account_id = +this.id()!
       } else {
         quote.group_account_id = +this.id()!
       }
-
 
 
       this.quoteService.createQuote(quote).pipe(

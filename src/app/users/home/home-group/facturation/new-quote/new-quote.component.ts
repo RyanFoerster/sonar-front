@@ -1,4 +1,4 @@
-import {AfterViewInit, Component, computed, effect, inject, input, signal} from '@angular/core';
+import {AfterViewInit, Component, computed, inject, input, signal} from '@angular/core';
 import {HlmInputDirective} from '@spartan-ng/ui-input-helm';
 import {HlmLabelDirective} from "@spartan-ng/ui-label-helm";
 import {
@@ -17,12 +17,14 @@ import {HlmIconComponent} from "@spartan-ng/ui-icon-helm";
 import {provideIcons} from "@ng-icons/core";
 import {
   lucideAlertTriangle,
-  lucideCheck, lucideCornerDownLeft,
+  lucideCheck,
+  lucideCornerDownLeft,
   lucideEdit,
   lucideFileDown,
   lucidePlus,
   lucidePlusCircle,
-  lucideTrash, lucideUndo2,
+  lucideTrash,
+  lucideUndo2,
   lucideXCircle
 } from "@ng-icons/lucide";
 import {EuroFormatPipe} from "../../../../../shared/pipes/euro-format.pipe";
@@ -37,10 +39,10 @@ import {
 } from '@spartan-ng/ui-dialog-helm';
 import {ClientEntity} from "../../../../../shared/entities/client.entity";
 import {FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators} from "@angular/forms";
-import {NgClass, PercentPipe} from "@angular/common";
+import {Location, NgClass, PercentPipe} from "@angular/common";
 import {ClientService} from "../../../../../shared/services/client.service";
 import {ClientDto} from "../../../../../shared/dtos/client.dto";
-import {tap} from "rxjs";
+import {take, tap} from "rxjs";
 import {UserEntity} from "../../../../../shared/entities/user.entity";
 import {UsersService} from "../../../../../shared/services/users.service";
 import {
@@ -54,13 +56,12 @@ import {ProductService} from "../../../../../shared/services/product.service";
 import {ProductEntity} from "../../../../../shared/entities/product.entity";
 import {QuoteDto} from "../../../../../shared/dtos/quote.dto";
 import {QuoteService} from "../../../../../shared/services/quote.service";
-import {Router} from "@angular/router";
-import {Location} from '@angular/common';
 import {
   BrnCommandComponent,
   BrnCommandGroupComponent,
   BrnCommandInputDirective,
-  BrnCommandItemDirective, BrnCommandListComponent
+  BrnCommandItemDirective,
+  BrnCommandListComponent
 } from "@spartan-ng/ui-command-brain";
 import {
   BrnPopoverComponent,
@@ -78,6 +79,7 @@ import {
   HlmCommandListDirective
 } from "@spartan-ng/ui-command-helm";
 import {HlmPopoverContentDirective} from "@spartan-ng/ui-popover-helm";
+import {AuthService} from "../../../../../shared/services/auth.service";
 
 @Component({
   selector: 'app-new-quote',
@@ -169,6 +171,7 @@ export class NewQuoteComponent implements AfterViewInit {
   private productService: ProductService = inject(ProductService)
   private quoteService: QuoteService = inject(QuoteService)
   private location: Location = inject(Location)
+  private authService: AuthService = inject(AuthService)
 
   protected client = signal<ClientEntity | null>(null)
   protected connectedUser = signal<UserEntity | null>(null)
@@ -177,6 +180,7 @@ export class NewQuoteComponent implements AfterViewInit {
   protected tva21 = signal(0)
   protected tva6 = signal(0)
   protected total = signal(0)
+  protected isValidBCENumber = signal<Boolean | null>(null)
   public state = signal<'closed' | 'open'>('closed');
   public currentClient = signal<ClientEntity | undefined>(undefined);
   protected id = input<number>()
@@ -184,6 +188,8 @@ export class NewQuoteComponent implements AfterViewInit {
   protected currentDate = new Date()
   protected notPastDate = computed(() => this.currentDate.toISOString().split('T')[0])
   protected startDate = computed(() => this.currentDate.toISOString().slice(0, 10))
+  protected clients = signal<ClientEntity[]>([])
+
 
   protected isToggleClientForm = signal(false)
   protected isToggleProductForm = signal(false)
@@ -232,6 +238,14 @@ export class NewQuoteComponent implements AfterViewInit {
   async ngAfterViewInit() {
     await this.getConnectedUser()
 
+    if (this.connectedUser()?.role === "ADMIN") {
+      this.clientService.getAll().pipe(
+        take(1),
+        tap((data) => {
+          this.clients.set(data)
+        })
+      ).subscribe()
+    }
   }
 
   stateChanged(state: 'open' | 'closed') {
@@ -248,9 +262,7 @@ export class NewQuoteComponent implements AfterViewInit {
   }
 
   async getConnectedUser() {
-    this.usersService.getInfo().pipe(
-      tap((data) => this.connectedUser.set(data))
-    ).subscribe()
+    this.connectedUser.set(this.authService.getUser())
   }
 
   toggleClientForm() {
@@ -266,6 +278,44 @@ export class NewQuoteComponent implements AfterViewInit {
     console.log(this.isArtisticPerformance())
   }
 
+  checkBCE() {
+    this.isValidBCENumber.set(null)
+    if (this.createClientForm.value.company_vat_number) {
+      this.clientService.checkBce(this.createClientForm.value.company_vat_number).pipe(
+        take(1),
+        tap((data) => {
+          console.log(data)
+          this.isValidBCENumber.set(data.Vat.isValid)
+          this.createClientForm.get('company_number')?.patchValue(data.Vat.number)
+          this.createClientForm.get('name')?.patchValue(data.Vat.details.name)
+          // Extraire les différentes parties de l'adresse
+          const addressParts = data.Vat.details.address.split('\n'); // Diviser la chaîne en deux parties : rue + numéro et code postal + ville
+          const streetAndNumber = addressParts[0];  // "Rue du Moulin 78"
+          const postalAndCity = addressParts[1];    // "4020 Liège"
+
+// Utiliser une expression régulière pour extraire le numéro et la rue
+          const streetMatch = streetAndNumber.match(/^(.+?)\s+(\d+)$/);
+          const street = streetMatch[1]; // Rue du Moulin
+          const number = streetMatch[2]; // 78
+
+// Diviser le code postal et la ville
+          const postalAndCityParts = postalAndCity.split(' ');
+          const postalCode = postalAndCityParts[0]; // 4020
+          const city = postalAndCityParts.slice(1).join(' '); // Liège
+
+          this.createClientForm.get('street')?.patchValue(street);
+          this.createClientForm.get('number')?.patchValue(number);
+          this.createClientForm.get('postalCode')?.patchValue(postalCode);
+          this.createClientForm.get('city')?.patchValue(city);
+        })
+      ).subscribe()
+    }
+  }
+
+  getIsValidBCENumber() {
+    return this.isValidBCENumber()
+  }
+
   createClient() {
     if (this.createClientForm.valid) {
       this.clientService.create(this.createClientForm.value as ClientDto).pipe(
@@ -279,7 +329,7 @@ export class NewQuoteComponent implements AfterViewInit {
 
   setClient(id: number) {
 
-    if(!this.client()) {
+    if (!this.client()) {
       this.clientService.getOneById(id).pipe(
         tap((data) => {
           this.client.set(data)

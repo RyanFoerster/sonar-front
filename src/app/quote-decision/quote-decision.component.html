@@ -1,0 +1,24 @@
+
+@if(quoteStatus === 'pending') {
+  <div class="lg:flex lg:flex-col lg:justify-center lg:items-center mx-10">
+
+
+  <div class="lg:flex lg:mb-4 lg:self-start lg:gap-5">
+    <button (click)="acceptQuote()" class="rounded-full bg-emerald-500 hover:bg-emerald-700" hlmBtn>Accepter le devis</button>
+    <button (click)="rejectQuote()" class="rounded-full bg-red-500 hover:bg-red-700" hlmBtn>Refuser le devis</button>
+  </div>
+
+  <div class="lg:h-[75vh] lg:w-full lg:flex lg:justify-center lg:items-center ">
+    <iframe class="lg:rounded-xl" id="pdfPreview" width="100%" height="100%"></iframe>
+  </div>
+</div>
+} @else if(quoteStatus === 'accepted') {
+  <div class="lg:flex lg:flex-col lg:justify-center lg:items-center mx-10 text-emerald-500">
+    Le devis a déjà été accepté par le client ou le groupe
+  </div>
+} @else if(quoteStatus === 'rejected') {
+  <div class="lg:flex lg:flex-col lg:justify-center lg:items-center mx-10 text-red-500">
+    Le devis a déjà été refusé par le client ou le groupe
+  </div>
+}
+

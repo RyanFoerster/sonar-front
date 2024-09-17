@@ -3,7 +3,7 @@ import {HlmButtonDirective} from "@spartan-ng/ui-button-helm";
 import {HlmIconComponent} from "@spartan-ng/ui-icon-helm";
 import {RouterLink} from "@angular/router";
 import {UsersService} from "../../../../shared/services/users.service";
-import {map, tap} from "rxjs";
+import {map, take, tap} from "rxjs";
 import {UserEntity} from "../../../../shared/entities/user.entity";
 import {DatePipe, JsonPipe, Location} from "@angular/common";
 import {
@@ -46,6 +46,10 @@ import {CompteGroupeEntity} from "../../../../shared/entities/compte-groupe.enti
 import {InvoiceEntity} from "../../../../shared/entities/invoice.entity";
 import {provideIcons} from "@ng-icons/core";
 import {lucideCornerDownLeft, lucideFileDown} from "@ng-icons/lucide";
+import {AuthService} from "../../../../shared/services/auth.service";
+import {PrincipalAccountEntity} from "../../../../shared/entities/principal-account.entity";
+import {ComptePrincipalService} from "../../../../shared/services/compte-principal.service";
+import {ClientEntity} from "../../../../shared/entities/client.entity";
 
 @Component({
   selector: 'app-facturation',
@@ -97,6 +101,9 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
 
   private usersService: UsersService = inject(UsersService);
   private invoiceService: InvoiceService = inject(InvoiceService);
+  private authService: AuthService = inject(AuthService);
+  private principalService: ComptePrincipalService = inject(ComptePrincipalService);
+  protected accountPrincipal: PrincipalAccountEntity | undefined;
 
   id = input<number>()
   typeOfProjet = input<string>()
@@ -121,13 +128,39 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
 
   async getConnectedUser() {
     this.usersService.getInfo().pipe(
+      take(1),
+      tap((data) => {
+        this.connectedUser.set(data);
+      }),
+      tap(() => {
+        if (this.connectedUser()?.role === "ADMIN") {
+          if (this.typeOfProjet() === "PRINCIPAL") {
+            this.principalService.getGroupById(+this.id()!).pipe(
+              take(1),
+              tap(data => {
+                this.accountPrincipal = data
+                console.log(this.accountPrincipal)
+              })
+            ).subscribe()
+          }
+        } else {
+          const groupAccountFinded = this.connectedUser()?.userSecondaryAccounts.find(account => account.id === +this.id()!);
+          this.groupAccount.set(groupAccountFinded?.group_account)
+        }
+      })
+    ).subscribe();
+
+
+    /*this.usersService.getInfo().pipe(
       map((data) => {
         this.connectedUser.set(data);
         return data.userSecondaryAccounts.find(account => account.id === +this.id()!);
-      })
+
+      }),
+      take(1)
     ).subscribe(groupAccountFinded => {
       this.groupAccount.set(groupAccountFinded?.group_account)
-    });
+    });*/
   }
 
   generateQuotePDF(quote: QuoteEntity) {

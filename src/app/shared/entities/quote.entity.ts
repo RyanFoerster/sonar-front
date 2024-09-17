@@ -12,8 +12,8 @@ export interface QuoteEntity {
   total: number
   payment_deadline: number
   status: string
-  group_acceptance: boolean
-  order_giver_acceptance: boolean;
+  group_acceptance: "accepted" | "rejected" | "pending"
+  order_giver_acceptance: "accepted" | "rejected" | "pending"
   client: ClientEntity
   products: ProductEntity[]
   invoice: InvoiceEntity

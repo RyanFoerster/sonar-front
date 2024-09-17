@@ -20,4 +20,12 @@ export class ClientService {
   getOneById(id: number) {
     return this.httpClient.get<ClientEntity>(`${environment.API_URL}/clients/${id}`)
   }
+
+  getAll() {
+    return this.httpClient.get<ClientEntity[]>(`${environment.API_URL}/clients`)
+  }
+
+  checkBce(vat: string) {
+    return this.httpClient.get<any>(`${environment.API_URL}/clients/bce/${vat}`)
+  }
 }

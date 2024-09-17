@@ -53,8 +53,10 @@
           <h3 class="font-semibold text-base md:text-lg">Rechercher un client</h3>
 
           <div class="w-full flex flex-col gap-2 md:flex-row">
-            <brn-popover class="w-full md:w-1/2 " [state]="state()" (stateChanged)="stateChanged($event)" sideOffset="5" closeDelay="100">
-              <button class="w-full justify-between rounded-full border-none bg-white shadow-lg" id="edit-profile" variant="outline" brnPopoverTrigger hlmBtn>
+            <brn-popover class="w-full md:w-1/2 " [state]="state()" (stateChanged)="stateChanged($event)" sideOffset="5"
+                         closeDelay="100">
+              <button class="w-full justify-between rounded-full border-none bg-white shadow-lg" id="edit-profile"
+                      variant="outline" brnPopoverTrigger hlmBtn>
                 {{ currentClient() ? currentClient()?.name : 'Séléctionner un client' }}
                 <hlm-icon size="sm" name="lucideChevronsUpDown"/>
               </button>
@@ -67,24 +69,43 @@
                 <brn-cmd-list hlm>
                   <brn-cmd-group hlm>
 
-                    @for (client of connectedUser()?.clients; track client.id) {
-                      <button
-                        brnCmdItem
-                        [value]="client.email"
-                        (selected)="commandSelected(client)"
-                        (click)="setClient(client.id)"
-                        class="flex justify-between w-full"
-                        hlm
-                      >
-                        <hlm-icon
-                          [class.opacity-0]="currentClient()?.email !== client.email"
-                          name="lucideCheck"
-                          hlmCmdIcon
-                        />
-                        <p>{{ client.email }} {{ client.name }}</p>
-                      </button>
+                    @if (connectedUser()?.role === "ADMIN") {
+                      @for (client of clients(); track client.id) {
+                        <button
+                          brnCmdItem
+                          [value]="client.email"
+                          (selected)="commandSelected(client)"
+                          (click)="setClient(client.id)"
+                          class="flex justify-between w-full"
+                          hlm
+                        >
+                          <hlm-icon
+                            [class.opacity-0]="currentClient()?.email !== client.email"
+                            name="lucideCheck"
+                            hlmCmdIcon
+                          />
+                          <p>{{ client.email }} {{ client.name }}</p>
+                        </button>
+                      }
+                    } @else {
+                      @for (client of connectedUser()?.clients; track client.id) {
+                        <button
+                          brnCmdItem
+                          [value]="client.email"
+                          (selected)="commandSelected(client)"
+                          (click)="setClient(client.id)"
+                          class="flex justify-between w-full"
+                          hlm
+                        >
+                          <hlm-icon
+                            [class.opacity-0]="currentClient()?.email !== client.email"
+                            name="lucideCheck"
+                            hlmCmdIcon
+                          />
+                          <p>{{ client.email }} {{ client.name }}</p>
+                        </button>
+                      }
                     }
-
                   </brn-cmd-group>
                 </brn-cmd-list>
               </brn-cmd>
@@ -311,9 +332,11 @@
 
         <label class="w-full flex flex-col" hlmLabel for="company_vat_number">Numéro de TVA
           <div class="flex gap-2">
-            <input formControlName="company_vat_number" hlmInput id="company_vat_number" placeholder="BE 987 XXX XXX"
-                   class="col-span-3 w-full rounded-full"/>
-            <button class="rounded-full w-1/4 flex justify-center items-center" hlmBtn>
+            <input
+              [ngClass]="{'border-green-600': getIsValidBCENumber(), 'border-red-600': !getIsValidBCENumber()}"
+              formControlName="company_vat_number" hlmInput id="company_vat_number" placeholder="BE 987 XXX XXX"
+              class="col-span-3 w-full rounded-full border border-green-600"/>
+            <button (click)="checkBCE()" type="button" class="rounded-full w-1/4 flex justify-center items-center" hlmBtn>
               Vérifier
               <hlm-icon size='xs' name="lucideCheck"/>
             </button>

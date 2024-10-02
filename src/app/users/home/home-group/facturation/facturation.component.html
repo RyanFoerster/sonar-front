@@ -32,11 +32,17 @@
               <hlm-td class="w-1/12">{{ quote.quote_date | date : 'dd/MM/YYYY' }}</hlm-td>
               <hlm-td class="w-2/12">{{ quote.client.name }}</hlm-td>
               <hlm-td class="w-2/12">{{ quote.total | euroFormat }}</hlm-td>
-              <hlm-td class="w-2/12">
+              <hlm-td class="w-2/12 flex gap-2 items-center">
                 <button class="flex gap-1 items-center" (click)="generateQuotePDF(quote)">
                   Visualiser le devis
                   <hlm-icon size='xs' name="lucideFileDown"/>
+
                 </button>
+                @if (!quote.invoice) {
+                  <a class="flex gap-1 items-center" routerLink="new-quote" [queryParams]="{ typeOfProjet: typeOfProjet(), updatedQuoteId: quote.id }" >
+                    <hlm-icon size='xs' name="lucideEdit"/>
+                  </a>
+                }
               </hlm-td>
               <hlm-td class="w-2/12">
                 @if (quote.invoice) {

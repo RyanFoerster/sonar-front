@@ -12,8 +12,9 @@ export interface ClientEntity {
   city: string
   country: string
   postalCode: string
-  company_number: number
-  company_vat_number: string
+  company_number?: number
+  company_vat_number?: string
+  national_number: string
   createdAt: Date
   updatedAt: Date
   user: UserEntity

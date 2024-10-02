@@ -45,7 +45,7 @@ import {
 import {CompteGroupeEntity} from "../../../../shared/entities/compte-groupe.entity";
 import {InvoiceEntity} from "../../../../shared/entities/invoice.entity";
 import {provideIcons} from "@ng-icons/core";
-import {lucideCornerDownLeft, lucideFileDown} from "@ng-icons/lucide";
+import {lucideCornerDownLeft, lucideEdit, lucideFileDown} from "@ng-icons/lucide";
 import {AuthService} from "../../../../shared/services/auth.service";
 import {PrincipalAccountEntity} from "../../../../shared/entities/principal-account.entity";
 import {ComptePrincipalService} from "../../../../shared/services/compte-principal.service";
@@ -91,7 +91,8 @@ import {ClientEntity} from "../../../../shared/entities/client.entity";
   providers: [
     provideIcons({
       lucideFileDown,
-      lucideCornerDownLeft
+      lucideCornerDownLeft,
+      lucideEdit
     })
   ],
   templateUrl: './facturation.component.html',

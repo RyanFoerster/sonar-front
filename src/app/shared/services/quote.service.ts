@@ -17,6 +17,10 @@ export class QuoteService {
     return this.httpClient.post<QuoteEntity>(`${environment.API_URL}/quote`, quoteDto);
   }
 
+  updateQuote(quoteId: string | null, quoteDto: QuoteDto) {
+    return this.httpClient.patch<QuoteEntity>(`${environment.API_URL}/quote/${quoteId}`, quoteDto);
+  }
+
   getQuote(quoteId: string | null) {
     return this.httpClient.get<QuoteEntity>(`${environment.API_URL}/quote/${quoteId}`);
   }
@@ -36,4 +40,5 @@ export class QuoteService {
   rejectQuoteFromClient(quoteId: string | null) {
     return this.httpClient.patch<QuoteEntity>(`${environment.API_URL}/quote/${quoteId}/order_giver_rejection`, {});
   }
+
 }

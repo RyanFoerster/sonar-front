@@ -11,9 +11,12 @@ export interface QuoteEntity {
   total_vat_21: number
   total: number
   payment_deadline: number
+  validation_deadline: Date
+  isVatIncluded: boolean
   status: string
   group_acceptance: "accepted" | "rejected" | "pending"
   order_giver_acceptance: "accepted" | "rejected" | "pending"
+  comment: string
   client: ClientEntity
   products: ProductEntity[]
   invoice: InvoiceEntity

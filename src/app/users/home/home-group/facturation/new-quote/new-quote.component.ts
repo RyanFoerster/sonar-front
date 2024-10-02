@@ -17,12 +17,12 @@ import {HlmIconComponent} from "@spartan-ng/ui-icon-helm";
 import {provideIcons} from "@ng-icons/core";
 import {
   lucideAlertTriangle,
-  lucideCheck,
+  lucideCheck, lucideChevronsUpDown,
   lucideCornerDownLeft,
   lucideEdit,
   lucideFileDown,
   lucidePlus,
-  lucidePlusCircle,
+  lucidePlusCircle, lucideSearch,
   lucideTrash,
   lucideUndo2,
   lucideXCircle
@@ -39,7 +39,7 @@ import {
 } from '@spartan-ng/ui-dialog-helm';
 import {ClientEntity} from "../../../../../shared/entities/client.entity";
 import {FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators} from "@angular/forms";
-import {Location, NgClass, PercentPipe} from "@angular/common";
+import {DatePipe, Location, NgClass, PercentPipe} from "@angular/common";
 import {ClientService} from "../../../../../shared/services/client.service";
 import {ClientDto} from "../../../../../shared/dtos/client.dto";
 import {take, tap} from "rxjs";
@@ -80,6 +80,7 @@ import {
 } from "@spartan-ng/ui-command-helm";
 import {HlmPopoverContentDirective} from "@spartan-ng/ui-popover-helm";
 import {AuthService} from "../../../../../shared/services/auth.service";
+import {QuoteEntity} from "../../../../../shared/entities/quote.entity";
 
 @Component({
   selector: 'app-new-quote',
@@ -147,6 +148,7 @@ import {AuthService} from "../../../../../shared/services/auth.service";
     HlmCommandItemIconDirective,
     HlmCommandListDirective,
     HlmPopoverContentDirective,
+    DatePipe,
   ],
   providers: [provideIcons({
     lucidePlusCircle,
@@ -158,7 +160,9 @@ import {AuthService} from "../../../../../shared/services/auth.service";
     lucideXCircle,
     lucideAlertTriangle,
     lucideUndo2,
-    lucideCornerDownLeft
+    lucideCornerDownLeft,
+    lucideSearch,
+    lucideChevronsUpDown
   })],
   templateUrl: './new-quote.component.html',
   styleUrl: './new-quote.component.css'
@@ -185,15 +189,71 @@ export class NewQuoteComponent implements AfterViewInit {
   public currentClient = signal<ClientEntity | undefined>(undefined);
   protected id = input<number>()
   protected typeOfProjet = input<string>()
+  protected updatedQuoteId = input<string>()
   protected currentDate = new Date()
   protected notPastDate = computed(() => this.currentDate.toISOString().split('T')[0])
   protected startDate = computed(() => this.currentDate.toISOString().slice(0, 10))
   protected clients = signal<ClientEntity[]>([])
+  protected updatedQuote = signal<QuoteEntity | null>(null)
 
+  protected paysEuropeens: string[] = [
+    "Albanie",
+    "Allemagne",
+    "Andorre",
+    "Arménie",
+    "Autriche",
+    "Azerbaïdjan",
+    "Belgique",
+    "Biélorussie",
+    "Bosnie-Herzégovine",
+    "Bulgarie",
+    "Chypre",
+    "Croatie",
+    "Danemark",
+    "Espagne",
+    "Estonie",
+    "Finlande",
+    "France",
+    "Géorgie",
+    "Grèce",
+    "Hongrie",
+    "Irlande",
+    "Islande",
+    "Italie",
+    "Kazakhstan",
+    "Kosovo",
+    "Lettonie",
+    "Liechtenstein",
+    "Lituanie",
+    "Luxembourg",
+    "Macédoine du Nord",
+    "Malte",
+    "Moldavie",
+    "Monaco",
+    "Monténégro",
+    "Norvège",
+    "Pays-Bas",
+    "Pologne",
+    "Portugal",
+    "Roumanie",
+    "Royaume-Uni",
+    "Russie",
+    "Saint-Marin",
+    "Serbie",
+    "Slovaquie",
+    "Slovénie",
+    "Suède",
+    "Suisse",
+    "Tchéquie",
+    "Ukraine",
+    "Vatican"
+  ];
 
   protected isToggleClientForm = signal(false)
   protected isToggleProductForm = signal(false)
   protected isArtisticPerformance = signal(false)
+  protected isPhysicalPerson = signal(false)
+  protected isTvaIncluded = signal(false)
 
   protected createQuoteForm!: FormGroup
   protected createClientForm!: FormGroup
@@ -210,6 +270,7 @@ export class NewQuoteComponent implements AfterViewInit {
       service_date: [new Date(), [Validators.required]],
       payment_deadline: ['', [Validators.required]],
       validation_deadline: ['', [Validators.required]],
+      comment: ['', [Validators.required]],
     })
 
     this.createClientForm = this.formBuilder.group({
@@ -223,6 +284,7 @@ export class NewQuoteComponent implements AfterViewInit {
       postalCode: ['', [Validators.required]],
       company_number: [null],
       company_vat_number: [null],
+      national_number: [null],
     })
 
     this.createProductForm = this.formBuilder.group({
@@ -246,7 +308,43 @@ export class NewQuoteComponent implements AfterViewInit {
         })
       ).subscribe()
     }
+    console.log(this.updatedQuoteId())
+    if (this.updatedQuoteId()) {
+      this.quoteService.getQuote(this.updatedQuoteId()!).pipe(
+        tap(data => {
+          this.updatedQuote.set(data)
+          this.isTvaIncluded.set(data.isVatIncluded)
+          this.createQuoteForm.patchValue({
+            quote_date: data.quote_date,
+            service_date: data.service_date,
+            payment_deadline: data.payment_deadline,
+            validation_deadline: data.validation_deadline,
+            comment: data.comment,
+          })
+
+          this.products.set(data.products.map(product => {
+            return {
+              ...product
+            }
+          }))
+
+          this.client.set(data.client)
+          this.currentClient.set(data.client)
+          this.tva21.set(this.setTva21(this.products()))
+          this.tva6.set(this.setTva6(this.products()))
+          this.totalHtva.set(this.products().reduce((a, b) => a + b.price_htva!, 0))
+          this.total.set(this.totalHtva() + this.tva21() + this.tva6())
+        })
+      ).subscribe()
+    }
   }
+
+  // formatDateToISO(date: Date): string {
+  //   const year = date.getUTCFullYear();
+  //   const month = (date.getMonth() + 1).toString().padStart(2, '0'); // getMonth() retourne un index commençant à 0
+  //   const day = date.getDate().toString().padStart(2, '0');
+  //   return `${year}-${month}-${day}`;
+  // }
 
   stateChanged(state: 'open' | 'closed') {
     this.state.set(state);
@@ -275,7 +373,44 @@ export class NewQuoteComponent implements AfterViewInit {
 
   toggleArtisticPerformance() {
     this.isArtisticPerformance.set(!this.isArtisticPerformance());
-    console.log(this.isArtisticPerformance())
+  }
+
+  togglePhysicalPerson() {
+    this.isPhysicalPerson.set(!this.isPhysicalPerson());
+  }
+
+  async toggleTvaIncluded() {
+    this.isTvaIncluded.set(!this.isTvaIncluded());
+    if (this.isTvaIncluded()) {
+      this.totalHtva.set(this.products().reduce((a, b) => a + b.price_htva!, 0) - this.tva21() - this.tva6())
+      this.total.set(this.totalHtva() + this.tva21() + this.tva6())
+      this.products().forEach(product => {
+        const priceHTVA = product.price_htva!
+        product.total = priceHTVA
+        product.price_htva = priceHTVA - product.tva_amount!
+
+      })
+      console.log(this.products())
+      for (const product of this.products()) {
+        this.productService.update(product.id?.toString()!, product).pipe(
+          take(1),
+        ).subscribe()
+      }
+    } else {
+      console.log("Products", JSON.stringify(this.products(), null, 2))
+      this.totalHtva.set(this.products().reduce((a, b) => a + b.price_htva! + b.tva_amount!, 0))
+      this.total.set(this.totalHtva() + this.tva21() + this.tva6())
+      this.products().forEach(product => {
+        const priceTOTAL = product.total!
+        product.total = priceTOTAL + product.tva_amount!
+        product.price_htva = priceTOTAL
+      })
+      for (const product of this.products()) {
+        this.productService.update(product.id?.toString()!, product).pipe(
+          take(1),
+        ).subscribe()
+      }
+    }
   }
 
   checkBCE() {
@@ -320,8 +455,20 @@ export class NewQuoteComponent implements AfterViewInit {
     if (this.createClientForm.valid) {
       this.clientService.create(this.createClientForm.value as ClientDto).pipe(
         tap(async data => {
-          await this.getConnectedUser()
+          this.setClient(data.id)
+          if (this.connectedUser()?.role === "ADMIN") {
+            this.clients().push(data)
+            this.authService.saveUser(this.connectedUser()!)
+
+          } else {
+            this.connectedUser()?.clients.push(data)
+            this.authService.saveUser(this.connectedUser()!)
+
+          }
+          this.currentClient.set(data)
+
           this.toggleClientForm()
+          this.isPhysicalPerson.set(false)
         })
       ).subscribe()
     }
@@ -329,7 +476,7 @@ export class NewQuoteComponent implements AfterViewInit {
 
   setClient(id: number) {
 
-    if (!this.client()) {
+    if (!this.client() || this.client()?.id !== id) {
       this.clientService.getOneById(id).pipe(
         tap((data) => {
           this.client.set(data)
@@ -413,7 +560,15 @@ export class NewQuoteComponent implements AfterViewInit {
 
   setTva21(products: ProductEntity[]) {
     const products_tva_21 = products.filter((product) => product.vat === 0.21)
-    return products_tva_21.reduce((a, b) => a + b.tva_amount!, 0)
+    if (this.isTvaIncluded()) {
+      console.log("TVA INCLUDED: ", (products_tva_21.reduce((a, b) => a + b.price! * b.quantity, 0) * 0.21))
+      return products_tva_21.reduce((a, b) => a + b.price * b.quantity!, 0) * 0.21
+    }
+
+    console.log("TVA INCLUDED: ", products_tva_21.reduce((a, b) => a + b.price_htva!, 0) * 0.21)
+    return products_tva_21.reduce((a, b) => a + b.price_htva!, 0) * 0.21
+
+
   }
 
   setTva6(products: ProductEntity[]) {
@@ -438,6 +593,10 @@ export class NewQuoteComponent implements AfterViewInit {
         quote.group_account_id = +this.id()!
       }
 
+      if (this.isTvaIncluded()) {
+        quote.isVatIncluded = true
+      }
+
 
       this.quoteService.createQuote(quote).pipe(
         tap(async () => this.goBack())
@@ -445,6 +604,25 @@ export class NewQuoteComponent implements AfterViewInit {
 
     }
 
+  }
+
+  updateQuote() {
+    if (this.createQuoteForm.valid && this.client() && this.products().length > 0) {
+      let quote: QuoteDto = this.createQuoteForm.value
+      quote.products_id = []
+      quote.client_id = this.client()?.id!
+      for (const product of this.products()) {
+        quote.products_id.push(product.id!)
+      }
+
+      if (this.isTvaIncluded()) {
+        quote.isVatIncluded = true
+      }
+
+      this.quoteService.updateQuote(this.updatedQuoteId()!, quote).pipe(
+        tap(async () => this.goBack())
+      ).subscribe()
+    }
   }
 
 }

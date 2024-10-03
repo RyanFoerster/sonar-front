@@ -171,7 +171,6 @@ export class MembershipComponent implements AfterViewInit {
 
     const account: UserSecondaryAccountEntity | undefined = user.userSecondaryAccounts.find(account => account.secondary_account_id === +this.id()!);
 
-    console.log(account)
 
     if (account) {
       const roleMap: { [key: string]: keyof UserSecondaryAccountEntity } = {

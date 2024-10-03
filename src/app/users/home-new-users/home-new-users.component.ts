@@ -95,7 +95,6 @@ export class HomeNewUsersComponent {
 
   registerToMeet(ctx: any) {
     this.meetService.registerToMeet(this.meetToBeRegistered()!).subscribe(result => {
-      console.log(result)
       if (result) {
         this.meetToBeRegistered.set(null)
         ctx.close()

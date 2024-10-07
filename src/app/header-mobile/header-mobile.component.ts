@@ -45,6 +45,7 @@ export class HeaderMobileComponent {
 
   toggleMenu() {
     this.isToggleMenu.set(!this.isToggleMenu())
+    document.body.classList.toggle('overflow-hidden')
   }
 
   logout() {

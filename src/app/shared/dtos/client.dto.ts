@@ -15,9 +15,9 @@ export interface ClientDto {
 
   postalCode: string;
 
-  company_number: number;
+  company_number?: number;
 
-  company_vat_number: string;
+  company_vat_number?: string;
 
-
+  national_number?: string;
 }

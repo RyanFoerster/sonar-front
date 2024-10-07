@@ -218,7 +218,6 @@ export class DiaryComponent {
               return eventUser.sort((a, b) => new Date(b.start_time).getTime() - new Date(a.start_time).getTime())
             }),
             tap((data: EventEntity[]) => {
-              console.log(data);
               this.events.set(data);
               this.filterEvents("upcoming");
               this.selectedEvent.set(this.filteredEvents()[0]);
@@ -285,7 +284,6 @@ export class DiaryComponent {
     if (findedUser) {
       this.isUserAccepted.set(findedUser.status === "accepted")
     }
-    console.log(this.selectedEvent())
   }
 
   setReason($event: any) {
@@ -380,7 +378,6 @@ export class DiaryComponent {
         if (existingStatusIndex !== -1 && existingStatusIndex !== undefined) {
           // Replace the status at the found index
           userStatus![existingStatusIndex] = {user_id: userId, status: "refused"};
-          console.log(this.selectedEvent())
         } else {
           // If not found, push the new status
           userStatus?.push({user_id: userId, status: "refused"});
@@ -396,7 +393,6 @@ export class DiaryComponent {
         return;
       }
 
-      console.log(this.createEventForm.value)
 
       this.eventService.create(this.createEventForm.value, this.accountGroup()!.id).subscribe(event => {
         this.events.set([...this.events(), event]);
@@ -435,7 +431,6 @@ export class DiaryComponent {
         eventDto.invitations_ids = this.duplicateEventForm.value.invitations_ids
       }
 
-      console.log(eventDto)
       this.eventService.create(eventDto, this.accountGroup()!.id).subscribe(event => {
         if(event.organisateurs.find(user => user.id === this.connectedUser()?.id)) {
           this.events.set([...this.events(), event]);

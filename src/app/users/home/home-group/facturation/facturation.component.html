@@ -1,8 +1,8 @@
 <div class="flex flex-col container gap-10">
   <button (click)="goBack()" class="w-fit  mb-5 rounded-full flex items-center gap-3" hlmBtn>
-  <hlm-icon size="sm" name="lucideCornerDownLeft"/>
-  Retour
-</button>
+    <hlm-icon size="sm" name="lucideCornerDownLeft"/>
+    Retour
+  </button>
   <a
     routerLink="new-quote"
     [queryParams]="{ typeOfProjet: typeOfProjet()}"
@@ -24,76 +24,156 @@
         <hlm-th class="w-2/12">Note de crédit</hlm-th>
       </hlm-trow>
 
-      @if(typeOfProjet() === "PRINCIPAL") {
-        @for (quote of connectedUser()?.comptePrincipal?.quote!; track quote.id) {
-          <hlm-trow>
-            <hlm-td truncate class="font-medium w-1/12">{{ quote.id }}</hlm-td>
-            <hlm-td class="w-1/12">{{ quote.quote_date | date : 'dd/MM/YYYY' }}</hlm-td>
-            <hlm-td class="w-2/12">{{ quote.client.name }}</hlm-td>
-            <hlm-td class="w-2/12">{{ quote.total | euroFormat }}</hlm-td>
-            <hlm-td class="w-2/12">
-              <button class="flex gap-1 items-center" (click)="generateQuotePDF(quote)">
-                Générer le devis
-                <hlm-icon size='xs' name="lucideFileDown"/>
-              </button>
-            </hlm-td>
-            <hlm-td class="w-2/12">
-              @if (quote.invoice) {
-                <button (click)="generateInvoicePDF(quote)">
-                  Générer le PDF de la facture
+      @if (typeOfProjet() === "PRINCIPAL") {
+        @if (connectedUser()?.role === "ADMIN") {
+          @for (quote of accountPrincipal?.quote!; track quote.id; let i = $index) {
+            <hlm-trow>
+              <hlm-td truncate class="font-medium w-1/12">{{ i + 1 }}</hlm-td>
+              <hlm-td class="w-1/12">{{ quote.quote_date | date : 'dd/MM/YYYY' }}</hlm-td>
+              <hlm-td class="w-2/12">{{ quote.client.name }}</hlm-td>
+              <hlm-td class="w-2/12">{{ quote.total | euroFormat }}</hlm-td>
+              <hlm-td class="w-2/12 flex gap-2 items-center">
+                <button class="flex gap-1 items-center" (click)="generateQuotePDF(quote)">
+                  Visualiser le devis
+                  <hlm-icon size='xs' name="lucideFileDown"/>
+
                 </button>
-              } @else {
-                <hlm-alert-dialog>
-                  <button class="" id="edit-profile" variant="outline" brnAlertDialogTrigger hlmBtn>Créer la facture ?</button>
-                  <hlm-alert-dialog-content *brnAlertDialogContent="let ctx">
-                    <hlm-alert-dialog-header>
-                      <h3 hlmAlertDialogTitle>Créer la facture ?</h3>
-                      <p hlmAlertDialogDescription>
-                        Cette action est irréversible.
-                      </p>
-                    </hlm-alert-dialog-header>
-                    <hlm-alert-dialog-footer>
-                      <button hlmAlertDialogCancel (click)="ctx.close()">Cancel</button>
-                      <button hlmAlertDialogAction (click)="createInvoice(quote, ctx)">Créer</button>
-                    </hlm-alert-dialog-footer>
-                  </hlm-alert-dialog-content>
-                </hlm-alert-dialog>
-              }
-            </hlm-td>
-            <hlm-td class="w-2/12">
-              @if (quote.invoice){
-                <hlm-dialog>
-                  <button brnDialogTrigger hlmBtn (click)="checkCreditNote(quote.invoice.id)">Voir si il existe une note de crédit</button>
-                  <hlm-dialog-content class="sm:max-w-[425px]" *brnDialogContent="let ctx">
-                    <hlm-dialog-header class="mt-5">
+                @if (!quote.invoice) {
+                  <a class="flex gap-1 items-center" routerLink="new-quote" [queryParams]="{ typeOfProjet: typeOfProjet(), updatedQuoteId: quote.id }" >
+                    <hlm-icon size='xs' name="lucideEdit"/>
+                  </a>
+                }
+              </hlm-td>
+              <hlm-td class="w-2/12">
+                @if (quote.invoice) {
+                  <button class="flex gap-1 items-center" (click)="generateInvoicePDF(quote)">
+                    Visualiser la facture
+                    <hlm-icon size='xs' name="lucideFileDown"/>
+                  </button>
+                } @else {
+                  <hlm-alert-dialog>
+                    <button class="" id="edit-profile" variant="outline" brnAlertDialogTrigger hlmBtn>Créer la facture
+                    </button>
+                    <hlm-alert-dialog-content *brnAlertDialogContent="let ctx">
+                      <hlm-alert-dialog-header>
+                        <h3 hlmAlertDialogTitle>Créer la facture</h3>
+                        <p hlmAlertDialogDescription>
+                          Cette action est irréversible.
+                        </p>
+                      </hlm-alert-dialog-header>
+                      <hlm-alert-dialog-footer>
+                        <button hlmAlertDialogCancel (click)="ctx.close()">Cancel</button>
+                        <button hlmAlertDialogAction (click)="createInvoice(quote, ctx)">Créer</button>
+                      </hlm-alert-dialog-footer>
+                    </hlm-alert-dialog-content>
+                  </hlm-alert-dialog>
+                }
+              </hlm-td>
+              <hlm-td class="w-2/12">
+                @if (quote.invoice) {
+                  <hlm-dialog>
+                    <button brnDialogTrigger hlmBtn (click)="checkCreditNote(quote.invoice.id)">Générer</button>
+                    <hlm-dialog-content class="sm:max-w-[425px]" *brnDialogContent="let ctx">
+                      <hlm-dialog-header class="mt-5">
+                        @if (creditNote()) {
+                          <h3 hlmDialogTitle class="text-green-400">Une note de crédit trouvée</h3>
+                        } @else {
+                          <h3 hlmDialogTitle class="text-red-400">Aucune note de crédit trouvée</h3>
+                        }
+                      </hlm-dialog-header>
                       @if (creditNote()) {
-                        <h3 hlmDialogTitle class="text-green-400">Une note de crédit trouvée</h3>
+                        <button hlmBtn (click)="generateCreditNotePdf()">
+                          Visualiser le PDF de la note de crédit
+                        </button>
                       } @else {
-                        <h3 hlmDialogTitle class="text-red-400">Aucune note de crédit trouvée</h3>
+                        <a hlmBtn [routerLink]="quote.invoice.id + '/credit-note'">Créer la note de crédit</a>
                       }
-                    </hlm-dialog-header>
-                    @if(creditNote()) {
-                      <button hlmBtn (click)="generateCreditNotePdf()">
-                        Générer le PDF de la note de crédit
-                      </button>
-                    } @else {
-                      <a hlmBtn [routerLink]="quote.invoice.id + '/credit-note'" >Créer la note de crédit</a>
-                    }
 
 
-                  </hlm-dialog-content>
-                </hlm-dialog>
+                    </hlm-dialog-content>
+                  </hlm-dialog>
 
-              }
-            </hlm-td>
+                }
+              </hlm-td>
 
-          </hlm-trow>
+            </hlm-trow>
+          }
+        } @else {
+          @for (quote of connectedUser()?.comptePrincipal?.quote!; track quote.id; let i = $index) {
+            <hlm-trow>
+              <hlm-td truncate class="font-medium w-1/12">{{ i + 1 }}</hlm-td>
+              <hlm-td class="w-1/12">{{ quote.quote_date | date : 'dd/MM/YYYY' }}</hlm-td>
+              <hlm-td class="w-2/12">{{ quote.client.name }}</hlm-td>
+              <hlm-td class="w-2/12">{{ quote.total | euroFormat }}</hlm-td>
+              <hlm-td class="w-2/12">
+                <button class="flex gap-1 items-center" (click)="generateQuotePDF(quote)">
+                  Générer le devis
+                  <hlm-icon size='xs' name="lucideFileDown"/>
+                </button>
+              </hlm-td>
+              <hlm-td class="w-2/12">
+                @if (quote.invoice) {
+                  <button (click)="generateInvoicePDF(quote)">
+                    Générer le PDF de la facture
+                  </button>
+                } @else {
+                  <hlm-alert-dialog>
+                    <button class="" id="edit-profile" variant="outline" brnAlertDialogTrigger hlmBtn>Créer la facture
+                      ?
+                    </button>
+                    <hlm-alert-dialog-content *brnAlertDialogContent="let ctx">
+                      <hlm-alert-dialog-header>
+                        <h3 hlmAlertDialogTitle>Créer la facture ?</h3>
+                        <p hlmAlertDialogDescription>
+                          Cette action est irréversible.
+                        </p>
+                      </hlm-alert-dialog-header>
+                      <hlm-alert-dialog-footer>
+                        <button hlmAlertDialogCancel (click)="ctx.close()">Cancel</button>
+                        <button hlmAlertDialogAction (click)="createInvoice(quote, ctx)">Créer</button>
+                      </hlm-alert-dialog-footer>
+                    </hlm-alert-dialog-content>
+                  </hlm-alert-dialog>
+                }
+              </hlm-td>
+              <hlm-td class="w-2/12">
+                @if (quote.invoice) {
+                  <hlm-dialog>
+                    <button brnDialogTrigger hlmBtn (click)="checkCreditNote(quote.invoice.id)">Voir si il existe une
+                      note de crédit
+                    </button>
+                    <hlm-dialog-content class="sm:max-w-[425px]" *brnDialogContent="let ctx">
+                      <hlm-dialog-header class="mt-5">
+                        @if (creditNote()) {
+                          <h3 hlmDialogTitle class="text-green-400">Une note de crédit trouvée</h3>
+                        } @else {
+                          <h3 hlmDialogTitle class="text-red-400">Aucune note de crédit trouvée</h3>
+                        }
+                      </hlm-dialog-header>
+                      @if (creditNote()) {
+                        <button hlmBtn (click)="generateCreditNotePdf()">
+                          Générer le PDF de la note de crédit
+                        </button>
+                      } @else {
+                        <a hlmBtn [routerLink]="quote.invoice.id + '/credit-note'">Créer la note de crédit</a>
+                      }
+
+
+                    </hlm-dialog-content>
+                  </hlm-dialog>
+
+                }
+              </hlm-td>
+
+            </hlm-trow>
+          }
         }
-      } @else if(typeOfProjet() === "GROUP"){
 
-        @for (quote of groupAccount()?.quote; track quote.id) {
+      } @else if (typeOfProjet() === "GROUP") {
+
+        @for (quote of groupAccount()?.quote; track quote.id; let i = $index) {
           <hlm-trow>
-            <hlm-td truncate class="font-medium w-1/12">{{ quote.id }}</hlm-td>
+            <hlm-td truncate class="font-medium w-1/12">{{ i + 1 }}</hlm-td>
             <hlm-td class="w-1/12">{{ quote.quote_date | date : 'dd/MM/YYYY' }}</hlm-td>
             <hlm-td class="w-2/12">{{ quote.client.name }}</hlm-td>
             <hlm-td class="w-2/12">{{ quote.total | euroFormat }}</hlm-td>
@@ -111,7 +191,8 @@
                 </button>
               } @else {
                 <hlm-alert-dialog>
-                  <button class="" id="edit-profile" variant="outline" brnAlertDialogTrigger hlmBtn>Créer la facture</button>
+                  <button class="" id="edit-profile" variant="outline" brnAlertDialogTrigger hlmBtn>Créer la facture
+                  </button>
                   <hlm-alert-dialog-content *brnAlertDialogContent="let ctx">
                     <hlm-alert-dialog-header>
                       <h3 hlmAlertDialogTitle>Créer la facture</h3>
@@ -128,7 +209,7 @@
               }
             </hlm-td>
             <hlm-td class="w-2/12">
-              @if (quote.invoice){
+              @if (quote.invoice) {
                 <hlm-dialog>
                   <button brnDialogTrigger hlmBtn (click)="checkCreditNote(quote.invoice.id)">Générer</button>
                   <hlm-dialog-content class="sm:max-w-[425px]" *brnDialogContent="let ctx">
@@ -139,12 +220,12 @@
                         <h3 hlmDialogTitle class="text-red-400">Aucune note de crédit trouvée</h3>
                       }
                     </hlm-dialog-header>
-                    @if(creditNote()) {
+                    @if (creditNote()) {
                       <button hlmBtn (click)="generateCreditNotePdf()">
                         Générer le PDF de la note de crédit
                       </button>
                     } @else {
-                      <a hlmBtn [routerLink]="quote.invoice.id + '/credit-note'" >Créer la note de crédit</a>
+                      <a hlmBtn [routerLink]="quote.invoice.id + '/credit-note'">Créer la note de crédit</a>
                     }
 
 

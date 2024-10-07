@@ -16,4 +16,29 @@ export class QuoteService {
   createQuote(quoteDto: QuoteDto) {
     return this.httpClient.post<QuoteEntity>(`${environment.API_URL}/quote`, quoteDto);
   }
+
+  updateQuote(quoteId: string | null, quoteDto: QuoteDto) {
+    return this.httpClient.patch<QuoteEntity>(`${environment.API_URL}/quote/${quoteId}`, quoteDto);
+  }
+
+  getQuote(quoteId: string | null) {
+    return this.httpClient.get<QuoteEntity>(`${environment.API_URL}/quote/${quoteId}`);
+  }
+
+  acceptQuoteFromGroup(quoteId: string | null) {
+      return this.httpClient.patch<QuoteEntity>(`${environment.API_URL}/quote/${quoteId}/group_acceptance`, {});
+  }
+
+  acceptQuoteFromClient(quoteId: string | null) {
+    return this.httpClient.patch<QuoteEntity>(`${environment.API_URL}/quote/${quoteId}/order_giver_acceptance`, {});
+  }
+
+  rejectQuoteFromGroup(quoteId: string | null) {
+    return this.httpClient.patch<QuoteEntity>(`${environment.API_URL}/quote/${quoteId}/group_rejection`, {});
+  }
+
+  rejectQuoteFromClient(quoteId: string | null) {
+    return this.httpClient.patch<QuoteEntity>(`${environment.API_URL}/quote/${quoteId}/order_giver_rejection`, {});
+  }
+
 }

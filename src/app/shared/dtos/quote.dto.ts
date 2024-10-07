@@ -7,6 +7,8 @@ export interface QuoteDto {
 
   validation_deadline: number;
 
+  isVatIncluded?: boolean;
+
   main_account_id?: number;
 
   group_account_id?: number;

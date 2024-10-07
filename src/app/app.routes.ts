@@ -78,5 +78,14 @@ export const routes: Routes = [
     path: "ponto-connect",
     loadComponent: () => import('./ponto-connect/ponto-connect.component').then((m) => m.PontoConnectComponent),
     canActivate: [authGuard]
+  },
+  {
+    path: "quote-decision",
+    loadComponent: () => import('./quote-decision/quote-decision.component').then((m) => m.QuoteDecisionComponent)
+  },
+  {
+    path: "**",
+    redirectTo: "home",
+    pathMatch: "full"
   }
 ];

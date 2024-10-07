@@ -1,19 +1,28 @@
-import {inject, Injectable} from '@angular/core';
-import {HttpClient} from "@angular/common/http";
-import {ProductDto} from "../dtos/product.dto";
-import {environment} from "../../../environments/environment";
-import {ProductEntity} from "../entities/product.entity";
+import { inject, Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { ProductDto } from '../dtos/product.dto';
+import { environment } from '../../../environments/environment';
+import { ProductEntity } from '../entities/product.entity';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ProductService {
-
   private readonly httpClient: HttpClient = inject(HttpClient);
 
-  constructor() { }
+  constructor() {}
 
   createProduct(productDto: ProductDto) {
-    return this.httpClient.post<ProductEntity>(`${environment.API_URL}/product`, productDto)
+    return this.httpClient.post<ProductEntity>(
+      `${environment.API_URL}/product`,
+      productDto,
+    );
+  }
+
+  update(product_id: string, productDto: ProductDto) {
+    return this.httpClient.put<ProductEntity>(
+      `${environment.API_URL}/product/update/${product_id}`,
+      productDto,
+    );
   }
 }

@@ -829,7 +829,7 @@
           <button (click)="filterEvents('hidden')" variant="outline"
                   class="rounded-full w-full text-[10px] h-auto border-2 border-purple-400 hover:bg-purple-400 hover:text-white"
                   [ngClass]="{'bg-purple-400': selectedFilter() === 'hidden'}" hlmBtn>
-            Masqué(s)
+            Annulé(s)
           </button>
         </div>
 
@@ -1223,8 +1223,8 @@
             </hlm-dialog>
 
             <hlm-dialog>
-              <button class="rounded-full w-full text-[10px] h-auto" id="edit-profile" brnDialogTrigger hlmBtn>Rappel
-                au(x) participant(s)
+              <button class="rounded-full w-full text-[10px] h-auto" id="edit-profile" brnDialogTrigger hlmBtn>
+                Mémo
               </button>
               <hlm-dialog-content class="sm:max-w-[425px]" *brnDialogContent="let ctx">
                 <hlm-dialog-header>

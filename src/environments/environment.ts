@@ -1,7 +1,7 @@
 export const environment = {
-    production: true,
-    API_URL: "https://sonarartists-81801f88396b.herokuapp.com",
-    TOKEN_KEY: "token",
-    REFRESH_TOKEN_KEY: "refresh_token",
-    USER_KEY: "user"
-}
+  production: true,
+  API_URL: 'sonar-back.vercel.app',
+  TOKEN_KEY: 'token',
+  REFRESH_TOKEN_KEY: 'refresh_token',
+  USER_KEY: 'user',
+};

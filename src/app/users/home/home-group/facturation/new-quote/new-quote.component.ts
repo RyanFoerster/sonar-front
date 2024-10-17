@@ -99,7 +99,6 @@ import { ClientService } from '../../../../../shared/services/client.service';
 import { ProductService } from '../../../../../shared/services/product.service';
 import { QuoteService } from '../../../../../shared/services/quote.service';
 import { UsersService } from '../../../../../shared/services/users.service';
-
 @Component({
   selector: 'app-new-quote',
   standalone: true,
@@ -183,6 +182,7 @@ import { UsersService } from '../../../../../shared/services/users.service';
       lucideSearch,
       lucideChevronsUpDown,
     }),
+    DatePipe,
   ],
   templateUrl: './new-quote.component.html',
   styleUrl: './new-quote.component.css',
@@ -195,6 +195,7 @@ export class NewQuoteComponent implements AfterViewInit {
   private quoteService: QuoteService = inject(QuoteService);
   private location: Location = inject(Location);
   private authService: AuthService = inject(AuthService);
+  private datePipe: DatePipe = inject(DatePipe);
 
   protected client = signal<ClientEntity | null>(null);
   protected connectedUser = signal<UserEntity | null>(null);
@@ -225,15 +226,9 @@ export class NewQuoteComponent implements AfterViewInit {
   protected updatedQuote = signal<QuoteEntity | null>(null);
 
   protected paysEuropeens: string[] = [
-    'Albanie',
     'Allemagne',
-    'Andorre',
-    'Arménie',
     'Autriche',
-    'Azerbaïdjan',
     'Belgique',
-    'Biélorussie',
-    'Bosnie-Herzégovine',
     'Bulgarie',
     'Chypre',
     'Croatie',
@@ -241,40 +236,24 @@ export class NewQuoteComponent implements AfterViewInit {
     'Espagne',
     'Estonie',
     'Finlande',
-    'France',
-    'Géorgie',
     'Grèce',
     'Hongrie',
     'Irlande',
-    'Islande',
     'Italie',
-    'Kazakhstan',
-    'Kosovo',
     'Lettonie',
-    'Liechtenstein',
     'Lituanie',
     'Luxembourg',
-    'Macédoine du Nord',
     'Malte',
-    'Moldavie',
-    'Monaco',
-    'Monténégro',
-    'Norvège',
     'Pays-Bas',
     'Pologne',
     'Portugal',
+    'République tchèque',
     'Roumanie',
-    'Royaume-Uni',
-    'Russie',
-    'Saint-Marin',
-    'Serbie',
-    'Slovaquie',
     'Slovénie',
+    'Slovaquie',
     'Suède',
     'Suisse',
-    'Tchéquie',
-    'Ukraine',
-    'Vatican',
+    'Royaume-Uni',
   ];
 
   protected isToggleClientForm = signal(false);
@@ -295,10 +274,10 @@ export class NewQuoteComponent implements AfterViewInit {
 
   constructor() {
     this.createQuoteForm = this.formBuilder.group({
-      quote_date: [new Date(), [Validators.required]],
-      service_date: [new Date(), [Validators.required]],
+      quote_date: [this.formatDate(new Date()), [Validators.required]],
+      service_date: [this.formatDate(new Date()), [Validators.required]],
       payment_deadline: ['', [Validators.required]],
-      validation_deadline: ['', [Validators.required]],
+      validation_deadline: [this.formatDate(new Date()), [Validators.required]],
       comment: ['', [Validators.required]],
     });
 
@@ -353,10 +332,10 @@ export class NewQuoteComponent implements AfterViewInit {
             this.updatedQuote.set(data);
             this.isTvaIncluded.set(data.isVatIncluded);
             this.createQuoteForm.patchValue({
-              quote_date: data.quote_date,
-              service_date: data.service_date,
+              quote_date: this.formatDate(data.quote_date),
+              service_date: this.formatDate(data.service_date),
               payment_deadline: data.payment_deadline,
-              validation_deadline: data.validation_deadline,
+              validation_deadline: this.formatDate(data.validation_deadline),
               comment: data.comment,
             });
 
@@ -380,6 +359,10 @@ export class NewQuoteComponent implements AfterViewInit {
         )
         .subscribe();
     }
+  }
+
+  private formatDate(date: Date): string {
+    return this.datePipe.transform(date, 'yyyy-MM-dd') || '';
   }
 
   // formatDateToISO(date: Date): string {
@@ -406,7 +389,24 @@ export class NewQuoteComponent implements AfterViewInit {
     this.connectedUser.set(this.authService.getUser());
   }
 
-  toggleClientForm() {
+  toggleClientForm(isNewClient: boolean = true) {
+    if (isNewClient) {
+      this.createClientForm.reset();
+    } else {
+      this.createClientForm.patchValue({
+        name: this.currentClient()?.name,
+        email: this.currentClient()?.email,
+        phone: this.currentClient()?.phone,
+        street: this.currentClient()?.street,
+        number: this.currentClient()?.number,
+        city: this.currentClient()?.city,
+        country: this.currentClient()?.country,
+        postalCode: this.currentClient()?.postalCode,
+        company_number: this.currentClient()?.company_number,
+        company_vat_number: this.currentClient()?.company_vat_number,
+        national_number: this.currentClient()?.national_number,
+      });
+    }
     this.isToggleClientForm.set(!this.isToggleClientForm());
   }
 
@@ -489,42 +489,40 @@ export class NewQuoteComponent implements AfterViewInit {
 
   checkBCE() {
     this.isValidBCENumber.set(null);
-    if (this.createClientForm.value.company_number) {
-      this.clientService
-        .checkBce(this.createClientForm.value.company_number)
-        .pipe(
-          take(1),
-          tap((data) => {
-            this.isValidBCENumber.set(data.Vat.isValid);
-            this.createClientForm
-              .get('company_vat_number')
-              ?.patchValue(data.Vat.vatNumber);
-            this.createClientForm
-              .get('name')
-              ?.patchValue(data.Vat.details.name);
-            // Extraire les différentes parties de l'adresse
-            const addressParts = data.Vat.details.address.split('\n'); // Diviser la chaîne en deux parties : rue + numéro et code postal + ville
-            const streetAndNumber = addressParts[0]; // "Rue du Moulin 78"
-            const postalAndCity = addressParts[1]; // "4020 Liège"
+    const companyNumber = this.createClientForm.get('company_number')?.value;
+    if (!companyNumber) return;
 
-            // Utiliser une expression régulière pour extraire le numéro et la rue
-            const streetMatch = streetAndNumber.match(/^(.+?)\s+(\d+)$/);
-            const street = streetMatch[1]; // Rue du Moulin
-            const number = streetMatch[2]; // 78
+    this.clientService
+      .checkBce(companyNumber)
+      .pipe(
+        take(1),
+        tap(({ Vat }) => {
+          this.isValidBCENumber.set(Vat.isValid);
 
-            // Diviser le code postal et la ville
-            const postalAndCityParts = postalAndCity.split(' ');
-            const postalCode = postalAndCityParts[0]; // 4020
-            const city = postalAndCityParts.slice(1).join(' '); // Liège
+          const { vatNumber, details } = Vat;
+          const { name, address } = details;
 
-            this.createClientForm.get('street')?.patchValue(street);
-            this.createClientForm.get('number')?.patchValue(number);
-            this.createClientForm.get('postalCode')?.patchValue(postalCode);
-            this.createClientForm.get('city')?.patchValue(city);
-          }),
-        )
-        .subscribe();
-    }
+          const [streetAndNumber, postalAndCity] = address.split('\n');
+          const [street, number] = this.extractStreetAndNumber(streetAndNumber);
+          const [postalCode, ...cityParts] = postalAndCity.split(' ');
+          const city = cityParts.join(' ');
+
+          this.createClientForm.patchValue({
+            company_vat_number: vatNumber,
+            name,
+            street,
+            number,
+            postalCode,
+            city,
+          });
+        }),
+      )
+      .subscribe();
+  }
+
+  private extractStreetAndNumber(streetAndNumber: string): [string, string] {
+    const match = streetAndNumber.match(/^(.+?)\s+(\d+)$/);
+    return match ? [match[1], match[2]] : [streetAndNumber, ''];
   }
 
   getIsValidBCENumber() {
@@ -536,19 +534,35 @@ export class NewQuoteComponent implements AfterViewInit {
       this.clientService
         .create(this.createClientForm.value as ClientDto)
         .pipe(
-          tap(async (data) => {
-            this.setClient(data.id);
-            if (this.connectedUser()?.role === 'ADMIN') {
-              this.clients().push(data);
-              this.authService.saveUser(this.connectedUser()!);
-            } else {
-              this.connectedUser()?.clients.push(data);
-              this.authService.saveUser(this.connectedUser()!);
-            }
-            this.currentClient.set(data);
+          take(1),
+          tap((newClient) => {
+            this.setClient(newClient.id);
 
+            // Mise à jour de la liste des clients
+            const clientList =
+              this.connectedUser()?.role === 'ADMIN'
+                ? this.clients()
+                : this.connectedUser()!.clients;
+            const existingIndex = clientList.findIndex(
+              (client) => client.id === newClient.id,
+            );
+
+            if (existingIndex !== -1) {
+              clientList[existingIndex] = newClient;
+            } else {
+              clientList.push(newClient);
+            }
+
+            // Mise à jour du client actuel
+            this.currentClient.set(newClient);
+
+            // Réinitialisation du formulaire et des états
+            this.createClientForm.reset();
             this.toggleClientForm();
             this.isPhysicalPerson.set(false);
+
+            // Sauvegarde de l'utilisateur connecté
+            this.authService.saveUser(this.connectedUser()!);
           }),
         )
         .subscribe();
@@ -575,43 +589,97 @@ export class NewQuoteComponent implements AfterViewInit {
     }
   }
 
+  // createProduct() {
+  //   if (this.createProductForm.valid && this.client()) {
+  //     const { vat, ...createProductDto } = this.createProductForm.value;
+  //     const productToAdd = { ...this.createProductForm.value };
+
+  //     if (
+  //       (this.client()?.country === 'Belgique' ||
+  //         this.client()?.country === 'Suisse' ||
+  //         this.client()?.country === 'Royaume-Uni') &&
+  //       this.client()?.company_number
+  //     ) {
+  //       if (!this.client()?.company_vat_number) {
+  //         if (!vat) {
+  //           productToAdd.vat = 0.21;
+  //         } else {
+  //           productToAdd.vat = 0.06;
+  //         }
+  //       } else {
+  //         productToAdd.vat = 0;
+  //       }
+  //     } else {
+  //       productToAdd.vat = 0;
+  //     }
+
+  //     if (this.isTvaIncluded()) {
+  //       productToAdd.vat = 0;
+  //     }
+
+  //     this.productService
+  //       .createProduct(productToAdd)
+  //       .pipe(
+  //         take(1),
+  //         tap((data) => {
+  //           this.products().push(data);
+  //           this.calculateQuoteAmount(data);
+
+  //           this.createProductForm.reset();
+  //           this.createProductForm.get('vat')?.patchValue(false);
+  //           this.toggleProductForm();
+  //         }),
+  //       )
+  //       .subscribe();
+  //   }
+  // }
+
   createProduct() {
-    if (this.createProductForm.valid && this.client()) {
-      const { vat, ...createProductDto } = this.createProductForm.value;
-      const productToAdd = { ...this.createProductForm.value };
+    if (!this.createProductForm.valid || !this.client()) return;
 
-      if (
-        this.client()?.country === 'Belgique' &&
-        this.client()?.company_number
-      ) {
-        if (!vat) {
-          productToAdd.vat = 0.21;
-        } else {
-          productToAdd.vat = 0.06;
-        }
+    const { vat, ...productToAdd } = this.createProductForm.value;
+    productToAdd.vat = this.calculateVat(vat);
+    console.log('productToAdd', productToAdd);
+    this.productService
+      .createProduct(productToAdd)
+      .pipe(
+        take(1),
+        tap((newProduct) => {
+          this.products.update((products) => [...products, newProduct]);
+          this.calculateQuoteAmount(newProduct);
+          this.resetProductForm();
+        }),
+      )
+      .subscribe();
+  }
+
+  private calculateVat(formVat: boolean): number {
+    if (this.isTvaIncluded()) return 0;
+
+    const { country, company_number, company_vat_number } = this.client()!;
+    const isEligibleCountry = ['Belgique', 'Suisse', 'Royaume-Uni'].includes(
+      country,
+    );
+
+    console.log('isEligibleCountry', isEligibleCountry);
+    console.log('company_number', company_number);
+    console.log('company_vat_number', company_vat_number);
+
+    if (isEligibleCountry && company_number) {
+      if (!company_vat_number && !isEligibleCountry) {
+        return 0; // Client avec numéro d'entreprise et numéro de TVA
       } else {
-        productToAdd.vat = 0;
+        return formVat ? 0.06 : 0.21; // Client avec numéro d'entreprise mais sans numéro de TVA
       }
-
-      if (this.isTvaIncluded()) {
-        productToAdd.vat = 0;
-      }
-
-      this.productService
-        .createProduct(productToAdd)
-        .pipe(
-          take(1),
-          tap((data) => {
-            this.products().push(data);
-            this.calculateQuoteAmount(data);
-
-            this.createProductForm.reset();
-            this.createProductForm.get('vat')?.patchValue(false);
-            this.toggleProductForm();
-          }),
-        )
-        .subscribe();
     }
+
+    return 0; // Autres cas (pays non éligible ou pas de numéro d'entreprise)
+  }
+
+  private resetProductForm() {
+    this.createProductForm.reset();
+    this.createProductForm.get('vat')?.patchValue(false);
+    this.toggleProductForm();
   }
 
   calculateQuoteAmount(data: ProductEntity) {
@@ -675,101 +743,92 @@ export class NewQuoteComponent implements AfterViewInit {
   }
 
   deleteProduct(id: number) {
-    // Filtrer les produits pour exclure celui avec l'ID spécifié
-    const updatedProducts = this.products().filter(
-      (product) => product.id !== id,
-    );
-    // Mettre à jour le signal products avec le nouveau tableau
-    this.products.set(updatedProducts);
+    this.products.update((products) => {
+      const updatedProducts = products.filter((product) => product.id !== id);
 
-    this.totalHtva.set(this.products().reduce((a, b) => a + b.price_htva!, 0));
+      this.totalHtva.set(
+        updatedProducts.reduce((a, b) => a + b.price_htva!, 0),
+      );
 
-    if (updatedProducts.length > 0) {
-      for (let product of updatedProducts) {
-        if (product.vat === 0.21)
-          this.tva21.set(this.setTva21(updatedProducts));
-        if (product.vat === 0.06) this.tva6.set(this.setTva6(updatedProducts));
+      if (updatedProducts.length > 0) {
+        this.tva21.set(this.setTva21(updatedProducts));
+        this.tva6.set(this.setTva6(updatedProducts));
+      } else {
+        this.tva21.set(0);
+        this.tva6.set(0);
+        this.isTvaIncluded.set(false);
       }
-    } else {
-      this.tva21.set(0);
-      this.tva6.set(0);
-    }
 
-    this.total.set(this.totalHtva() + this.tva21() + this.tva6());
-    if (this.products().length === 0) {
-      this.isTvaIncluded.set(false);
-    }
+      this.total.set(this.totalHtva() + this.tva21() + this.tva6());
+
+      return updatedProducts;
+    });
   }
 
   setTva21(products: ProductEntity[]) {
     const products_tva_21 = products.filter((product) => product.vat === 0.21);
-    if (this.isTvaIncluded()) {
-      return (
-        products_tva_21.reduce((a, b) => a + b.price * b.quantity!, 0) * 0.21
-      );
-    }
-
-    return products_tva_21.reduce((a, b) => a + b.price_htva!, 0) * 0.21;
+    const baseAmount = this.isTvaIncluded()
+      ? products_tva_21.reduce((a, b) => a + b.price * b.quantity!, 0)
+      : products_tva_21.reduce((a, b) => a + b.price_htva!, 0);
+    return baseAmount * 0.21;
   }
 
   setTva6(products: ProductEntity[]) {
-    const products_tva_6 = products.filter((product) => product.vat === 0.06);
-    return products_tva_6.reduce((a, b) => a + b.tva_amount!, 0);
+    return products
+      .filter((product) => product.vat === 0.06)
+      .reduce((a, b) => a + b.tva_amount!, 0);
   }
 
   createQuote() {
     if (
-      this.createQuoteForm.valid &&
-      this.client() &&
-      this.products().length > 0
+      !this.createQuoteForm.valid ||
+      !this.client() ||
+      this.products().length === 0
     ) {
-      let quote: QuoteDto = this.createQuoteForm.value;
-      quote.products_id = [];
-      quote.client_id = this.client()?.id!;
-      for (const product of this.products()) {
-        quote.products_id.push(product.id!);
-      }
-
-      if (this.typeOfProjet() === 'PRINCIPAL') {
-        quote.main_account_id = +this.id()!;
-      } else {
-        quote.group_account_id = +this.id()!;
-      }
-
-      if (this.isTvaIncluded()) {
-        quote.isVatIncluded = true;
-      }
-
-      this.quoteService
-        .createQuote(quote)
-        .pipe(tap(async () => this.goBack()))
-        .subscribe();
+      return;
     }
+
+    const quote: QuoteDto = {
+      ...this.createQuoteForm.value,
+      products_id: this.products().map((product) => product.id!),
+      client_id: this.client()!.id,
+      [this.typeOfProjet() === 'PRINCIPAL'
+        ? 'main_account_id'
+        : 'group_account_id']: +this.id()!,
+      isVatIncluded: this.isTvaIncluded(),
+    };
+
+    this.quoteService
+      .createQuote(quote)
+      .pipe(
+        take(1),
+        tap(() => this.goBack()),
+      )
+      .subscribe();
   }
 
   updateQuote() {
     if (
-      this.createQuoteForm.valid &&
-      this.client() &&
-      this.products().length > 0
+      !this.createQuoteForm.valid ||
+      !this.client() ||
+      this.products().length === 0
     ) {
-      let quote: QuoteDto = this.createQuoteForm.value;
-      quote.products_id = [];
-      quote.client_id = this.client()?.id!;
-      for (const product of this.products()) {
-        quote.products_id.push(product.id!);
-      }
-
-      if (this.isTvaIncluded()) {
-        quote.isVatIncluded = true;
-      } else {
-        quote.isVatIncluded = false;
-      }
-
-      this.quoteService
-        .updateQuote(this.updatedQuoteId()!, quote)
-        .pipe(tap(async () => this.goBack()))
-        .subscribe();
+      return;
     }
+
+    const quote: QuoteDto = {
+      ...this.createQuoteForm.value,
+      products_id: this.products().map((product) => product.id!),
+      client_id: this.client()!.id,
+      isVatIncluded: this.isTvaIncluded(),
+    };
+
+    this.quoteService
+      .updateQuote(this.updatedQuoteId()!, quote)
+      .pipe(
+        take(1),
+        tap(() => this.goBack()),
+      )
+      .subscribe();
   }
 }

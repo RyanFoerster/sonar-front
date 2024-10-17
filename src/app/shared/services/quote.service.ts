@@ -1,44 +1,69 @@
-import {inject, Injectable} from '@angular/core';
-import {HttpClient} from "@angular/common/http";
-import {QuoteDto} from "../dtos/quote.dto";
-import {environment} from "../../../environments/environment";
-import {QuoteEntity} from "../entities/quote.entity";
+import { inject, Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { QuoteDto } from '../dtos/quote.dto';
+import { environment } from '../../../environments/environment';
+import { QuoteEntity } from '../entities/quote.entity';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class QuoteService {
+  httpClient: HttpClient = inject(HttpClient);
 
-  httpClient: HttpClient = inject(HttpClient)
-
-  constructor() { }
+  constructor() {}
 
   createQuote(quoteDto: QuoteDto) {
-    return this.httpClient.post<QuoteEntity>(`${environment.API_URL}/quote`, quoteDto);
+    return this.httpClient.post<QuoteEntity>(
+      `${environment.API_URL}/quote`,
+      quoteDto,
+    );
   }
 
   updateQuote(quoteId: string | null, quoteDto: QuoteDto) {
-    return this.httpClient.patch<QuoteEntity>(`${environment.API_URL}/quote/${quoteId}`, quoteDto);
+    return this.httpClient.patch<QuoteEntity>(
+      `${environment.API_URL}/quote/${quoteId}`,
+      quoteDto,
+    );
   }
 
   getQuote(quoteId: string | null) {
-    return this.httpClient.get<QuoteEntity>(`${environment.API_URL}/quote/${quoteId}`);
+    return this.httpClient.get<QuoteEntity>(
+      `${environment.API_URL}/quote/${quoteId}`,
+    );
+  }
+
+  reportQuoteDate(quoteId: number | null, report_date: Date) {
+    return this.httpClient.patch<boolean>(
+      `${environment.API_URL}/quote/${quoteId}/report_date`,
+      { report_date },
+    );
   }
 
   acceptQuoteFromGroup(quoteId: string | null) {
-      return this.httpClient.patch<QuoteEntity>(`${environment.API_URL}/quote/${quoteId}/group_acceptance`, {});
+    return this.httpClient.patch<QuoteEntity>(
+      `${environment.API_URL}/quote/${quoteId}/group_acceptance`,
+      {},
+    );
   }
 
   acceptQuoteFromClient(quoteId: string | null) {
-    return this.httpClient.patch<QuoteEntity>(`${environment.API_URL}/quote/${quoteId}/order_giver_acceptance`, {});
+    return this.httpClient.patch<QuoteEntity>(
+      `${environment.API_URL}/quote/${quoteId}/order_giver_acceptance`,
+      {},
+    );
   }
 
   rejectQuoteFromGroup(quoteId: string | null) {
-    return this.httpClient.patch<QuoteEntity>(`${environment.API_URL}/quote/${quoteId}/group_rejection`, {});
+    return this.httpClient.patch<QuoteEntity>(
+      `${environment.API_URL}/quote/${quoteId}/group_rejection`,
+      {},
+    );
   }
 
   rejectQuoteFromClient(quoteId: string | null) {
-    return this.httpClient.patch<QuoteEntity>(`${environment.API_URL}/quote/${quoteId}/order_giver_rejection`, {});
+    return this.httpClient.patch<QuoteEntity>(
+      `${environment.API_URL}/quote/${quoteId}/order_giver_rejection`,
+      {},
+    );
   }
-
 }

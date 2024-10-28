@@ -190,18 +190,28 @@
             >
               Coordonnées du client
             </h2>
-            <div class="bg-white p-10 rounded-3xl shadow-lg text-xs md:text-lg">
-              <p class="font-bold">{{ client()?.name }}</p>
-              <p>{{ client()?.street }} {{ client()?.number }}</p>
-              <p>
-                {{ client()?.city }} {{ client()?.postalCode }}
-                {{ client()?.country }}
-              </p>
-              @if (client()?.company_number) {
-                <p>TVA: {{ client()?.company_vat_number }}</p>
-              } @else if (client()?.national_number) {
-                <p>N° national: {{ client()?.national_number }}</p>
-              }
+            <div
+              class="bg-white flex p-10 rounded-3xl shadow-lg text-xs md:text-lg relative"
+            >
+              <div>
+                <p class="font-bold">{{ client()?.name }}</p>
+                <p>{{ client()?.street }} {{ client()?.number }}</p>
+                <p>
+                  {{ client()?.city }} {{ client()?.postalCode }}
+                  {{ client()?.country }}
+                </p>
+                @if (client()?.company_number) {
+                  <p>TVA: {{ client()?.company_vat_number }}</p>
+                } @else if (client()?.national_number) {
+                  <p>N° national: {{ client()?.national_number }}</p>
+                }
+              </div>
+              <button
+                class="absolute top-2 right-5"
+                (click)="toggleClientForm(false)"
+              >
+                <hlm-icon size="sm" name="lucideEdit" />
+              </button>
             </div>
           </div>
         }

@@ -661,10 +661,6 @@ export class NewQuoteComponent implements AfterViewInit {
       country,
     );
 
-    console.log('isEligibleCountry', isEligibleCountry);
-    console.log('company_number', company_number);
-    console.log('company_vat_number', company_vat_number);
-
     if (isEligibleCountry && company_number) {
       if (!company_vat_number && !isEligibleCountry) {
         return 0; // Client avec numéro d'entreprise et numéro de TVA
@@ -774,9 +770,11 @@ export class NewQuoteComponent implements AfterViewInit {
   }
 
   setTva6(products: ProductEntity[]) {
-    return products
-      .filter((product) => product.vat === 0.06)
-      .reduce((a, b) => a + b.tva_amount!, 0);
+    const products_tva_6 = products.filter((product) => product.vat === 0.06);
+    const baseAmount = this.isTvaIncluded()
+      ? products_tva_6.reduce((a, b) => a + b.price * b.quantity!, 0)
+      : products_tva_6.reduce((a, b) => a + b.price_htva!, 0);
+    return baseAmount * 0.06;
   }
 
   createQuote() {

@@ -48,6 +48,13 @@ export class InvoiceService {
     );
   }
 
+  createCreditNoteWithoutInvoice(creditNote: any) {
+    return this.httpClient.post<InvoiceEntity>(
+      `${environment.API_URL}/invoice/credit-note-without-invoice`,
+      creditNote,
+    );
+  }
+
   getCreditNoteByInvoiceId(invoice_id: number) {
     return this.httpClient.get<InvoiceEntity>(
       `${environment.API_URL}/invoice/credit-note/${invoice_id}`,

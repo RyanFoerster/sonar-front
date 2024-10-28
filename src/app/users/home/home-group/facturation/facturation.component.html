@@ -7,20 +7,52 @@
     <hlm-icon size="sm" name="lucideCornerDownLeft" />
     Retour
   </button>
-  <a
-    routerLink="new-quote"
-    [queryParams]="{ typeOfProjet: typeOfProjet() }"
-    class="rounded-full w-3/6 self-end text-[10px] font-semibold h-auto bg-gray-sonar text-black md:flex md:justify-center md:items-center md:gap-2 md:min-w-4/5 md:px-10 md:text-lg"
-    hlmBtn
-    >Créer un nouveau devis
-  </a>
-
+  <div
+    class="flex lg:self-end flex-col gap-2 w-full lg:w-1/2 lg:flex-row"
+    [ngClass]="{ 'justify-end': connectedUser()?.role !== 'ADMIN' }"
+  >
+    <a
+      routerLink="new-quote"
+      [queryParams]="{ typeOfProjet: typeOfProjet() }"
+      class="rounded-full w-full lg:w-3/6 lg:self-end text-[10px] font-semibold h-auto bg-gray-sonar text-black md:flex md:justify-center md:items-center md:gap-2 md:min-w-4/5 md:px-10 md:text-lg hover:bg-gray-sonar/80"
+      hlmBtn
+      >Créer un nouveau devis
+    </a>
+    @if (connectedUser()?.role === "ADMIN") {
+      <a
+        routerLink="credit-note"
+        [queryParams]="{ typeOfProjet: typeOfProjet() }"
+        class="rounded-full w-full lg:w-3/6 lg:self-end text-[10px] font-semibold h-auto bg-gray-sonar text-black md:flex md:justify-center md:items-center md:gap-2 md:min-w-4/5 md:px-10 md:text-lg hover:bg-gray-sonar/80"
+        hlmBtn
+        >Créer une note de crédit
+      </a>
+    }
+  </div>
   <div class="flex flex-col gap-2">
-    <h2 class="text-3xl uppercase">Facturation</h2>
-    <hlm-table class="w-full min-w-[400px]">
+    <div
+      class="flex flex-col gap-2 justify-between lg:items-center lg:flex-row lg:gap-0"
+    >
+      <h2 class="text-3xl uppercase">Facturation</h2>
+      <brn-select class="inline-block" placeholder="Tout">
+        <hlm-select-trigger class="w-full lg:w-56">
+          <hlm-select-value />
+        </hlm-select-trigger>
+        <hlm-select-content>
+          <hlm-option (click)="filterList('all')" value="all">Tout</hlm-option>
+          <hlm-option (click)="filterList('invoice')" value="invoice">
+            Facture
+          </hlm-option>
+          <hlm-option (click)="filterList('credit-note')" value="credit-note">
+            Note de crédit
+          </hlm-option>
+        </hlm-select-content>
+      </brn-select>
+    </div>
+    <!-- ? DESKTOP -->
+    <hlm-table class="w-full min-w-[400px] hidden lg:table">
       <hlm-trow>
         <hlm-th class="w-1/12">N°Devis</hlm-th>
-        <hlm-th class="w-1/12">Date</hlm-th>
+        <hlm-th class="w-1/12">Date de prestation</hlm-th>
         <hlm-th class="w-2/12">Client</hlm-th>
         <hlm-th class="w-2/12">Montant</hlm-th>
         <hlm-th class="w-2/12">Devis</hlm-th>
@@ -30,15 +62,382 @@
 
       @if (typeOfProjet() === "PRINCIPAL") {
         @if (connectedUser()?.role === "ADMIN") {
+          @if (filterSelected() === "all") {
+            @for (
+              quote of accountPrincipal?.quote!;
+              track quote.id;
+              let i = $index
+            ) {
+              <hlm-trow>
+                <hlm-td truncate class="font-medium w-1/12">{{ i + 1 }}</hlm-td>
+                <hlm-td class="w-1/12">{{
+                  quote.service_date | date: "dd/MM/YYYY"
+                }}</hlm-td>
+                <hlm-td class="w-2/12">{{ quote.client.name }}</hlm-td>
+                <hlm-td class="w-2/12">{{ quote.total | euroFormat }}</hlm-td>
+                <hlm-td
+                  class="w-2/12 flex gap-2"
+                  [class.flex-col]="!quote.invoice"
+                >
+                  <button
+                    class="flex gap-1 self-start items-center"
+                    [ngClass]="{ 'self-start': !quote.invoice }"
+                    (click)="generateQuotePDF(quote)"
+                    [disabled]="quote.invoice"
+                    [class.text-gray-400]="quote.invoice"
+                    [class.cursor-not-allowed]="quote.invoice"
+                  >
+                    Télécharger le devis
+                    <hlm-icon size="xs" name="lucideFileDown" />
+                  </button>
+                  @if (!quote.invoice) {
+                    <brn-separator hlmSeparator />
+                    <button
+                      class="flex gap-1 self-start items-center"
+                      routerLink="new-quote"
+                      [disabled]="quote.invoice"
+                      [queryParams]="{
+                        typeOfProjet: typeOfProjet(),
+                        updatedQuoteId: quote.id,
+                      }"
+                    >
+                      Modifier le devis
+                      <hlm-icon size="xs" name="lucideEdit" />
+                    </button>
+
+                    <brn-separator hlmSeparator />
+                    <brn-popover class="self-start">
+                      <button
+                        brnPopoverTrigger
+                        (click)="setReportDate(quote.validation_deadline)"
+                      >
+                        Reporter la date du devis
+                      </button>
+                      <div
+                        hlmPopoverContent
+                        *brnPopoverContent="let ctx"
+                        class="p-4"
+                      >
+                        <input
+                          type="date"
+                          [ngModel]="reportDateFormatted()"
+                          [min]="notPastDate()"
+                          class="mb-4 w-full p-2 border rounded"
+                        />
+                        <div class="flex justify-between gap-2">
+                          <button
+                            class="w-full"
+                            hlmBtn
+                            (click)="reportQuoteDate(quote.id, ctx)"
+                          >
+                            Enregistrer
+                          </button>
+                          <button
+                            class="w-full"
+                            hlmBtn
+                            variant="outline"
+                            (click)="ctx.close()"
+                          >
+                            Annuler
+                          </button>
+                        </div>
+                      </div>
+                    </brn-popover>
+                    <hlm-toaster />
+                  }
+                </hlm-td>
+                <hlm-td class="w-2/12">
+                  @if (quote.invoice) {
+                    <button
+                      class="flex gap-1 items-center"
+                      (click)="generateInvoicePDF(quote)"
+                    >
+                      Télécharger la facture
+                      <hlm-icon size="xs" name="lucideFileDown" />
+                    </button>
+                  } @else {
+                    <hlm-alert-dialog>
+                      <button
+                        class=""
+                        id="edit-profile"
+                        variant="outline"
+                        brnAlertDialogTrigger
+                        hlmBtn
+                      >
+                        Créer la facture
+                      </button>
+                      <hlm-alert-dialog-content
+                        *brnAlertDialogContent="let ctx"
+                      >
+                        <hlm-alert-dialog-header>
+                          <h3 hlmAlertDialogTitle>Créer la facture</h3>
+                          <p hlmAlertDialogDescription>
+                            Cette action est irréversible.
+                          </p>
+                        </hlm-alert-dialog-header>
+                        <hlm-alert-dialog-footer>
+                          <button hlmAlertDialogCancel (click)="ctx.close()">
+                            Cancel
+                          </button>
+                          <button
+                            hlmAlertDialogAction
+                            (click)="createInvoice(quote, ctx)"
+                          >
+                            Créer
+                          </button>
+                        </hlm-alert-dialog-footer>
+                      </hlm-alert-dialog-content>
+                    </hlm-alert-dialog>
+                  }
+                </hlm-td>
+                <hlm-td class="w-2/12">
+                  @if (quote.invoice) {
+                    <hlm-dialog>
+                      <button
+                        brnDialogTrigger
+                        hlmBtn
+                        (click)="checkCreditNote(quote.invoice.id)"
+                      >
+                        Générer
+                      </button>
+                      <hlm-dialog-content
+                        class="sm:max-w-[425px]"
+                        *brnDialogContent="let ctx"
+                      >
+                        <hlm-dialog-header class="mt-5">
+                          @if (creditNote()) {
+                            <h3 hlmDialogTitle class="text-green-400">
+                              Une note de crédit trouvée
+                            </h3>
+                          } @else {
+                            <h3 hlmDialogTitle class="text-red-400">
+                              Aucune note de crédit trouvée
+                            </h3>
+                          }
+                        </hlm-dialog-header>
+                        @if (creditNote()) {
+                          <button hlmBtn (click)="generateCreditNotePdf()">
+                            Télécharger la note de crédit
+                          </button>
+                        } @else {
+                          <a
+                            hlmBtn
+                            routerLink="credit-note"
+                            [queryParams]="{
+                              invoice_id: quote.invoice.id,
+                              typeOfProjet: typeOfProjet(),
+                            }"
+                            >Créer la note de crédit</a
+                          >
+                        }
+                      </hlm-dialog-content>
+                    </hlm-dialog>
+                  }
+                </hlm-td>
+              </hlm-trow>
+            }
+
+            @for (
+              creditNote of creditNoteList();
+              track creditNote.id;
+              let i = $index
+            ) {
+              <hlm-trow>
+                <hlm-td truncate class="font-medium w-1/12">{{ i + 1 }}</hlm-td>
+                <hlm-td class="w-1/12">{{
+                  creditNote.invoice_date | date: "dd/MM/YYYY"
+                }}</hlm-td>
+                <hlm-td class="w-2/12">{{ creditNote.client.name }}</hlm-td>
+                <hlm-td class="w-2/12">{{
+                  creditNote.total | euroFormat
+                }}</hlm-td>
+                <hlm-td class="w-2/12 flex gap-2">
+                  <hlm-toaster />
+                </hlm-td>
+                <hlm-td class="w-2/12"> </hlm-td>
+                <hlm-td class="w-2/12">
+                  <button hlmBtn (click)="generateCreditNotePdf(creditNote)">
+                    Télécharger la note de crédit
+                  </button>
+                </hlm-td>
+              </hlm-trow>
+            }
+          } @else if (filterSelected() === "invoice") {
+            @for (
+              quote of accountPrincipal?.quote!;
+              track quote.id;
+              let i = $index
+            ) {
+              @if (quote.invoice) {
+                <hlm-trow>
+                  <hlm-td truncate class="font-medium w-1/12">{{
+                    i + 1
+                  }}</hlm-td>
+                  <hlm-td class="w-1/12">{{
+                    quote.service_date | date: "dd/MM/YYYY"
+                  }}</hlm-td>
+                  <hlm-td class="w-2/12">{{ quote.client.name }}</hlm-td>
+                  <hlm-td class="w-2/12">{{ quote.total | euroFormat }}</hlm-td>
+                  <hlm-td
+                    class="w-2/12 flex gap-2"
+                    [class.flex-col]="!quote.invoice"
+                  >
+                    <button
+                      class="flex gap-1 self-start items-center"
+                      [ngClass]="{ 'self-start': !quote.invoice }"
+                      (click)="generateQuotePDF(quote)"
+                      [disabled]="quote.invoice"
+                      [class.text-gray-400]="quote.invoice"
+                      [class.cursor-not-allowed]="quote.invoice"
+                    >
+                      Télécharger le devis
+                      <hlm-icon size="xs" name="lucideFileDown" />
+                    </button>
+                    @if (!quote.invoice) {
+                      <brn-separator hlmSeparator />
+                      <button
+                        class="flex gap-1 self-start items-center"
+                        routerLink="new-quote"
+                        [disabled]="quote.invoice"
+                        [queryParams]="{
+                          typeOfProjet: typeOfProjet(),
+                          updatedQuoteId: quote.id,
+                        }"
+                      >
+                        Modifier le devis
+                        <hlm-icon size="xs" name="lucideEdit" />
+                      </button>
+
+                      <brn-separator hlmSeparator />
+                      <brn-popover class="self-start">
+                        <button
+                          brnPopoverTrigger
+                          (click)="setReportDate(quote.validation_deadline)"
+                        >
+                          Reporter la date du devis
+                        </button>
+                        <div
+                          hlmPopoverContent
+                          *brnPopoverContent="let ctx"
+                          class="p-4"
+                        >
+                          <input
+                            type="date"
+                            [ngModel]="reportDateFormatted()"
+                            [min]="notPastDate()"
+                            class="mb-4 w-full p-2 border rounded"
+                          />
+                          <div class="flex justify-between gap-2">
+                            <button
+                              class="w-full"
+                              hlmBtn
+                              (click)="reportQuoteDate(quote.id, ctx)"
+                            >
+                              Enregistrer
+                            </button>
+                            <button
+                              class="w-full"
+                              hlmBtn
+                              variant="outline"
+                              (click)="ctx.close()"
+                            >
+                              Annuler
+                            </button>
+                          </div>
+                        </div>
+                      </brn-popover>
+                      <hlm-toaster />
+                    }
+                  </hlm-td>
+                  <hlm-td class="w-2/12">
+                    @if (quote.invoice) {
+                      <button
+                        class="flex gap-1 items-center"
+                        (click)="generateInvoicePDF(quote)"
+                      >
+                        Télécharger la facture
+                        <hlm-icon size="xs" name="lucideFileDown" />
+                      </button>
+                    }
+                  </hlm-td>
+                  <hlm-td class="w-2/12">
+                    @if (quote.invoice) {
+                      <hlm-dialog>
+                        <button
+                          brnDialogTrigger
+                          hlmBtn
+                          (click)="checkCreditNote(quote.invoice.id)"
+                        >
+                          Générer
+                        </button>
+                        <hlm-dialog-content
+                          class="sm:max-w-[425px]"
+                          *brnDialogContent="let ctx"
+                        >
+                          <hlm-dialog-header class="mt-5">
+                            @if (creditNote()) {
+                              <h3 hlmDialogTitle class="text-green-400">
+                                Une note de crédit trouvée
+                              </h3>
+                            } @else {
+                              <h3 hlmDialogTitle class="text-red-400">
+                                Aucune note de crédit trouvée
+                              </h3>
+                            }
+                          </hlm-dialog-header>
+                          @if (creditNote()) {
+                            <button hlmBtn (click)="generateCreditNotePdf()">
+                              Télécharger la note de crédit
+                            </button>
+                          } @else {
+                            <a
+                              hlmBtn
+                              routerLink="credit-note"
+                              [queryParams]="{
+                                invoice_id: quote.invoice.id,
+                                typeOfProjet: typeOfProjet(),
+                              }"
+                              >Créer la note de crédit</a
+                            >
+                          }
+                        </hlm-dialog-content>
+                      </hlm-dialog>
+                    }
+                  </hlm-td>
+                </hlm-trow>
+              }
+            }
+          } @else if (filterSelected() === "credit-note") {
+            @for (quote of creditNoteList(); track quote.id; let i = $index) {
+              <!-- ? DESKTOP -->
+              <hlm-trow class="hidden lg:flex">
+                <hlm-td truncate class="font-medium w-1/12">{{ i + 1 }}</hlm-td>
+                <hlm-td class="w-1/12">{{
+                  quote.invoice_date | date: "dd/MM/YYYY"
+                }}</hlm-td>
+                <hlm-td class="w-2/12">{{ quote.client.name }}</hlm-td>
+                <hlm-td class="w-2/12">{{ quote.total | euroFormat }}</hlm-td>
+                <hlm-td class="w-2/12">N/A</hlm-td>
+                <hlm-td class="w-2/12">N/A</hlm-td>
+
+                <hlm-td class="w-2/12">
+                  <button hlmBtn (click)="generateCreditNotePdf()">
+                    Télécharger la note de crédit
+                  </button>
+                </hlm-td>
+              </hlm-trow>
+            }
+          }
+        } @else {
           @for (
-            quote of accountPrincipal?.quote!;
+            quote of connectedUser()?.comptePrincipal?.quote!;
             track quote.id;
             let i = $index
           ) {
             <hlm-trow>
               <hlm-td truncate class="font-medium w-1/12">{{ i + 1 }}</hlm-td>
               <hlm-td class="w-1/12">{{
-                quote.quote_date | date: "dd/MM/YYYY"
+                quote.service_date | date: "dd/MM/YYYY"
               }}</hlm-td>
               <hlm-td class="w-2/12">{{ quote.client.name }}</hlm-td>
               <hlm-td class="w-2/12">{{ quote.total | euroFormat }}</hlm-td>
@@ -48,6 +447,7 @@
               >
                 <button
                   class="flex gap-1 self-start items-center"
+                  [ngClass]="{ 'self-start': !quote.invoice }"
                   (click)="generateQuotePDF(quote)"
                   [disabled]="quote.invoice"
                   [class.text-gray-400]="quote.invoice"
@@ -186,130 +586,11 @@
                       } @else {
                         <a
                           hlmBtn
-                          [routerLink]="quote.invoice.id + '/credit-note'"
-                          >Créer la note de crédit</a
-                        >
-                      }
-                    </hlm-dialog-content>
-                  </hlm-dialog>
-                }
-              </hlm-td>
-            </hlm-trow>
-          }
-        } @else {
-          @for (
-            quote of connectedUser()?.comptePrincipal?.quote!;
-            track quote.id;
-            let i = $index
-          ) {
-            <hlm-trow>
-              <hlm-td truncate class="font-medium w-1/12">{{ i + 1 }}</hlm-td>
-              <hlm-td class="w-1/12">{{
-                quote.quote_date | date: "dd/MM/YYYY"
-              }}</hlm-td>
-              <hlm-td class="w-2/12">{{ quote.client.name }}</hlm-td>
-              <hlm-td class="w-2/12">{{ quote.total | euroFormat }}</hlm-td>
-              @if (!quote.invoice) {
-                <hlm-td
-                  class="w-2/12 flex gap-2 items-center"
-                  [class.flex-col]="!quote.invoice"
-                >
-                  <button
-                    class="flex gap-1 items-center"
-                    (click)="generateQuotePDF(quote)"
-                    [disabled]="quote.invoice"
-                  >
-                    Télécharger le devis
-                    <hlm-icon size="xs" name="lucideFileDown" />
-                  </button>
-                  @if (!quote.invoice) {
-                    <brn-separator hlmSeparator />
-                    <button
-                      class="flex gap-1 self-start items-center"
-                      routerLink="new-quote"
-                      [disabled]="quote.invoice"
-                      [queryParams]="{
-                        typeOfProjet: typeOfProjet(),
-                        updatedQuoteId: quote.id,
-                      }"
-                    >
-                      Modifier le devis
-                      <hlm-icon size="xs" name="lucideEdit" />
-                    </button>
-                  }
-                </hlm-td>
-              }
-              <hlm-td class="w-2/12">
-                @if (quote.invoice) {
-                  <button (click)="generateInvoicePDF(quote)">
-                    Télécharger la facture
-                  </button>
-                } @else {
-                  <hlm-alert-dialog>
-                    <button
-                      class=""
-                      id="edit-profile"
-                      variant="outline"
-                      brnAlertDialogTrigger
-                      hlmBtn
-                    >
-                      Créer la facture ?
-                    </button>
-                    <hlm-alert-dialog-content *brnAlertDialogContent="let ctx">
-                      <hlm-alert-dialog-header>
-                        <h3 hlmAlertDialogTitle>Créer la facture ?</h3>
-                        <p hlmAlertDialogDescription>
-                          Cette action est irréversible.
-                        </p>
-                      </hlm-alert-dialog-header>
-                      <hlm-alert-dialog-footer>
-                        <button hlmAlertDialogCancel (click)="ctx.close()">
-                          Cancel
-                        </button>
-                        <button
-                          hlmAlertDialogAction
-                          (click)="createInvoice(quote, ctx)"
-                        >
-                          Créer
-                        </button>
-                      </hlm-alert-dialog-footer>
-                    </hlm-alert-dialog-content>
-                  </hlm-alert-dialog>
-                }
-              </hlm-td>
-              <hlm-td class="w-2/12">
-                @if (quote.invoice) {
-                  <hlm-dialog>
-                    <button
-                      brnDialogTrigger
-                      hlmBtn
-                      (click)="checkCreditNote(quote.invoice.id)"
-                    >
-                      Voir si il existe une note de crédit
-                    </button>
-                    <hlm-dialog-content
-                      class="sm:max-w-[425px]"
-                      *brnDialogContent="let ctx"
-                    >
-                      <hlm-dialog-header class="mt-5">
-                        @if (creditNote()) {
-                          <h3 hlmDialogTitle class="text-green-400">
-                            Une note de crédit trouvée
-                          </h3>
-                        } @else {
-                          <h3 hlmDialogTitle class="text-red-400">
-                            Aucune note de crédit trouvée
-                          </h3>
-                        }
-                      </hlm-dialog-header>
-                      @if (creditNote()) {
-                        <button hlmBtn (click)="generateCreditNotePdf()">
-                          Télécharger la note de crédit
-                        </button>
-                      } @else {
-                        <a
-                          hlmBtn
-                          [routerLink]="quote.invoice.id + '/credit-note'"
+                          routerLink="credit-note"
+                          [queryParams]="{
+                            invoice_id: quote.invoice.id,
+                            typeOfProjet: typeOfProjet(),
+                          }"
                           >Créer la note de crédit</a
                         >
                       }
@@ -325,18 +606,77 @@
           <hlm-trow>
             <hlm-td truncate class="font-medium w-1/12">{{ i + 1 }}</hlm-td>
             <hlm-td class="w-1/12">{{
-              quote.quote_date | date: "dd/MM/YYYY"
+              quote.service_date | date: "dd/MM/YYYY"
             }}</hlm-td>
             <hlm-td class="w-2/12">{{ quote.client.name }}</hlm-td>
             <hlm-td class="w-2/12">{{ quote.total | euroFormat }}</hlm-td>
-            <hlm-td class="w-2/12">
+            <hlm-td class="w-2/12 flex gap-2" [class.flex-col]="!quote.invoice">
               <button
-                class="flex gap-1 items-center"
+                class="flex gap-1 self-start items-center"
+                [ngClass]="{ 'self-start': !quote.invoice }"
                 (click)="generateQuotePDF(quote)"
+                [disabled]="quote.invoice"
+                [class.text-gray-400]="quote.invoice"
+                [class.cursor-not-allowed]="quote.invoice"
               >
                 Télécharger le devis
                 <hlm-icon size="xs" name="lucideFileDown" />
               </button>
+              @if (!quote.invoice) {
+                <brn-separator hlmSeparator />
+                <button
+                  class="flex gap-1 self-start items-center"
+                  routerLink="new-quote"
+                  [disabled]="quote.invoice"
+                  [queryParams]="{
+                    typeOfProjet: typeOfProjet(),
+                    updatedQuoteId: quote.id,
+                  }"
+                >
+                  Modifier le devis
+                  <hlm-icon size="xs" name="lucideEdit" />
+                </button>
+
+                <brn-separator hlmSeparator />
+                <brn-popover class="self-start">
+                  <button
+                    brnPopoverTrigger
+                    (click)="setReportDate(quote.validation_deadline)"
+                  >
+                    Reporter la date du devis
+                  </button>
+                  <div
+                    hlmPopoverContent
+                    *brnPopoverContent="let ctx"
+                    class="p-4"
+                  >
+                    <input
+                      type="date"
+                      [ngModel]="reportDateFormatted()"
+                      [min]="notPastDate()"
+                      class="mb-4 w-full p-2 border rounded"
+                    />
+                    <div class="flex justify-between gap-2">
+                      <button
+                        class="w-full"
+                        hlmBtn
+                        (click)="reportQuoteDate(quote.id, ctx)"
+                      >
+                        Enregistrer
+                      </button>
+                      <button
+                        class="w-full"
+                        hlmBtn
+                        variant="outline"
+                        (click)="ctx.close()"
+                      >
+                        Annuler
+                      </button>
+                    </div>
+                  </div>
+                </brn-popover>
+                <hlm-toaster />
+              }
             </hlm-td>
             <hlm-td class="w-2/12">
               @if (quote.invoice) {
@@ -388,7 +728,7 @@
                     hlmBtn
                     (click)="checkCreditNote(quote.invoice.id)"
                   >
-                    Télécharger la note de crédit
+                    Générer
                   </button>
                   <hlm-dialog-content
                     class="sm:max-w-[425px]"
@@ -410,7 +750,13 @@
                         Télécharger la note de crédit
                       </button>
                     } @else {
-                      <a hlmBtn [routerLink]="quote.invoice.id + '/credit-note'"
+                      <a
+                        hlmBtn
+                        routerLink="credit-note"
+                        [queryParams]="{
+                          invoice_id: quote.invoice.id,
+                          typeOfProjet: typeOfProjet(),
+                        }"
                         >Créer la note de crédit</a
                       >
                     }
@@ -422,5 +768,135 @@
         }
       }
     </hlm-table>
+
+    <!-- ? MOBILE -->
+    <div class="lg:hidden">
+      @if (typeOfProjet() === "PRINCIPAL") {
+        @if (connectedUser()?.role === "ADMIN") {
+          @if (filterSelected() === "all" || filterSelected() === "invoice") {
+            @for (
+              quote of accountPrincipal?.quote!;
+              track quote.id;
+              let i = $index
+            ) {
+              <div class="bg-white shadow rounded-lg mb-4 p-4">
+                <div class="flex justify-between items-center mb-2">
+                  <span class="font-bold">Devis #{{ i + 1 }}</span>
+                  <span class="text-sm text-gray-500">{{
+                    quote.service_date | date: "dd/MM/YYYY"
+                  }}</span>
+                </div>
+                <div class="mb-2">
+                  <span class="font-semibold">Client:</span>
+                  {{ quote.client.name }}
+                </div>
+                <div class="mb-2">
+                  <span class="font-semibold">Montant:</span>
+                  {{ quote.total | euroFormat }}
+                </div>
+                <div class="flex flex-col gap-2 mt-4">
+                  <button
+                    class="text-sm bg-blue-500 text-white py-2 px-4 rounded"
+                    (click)="generateQuotePDF(quote)"
+                    [disabled]="quote.invoice"
+                    [class.text-gray-400]="quote.invoice"
+                    [ngClass]="{ 'bg-blue-500/50': quote.invoice }"
+                  >
+                    Télécharger le devis
+                  </button>
+                  @if (quote.invoice) {
+                    <button
+                      class="text-sm bg-green-500 text-white py-2 px-4 rounded"
+                      (click)="generateInvoicePDF(quote)"
+                    >
+                      Télécharger la facture
+                    </button>
+                  } @else {
+                    <hlm-alert-dialog>
+                      <button
+                        class="text-sm bg-yellow-500 text-white py-2 px-4 rounded"
+                        brnAlertDialogTrigger
+                      >
+                        Créer la facture
+                      </button>
+                      <!-- ... Contenu de l'alerte ... -->
+                    </hlm-alert-dialog>
+                  }
+                  @if (quote.invoice) {
+                    <hlm-dialog>
+                      <button
+                        class="text-sm bg-purple-500 text-white py-2 px-4 rounded w-full"
+                        brnDialogTrigger
+                        (click)="checkCreditNote(quote.invoice.id)"
+                      >
+                        Générer note de crédit
+                      </button>
+                      <!-- ... Contenu du dialogue ... -->
+                    </hlm-dialog>
+                  }
+                </div>
+              </div>
+            }
+            @for (
+              creditnote of creditNoteList();
+              track creditnote.id;
+              let i = $index
+            ) {
+              <div class="bg-white shadow rounded-lg mb-4 p-4">
+                <div class="flex justify-between items-center mb-2">
+                  <span class="font-bold">Devis #{{ i + 1 }}</span>
+                  <span class="text-sm text-gray-500">{{
+                    creditnote.invoice_date | date: "dd/MM/YYYY"
+                  }}</span>
+                </div>
+                <div class="mb-2">
+                  <span class="font-semibold">Client:</span>
+                  {{ creditnote.client.name }}
+                </div>
+                <div class="mb-2">
+                  <span class="font-semibold">Montant:</span>
+                  {{ creditnote.total | euroFormat }}
+                </div>
+                <div class="flex flex-col gap-2 mt-4">
+                  <button
+                    class="text-sm bg-green-500 text-white py-2 px-4 rounded"
+                    (click)="generateCreditNotePdf(creditnote)"
+                  >
+                    Télécharger la facture
+                  </button>
+                </div>
+              </div>
+            }
+          } @else if (filterSelected() === "credit-note") {
+            @for (quote of creditNoteList(); track quote.id; let i = $index) {
+              <div class="bg-white shadow rounded-lg mb-4 p-4">
+                <div class="flex justify-between items-center mb-2">
+                  <span class="font-bold">Note de crédit #{{ i + 1 }}</span>
+                  <span class="text-sm text-gray-500">{{
+                    quote.invoice_date | date: "dd/MM/YYYY"
+                  }}</span>
+                </div>
+                <div class="mb-2">
+                  <span class="font-semibold">Client:</span>
+                  {{ quote.client.name }}
+                </div>
+                <div class="mb-2">
+                  <span class="font-semibold">Montant:</span>
+                  {{ quote.total | euroFormat }}
+                </div>
+                <button
+                  class="w-full text-sm bg-blue-500 text-white py-2 px-4 rounded mt-4"
+                  (click)="generateCreditNotePdf()"
+                >
+                  Télécharger la note de crédit
+                </button>
+              </div>
+            }
+          }
+        }
+        <!-- ... Autres conditions ... -->
+      }
+      <!-- ... Autres conditions pour GROUP ... -->
+    </div>
   </div>
 </div>

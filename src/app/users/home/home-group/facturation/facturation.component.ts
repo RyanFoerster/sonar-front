@@ -1,4 +1,4 @@
-import { DatePipe, JsonPipe, Location } from '@angular/common';
+import { DatePipe, JsonPipe, Location, NgClass } from '@angular/common';
 import {
   AfterViewInit,
   Component,
@@ -81,6 +81,9 @@ import {
 import { toast } from 'ngx-sonner';
 import { HlmToasterComponent } from '@spartan-ng/ui-sonner-helm';
 import { FormsModule } from '@angular/forms';
+import { CompteGroupeService } from '../../../../shared/services/compte-groupe.service';
+import { BrnSelectImports } from '@spartan-ng/ui-select-brain';
+import { HlmSelectImports } from '@spartan-ng/ui-select-helm';
 @Component({
   selector: 'app-facturation',
   standalone: true,
@@ -127,6 +130,9 @@ import { FormsModule } from '@angular/forms';
     FormsModule,
     DatePipe,
     HlmToasterComponent,
+    NgClass,
+    BrnSelectImports,
+    HlmSelectImports,
   ],
   providers: [
     provideIcons({
@@ -148,6 +154,7 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
     ComptePrincipalService,
   );
   private datePipe: DatePipe = inject(DatePipe);
+  private groupService: CompteGroupeService = inject(CompteGroupeService);
 
   protected accountPrincipal: PrincipalAccountEntity | undefined;
 
@@ -156,9 +163,12 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
   protected connectedUser = signal<UserEntity | null>(null);
   protected groupAccount = signal<CompteGroupeEntity | undefined>(undefined);
   protected creditNote = signal<InvoiceEntity | null>(null);
+  protected creditNoteList = signal<InvoiceEntity[]>([]);
   protected isCreditNote = signal<Boolean | null>(null);
   protected currentDate = new Date();
   protected reportDate = signal<Date>(this.currentDate);
+  protected filterSelected = signal<'invoice' | 'credit-note' | 'all'>('all');
+
   protected reportDateFormatted = computed(() =>
     this.formatDate(this.reportDate()),
   );
@@ -201,6 +211,27 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
                   take(1),
                   tap((data) => {
                     this.accountPrincipal = data;
+                    console.log('data', data);
+                    for (const creditNote of data.invoice!) {
+                      if (creditNote.type === 'credit_note') {
+                        this.creditNoteList.set([
+                          ...this.creditNoteList(),
+                          creditNote,
+                        ]);
+                      }
+
+                      console.log('creditNote', this.creditNoteList());
+                    }
+                  }),
+                )
+                .subscribe();
+            } else {
+              this.groupService
+                .getGroupById(+this.id()!)
+                .pipe(
+                  take(1),
+                  tap((data) => {
+                    this.groupAccount.set(data);
                   }),
                 )
                 .subscribe();
@@ -215,6 +246,39 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
         }),
       )
       .subscribe();
+  }
+
+  filterList(type: 'invoice' | 'credit-note' | 'all') {
+    if (type === this.filterSelected()) {
+      this.filterSelected.set('all');
+    } else {
+      this.filterSelected.set(type);
+      if (this.filterSelected() === 'credit-note') {
+        if (this.accountPrincipal) {
+          for (const quote of this.accountPrincipal.quote!) {
+            if (
+              quote.invoice &&
+              !this.creditNoteList().find(
+                (creditNote) => creditNote.linkedInvoiceId === quote.invoice.id,
+              )
+            ) {
+              this.checkCreditNote(quote.invoice.id);
+            }
+          }
+        } else if (this.groupAccount()) {
+          for (const quote of this.groupAccount()?.quote!) {
+            if (
+              quote.invoice &&
+              !this.creditNoteList().find(
+                (creditNote) => creditNote.linkedInvoiceId === quote.invoice.id,
+              )
+            ) {
+              this.checkCreditNote(quote.invoice.id);
+            }
+          }
+        }
+      }
+    }
   }
 
   // generateQuotePDF(quote: QuoteEntity) {
@@ -309,8 +373,16 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
     // Fonction pour ajouter un en-tête à chaque page
     const addHeader = () => {
       // Logo de l'entreprise
-      const logoUrl = '/assets/images/Groupe-30.png';
-      doc.addImage(logoUrl, 'PNG', margin, margin, 40, 15);
+      const logoUrl = '/assets/images/SONAR.png';
+      const logoWidth = 40;
+      const logoHeight = 15;
+      const aspectRatio = logoWidth / logoHeight;
+
+      // Calculer la nouvelle hauteur en conservant le ratio d'aspect
+      const newLogoWidth = 40;
+      const newLogoHeight = newLogoWidth / aspectRatio;
+
+      doc.addImage(logoUrl, 'PNG', margin, margin, newLogoWidth, newLogoHeight);
 
       // Informations de l'entreprise
       doc.setFontSize(10);
@@ -565,95 +637,324 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
     };
   }
 
-  generateCreditNotePdf() {
+  // generateCreditNotePdf() {
+  //   const doc = new jsPDF();
+  //   // Ajouter le logo
+  //   const logoUrl = '/assets/images/Groupe-30.png'; // Remplacez par le chemin de votre logo
+  //   const img = new Image();
+  //   img.src = logoUrl;
+
+  //   img.onload = () => {
+  //     doc.addImage(img, 'PNG', 10, 10, 50, 20); // Position et taille du logo
+
+  //     // Informations sur l'utilisateur (alignées à gauche)
+  //     doc.setFontSize(12);
+  //     doc.text(
+  //       `Créé par: ${this.connectedUser()?.firstName} ${this.connectedUser()?.name}`,
+  //       10,
+  //       40,
+  //     );
+  //     doc.text(`Email: ${this.connectedUser()?.email}`, 10, 50);
+  //     doc.text(`Téléphone: ${this.connectedUser()?.telephone}`, 10, 60);
+
+  //     // Informations sur le client (alignées à droite)
+  //     const clientInfo = `
+  //       Client: ${this.creditNote()?.client.name}
+  //       Email: ${this.creditNote()?.client.email}
+  //       Téléphone: ${this.creditNote()?.client.phone}
+  //       Adresse: ${this.creditNote()?.client.street} ${this.creditNote()?.client.number}, ${this.creditNote()?.client.city}, ${this.creditNote()?.client.country}, ${this.creditNote()?.client.postalCode}
+  //     `;
+  //     const clientLines = clientInfo.split('\n');
+  //     const clientYStart = 40; // Position Y de départ pour le client
+  //     const clientYSpacing = 10; // Espacement entre les lignes
+
+  //     // Aligner à droite
+  //     clientLines.forEach((line, index) => {
+  //       const yPosition = clientYStart + index * clientYSpacing;
+  //       const textWidth = doc.getTextWidth(line);
+  //       const pageWidth = doc.internal.pageSize.getWidth();
+  //       doc.text(line, pageWidth - textWidth - 10, yPosition); // Alignement à droite
+  //     });
+
+  //     // Tableau pour les informations sur le devis
+  //     const invoiceData = [
+  //       ['Information', 'Valeur'],
+  //       [
+  //         'Date de la facture',
+  //         this.creditNote()?.invoice_date.toLocaleString()!,
+  //       ],
+  //       ['Date de service', this.creditNote()?.service_date.toLocaleString()!],
+  //       ['Total HTVA', `${this.creditNote()?.price_htva.toFixed(2)!} €`],
+  //       ['Total TVA 6%', `${this.creditNote()?.total_vat_6.toFixed(2)!} €`],
+  //       ['Total TVA 21%', `${this.creditNote()?.total_vat_21.toFixed(2)!} €`],
+  //       [
+  //         'Total note de crédit',
+  //         `${this.creditNote()?.creditNoteAmount.toFixed(2)!} €`,
+  //       ],
+  //       [
+  //         'Total TTC',
+  //         `${(this.creditNote()?.total! - this.creditNote()?.creditNoteAmount!).toFixed(2)} €`,
+  //       ],
+  //       ['Numéro de facture', `${this.creditNote()?.linkedInvoiceId}`],
+  //     ];
+
+  //     autoTable(doc, {
+  //       head: [['Information', 'Valeur']],
+  //       body: invoiceData,
+  //       startY: 100,
+  //       styles: { fontSize: 10 },
+  //       headStyles: { fillColor: [100, 100, 100] },
+  //     });
+
+  //     // Récupérer la position Y après le premier tableau
+  //     const yAfterInvoiceTable = doc.internal.pageSize.getHeight() - 100; // Laisser 100 unités en bas
+
+  //     // Tableau pour les détails des produits
+  //     const productData = this.creditNote()?.products.map((product) => [
+  //       product.description,
+  //       `Quantité: ${product.quantity}`,
+  //       `Prix: ${product.price.toFixed(2)} €`,
+  //     ]);
+
+  //     autoTable(doc, {
+  //       head: [['Produit', 'Quantité', 'Prix']],
+  //       body: productData,
+  //       startY: yAfterInvoiceTable,
+  //       styles: { fontSize: 10 },
+  //       headStyles: { fillColor: [100, 100, 100] },
+  //     });
+
+  //     // Sauvegarder ou ouvrir le PDF
+  //     doc.save(`note_de_credit_${this.creditNote()?.id}.pdf`);
+  //   };
+  // }
+
+  generateCreditNotePdf(creditNote?: InvoiceEntity) {
+    if (creditNote) this.creditNote.set(creditNote);
     const doc = new jsPDF();
-    // Ajouter le logo
-    const logoUrl = '/assets/images/Groupe-30.png'; // Remplacez par le chemin de votre logo
-    const img = new Image();
-    img.src = logoUrl;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 20;
+    const maxWidth = 60;
 
-    img.onload = () => {
-      doc.addImage(img, 'PNG', 10, 10, 50, 20); // Position et taille du logo
+    // Fonction pour ajouter un en-tête à chaque page
+    const addHeader = () => {
+      // Logo de l'entreprise
+      const logoUrl = '/assets/images/SONAR.png';
+      const logoWidth = 40;
+      const logoHeight = 40;
+      const aspectRatio = logoWidth / logoHeight;
 
-      // Informations sur l'utilisateur (alignées à gauche)
-      doc.setFontSize(12);
+      // Calculer la nouvelle hauteur en conservant le ratio d'aspect
+      const newLogoWidth = 40;
+      const newLogoHeight = newLogoWidth / aspectRatio;
+
+      doc.addImage(logoUrl, 'PNG', margin, 5, newLogoWidth, newLogoHeight);
+
+      // Informations de l'entreprise
+      doc.setFontSize(10);
+      doc.setTextColor(100);
+      doc.text('Sonar Artists ASBL', pageWidth - margin, margin, {
+        align: 'right',
+      });
+      doc.text('6 rue Francisco Ferrer', pageWidth - margin, margin + 5, {
+        align: 'right',
+      });
       doc.text(
-        `Créé par: ${this.connectedUser()?.firstName} ${this.connectedUser()?.name}`,
-        10,
-        40,
+        '4460 Grâce-Hollogne, Belgique',
+        pageWidth - margin,
+        margin + 10,
+        {
+          align: 'right',
+        },
       );
-      doc.text(`Email: ${this.connectedUser()?.email}`, 10, 50);
-      doc.text(`Téléphone: ${this.connectedUser()?.telephone}`, 10, 60);
 
-      // Informations sur le client (alignées à droite)
-      const clientInfo = `
-        Client: ${this.creditNote()?.client.name}
-        Email: ${this.creditNote()?.client.email}
-        Téléphone: ${this.creditNote()?.client.phone}
-        Adresse: ${this.creditNote()?.client.street} ${this.creditNote()?.client.number}, ${this.creditNote()?.client.city}, ${this.creditNote()?.client.country}, ${this.creditNote()?.client.postalCode}
-      `;
-      const clientLines = clientInfo.split('\n');
-      const clientYStart = 40; // Position Y de départ pour le client
-      const clientYSpacing = 10; // Espacement entre les lignes
+      doc.text(
+        'Email: contact@sonarartists.be',
+        pageWidth - margin,
+        margin + 20,
+        { align: 'right' },
+      );
 
-      // Aligner à droite
-      clientLines.forEach((line, index) => {
-        const yPosition = clientYStart + index * clientYSpacing;
-        const textWidth = doc.getTextWidth(line);
-        const pageWidth = doc.internal.pageSize.getWidth();
-        doc.text(line, pageWidth - textWidth - 10, yPosition); // Alignement à droite
-      });
-
-      // Tableau pour les informations sur le devis
-      const invoiceData = [
-        ['Information', 'Valeur'],
-        [
-          'Date de la facture',
-          this.creditNote()?.invoice_date.toLocaleString()!,
-        ],
-        ['Date de service', this.creditNote()?.service_date.toLocaleString()!],
-        ['Total HTVA', `${this.creditNote()?.price_htva.toFixed(2)!} €`],
-        ['Total TVA 6%', `${this.creditNote()?.total_vat_6.toFixed(2)!} €`],
-        ['Total TVA 21%', `${this.creditNote()?.total_vat_21.toFixed(2)!} €`],
-        [
-          'Total note de crédit',
-          `${this.creditNote()?.creditNoteAmount.toFixed(2)!} €`,
-        ],
-        [
-          'Total TTC',
-          `${(this.creditNote()?.total! - this.creditNote()?.creditNoteAmount!).toFixed(2)} €`,
-        ],
-      ];
-
-      autoTable(doc, {
-        head: [['Information', 'Valeur']],
-        body: invoiceData,
-        startY: 100,
-        styles: { fontSize: 10 },
-        headStyles: { fillColor: [100, 100, 100] },
-      });
-
-      // Récupérer la position Y après le premier tableau
-      const yAfterInvoiceTable = doc.internal.pageSize.getHeight() - 100; // Laisser 100 unités en bas
-
-      // Tableau pour les détails des produits
-      const productData = this.creditNote()?.products.map((product) => [
-        product.description,
-        `Quantité: ${product.quantity}`,
-        `Prix: ${product.price.toFixed(2)} €`,
-      ]);
-
-      autoTable(doc, {
-        head: [['Produit', 'Quantité', 'Prix']],
-        body: productData,
-        startY: yAfterInvoiceTable,
-        styles: { fontSize: 10 },
-        headStyles: { fillColor: [100, 100, 100] },
-      });
-
-      // Sauvegarder ou ouvrir le PDF
-      doc.save(`note_de_credit_${this.creditNote()?.id}.pdf`);
+      // Ligne de séparation
+      doc.setDrawColor(200);
+      doc.line(margin, margin + 30, pageWidth - margin, margin + 30);
     };
+
+    // Ajouter l'en-tête
+    addHeader();
+
+    let yPosition2 = 60;
+    const lineHeight = 7; // Espacement entre les lignes
+    const titleLineHeight = 10; // Espacement spécifique après le titre
+
+    doc.setFontSize(18);
+    doc.setTextColor(0);
+    doc.text(`Note de crédit N°: ${this.creditNote()?.id}`, margin, yPosition2);
+    yPosition2 += titleLineHeight; // Espace réduit après le titre
+
+    // Informations de la note de crédit
+    doc.setFontSize(10);
+    doc.text(
+      `Date: ${new Date(this.creditNote()?.invoice_date!).toLocaleDateString()}`,
+      margin,
+      yPosition2,
+    );
+    yPosition2 += lineHeight;
+
+    if (this.creditNote()?.service_date) {
+      doc.text(
+        `Date de service: ${new Date(this.creditNote()?.service_date!).toLocaleDateString()}`,
+        margin,
+        yPosition2,
+      );
+      yPosition2 += lineHeight;
+    }
+
+    if (this.creditNote()?.linkedInvoiceId) {
+      doc.text(
+        `Numéro de facture liée: ${this.creditNote()?.linkedInvoiceId}`,
+        margin,
+        yPosition2,
+      );
+      yPosition2 += lineHeight;
+    }
+
+    // Informations du client
+    doc.setFontSize(11);
+    doc.text('Adressé à:', pageWidth - margin - 60, 70);
+    doc.setFontSize(10);
+
+    let yPosition = 75;
+    const clientName = doc.splitTextToSize(
+      this.creditNote()?.client.name!,
+      maxWidth,
+    );
+    clientName.forEach((line: string) => {
+      doc.text(line, pageWidth - margin - 60, yPosition);
+      yPosition += 5;
+    });
+
+    doc.text(
+      `${this.creditNote()?.client.street} ${this.creditNote()?.client.number}`,
+      pageWidth - margin - 60,
+      yPosition,
+    );
+    yPosition += 5;
+    doc.text(
+      `${this.creditNote()?.client.postalCode} ${this.creditNote()?.client.city}`,
+      pageWidth - margin - 60,
+      yPosition,
+    );
+    yPosition += 5;
+    doc.text(
+      `${this.creditNote()?.client.country}`,
+      pageWidth - margin - 60,
+      yPosition,
+    );
+    yPosition += 5;
+    doc.text(
+      `Tél: ${this.creditNote()?.client.phone}`,
+      pageWidth - margin - 60,
+      yPosition,
+    );
+    yPosition += 5;
+    doc.text(
+      `Email: ${this.creditNote()?.client.email}`,
+      pageWidth - margin - 60,
+      yPosition,
+    );
+
+    // Tableau des produits
+    const tableStart = 120;
+    autoTable(doc, {
+      startY: tableStart,
+      head: [['Description', 'Quantité', 'Prix unitaire', 'Total HT']],
+      body: this.creditNote()?.products.map((product) => [
+        product.description,
+        product.quantity,
+        `${Math.abs(product.price).toFixed(2)} €`,
+        `${Math.abs(product.quantity * product.price).toFixed(2)} €`,
+      ]),
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [70, 70, 70], textColor: 255 },
+      columnStyles: {
+        0: { cellWidth: 'auto' },
+        1: { cellWidth: 30, halign: 'center' },
+        2: { cellWidth: 40, halign: 'right' },
+        3: { cellWidth: 40, halign: 'right' },
+      },
+    });
+
+    // Récupérer la position Y après le tableau
+    const finalY = (doc as any).lastAutoTable.finalY || tableStart;
+
+    // Résumé des totaux
+    doc.setFontSize(10);
+    doc.text(`Total HT:`, pageWidth - margin - 50, finalY + 10, {
+      align: 'right',
+    });
+    doc.text(
+      `${Math.abs(this.creditNote()?.price_htva!).toFixed(2)} €`,
+      pageWidth - margin,
+      finalY + 10,
+      { align: 'right' },
+    );
+    doc.text(`TVA 6%:`, pageWidth - margin - 50, finalY + 15, {
+      align: 'right',
+    });
+    doc.text(
+      `${Math.abs(this.creditNote()?.total_vat_6!).toFixed(2)} €`,
+      pageWidth - margin,
+      finalY + 15,
+      { align: 'right' },
+    );
+    doc.text(`TVA 21%:`, pageWidth - margin - 50, finalY + 20, {
+      align: 'right',
+    });
+    doc.text(
+      `${Math.abs(this.creditNote()?.total_vat_21!).toFixed(2)} €`,
+      pageWidth - margin,
+      finalY + 20,
+      { align: 'right' },
+    );
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Total note de crédit:`, pageWidth - margin - 50, finalY + 30, {
+      align: 'right',
+    });
+    doc.text(
+      `${Math.abs(this.creditNote()?.creditNoteAmount!).toFixed(2)} €`,
+      pageWidth - margin,
+      finalY + 30,
+      { align: 'right' },
+    );
+
+    // Conditions et notes
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    const conditions = [
+      'Cette note de crédit annule et remplace la facture mentionnée ci-dessus.',
+      `Date d'émission : ${this.formatDateBelgium(this.creditNote()?.invoice_date!)}`,
+      'Nous vous remercions de votre compréhension.',
+    ];
+    conditions.forEach((condition, index) => {
+      doc.text(condition, margin, pageHeight - 40 + index * 5);
+    });
+
+    // Pied de page
+    doc.setFontSize(8);
+    doc.setTextColor(100);
+    doc.text(
+      'Sonar Artists ASBL - TVA BE0123456789',
+      pageWidth / 2,
+      pageHeight - 10,
+      { align: 'center' },
+    );
+
+    // Sauvegarder le PDF
+    doc.save(`note_de_credit_${this.creditNote()?.id}.pdf`);
+    this.creditNote.set(null);
   }
 
   createInvoice(quote: QuoteEntity, ctx: any) {
@@ -677,6 +978,7 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
       .getCreditNoteByInvoiceId(invoice_id)
       .subscribe((data) => {
         this.creditNote.set(data); // Récupération de la note de crédit
+        this.creditNoteList.update((prev) => [...prev, data]);
         // Vérification de la note de crédit après sa récupération
         if (this.creditNote()) {
           this.isCreditNote.set(true);

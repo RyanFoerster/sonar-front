@@ -33,3 +33,14 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           script: |
             docker pull ${{ secrets.DOCKER_USERNAME }}/sonar-front:latest
+
+      - name: Run the docker container
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          script: |
+            docker stop sonar-front || true
+            docker rm sonar-front || true
+            docker run -d -p 80:80 --name sonar-front ${{ secrets.DOCKER_USERNAME }}/sonar-front:latest

@@ -1,29 +1,32 @@
-name: Generate a build and push to another branch
+name: Build and Publish Docker Image
 
 on:
   push:
-    branches:
-      - main # The branch name your are commit the new changes
+    branches: ["main"]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    name: Build and Push
+    runs-on: debian-latest
     steps:
-      - name: git-checkout
-        uses: actions/checkout@v3
-
-      - name: Install all dependencies
-        run: npm install
-
-      - name: Build
-        run: ng build # The build command of your project
-
-      - name: Push
-        uses: s0/git-publish-subdir-action@develop
+      - uses: actions/checkout@v2
+      - name: Login to docker hub
+        id: docker-hub
         env:
-          REPO: self
-          BRANCH: main # The branch name where you want to push the assets
-          FOLDER: main # The directory where your assets are generated
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # GitHub will automatically add this - you don't need to bother getting a token
-          MESSAGE: "Build: ({sha}) {msg}" # The commit message
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: |
+          docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+      - name: Build Docker Image
+        id: build-image
+        run: |
+          ls -la
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/my-app:latest .
+      - name: push the docker image
+        id: push-image
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/my-app:latest
+
+      - name: Deploy the image to the VPS
+        run: ssh -i ${{ secrets.SSH_PRIVATE_KEY }} ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} "docker pull ${{ secrets.DOCKER_USERNAME }}/my-app:latest"
+
+      - name: Use Docker Swarm to run the image
+        run: ssh -i ${{ secrets.SSH_PRIVATE_KEY }} ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} "docker service update --image ${{ secrets.DOCKER_USERNAME }}/my-app:latest my-app"

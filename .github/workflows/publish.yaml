@@ -25,15 +25,11 @@ jobs:
         id: push-image
         run: docker push ${{ secrets.DOCKER_USERNAME }}/sonar-front:latest
 
-      - name: Set up SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+      - name: Install ssh-pass
+        run: sudo apt-get install sshpass
 
       - name: Deploy the image to the VPS
-        run: ssh ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} "docker pull ${{ secrets.DOCKER_USERNAME }}/sonar-front:latest"
+        run: sshpass -p ${{ secrets.SSH_PASSWORD }} ssh ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} "docker pull ${{ secrets.DOCKER_USERNAME }}/sonar-front:latest"
 
       - name: Use Docker Swarm to run the image
         run: ssh ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} "docker service update --image ${{ secrets.DOCKER_USERNAME }}/sonar-front:latest sonar-front"

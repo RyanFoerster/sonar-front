@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
-  API_URL: 'web-production-8114.up.railway.app',
+  API_URL: 'http://82.112.255.83:3000',
   TOKEN_KEY: 'token',
   REFRESH_TOKEN_KEY: 'refresh_token',
   USER_KEY: 'user',

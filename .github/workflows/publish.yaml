@@ -25,8 +25,15 @@ jobs:
         id: push-image
         run: docker push ${{ secrets.DOCKER_USERNAME }}/my-app:latest
 
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+
       - name: Deploy the image to the VPS
-        run: ssh -i ${{ secrets.SSH_PRIVATE_KEY }} ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} "docker pull ${{ secrets.DOCKER_USERNAME }}/my-app:latest"
+        run: ssh ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} "docker pull ${{ secrets.DOCKER_USERNAME }}/my-app:latest"
 
       - name: Use Docker Swarm to run the image
-        run: ssh -i ${{ secrets.SSH_PRIVATE_KEY }} ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} "docker service update --image ${{ secrets.DOCKER_USERNAME }}/my-app:latest my-app"
+        run: ssh ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} "docker service update --image ${{ secrets.DOCKER_USERNAME }}/my-app:latest my-app"

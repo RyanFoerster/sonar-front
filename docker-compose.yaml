@@ -3,6 +3,14 @@ services:
     image: dimagin/sonar-front:latest
     expose:
       - 8000
+    volumes:
+      - dist-data:/usr/share/nginx/html # Copier le build Angular dans le volume partagé
+    command:
+      [
+        "/bin/sh",
+        "-c",
+        "cp -r /app/dist/sonar-front/browser/* /usr/share/nginx/html && tail -f /dev/null",
+      ]
     restart: unless-stopped
 
   nginx:
@@ -10,13 +18,13 @@ services:
     restart: unless-stopped
     image: nginx:latest
     ports:
-      - 80:80
-      - 443:443
+      - "80:80"
+      - "443:443"
     volumes:
       - ./nginx/conf/:/etc/nginx/conf.d/:ro
       - ./certbot/www:/var/www/certbot/:ro
-      - ./certbot/conf/:/etc/nginx/ssl/:ro
-      - ./app/dist/sonar-front/browser:/usr/share/nginx/html:ro
+      - ./certbot/conf/:/etc/letsencrypt/:ro
+      - dist-data:/usr/share/nginx/html:ro
     depends_on:
       - front
 
@@ -26,4 +34,10 @@ services:
     volumes:
       - ./certbot/www/:/var/www/certbot/:rw
       - ./certbot/conf/:/etc/letsencrypt/:rw
-    command: certonly --webroot -w /var/www/certbot --force-renewal --email ryanfoerster@dimagin.be -d sonarartists.fr --agree-tos
+    entrypoint: '/bin/sh -c ''trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet --renew-hook "nginx -s reload"; sleep 12h; done'''
+    environment:
+      - EMAIL=ryanfoerster@dimagin.be
+      - DOMAIN=sonarartists.fr
+
+volumes:
+  dist-data:

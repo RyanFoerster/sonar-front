@@ -11,3 +11,13 @@ RUN npm install -g @angular/cli
 COPY . .
 
 RUN ng build --configuration=production
+
+FROM nginx
+
+COPY --from=build /app/dist/ /usr/share/nginx/html
+
+RUN rm /etc/nginx/conf.d/default.conf
+
+COPY ./nginx.conf /etc/nginx/conf.d
+
+

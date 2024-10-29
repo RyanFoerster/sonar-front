@@ -1,43 +1,28 @@
 services:
   front:
     image: dimagin/sonar-front:latest
-    expose:
-      - 8000
-    volumes:
-      - dist-data:/usr/share/nginx/html # Copier le build Angular dans le volume partagé
-    command:
-      [
-        "/bin/sh",
-        "-c",
-        "cp -r /app/dist/sonar-front/browser/* /usr/share/nginx/html && tail -f /dev/null",
-      ]
-    restart: unless-stopped
-
-  nginx:
-    container_name: nginx
-    restart: unless-stopped
-    image: nginx:latest
     ports:
-      - "80:80"
-      - "443:443"
+      - 80:80
+      - 443:443
     volumes:
-      - ./nginx.conf/:/etc/nginx/conf.d/:ro
-      - ./certbot/www:/var/www/certbot/:ro
-      - ./certbot/conf/:/etc/letsencrypt/:ro
-      - dist-data:/usr/share/nginx/html:ro
-    depends_on:
-      - front
+      - ./config:/config
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - /tmp/acme-challenge:/tmp/acme-challenge
+    networks:
+      - app
+    restart: always
 
-  certbot:
-    image: certbot/certbot:latest
-    container_name: certbot
+  letsencrypt:
+    container_name: "certbot"
+    image: certbot/certbot
+    command: sh -c "certbot certonly --webroot -w /tmp/acme-challenge/ -d test.mrshanas.com --text --agree-tos --email ryanfoerster@dimagin.be --rsa-key-size 4096 --verbose --keep-until-expiring --preferred-challenges=http"
+    entrypoint: ""
     volumes:
-      - ./certbot/www/:/var/www/certbot/:rw
-      - ./certbot/conf/:/etc/letsencrypt/:rw
-    entrypoint: '/bin/sh -c ''trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet --renew-hook "nginx -s reload"; sleep 12h; done'''
+      - "/etc/letsencrypt:/etc/letsencrypt"
+      - "/tmp/acme-challenge:/tmp/acme-challenge"
     environment:
-      - EMAIL=ryanfoerster@dimagin.be
-      - DOMAIN=sonarartists.fr
+      - TERM=xterm
 
-volumes:
-  dist-data:
+networks:
+  app:
+    driver: bridge

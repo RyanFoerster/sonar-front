@@ -1,8 +1,8 @@
 services:
   front:
     image: dimagin/sonar-front:latest
-    ports:
-      - "80:8000"
+    expose:
+      - 8000
     restart: unless-stopped
 
   nginx:

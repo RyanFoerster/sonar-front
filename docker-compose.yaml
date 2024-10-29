@@ -16,6 +16,9 @@ services:
       - ./nginx/conf/:/etc/nginx/conf.d/:ro
       - ./certbot/www:/var/www/certbot/:ro
       - ./certbot/conf/:/etc/nginx/ssl/:ro
+      - ./app/dist/sonar-front/browser:/usr/share/nginx/html:ro
+    depends_on:
+      - front
 
   certbot:
     image: certbot/certbot:latest

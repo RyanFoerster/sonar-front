@@ -12,11 +12,19 @@ COPY . .
 
 RUN ng build --configuration=production
 
-FROM nginx:alpine
+# FROM nginx:alpine
 
-COPY --from=build app/dist/sonar-front/browser /usr/share/nginx/html
-COPY ngnix.conf /etc/nginx/conf.d/default.conf
+# COPY --from=build app/dist/sonar-front/browser /usr/share/nginx/html
+# COPY ngnix.conf /etc/nginx/conf.d/default.conf
 
-EXPOSE 8080
 
-CMD ["nginx", "-g", "daemon off;"]
+# RUN apk add certbot
+
+# COPY ./certbot/conf /etc/letsencrypt
+# COPY ./ dest
+
+
+# EXPOSE 8080
+# EXPOSE 443
+
+# CMD ["nginx", "-g", "daemon off;"]

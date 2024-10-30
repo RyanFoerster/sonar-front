@@ -1,35 +1,13 @@
 services:
-  front:
+  sonar-front:
     image: dimagin/sonar-front:latest
-    volumes:
-      - dist_data:/usr/share/nginx/html
-
-  nginx:
-    image: nginx:latest
+    container_name: sonar-front
     ports:
-      - 80:80
-      - 443:443
+      - "8000:80"
     restart: always
-    volumes:
-      - ./nginx/conf/:/etc/nginx/conf.d/:ro
-      - ./certbot/www/:/var/www/certbot/:ro
-      - ./certbot/conf/:/etc/nginx/ssl/:ro
-      - dist_data:/usr/share/nginx/html
-    depends_on:
-      - front
-    command: /bin/bash -c "nginx -g 'daemon off;'"
-
-  certbot:
-    image: certbot/certbot:latest
-    volumes:
-      - ./certbot/www/:/var/www/certbot/:rw
-      - ./certbot/conf/:/etc/letsencrypt/:rw
-    command: certonly --webroot --webroot-path=/var/www/certbot --email ryanfoerster@dimagin.be -d sonarartists.fr --agree-tos
+    networks:
+      - sonar-network
 
 networks:
-  app:
+  sonar-network:
     driver: bridge
-
-volumes:
-  dist_data:
-    driver: local

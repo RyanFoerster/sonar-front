@@ -1,17 +1,19 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { environment } from '../../../environments/environment';
 import { CreateUserDto } from '../dtos/create-user.dto';
+import { environment } from '../../../environments/environment';
 import { SignInDto } from '../dtos/sign-in.dto';
-import { UpdateUserDto } from '../dtos/update-user.dto';
 import { LoggedUser } from '../entities/logged-user.entity';
 import { UserEntity } from '../entities/user.entity';
+import { UpdateUserDto } from '../dtos/update-user.dto';
+
 
 @Injectable({
   providedIn: 'root',
 })
 export class UsersService {
   httpClient: HttpClient = inject(HttpClient);
+
 
   httpOptions = {
     headers: new HttpHeaders({
@@ -33,6 +35,7 @@ export class UsersService {
   signUpFromAdmin(createuserDto: CreateUserDto) {
     return this.httpClient.post<boolean>(
       `${environment.API_URL}/auth/register-from-admin`,
+
       createuserDto
     );
   }
@@ -52,6 +55,7 @@ export class UsersService {
   update(updteUserDto: UpdateUserDto) {
     return this.httpClient.patch<UserEntity>(
       `${environment.API_URL}/users`,
+
       updteUserDto
     );
   }
@@ -59,18 +63,21 @@ export class UsersService {
   getAllUsersGroup(id: number) {
     return this.httpClient.get<UserEntity[]>(
       `${environment.API_URL}/users/groups`,
+
       { params: { id } }
     );
   }
 
   findAll() {
     return this.httpClient.get<UserEntity[]>(
+
       `${environment.API_URL}/users/all`
     );
   }
 
   findAllPendingUser() {
     return this.httpClient.get<UserEntity[]>(
+
       `${environment.API_URL}/users/pending`
     );
   }

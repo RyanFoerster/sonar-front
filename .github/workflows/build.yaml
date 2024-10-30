@@ -43,4 +43,4 @@ jobs:
           script: |
             docker stop sonar-front || true
             docker rm sonar-front || true
-            docker run -d -p 80:80 --name sonar-front ${{ secrets.DOCKER_USERNAME }}/sonar-front:latest
+            docker run -d -p 8070:80 --name sonar-front ${{ secrets.DOCKER_USERNAME }}/sonar-front:latest

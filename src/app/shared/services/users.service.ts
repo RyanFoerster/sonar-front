@@ -7,28 +7,18 @@ import { LoggedUser } from '../entities/logged-user.entity';
 import { UserEntity } from '../entities/user.entity';
 import { UpdateUserDto } from '../dtos/update-user.dto';
 
-
 @Injectable({
   providedIn: 'root',
 })
 export class UsersService {
   httpClient: HttpClient = inject(HttpClient);
 
-
-  httpOptions = {
-    headers: new HttpHeaders({
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*',
-    }),
-    withCredentials: true,
-  };
-
   constructor() {}
 
   signUp(createuserDto: CreateUserDto) {
     return this.httpClient.post<boolean>(
       `${environment.API_URL}/auth/register`,
-      createuserDto
+      createuserDto,
     );
   }
 
@@ -36,7 +26,7 @@ export class UsersService {
     return this.httpClient.post<boolean>(
       `${environment.API_URL}/auth/register-from-admin`,
 
-      createuserDto
+      createuserDto,
     );
   }
 
@@ -44,7 +34,6 @@ export class UsersService {
     return this.httpClient.post<LoggedUser>(
       `${environment.API_URL}/auth/login`,
       credentials,
-      this.httpOptions
     );
   }
 
@@ -56,7 +45,7 @@ export class UsersService {
     return this.httpClient.patch<UserEntity>(
       `${environment.API_URL}/users`,
 
-      updteUserDto
+      updteUserDto,
     );
   }
 
@@ -64,21 +53,19 @@ export class UsersService {
     return this.httpClient.get<UserEntity[]>(
       `${environment.API_URL}/users/groups`,
 
-      { params: { id } }
+      { params: { id } },
     );
   }
 
   findAll() {
     return this.httpClient.get<UserEntity[]>(
-
-      `${environment.API_URL}/users/all`
+      `${environment.API_URL}/users/all`,
     );
   }
 
   findAllPendingUser() {
     return this.httpClient.get<UserEntity[]>(
-
-      `${environment.API_URL}/users/pending`
+      `${environment.API_URL}/users/pending`,
     );
   }
 
@@ -91,7 +78,7 @@ export class UsersService {
   toggleActiveUser(user: UserEntity) {
     return this.httpClient.patch(
       `${environment.API_URL}/users/toggleActive`,
-      user
+      user,
     );
   }
 

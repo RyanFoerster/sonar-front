@@ -16,6 +16,7 @@ export class UsersService {
   httpOptions = {
     headers: new HttpHeaders({
       'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
     }),
     withCredentials: true,
   };

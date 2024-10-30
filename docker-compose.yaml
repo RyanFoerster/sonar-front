@@ -1,28 +1,35 @@
 services:
   front:
     image: dimagin/sonar-front:latest
+    volumes:
+      - dist_data:/usr/share/nginx/html
+
+  nginx:
+    image: nginx:latest
     ports:
       - 80:80
       - 443:443
-    volumes:
-      - ./config:/config
-      - /etc/letsencrypt:/etc/letsencrypt:ro
-      - /tmp/acme-challenge:/tmp/acme-challenge
-    networks:
-      - app
     restart: always
-
-  letsencrypt:
-    container_name: "certbot"
-    image: certbot/certbot
-    command: sh -c "certbot certonly --webroot -w /tmp/acme-challenge/ -d test.mrshanas.com --text --agree-tos --email ryanfoerster@dimagin.be --rsa-key-size 4096 --verbose --keep-until-expiring --preferred-challenges=http"
-    entrypoint: ""
     volumes:
-      - "/etc/letsencrypt:/etc/letsencrypt"
-      - "/tmp/acme-challenge:/tmp/acme-challenge"
-    environment:
-      - TERM=xterm
+      - ./nginx/conf/:/etc/nginx/conf.d/:ro
+      - ./certbot/www/:/var/www/certbot/:ro
+      - ./certbot/conf/:/etc/nginx/ssl/:ro
+      - dist_data:/usr/share/nginx/html
+    depends_on:
+      - front
+    command: /bin/bash -c "nginx -g 'daemon off;'"
+
+  certbot:
+    image: certbot/certbot:latest
+    volumes:
+      - ./certbot/www/:/var/www/certbot/:rw
+      - ./certbot/conf/:/etc/letsencrypt/:rw
+    command: certonly --webroot --webroot-path=/var/www/certbot --email ryanfoerster@dimagin.be -d sonarartists.fr --agree-tos
 
 networks:
   app:
     driver: bridge
+
+volumes:
+  dist_data:
+    driver: local

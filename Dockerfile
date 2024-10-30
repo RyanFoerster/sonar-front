@@ -21,13 +21,6 @@ FROM nginx:alpine
 
 COPY --from=build app/dist/sonar-front/browser /usr/share/nginx/html
 
-COPY ./nginx.conf /etc/nginx/conf.d/default.conf
-
-COPY --from=ssl /etc/letsencrypt/live/sonarartists.fr /etc/letsencrypt/live/sonarartists.fr
-
-VOLUME [ "/etc/letsencrypt", "/var/www/certbot", "/etc/nginx/conf.d" ]
-
-
-EXPOSE 80
+EXPOSE 8070
 
 CMD ["nginx", "-g", "daemon off;"]

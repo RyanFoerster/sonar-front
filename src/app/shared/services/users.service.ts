@@ -1,73 +1,106 @@
-import {HttpClient} from '@angular/common/http';
-import {inject, Injectable} from '@angular/core';
-import {CreateUserDto} from '../dtos/create-user.dto';
-import {environment} from '../../../environments/environment';
-import {SignInDto} from '../dtos/sign-in.dto';
-import {LoggedUser} from '../entities/logged-user.entity';
-import {UserEntity} from "../entities/user.entity";
-import {UpdateUserDto} from "../dtos/update-user.dto";
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
+import { environment } from '../../../environments/environment';
+import { CreateUserDto } from '../dtos/create-user.dto';
+import { SignInDto } from '../dtos/sign-in.dto';
+import { UpdateUserDto } from '../dtos/update-user.dto';
+import { LoggedUser } from '../entities/logged-user.entity';
+import { UserEntity } from '../entities/user.entity';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class UsersService {
+  httpClient: HttpClient = inject(HttpClient);
 
-  httpClient: HttpClient = inject(HttpClient)
+  httpOptions = {
+    headers: new HttpHeaders({
+      'Content-Type': 'application/json',
+    }),
+    withCredentials: true,
+  };
 
-  constructor() {
-
-  }
+  constructor() {}
 
   signUp(createuserDto: CreateUserDto) {
-    return this.httpClient.post<boolean>(`${environment.API_URL}/auth/register`, createuserDto)
+    return this.httpClient.post<boolean>(
+      `${environment.API_URL}/auth/register`,
+      createuserDto
+    );
   }
 
   signUpFromAdmin(createuserDto: CreateUserDto) {
-    return this.httpClient.post<boolean>(`${environment.API_URL}/auth/register-from-admin`, createuserDto)
+    return this.httpClient.post<boolean>(
+      `${environment.API_URL}/auth/register-from-admin`,
+      createuserDto
+    );
   }
 
   signIn(credentials: SignInDto) {
-    return this.httpClient.post<LoggedUser>(`${environment.API_URL}/auth/login`, credentials)
+    return this.httpClient.post<LoggedUser>(
+      `${environment.API_URL}/auth/login`,
+      credentials,
+      this.httpOptions
+    );
   }
 
   getInfo() {
-    return this.httpClient.get<UserEntity>(`${environment.API_URL}/users`)
+    return this.httpClient.get<UserEntity>(`${environment.API_URL}/users`);
   }
 
   update(updteUserDto: UpdateUserDto) {
-    return this.httpClient.patch<UserEntity>(`${environment.API_URL}/users`, updteUserDto)
+    return this.httpClient.patch<UserEntity>(
+      `${environment.API_URL}/users`,
+      updteUserDto
+    );
   }
 
-
   getAllUsersGroup(id: number) {
-    return this.httpClient.get<UserEntity[]>(`${environment.API_URL}/users/groups`, {params: {id}})
+    return this.httpClient.get<UserEntity[]>(
+      `${environment.API_URL}/users/groups`,
+      { params: { id } }
+    );
   }
 
   findAll() {
-    return this.httpClient.get<UserEntity[]>(`${environment.API_URL}/users/all`)
+    return this.httpClient.get<UserEntity[]>(
+      `${environment.API_URL}/users/all`
+    );
   }
 
   findAllPendingUser() {
-    return this.httpClient.get<UserEntity[]>(`${environment.API_URL}/users/pending`)
+    return this.httpClient.get<UserEntity[]>(
+      `${environment.API_URL}/users/pending`
+    );
   }
 
   getProfilePicture(filename: string) {
-    return this.httpClient.get(`${environment.API_URL}/users/${filename}`, {responseType: "blob"})
+    return this.httpClient.get(`${environment.API_URL}/users/${filename}`, {
+      responseType: 'blob',
+    });
   }
 
   toggleActiveUser(user: UserEntity) {
-    return this.httpClient.patch(`${environment.API_URL}/users/toggleActive`, user)
+    return this.httpClient.patch(
+      `${environment.API_URL}/users/toggleActive`,
+      user
+    );
   }
 
   deleteUser(id: number) {
-    return this.httpClient.delete(`${environment.API_URL}/users/${id}`)
+    return this.httpClient.delete(`${environment.API_URL}/users/${id}`);
   }
 
   forgotPassword(email: string) {
-    return this.httpClient.post(`${environment.API_URL}/auth/forgot-password`, {email})
+    return this.httpClient.post(`${environment.API_URL}/auth/forgot-password`, {
+      email,
+    });
   }
 
   resetPassword(token: string, password: string) {
-    return this.httpClient.put(`${environment.API_URL}/auth/reset-password`, {resetToken: token, newPassword: password})
+    return this.httpClient.put(`${environment.API_URL}/auth/reset-password`, {
+      resetToken: token,
+      newPassword: password,
+    });
   }
 }

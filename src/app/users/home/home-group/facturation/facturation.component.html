@@ -69,7 +69,9 @@
               let i = $index
             ) {
               <hlm-trow>
-                <hlm-td truncate class="font-medium w-1/12">{{ i + 1 }}</hlm-td>
+                <hlm-td truncate class="font-medium w-1/12">{{
+                  quote.quote_number
+                }}</hlm-td>
                 <hlm-td class="w-1/12">{{
                   quote.service_date | date: "dd/MM/YYYY"
                 }}</hlm-td>
@@ -243,7 +245,9 @@
               let i = $index
             ) {
               <hlm-trow>
-                <hlm-td truncate class="font-medium w-1/12">{{ i + 1 }}</hlm-td>
+                <hlm-td truncate class="font-medium w-1/12">{{
+                  creditNote.invoice_number
+                }}</hlm-td>
                 <hlm-td class="w-1/12">{{
                   creditNote.invoice_date | date: "dd/MM/YYYY"
                 }}</hlm-td>

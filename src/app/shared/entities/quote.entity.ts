@@ -6,6 +6,7 @@ export interface QuoteEntity {
   id: number;
 
   quote_date: Date;
+  quote_number: number;
   service_date: Date;
   price_htva: number;
   total_vat_6: number;

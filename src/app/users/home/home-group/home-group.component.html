@@ -1,23 +1,30 @@
 <div class="flex flex-col justify-center">
-  <button (click)="goBack()" class="w-fit mx-10 mb-5 rounded-full flex items-center gap-3" hlmBtn>
-    <hlm-icon size="sm" name="lucideCornerDownLeft"/>
+  <button
+    (click)="goBack()"
+    class="w-fit mx-10 mb-5 rounded-full flex items-center gap-3"
+    hlmBtn
+  >
+    <hlm-icon size="sm" name="lucideCornerDownLeft" />
     Retour
   </button>
-  <div class="background-div h-40 max-w-full md:h-60 relative mx-10 overflow-hidden rounded-2xl shadow">
-    <div class="absolute bottom-2 right-2 size-5 bg-white rounded-full flex justify-center items-center">
-      <hlm-icon class="w-3" name="lucideEdit"/>
+  <div
+    class="background-div h-40 max-w-full md:h-60 relative mx-10 overflow-hidden rounded-2xl shadow"
+  >
+    <div
+      class="absolute bottom-2 right-2 size-5 bg-white rounded-full flex justify-center items-center"
+    >
+      <hlm-icon class="w-3" name="lucideEdit" />
     </div>
   </div>
 
-
   <div class="grid grid-col justify-around px-10">
     <div class="grid grid-cols-2 py-4 md:text-2xl font-bold">
-      <p> {{ projet()?.username }}</p>
+      <p>{{ projet()?.username }}</p>
     </div>
 
     <div class="grid justify-between md:justify-start">
       <div class="grid grid-cols-2 gap-2 md:gap-4 w-full">
-        @if (typeOfProjet() === "GROUP") {
+        <!-- @if (typeOfProjet() === "GROUP") {
           <a
             routerLink="membership"
             [queryParams]="{ typeOfProjet: typeOfProjet()}"
@@ -26,9 +33,9 @@
             Gérer les membres
             <hlm-icon class="hidden md:block md:text-center w-4" name="lucideChevronRight"/>
           </a>
-        }
+        } -->
 
-        @if (typeOfProjet() === "GROUP") {
+        <!-- @if (typeOfProjet() === "GROUP") {
           <a
             routerLink="diary"
             [queryParams]="{ typeOfProjet: typeOfProjet()}"
@@ -36,21 +43,25 @@
             hlmBtn>Agenda du projet
             <hlm-icon class="hidden md:block md:text-center w-4" name="lucideChevronRight"/>
           </a>
-        }
+        } -->
         <a
           routerLink="project-account"
-          [queryParams]="{ typeOfProjet: typeOfProjet()}"
-          class="rounded-full w-full text-[10px] font-semibold h-auto  bg-gray-sonar text-black md:flex md:justify-center md:items-center md:gap-2 md:min-w-4/5 md:px-10 md:text-lg hover:bg-gray-200"
-          hlmBtn>Compte du projet
-          <hlm-icon class="hidden md:block md:text-center w-4" name="lucideChevronRight"/>
+          [queryParams]="{ typeOfProjet: typeOfProjet() }"
+          class="rounded-full w-full text-[10px] font-semibold h-auto bg-gray-sonar text-black md:flex md:justify-center md:items-center md:gap-2 md:min-w-4/5 md:px-10 md:text-lg hover:bg-gray-200"
+          hlmBtn
+          >Compte du projet
+          <hlm-icon
+            class="hidden md:block md:text-center w-4"
+            name="lucideChevronRight"
+          />
         </a>
-        <a
+        <!-- <a
           routerLink="facturation"
           [queryParams]="{ typeOfProjet: typeOfProjet()}"
           class="rounded-full w-full text-[10px] font-semibold h-auto  bg-gray-sonar text-black md:flex md:justify-center md:items-center md:gap-2 md:min-w-4/5 md:px-10 md:text-lg hover:bg-gray-200"
           hlmBtn>Facturation
           <hlm-icon class="hidden md:block md:text-center w-4" name="lucideChevronRight"/>
-        </a>
+        </a> -->
       </div>
     </div>
   </div>

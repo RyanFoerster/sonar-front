@@ -35,15 +35,18 @@ export class InvoiceService {
   createCreditNote({
     linkedInvoiceId,
     creditNoteAmount,
+    products_ids,
   }: {
     linkedInvoiceId: number;
     creditNoteAmount: number;
+    products_ids: number[];
   }) {
     return this.httpClient.post<InvoiceEntity>(
       `${environment.API_URL}/invoice/credit-note`,
       {
         linkedInvoiceId,
         creditNoteAmount,
+        products_ids,
       },
     );
   }

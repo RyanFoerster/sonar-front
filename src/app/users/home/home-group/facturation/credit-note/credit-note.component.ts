@@ -376,6 +376,7 @@ export class CreditNoteComponent implements AfterViewInit {
       .createCreditNote({
         linkedInvoiceId: +this.invoice_id()!,
         creditNoteAmount: this.creditNoteAmount(),
+        products_ids: this.products().map((product) => product.id!),
       })
       .subscribe(() => this.goBack());
   }

@@ -281,88 +281,6 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  // generateQuotePDF(quote: QuoteEntity) {
-  //   const doc = new jsPDF();
-
-  //   // Ajouter le logo
-  //   const logoUrl = '/assets/images/Groupe-30.png'; // Remplacez par le chemin de votre logo
-  //   const img = new Image();
-  //   img.src = logoUrl;
-
-  //   img.onload = () => {
-  //     doc.addImage(img, 'PNG', 10, 10, 50, 20); // Position et taille du logo
-
-  //     // Informations sur l'utilisateur (alignées à gauche)
-  //     doc.setFontSize(12);
-  //     doc.text(
-  //       `Créé par: ${this.connectedUser()?.firstName} ${this.connectedUser()?.name}`,
-  //       10,
-  //       40,
-  //     );
-  //     doc.text(`Email: ${this.connectedUser()?.email}`, 10, 50);
-  //     doc.text(`Téléphone: ${this.connectedUser()?.telephone}`, 10, 60);
-
-  //     // Informations sur le client (alignées à droite)
-  //     const clientInfo = `
-  //       Client: ${quote.client.name}
-  //       Email: ${quote.client.email}
-  //       Téléphone: ${quote.client.phone}
-  //       Adresse: ${quote.client.street} ${quote.client.number}, ${quote.client.city}, ${quote.client.country}, ${quote.client.postalCode}
-  //     `;
-  //     const clientLines = clientInfo.split('\n');
-  //     const clientYStart = 40; // Position Y de départ pour le client
-  //     const clientYSpacing = 10; // Espacement entre les lignes
-
-  //     // Aligner à droite
-  //     clientLines.forEach((line, index) => {
-  //       const yPosition = clientYStart + index * clientYSpacing;
-  //       const textWidth = doc.getTextWidth(line);
-  //       const pageWidth = doc.internal.pageSize.getWidth();
-  //       doc.text(line, pageWidth - textWidth - 10, yPosition); // Alignement à droite
-  //     });
-
-  //     // Tableau pour les informations sur le devis
-  //     const invoiceData = [
-  //       ['Information', 'Valeur'],
-  //       ['Date du devis', quote.quote_date.toLocaleString()],
-  //       ['Date de service', quote.service_date.toLocaleString()],
-  //       ['Total HTVA', `${quote.price_htva.toFixed(2)} €`],
-  //       ['Total TVA 6%', `${quote.total_vat_6.toFixed(2)} €`],
-  //       ['Total TVA 21%', `${quote.total_vat_21.toFixed(2)} €`],
-  //       ['Total TTC', `${quote.total.toFixed(2)} €`],
-  //     ];
-
-  //     autoTable(doc, {
-  //       head: [['Information', 'Valeur']],
-  //       body: invoiceData,
-  //       startY: 100,
-  //       styles: { fontSize: 10 },
-  //       headStyles: { fillColor: [100, 100, 100] },
-  //     });
-
-  //     // Récupérer la position Y après le premier tableau
-  //     const yAfterInvoiceTable = doc.internal.pageSize.getHeight() - 100; // Laisser 100 unités en bas
-
-  //     // Tableau pour les détails des produits
-  //     const productData = quote.products.map((product) => [
-  //       product.description,
-  //       `Quantité: ${product.quantity}`,
-  //       `Prix: ${product.price.toFixed(2)} €`,
-  //     ]);
-
-  //     autoTable(doc, {
-  //       head: [['Produit', 'Quantité', 'Prix']],
-  //       body: productData,
-  //       startY: yAfterInvoiceTable,
-  //       styles: { fontSize: 10 },
-  //       headStyles: { fillColor: [100, 100, 100] },
-  //     });
-
-  //     // Sauvegarder ou ouvrir le PDF
-  //     doc.save(`devis_${quote.id}.pdf`);
-  //   };
-  // }
-
   generateQuotePDF(quote: QuoteEntity) {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -555,90 +473,9 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
     doc.save(`devis_${quote.id}.pdf`);
   }
 
-  generateInvoicePDF(quote: QuoteEntity) {
-    const doc = new jsPDF();
-    const invoice = quote.invoice;
-    // Ajouter le logo
-    const logoUrl = '/assets/images/Groupe-30.png'; // Remplacez par le chemin de votre logo
-    const img = new Image();
-    img.src = logoUrl;
-
-    img.onload = () => {
-      doc.addImage(img, 'PNG', 10, 10, 50, 20); // Position et taille du logo
-
-      // Informations sur l'utilisateur (alignées à gauche)
-      doc.setFontSize(12);
-      doc.text(
-        `Créé par: ${this.connectedUser()?.firstName} ${this.connectedUser()?.name}`,
-        10,
-        40,
-      );
-      doc.text(`Email: ${this.connectedUser()?.email}`, 10, 50);
-      doc.text(`Téléphone: ${this.connectedUser()?.telephone}`, 10, 60);
-
-      // Informations sur le client (alignées à droite)
-      const clientInfo = `
-        Client: ${quote.client.name}
-        Email: ${quote.client.email}
-        Téléphone: ${quote.client.phone}
-        Adresse: ${quote.client.street} ${quote.client.number}, ${quote.client.city}, ${quote.client.country}, ${quote.client.postalCode}
-      `;
-      const clientLines = clientInfo.split('\n');
-      const clientYStart = 40; // Position Y de départ pour le client
-      const clientYSpacing = 10; // Espacement entre les lignes
-
-      // Aligner à droite
-      clientLines.forEach((line, index) => {
-        const yPosition = clientYStart + index * clientYSpacing;
-        const textWidth = doc.getTextWidth(line);
-        const pageWidth = doc.internal.pageSize.getWidth();
-        doc.text(line, pageWidth - textWidth - 10, yPosition); // Alignement à droite
-      });
-
-      // Tableau pour les informations sur le devis
-      const invoiceData = [
-        ['Information', 'Valeur'],
-        ['Date de la facture', invoice.invoice_date.toLocaleString()],
-        ['Date de service', invoice.service_date.toLocaleString()],
-        ['Total HTVA', `${invoice.price_htva.toFixed(2)} €`],
-        ['Total TVA 6%', `${invoice.total_vat_6.toFixed(2)} €`],
-        ['Total TVA 21%', `${invoice.total_vat_21.toFixed(2)} €`],
-        ['Total TTC', `${invoice.total.toFixed(2)} €`],
-      ];
-
-      autoTable(doc, {
-        head: [['Information', 'Valeur']],
-        body: invoiceData,
-        startY: 100,
-        styles: { fontSize: 10 },
-        headStyles: { fillColor: [100, 100, 100] },
-      });
-
-      // Récupérer la position Y après le premier tableau
-      const yAfterInvoiceTable = doc.internal.pageSize.getHeight() - 100; // Laisser 100 unités en bas
-
-      // Tableau pour les détails des produits
-      const productData = quote.products.map((product) => [
-        product.description,
-        `Quantité: ${product.quantity}`,
-        `Prix: ${product.price.toFixed(2)} €`,
-      ]);
-
-      autoTable(doc, {
-        head: [['Produit', 'Quantité', 'Prix']],
-        body: productData,
-        startY: yAfterInvoiceTable,
-        styles: { fontSize: 10 },
-        headStyles: { fillColor: [100, 100, 100] },
-      });
-
-      doc.save(`facture_${invoice.id}.pdf`);
-      // Sauvegarder ou ouvrir le PDF
-    };
-  }
-
-  // generateCreditNotePdf() {
+  // generateInvoicePDF(quote: QuoteEntity) {
   //   const doc = new jsPDF();
+  //   const invoice = quote.invoice;
   //   // Ajouter le logo
   //   const logoUrl = '/assets/images/Groupe-30.png'; // Remplacez par le chemin de votre logo
   //   const img = new Image();
@@ -659,10 +496,10 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
 
   //     // Informations sur le client (alignées à droite)
   //     const clientInfo = `
-  //       Client: ${this.creditNote()?.client.name}
-  //       Email: ${this.creditNote()?.client.email}
-  //       Téléphone: ${this.creditNote()?.client.phone}
-  //       Adresse: ${this.creditNote()?.client.street} ${this.creditNote()?.client.number}, ${this.creditNote()?.client.city}, ${this.creditNote()?.client.country}, ${this.creditNote()?.client.postalCode}
+  //       Client: ${quote.client.name}
+  //       Email: ${quote.client.email}
+  //       Téléphone: ${quote.client.phone}
+  //       Adresse: ${quote.client.street} ${quote.client.number}, ${quote.client.city}, ${quote.client.country}, ${quote.client.postalCode}
   //     `;
   //     const clientLines = clientInfo.split('\n');
   //     const clientYStart = 40; // Position Y de départ pour le client
@@ -679,23 +516,12 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
   //     // Tableau pour les informations sur le devis
   //     const invoiceData = [
   //       ['Information', 'Valeur'],
-  //       [
-  //         'Date de la facture',
-  //         this.creditNote()?.invoice_date.toLocaleString()!,
-  //       ],
-  //       ['Date de service', this.creditNote()?.service_date.toLocaleString()!],
-  //       ['Total HTVA', `${this.creditNote()?.price_htva.toFixed(2)!} €`],
-  //       ['Total TVA 6%', `${this.creditNote()?.total_vat_6.toFixed(2)!} €`],
-  //       ['Total TVA 21%', `${this.creditNote()?.total_vat_21.toFixed(2)!} €`],
-  //       [
-  //         'Total note de crédit',
-  //         `${this.creditNote()?.creditNoteAmount.toFixed(2)!} €`,
-  //       ],
-  //       [
-  //         'Total TTC',
-  //         `${(this.creditNote()?.total! - this.creditNote()?.creditNoteAmount!).toFixed(2)} €`,
-  //       ],
-  //       ['Numéro de facture', `${this.creditNote()?.linkedInvoiceId}`],
+  //       ['Date de la facture', invoice.invoice_date.toLocaleString()],
+  //       ['Date de service', invoice.service_date.toLocaleString()],
+  //       ['Total HTVA', `${invoice.price_htva.toFixed(2)} €`],
+  //       ['Total TVA 6%', `${invoice.total_vat_6.toFixed(2)} €`],
+  //       ['Total TVA 21%', `${invoice.total_vat_21.toFixed(2)} €`],
+  //       ['Total TTC', `${invoice.total.toFixed(2)} €`],
   //     ];
 
   //     autoTable(doc, {
@@ -710,7 +536,7 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
   //     const yAfterInvoiceTable = doc.internal.pageSize.getHeight() - 100; // Laisser 100 unités en bas
 
   //     // Tableau pour les détails des produits
-  //     const productData = this.creditNote()?.products.map((product) => [
+  //     const productData = quote.products.map((product) => [
   //       product.description,
   //       `Quantité: ${product.quantity}`,
   //       `Prix: ${product.price.toFixed(2)} €`,
@@ -724,10 +550,218 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
   //       headStyles: { fillColor: [100, 100, 100] },
   //     });
 
+  //     doc.save(`facture_${invoice.id}.pdf`);
   //     // Sauvegarder ou ouvrir le PDF
-  //     doc.save(`note_de_credit_${this.creditNote()?.id}.pdf`);
   //   };
   // }
+
+  generateInvoicePDF(quote: QuoteEntity) {
+    const doc = new jsPDF();
+    const invoice = quote.invoice;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 20;
+    const maxWidth = 60;
+
+    // Fonction pour ajouter un en-tête à chaque page
+    const addHeader = () => {
+      // Logo de l'entreprise
+      const logoUrl = '/assets/images/SONAR.png';
+      const logoWidth = 40;
+      const logoHeight = 40;
+      const aspectRatio = logoWidth / logoHeight;
+
+      // Calculer la nouvelle hauteur en conservant le ratio d'aspect
+      const newLogoWidth = 40;
+      const newLogoHeight = newLogoWidth / aspectRatio;
+
+      doc.addImage(logoUrl, 'PNG', margin, 5, newLogoWidth, newLogoHeight);
+
+      // Informations de l'entreprise
+      doc.setFontSize(10);
+      doc.setTextColor(100);
+      doc.text('Sonar Artists ASBL', pageWidth - margin, margin, {
+        align: 'right',
+      });
+      doc.text('6 rue Francisco Ferrer', pageWidth - margin, margin + 5, {
+        align: 'right',
+      });
+      doc.text(
+        '4460 Grâce-Hollogne, Belgique',
+        pageWidth - margin,
+        margin + 10,
+        {
+          align: 'right',
+        },
+      );
+      doc.text(
+        'Email: contact@sonarartists.be',
+        pageWidth - margin,
+        margin + 20,
+        { align: 'right' },
+      );
+
+      // Ligne de séparation
+      doc.setDrawColor(200);
+      doc.line(margin, margin + 30, pageWidth - margin, margin + 30);
+    };
+
+    // Ajouter l'en-tête
+    addHeader();
+
+    let yPosition2 = 60;
+    const lineHeight = 7; // Espacement entre les lignes
+    const titleLineHeight = 10; // Espacement spécifique après le titre
+
+    doc.setFontSize(18);
+    doc.setTextColor(0);
+    doc.text(`Facture N°: ${invoice?.id}`, margin, yPosition2);
+    yPosition2 += titleLineHeight;
+
+    // Informations de la facture
+    doc.setFontSize(10);
+    doc.text(
+      `Date: ${new Date(invoice?.invoice_date!).toLocaleDateString()}`,
+      margin,
+      yPosition2,
+    );
+    yPosition2 += lineHeight;
+
+    if (invoice?.service_date) {
+      doc.text(
+        `Date de service: ${new Date(invoice?.service_date!).toLocaleDateString()}`,
+        margin,
+        yPosition2,
+      );
+      yPosition2 += lineHeight;
+    }
+
+    // Informations du client
+    doc.setFontSize(11);
+    doc.text('Adressé à:', pageWidth - margin - 60, 70);
+    doc.setFontSize(10);
+
+    let yPosition = 75;
+    const clientName = doc.splitTextToSize(quote.client.name, maxWidth);
+    clientName.forEach((line: string) => {
+      doc.text(line, pageWidth - margin - 60, yPosition);
+      yPosition += 5;
+    });
+
+    doc.text(
+      `${quote.client.street} ${quote.client.number}`,
+      pageWidth - margin - 60,
+      yPosition,
+    );
+    yPosition += 5;
+    doc.text(
+      `${quote.client.postalCode} ${quote.client.city}`,
+      pageWidth - margin - 60,
+      yPosition,
+    );
+    yPosition += 5;
+    doc.text(`${quote.client.country}`, pageWidth - margin - 60, yPosition);
+    yPosition += 5;
+    doc.text(`Tél: ${quote.client.phone}`, pageWidth - margin - 60, yPosition);
+    yPosition += 5;
+    doc.text(
+      `Email: ${quote.client.email}`,
+      pageWidth - margin - 60,
+      yPosition,
+    );
+
+    // Tableau des produits
+    const tableStart = 120;
+    autoTable(doc, {
+      startY: tableStart,
+      head: [['Description', 'Quantité', 'Prix unitaire', 'Total HT']],
+      body: quote.products.map((product) => [
+        product.description,
+        product.quantity,
+        `${product.price.toFixed(2)} €`,
+        `${(product.quantity * product.price).toFixed(2)} €`,
+      ]),
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [70, 70, 70], textColor: 255 },
+      columnStyles: {
+        0: { cellWidth: 'auto' },
+        1: { cellWidth: 30, halign: 'center' },
+        2: { cellWidth: 40, halign: 'right' },
+        3: { cellWidth: 40, halign: 'right' },
+      },
+    });
+
+    // Récupérer la position Y après le tableau
+    const finalY = (doc as any).lastAutoTable.finalY || tableStart;
+
+    // Résumé des totaux
+    doc.setFontSize(10);
+    doc.text(`Total HT:`, pageWidth - margin - 50, finalY + 10, {
+      align: 'right',
+    });
+    doc.text(
+      `${invoice?.price_htva.toFixed(2)} €`,
+      pageWidth - margin,
+      finalY + 10,
+      { align: 'right' },
+    );
+    doc.text(`TVA 6%:`, pageWidth - margin - 50, finalY + 15, {
+      align: 'right',
+    });
+    doc.text(
+      `${invoice?.total_vat_6.toFixed(2)} €`,
+      pageWidth - margin,
+      finalY + 15,
+      { align: 'right' },
+    );
+    doc.text(`TVA 21%:`, pageWidth - margin - 50, finalY + 20, {
+      align: 'right',
+    });
+    doc.text(
+      `${invoice?.total_vat_21.toFixed(2)} €`,
+      pageWidth - margin,
+      finalY + 20,
+      { align: 'right' },
+    );
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Total TTC:`, pageWidth - margin - 50, finalY + 30, {
+      align: 'right',
+    });
+    doc.text(
+      `${invoice?.total.toFixed(2)} €`,
+      pageWidth - margin,
+      finalY + 30,
+      {
+        align: 'right',
+      },
+    );
+
+    // Conditions et notes
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    const conditions = [
+      'Conditions de paiement : 30 jours à compter de la date de facturation',
+      `Date d'émission : ${this.formatDateBelgium(invoice?.invoice_date!)}`,
+      'Nous vous remercions de votre confiance',
+    ];
+    conditions.forEach((condition, index) => {
+      doc.text(condition, margin, pageHeight - 40 + index * 5);
+    });
+
+    // Pied de page
+    doc.setFontSize(8);
+    doc.setTextColor(100);
+    doc.text(
+      'Sonar Artists ASBL - TVA BE0123456789',
+      pageWidth / 2,
+      pageHeight - 10,
+      { align: 'center' },
+    );
+
+    // Sauvegarder le PDF
+    doc.save(`facture_${invoice?.id}.pdf`);
+  }
 
   generateCreditNotePdf(creditNote?: InvoiceEntity) {
     if (creditNote) this.creditNote.set(creditNote);
@@ -895,7 +929,12 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
       align: 'right',
     });
     doc.text(
-      `${Math.abs(this.creditNote()?.price_htva!).toFixed(2)} €`,
+      `${Math.abs(
+        this.creditNote()?.products.reduce(
+          (acc, product) => acc + product.quantity * product.price,
+          0,
+        )!,
+      ).toFixed(2)} €`,
       pageWidth - margin,
       finalY + 10,
       { align: 'right' },
@@ -904,7 +943,15 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
       align: 'right',
     });
     doc.text(
-      `${Math.abs(this.creditNote()?.total_vat_6!).toFixed(2)} €`,
+      `${Math.abs(
+        this.creditNote()?.products.reduce(
+          (acc, product) =>
+            product.vat === 0.06
+              ? acc + product.quantity * product.price * 0.06
+              : acc,
+          0,
+        )!,
+      ).toFixed(2)} €`,
       pageWidth - margin,
       finalY + 15,
       { align: 'right' },
@@ -913,7 +960,15 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
       align: 'right',
     });
     doc.text(
-      `${Math.abs(this.creditNote()?.total_vat_21!).toFixed(2)} €`,
+      `${Math.abs(
+        this.creditNote()?.products.reduce(
+          (acc, product) =>
+            product.vat === 0.21
+              ? acc + product.quantity * product.price * 0.21
+              : acc,
+          0,
+        )!,
+      ).toFixed(2)} €`,
       pageWidth - margin,
       finalY + 20,
       { align: 'right' },

@@ -28,4 +28,4 @@ jobs:
           script: |
             docker stop sonar-front || true
             docker rm sonar-front || true
-            docker run --network=sonar-network -d -p ${{ secrets.SONAR_FRONTEND_PORT }}:80 --name sonar-front ${{ secrets.DOCKER_USERNAME }}/sonar-front:latest
+            docker run --network=sonar-back_sonar-network -d -p ${{ secrets.SONAR_FRONTEND_PORT }}:80 --name sonar-front ${{ secrets.DOCKER_USERNAME }}/sonar-front:latest

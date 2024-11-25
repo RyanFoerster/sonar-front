@@ -38,7 +38,7 @@ import { Router } from '@angular/router';
 import { EuroFormatPipe } from '../../../../shared/pipes/euro-format.pipe';
 import { TransactionService } from '../../../../shared/services/transaction.service';
 import { TransactionEntity } from '../../../../shared/entities/transaction.entity';
-import { catchError, delay, forkJoin, of, switchMap, tap } from 'rxjs';
+import { catchError, delay, EMPTY, forkJoin, of, switchMap, tap } from 'rxjs';
 import { DatePipe, JsonPipe, Location, NgClass } from '@angular/common';
 import { HlmIconComponent, provideIcons } from '@spartan-ng/ui-icon-helm';
 import {
@@ -107,7 +107,7 @@ import { lucideCornerDownLeft } from '@ng-icons/lucide';
 })
 export class ProjectAccountComponent implements AfterViewInit {
   private principalAccountService: ComptePrincipalService = inject(
-    ComptePrincipalService,
+    ComptePrincipalService
   );
   private groupAccountService: CompteGroupeService =
     inject(CompteGroupeService);
@@ -122,17 +122,17 @@ export class ProjectAccountComponent implements AfterViewInit {
 
   protected isSpinner = signal(false);
   protected accountPrincipal = signal<PrincipalAccountEntity | undefined>(
-    undefined,
+    undefined
   );
   protected accountGroup = signal<CompteGroupeEntity | undefined>(undefined);
   protected transactionRecipient = signal<TransactionEntity[] | undefined>(
-    undefined,
+    undefined
   );
   protected transactionSender = signal<TransactionEntity[] | undefined>(
-    undefined,
+    undefined
   );
   protected principalAccounts = signal<PrincipalAccountEntity[] | undefined>(
-    undefined,
+    undefined
   );
   protected groupAccounts = signal<CompteGroupeEntity[] | undefined>(undefined);
   protected amountHtva = signal(0);
@@ -140,7 +140,7 @@ export class ProjectAccountComponent implements AfterViewInit {
   protected errorMessage = signal('');
 
   protected amount_total = computed(
-    () => +this.amountHtva() - +this.amountTva(),
+    () => +this.amountHtva() - +this.amountTva()
   );
 
   protected transactionForm!: FormGroup;
@@ -165,7 +165,7 @@ export class ProjectAccountComponent implements AfterViewInit {
       },
       {
         validators: atLeastOneRequired(),
-      },
+      }
     );
   }
 
@@ -215,13 +215,13 @@ export class ProjectAccountComponent implements AfterViewInit {
             this.isSpinner.set(true);
           }),
           delay(1000),
-          tap(() => this.isSpinner.set(false)),
+          tap(() => this.isSpinner.set(false))
         )
         .subscribe();
     }
   }
 
-  async fetchTransaction() {
+  /* async fetchTransaction() {
     if (this.typeOfProjet() === 'PRINCIPAL') {
       this.principalAccountService
         .getGroupById(+this.id()!)
@@ -288,6 +288,60 @@ export class ProjectAccountComponent implements AfterViewInit {
     } else {
       this.router.navigate(['/home']);
     }
+  } */
+
+  async fetchTransaction() {
+    const projectType = this.typeOfProjet();
+    if (projectType !== 'PRINCIPAL' && projectType !== 'GROUP') {
+      return this.router.navigate(['/home']);
+    }
+
+    const isPrincipal = projectType === 'PRINCIPAL';
+    const service = isPrincipal
+      ? this.principalAccountService
+      : this.groupAccountService;
+    const accountSetter = isPrincipal
+      ? this.accountPrincipal
+      : this.accountGroup;
+
+    return service
+      .getGroupById(+this.id()!)
+      .pipe(
+        tap((data) => accountSetter.set(data)),
+        switchMap((data) => {
+          const accountId = data.id;
+          return forkJoin({
+            recipientTransactions:
+              this.transactionService[
+                isPrincipal
+                  ? 'getRecipientPrincipalTransactionById'
+                  : 'getRecipientGroupTransactionById'
+              ](accountId),
+            senderTransactions:
+              this.transactionService[
+                isPrincipal
+                  ? 'getSenderPrincipalTransactionById'
+                  : 'getSenderGroupTransactionById'
+              ](accountId),
+          });
+        }),
+        tap(({ recipientTransactions, senderTransactions }) => {
+          const sortedRecipientTransactions = recipientTransactions.sort(
+            (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+          );
+          const sortedSenderTransactions = senderTransactions.sort(
+            (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+          );
+
+          this.transactionRecipient.set(sortedRecipientTransactions);
+          this.transactionSender.set(sortedSenderTransactions);
+        }),
+        catchError((error) => {
+          console.error('Erreur lors de la récupération des données :', error);
+          return EMPTY;
+        })
+      )
+      .subscribe();
   }
 
   setAmountHtva(event: any) {
@@ -316,7 +370,7 @@ export class ProjectAccountComponent implements AfterViewInit {
             this.isSpinner.set(false); // Assurez-vous d'arrêter le spinner en cas d'erreur
             this.errorMessage.set(err.error.message); // Affichez un message d'erreur
             return of(null); // Retournez une valeur par défaut pour éviter la propagation de l'erreur
-          }),
+          })
         )
         .subscribe();
     }

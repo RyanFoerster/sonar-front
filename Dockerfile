@@ -11,7 +11,7 @@ RUN npm cache clean --force
 
 RUN pnpm install
 
-RUN pnpm install -g @angular/cli
+RUN npm install -g @angular/cli
 
 COPY . .
 

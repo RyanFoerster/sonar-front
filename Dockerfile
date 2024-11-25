@@ -3,10 +3,13 @@ FROM node:20.17.0 AS build
 WORKDIR /app
 
 COPY package*.json ./
+COPY pnpm-lock.yaml ./
 
-RUN npm install
+RUN npm install -g pnpm
 
-RUN npm install -g @angular/cli
+RUN pnpm install
+
+RUN pnpm install -g @angular/cli
 
 COPY . .
 

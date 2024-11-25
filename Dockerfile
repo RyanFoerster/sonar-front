@@ -9,11 +9,11 @@ RUN npm install -g pnpm
 
 RUN pnpm install
 
-RUN pnpm install -g @angular/cli
+# RUN pnpm install -g @angular/cli
 
 COPY . .
 
-RUN ng build --configuration=production
+RUN pnpm run build
 
 FROM nginx:alpine
 

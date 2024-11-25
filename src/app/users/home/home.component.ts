@@ -1,6 +1,6 @@
-import {JsonPipe} from '@angular/common';
-import {Component, inject, signal, WritableSignal,} from '@angular/core';
-import {BrnAccordionContentComponent} from '@spartan-ng/ui-accordion-brain';
+import { JsonPipe } from '@angular/common';
+import { Component, inject, signal, WritableSignal } from '@angular/core';
+import { BrnAccordionContentComponent } from '@spartan-ng/ui-accordion-brain';
 import {
   HlmAccordionContentDirective,
   HlmAccordionDirective,
@@ -8,21 +8,24 @@ import {
   HlmAccordionItemDirective,
   HlmAccordionTriggerDirective,
 } from '@spartan-ng/ui-accordion-helm';
-import {HlmIconComponent} from '@spartan-ng/ui-icon-helm';
-import {AccordionModule} from 'primeng/accordion';
-import {IconFieldModule} from 'primeng/iconfield';
-import {InputIconModule} from 'primeng/inputicon';
-import {InputTextModule} from 'primeng/inputtext';
-import {HlmButtonDirective} from '@spartan-ng/ui-button-helm';
-import {AccountComponentComponent} from './account-component/account-component.component';
-import {UserEntity} from '../../shared/entities/user.entity';
-import {UsersService} from '../../shared/services/users.service';
-import {tap} from 'rxjs';
-import {CompteGroupeEntity} from '../../shared/entities/compte-groupe.entity';
-import {CompteGroupeService} from '../../shared/services/compte-groupe.service';
-import {ComptePrincipalService} from '../../shared/services/compte-principal.service';
-import {PrincipalAccountEntity} from '../../shared/entities/principal-account.entity';
-import {BrnDialogContentDirective, BrnDialogTriggerDirective} from '@spartan-ng/ui-dialog-brain';
+import { HlmIconComponent } from '@spartan-ng/ui-icon-helm';
+import { AccordionModule } from 'primeng/accordion';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
+import { InputTextModule } from 'primeng/inputtext';
+import { HlmButtonDirective } from '@spartan-ng/ui-button-helm';
+import { AccountComponentComponent } from './account-component/account-component.component';
+import { UserEntity } from '../../shared/entities/user.entity';
+import { UsersService } from '../../shared/services/users.service';
+import { tap } from 'rxjs';
+import { CompteGroupeEntity } from '../../shared/entities/compte-groupe.entity';
+import { CompteGroupeService } from '../../shared/services/compte-groupe.service';
+import { ComptePrincipalService } from '../../shared/services/compte-principal.service';
+import { PrincipalAccountEntity } from '../../shared/entities/principal-account.entity';
+import {
+  BrnDialogContentDirective,
+  BrnDialogTriggerDirective,
+} from '@spartan-ng/ui-dialog-brain';
 import {
   HlmDialogComponent,
   HlmDialogContentComponent,
@@ -31,14 +34,17 @@ import {
   HlmDialogHeaderComponent,
   HlmDialogTitleDirective,
 } from '@spartan-ng/ui-dialog-helm';
-import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from "@angular/forms";
-
+import {
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 
 @Component({
   selector: 'app-home',
   standalone: true,
   imports: [
-    BrnAccordionContentComponent,
     HlmAccordionContentDirective,
     HlmAccordionDirective,
     HlmAccordionIconDirective,
@@ -61,14 +67,13 @@ import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from "@angular/
     BrnDialogContentDirective,
     BrnDialogTriggerDirective,
     ReactiveFormsModule,
-    HlmDialogFooterComponent
+    HlmDialogFooterComponent,
   ],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css',
 })
 export class HomeComponent {
-
-  createGroupProjectForm!: FormGroup
+  createGroupProjectForm!: FormGroup;
 
   userConnected: WritableSignal<UserEntity | null> = signal(null);
   groupAccounts: WritableSignal<CompteGroupeEntity[] | null> = signal(null);
@@ -77,22 +82,25 @@ export class HomeComponent {
 
   usersService: UsersService = inject(UsersService);
   groupAccountService: CompteGroupeService = inject(CompteGroupeService);
-  comptePrincipalService: ComptePrincipalService = inject(ComptePrincipalService);
-  formBuilder: FormBuilder = inject(FormBuilder)
+  comptePrincipalService: ComptePrincipalService = inject(
+    ComptePrincipalService
+  );
+  formBuilder: FormBuilder = inject(FormBuilder);
 
   constructor() {
-    this.setConnectedUser()
+    this.setConnectedUser();
 
     this.createGroupProjectForm = this.formBuilder.group({
       username: ['', [Validators.required]],
-    })
+    });
   }
 
   createGroupProject() {
     if (this.createGroupProjectForm.valid) {
-      this.groupAccountService.createGroupeProject(this.createGroupProjectForm.value).pipe(
-        tap(() => this.setConnectedUser())
-      ).subscribe()
+      this.groupAccountService
+        .createGroupeProject(this.createGroupProjectForm.value)
+        .pipe(tap(() => this.setConnectedUser()))
+        .subscribe();
     }
   }
 
@@ -117,6 +125,4 @@ export class HomeComponent {
       )
       .subscribe();
   }
-
-
 }

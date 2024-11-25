@@ -92,7 +92,6 @@ import { lucideCornerDownLeft } from '@ng-icons/lucide';
     HlmAccordionDirective,
     HlmAccordionIconDirective,
     HlmAccordionContentDirective,
-    BrnAccordionContentComponent,
     HlmThComponent,
     HlmThComponent,
     HlmThComponent,

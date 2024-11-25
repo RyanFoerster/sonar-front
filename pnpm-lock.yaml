@@ -41,6 +41,9 @@ importers:
       '@angular/ssr':
         specifier: ^18.0.6
         version: 18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))
+      '@dotenv-run/core':
+        specifier: ^1.3.6
+        version: 1.3.6
       '@ng-icons/core':
         specifier: ^25.1.0
         version: 25.6.1
@@ -49,16 +52,16 @@ importers:
         version: 26.5.0
       '@spartan-ng/ui-accordion-brain':
         specifier: 0.0.1-alpha.353
-        version: 0.0.1-alpha.353(@angular/cdk@18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@1.2.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))
+        version: 0.0.1-alpha.353(@angular/cdk@18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@2.1.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))
       '@spartan-ng/ui-alertdialog-brain':
         specifier: 0.0.1-alpha.353
-        version: 0.0.1-alpha.353(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@1.2.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(@spartan-ng/ui-dialog-brain@0.0.1-alpha.353(@angular/cdk@18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@1.2.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5)))))
+        version: 0.0.1-alpha.353(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@2.1.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(@spartan-ng/ui-dialog-brain@0.0.1-alpha.353(@angular/cdk@18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@2.1.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5)))))
       '@spartan-ng/ui-avatar-brain':
         specifier: 0.0.1-alpha.353
-        version: 0.0.1-alpha.353(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@1.2.1)
+        version: 0.0.1-alpha.353(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@2.1.1)
       '@spartan-ng/ui-checkbox-brain':
         specifier: 0.0.1-alpha.353
-        version: 0.0.1-alpha.353(6foiyldhdkj3c7hxpchblg3gom)
+        version: 0.0.1-alpha.353(prjfgzpstqdoze5tsml4t74vpu)
       '@spartan-ng/ui-collapsible-brain':
         specifier: 0.0.1-alpha.353
         version: 0.0.1-alpha.353(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))
@@ -67,19 +70,19 @@ importers:
         version: 0.0.1-alpha.353(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@ngneat/overview@5.1.1(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10)))(@ngneat/until-destroy@10.0.0(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@ngxpert/cmdk@1.0.0(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))
       '@spartan-ng/ui-core':
         specifier: ^0.0.1-alpha.353
-        version: 0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@1.2.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5)))
+        version: 0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@2.1.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5)))
       '@spartan-ng/ui-dialog-brain':
         specifier: 0.0.1-alpha.353
-        version: 0.0.1-alpha.353(@angular/cdk@18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@1.2.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))
+        version: 0.0.1-alpha.353(@angular/cdk@18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@2.1.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))
       '@spartan-ng/ui-form-field-brain':
         specifier: 0.0.1-alpha.353
-        version: 0.0.1-alpha.353(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@1.2.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(class-variance-authority@0.6.1)(clsx@1.2.1)
+        version: 0.0.1-alpha.353(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@2.1.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(class-variance-authority@0.6.1)(clsx@2.1.1)
       '@spartan-ng/ui-forms-brain':
         specifier: ^0.0.1-alpha.353
-        version: 0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@1.2.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(class-variance-authority@0.6.1)(clsx@1.2.1)
+        version: 0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@2.1.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(class-variance-authority@0.6.1)(clsx@2.1.1)
       '@spartan-ng/ui-hovercard-brain':
         specifier: 0.0.1-alpha.353
-        version: 0.0.1-alpha.353(@angular/cdk@18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@1.2.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))
+        version: 0.0.1-alpha.353(@angular/cdk@18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@2.1.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))
       '@spartan-ng/ui-label-brain':
         specifier: 0.0.1-alpha.353
         version: 0.0.1-alpha.353(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@angular/forms@18.2.9(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@angular/platform-browser@18.2.9(@angular/animations@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10)))(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10)))(rxjs@7.8.1))
@@ -88,7 +91,7 @@ importers:
         version: 0.0.1-alpha.353(@angular/cdk@18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))
       '@spartan-ng/ui-popover-brain':
         specifier: 0.0.1-alpha.353
-        version: 0.0.1-alpha.353(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@1.2.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(@spartan-ng/ui-dialog-brain@0.0.1-alpha.353(@angular/cdk@18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@1.2.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5)))))
+        version: 0.0.1-alpha.353(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@2.1.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(@spartan-ng/ui-dialog-brain@0.0.1-alpha.353(@angular/cdk@18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@2.1.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5)))))
       '@spartan-ng/ui-progress-brain':
         specifier: 0.0.1-alpha.353
         version: 0.0.1-alpha.353(@angular/cdk@18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))
@@ -97,40 +100,34 @@ importers:
         version: 0.0.1-alpha.353(@angular/cdk@18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@angular/forms@18.2.9(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@angular/platform-browser@18.2.9(@angular/animations@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10)))(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10)))(rxjs@7.8.1))
       '@spartan-ng/ui-select-brain':
         specifier: 0.0.1-alpha.353
-        version: 0.0.1-alpha.353(og3ch4b7lllcmqrlq5amsgs4im)
+        version: 0.0.1-alpha.353(o7tx6tjgoc2mw5gookbn3h2x6q)
       '@spartan-ng/ui-separator-brain':
         specifier: 0.0.1-alpha.353
         version: 0.0.1-alpha.353(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))
       '@spartan-ng/ui-sheet-brain':
         specifier: 0.0.1-alpha.353
-        version: 0.0.1-alpha.353(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@1.2.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(@spartan-ng/ui-dialog-brain@0.0.1-alpha.353(@angular/cdk@18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@1.2.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5)))))
+        version: 0.0.1-alpha.353(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@2.1.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(@spartan-ng/ui-dialog-brain@0.0.1-alpha.353(@angular/cdk@18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@2.1.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5)))))
       '@spartan-ng/ui-switch-brain':
         specifier: 0.0.1-alpha.353
-        version: 0.0.1-alpha.353(6foiyldhdkj3c7hxpchblg3gom)
+        version: 0.0.1-alpha.353(prjfgzpstqdoze5tsml4t74vpu)
       '@spartan-ng/ui-table-brain':
         specifier: 0.0.1-alpha.353
-        version: 0.0.1-alpha.353(@angular/cdk@18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@1.2.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))
+        version: 0.0.1-alpha.353(@angular/cdk@18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@2.1.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))
       '@spartan-ng/ui-tabs-brain':
         specifier: 0.0.1-alpha.353
-        version: 0.0.1-alpha.353(@angular/cdk@18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@1.2.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(rxjs@7.8.1)
+        version: 0.0.1-alpha.353(@angular/cdk@18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@2.1.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(rxjs@7.8.1)
       '@spartan-ng/ui-toggle-brain':
         specifier: 0.0.1-alpha.353
         version: 0.0.1-alpha.353(@angular/cdk@18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@angular/forms@18.2.9(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@angular/platform-browser@18.2.9(@angular/animations@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10)))(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10)))(rxjs@7.8.1))
       '@spartan-ng/ui-tooltip-brain':
         specifier: 0.0.1-alpha.353
-        version: 0.0.1-alpha.353(@angular/cdk@18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@1.2.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(rxjs@7.8.1)
-      '@vercel/analytics':
-        specifier: ^1.3.1
-        version: 1.3.2(react@18.3.1)
-      '@vercel/speed-insights':
-        specifier: ^1.0.12
-        version: 1.0.14(react@18.3.1)
+        version: 0.0.1-alpha.353(@angular/cdk@18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@2.1.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(rxjs@7.8.1)
       class-variance-authority:
         specifier: ^0.6.0
         version: 0.6.1
       clsx:
-        specifier: ^1.2.1
-        version: 1.2.1
+        specifier: ^2.1.1
+        version: 2.1.1
       dotenv:
         specifier: ^16.4.5
         version: 16.4.5
@@ -2685,40 +2682,6 @@ packages:
     resolution: {integrity: sha512-PChz8UaKQAVNHghsHcPyx1OMHoFRUEA7rJSK/mDhdq85bk+PLsUHUBqTQTFt18VJZbmxBovM65fezlheQRsSDA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@vercel/analytics@1.3.2':
-    resolution: {integrity: sha512-n/Ws7skBbW+fUBMeg+jrT30+GP00jTHvCcL4fuVrShuML0uveEV/4vVUdvqEVnDgXIGfLm0GXW5EID2mCcRXhg==}
-    peerDependencies:
-      next: '>= 13'
-      react: ^18.0 || ^19.0 || ^19.0.0-rc
-    peerDependenciesMeta:
-      next:
-        optional: true
-      react:
-        optional: true
-
-  '@vercel/speed-insights@1.0.14':
-    resolution: {integrity: sha512-env1BkPddz1UaEZwBL4GmfRksMi2LbiYaKuoxMQjfLk83aEh7kkWMukkUhpQVs717NE6nnD+1+KO85GZHOZ4nQ==}
-    peerDependencies:
-      '@sveltejs/kit': ^1 || ^2
-      next: '>= 13'
-      react: ^18 || ^19 || ^19.0.0-rc
-      svelte: '>= 4'
-      vue: ^3
-      vue-router: ^4
-    peerDependenciesMeta:
-      '@sveltejs/kit':
-        optional: true
-      next:
-        optional: true
-      react:
-        optional: true
-      svelte:
-        optional: true
-      vue:
-        optional: true
-      vue-router:
-        optional: true
-
   '@vitejs/plugin-basic-ssl@1.1.0':
     resolution: {integrity: sha512-wO4Dk/rm8u7RNhOf95ZzcEmC9rYOncYgvq4z3duaJrCgjN8BxAnDVyndanfcJZ0O6XZzHz6Q0hTimxTg8Y9g/A==}
     engines: {node: '>=14.6.0'}
@@ -3191,6 +3154,10 @@ packages:
 
   clsx@1.2.1:
     resolution: {integrity: sha512-EcR6r5a8bj6pu3ycsa/E/cKVGuTgZJZdsyUYHOksG/UHIiKfjxzRxYJpyVBwYaQeOvghal9fcc4PidlgzugAQg==}
+    engines: {node: '>=6'}
+
+  clsx@2.1.1:
+    resolution: {integrity: sha512-eYm0QWBtUrBWZWG0d386OGAw16Z995PiOVo2B7bjWSbHedGl5e0ZWaq65kOGgUSNesEIDkB9ISbTg/JK9dhCZA==}
     engines: {node: '>=6'}
 
   co@4.6.0:
@@ -5930,9 +5897,6 @@ packages:
   serve-static@1.16.2:
     resolution: {integrity: sha512-VqpjJZKadQB/PEbEwvFdO43Ax5dFBZ2UECszz8bQ7pi7wt//PWe1P6MN7eCnjsatYtBT6EuiClbjSWP2WrIoTw==}
     engines: {node: '>= 0.8.0'}
-
-  server-only@0.0.1:
-    resolution: {integrity: sha512-qepMx2JxAa5jjfzxG79yPPq+8BuFToHd1hm7kI+Z4zAq1ftQiP7HcxMhDDItrbtwVeLg/cY2JnKnrcFkmiswNA==}
 
   set-function-length@1.2.2:
     resolution: {integrity: sha512-pgRc4hJ4/sNjWCSS9AmnS40x3bNMDTknHgL5UaMBTMyJnU90EgWh1Rz+MC9eFu4BuN/UwZjKQuY/1v3rM7HMfg==}
@@ -9838,34 +9802,34 @@ snapshots:
       - vue-tsc
       - webpack-cli
 
-  '@spartan-ng/ui-accordion-brain@0.0.1-alpha.353(@angular/cdk@18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@1.2.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))':
+  '@spartan-ng/ui-accordion-brain@0.0.1-alpha.353(@angular/cdk@18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@2.1.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))':
     dependencies:
       '@angular/cdk': 18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1)
       '@angular/core': 18.2.9(rxjs@7.8.1)(zone.js@0.14.10)
-      '@spartan-ng/ui-core': 0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@1.2.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5)))
+      '@spartan-ng/ui-core': 0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@2.1.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5)))
       tslib: 2.8.0
 
-  '@spartan-ng/ui-alertdialog-brain@0.0.1-alpha.353(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@1.2.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(@spartan-ng/ui-dialog-brain@0.0.1-alpha.353(@angular/cdk@18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@1.2.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5)))))':
+  '@spartan-ng/ui-alertdialog-brain@0.0.1-alpha.353(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@2.1.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(@spartan-ng/ui-dialog-brain@0.0.1-alpha.353(@angular/cdk@18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@2.1.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5)))))':
     dependencies:
       '@angular/core': 18.2.9(rxjs@7.8.1)(zone.js@0.14.10)
-      '@spartan-ng/ui-core': 0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@1.2.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5)))
-      '@spartan-ng/ui-dialog-brain': 0.0.1-alpha.353(@angular/cdk@18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@1.2.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))
+      '@spartan-ng/ui-core': 0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@2.1.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5)))
+      '@spartan-ng/ui-dialog-brain': 0.0.1-alpha.353(@angular/cdk@18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@2.1.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))
       tslib: 2.8.0
 
-  '@spartan-ng/ui-avatar-brain@0.0.1-alpha.353(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@1.2.1)':
+  '@spartan-ng/ui-avatar-brain@0.0.1-alpha.353(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@2.1.1)':
     dependencies:
       '@angular/common': 18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1)
       '@angular/core': 18.2.9(rxjs@7.8.1)(zone.js@0.14.10)
-      clsx: 1.2.1
+      clsx: 2.1.1
       tslib: 2.8.0
 
-  '@spartan-ng/ui-checkbox-brain@0.0.1-alpha.353(6foiyldhdkj3c7hxpchblg3gom)':
+  '@spartan-ng/ui-checkbox-brain@0.0.1-alpha.353(prjfgzpstqdoze5tsml4t74vpu)':
     dependencies:
       '@angular/cdk': 18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1)
       '@angular/common': 18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1)
       '@angular/core': 18.2.9(rxjs@7.8.1)(zone.js@0.14.10)
       '@angular/forms': 18.2.9(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@angular/platform-browser@18.2.9(@angular/animations@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10)))(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10)))(rxjs@7.8.1)
-      '@spartan-ng/ui-core': 0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@1.2.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5)))
+      '@spartan-ng/ui-core': 0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@2.1.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5)))
       tslib: 2.8.0
 
   '@spartan-ng/ui-collapsible-brain@0.0.1-alpha.353(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))':
@@ -9882,44 +9846,44 @@ snapshots:
       '@ngxpert/cmdk': 1.0.0(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1)
       tslib: 2.8.0
 
-  '@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@1.2.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5)))':
+  '@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@2.1.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5)))':
     dependencies:
       '@angular/core': 18.2.9(rxjs@7.8.1)(zone.js@0.14.10)
-      clsx: 1.2.1
+      clsx: 2.1.1
       rxjs: 7.8.1
       tailwind-merge: 2.5.4
       tailwindcss: 3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))
       tailwindcss-animate: 1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5)))
       tslib: 2.8.0
 
-  '@spartan-ng/ui-dialog-brain@0.0.1-alpha.353(@angular/cdk@18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@1.2.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))':
+  '@spartan-ng/ui-dialog-brain@0.0.1-alpha.353(@angular/cdk@18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@2.1.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))':
     dependencies:
       '@angular/cdk': 18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1)
       '@angular/core': 18.2.9(rxjs@7.8.1)(zone.js@0.14.10)
-      '@spartan-ng/ui-core': 0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@1.2.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5)))
+      '@spartan-ng/ui-core': 0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@2.1.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5)))
       tslib: 2.8.0
 
-  '@spartan-ng/ui-form-field-brain@0.0.1-alpha.353(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@1.2.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(class-variance-authority@0.6.1)(clsx@1.2.1)':
+  '@spartan-ng/ui-form-field-brain@0.0.1-alpha.353(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@2.1.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(class-variance-authority@0.6.1)(clsx@2.1.1)':
     dependencies:
       '@angular/core': 18.2.9(rxjs@7.8.1)(zone.js@0.14.10)
-      '@spartan-ng/ui-core': 0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@1.2.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5)))
+      '@spartan-ng/ui-core': 0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@2.1.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5)))
       class-variance-authority: 0.6.1
-      clsx: 1.2.1
+      clsx: 2.1.1
       tslib: 2.8.0
 
-  '@spartan-ng/ui-forms-brain@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@1.2.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(class-variance-authority@0.6.1)(clsx@1.2.1)':
+  '@spartan-ng/ui-forms-brain@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@2.1.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(class-variance-authority@0.6.1)(clsx@2.1.1)':
     dependencies:
       '@angular/core': 18.2.9(rxjs@7.8.1)(zone.js@0.14.10)
-      '@spartan-ng/ui-core': 0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@1.2.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5)))
+      '@spartan-ng/ui-core': 0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@2.1.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5)))
       class-variance-authority: 0.6.1
-      clsx: 1.2.1
+      clsx: 2.1.1
       tslib: 2.8.0
 
-  '@spartan-ng/ui-hovercard-brain@0.0.1-alpha.353(@angular/cdk@18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@1.2.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))':
+  '@spartan-ng/ui-hovercard-brain@0.0.1-alpha.353(@angular/cdk@18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@2.1.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))':
     dependencies:
       '@angular/cdk': 18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1)
       '@angular/core': 18.2.9(rxjs@7.8.1)(zone.js@0.14.10)
-      '@spartan-ng/ui-core': 0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@1.2.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5)))
+      '@spartan-ng/ui-core': 0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@2.1.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5)))
       tslib: 2.8.0
 
   '@spartan-ng/ui-label-brain@0.0.1-alpha.353(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@angular/forms@18.2.9(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@angular/platform-browser@18.2.9(@angular/animations@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10)))(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10)))(rxjs@7.8.1))':
@@ -9935,11 +9899,11 @@ snapshots:
       '@angular/core': 18.2.9(rxjs@7.8.1)(zone.js@0.14.10)
       tslib: 2.8.0
 
-  '@spartan-ng/ui-popover-brain@0.0.1-alpha.353(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@1.2.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(@spartan-ng/ui-dialog-brain@0.0.1-alpha.353(@angular/cdk@18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@1.2.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5)))))':
+  '@spartan-ng/ui-popover-brain@0.0.1-alpha.353(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@2.1.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(@spartan-ng/ui-dialog-brain@0.0.1-alpha.353(@angular/cdk@18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@2.1.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5)))))':
     dependencies:
       '@angular/core': 18.2.9(rxjs@7.8.1)(zone.js@0.14.10)
-      '@spartan-ng/ui-core': 0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@1.2.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5)))
-      '@spartan-ng/ui-dialog-brain': 0.0.1-alpha.353(@angular/cdk@18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@1.2.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))
+      '@spartan-ng/ui-core': 0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@2.1.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5)))
+      '@spartan-ng/ui-dialog-brain': 0.0.1-alpha.353(@angular/cdk@18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@2.1.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))
       tslib: 2.8.0
 
   '@spartan-ng/ui-progress-brain@0.0.1-alpha.353(@angular/cdk@18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))':
@@ -9955,13 +9919,13 @@ snapshots:
       '@angular/forms': 18.2.9(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@angular/platform-browser@18.2.9(@angular/animations@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10)))(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10)))(rxjs@7.8.1)
       tslib: 2.8.0
 
-  '@spartan-ng/ui-select-brain@0.0.1-alpha.353(og3ch4b7lllcmqrlq5amsgs4im)':
+  '@spartan-ng/ui-select-brain@0.0.1-alpha.353(o7tx6tjgoc2mw5gookbn3h2x6q)':
     dependencies:
       '@angular/cdk': 18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1)
       '@angular/common': 18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1)
       '@angular/core': 18.2.9(rxjs@7.8.1)(zone.js@0.14.10)
       '@angular/forms': 18.2.9(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@angular/platform-browser@18.2.9(@angular/animations@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10)))(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10)))(rxjs@7.8.1)
-      '@spartan-ng/ui-core': 0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@1.2.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5)))
+      '@spartan-ng/ui-core': 0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@2.1.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5)))
       '@spartan-ng/ui-label-brain': 0.0.1-alpha.353(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@angular/forms@18.2.9(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@angular/platform-browser@18.2.9(@angular/animations@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10)))(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10)))(rxjs@7.8.1))
       tslib: 2.8.0
 
@@ -9970,34 +9934,34 @@ snapshots:
       '@angular/core': 18.2.9(rxjs@7.8.1)(zone.js@0.14.10)
       tslib: 2.8.0
 
-  '@spartan-ng/ui-sheet-brain@0.0.1-alpha.353(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@1.2.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(@spartan-ng/ui-dialog-brain@0.0.1-alpha.353(@angular/cdk@18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@1.2.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5)))))':
+  '@spartan-ng/ui-sheet-brain@0.0.1-alpha.353(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@2.1.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(@spartan-ng/ui-dialog-brain@0.0.1-alpha.353(@angular/cdk@18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@2.1.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5)))))':
     dependencies:
       '@angular/core': 18.2.9(rxjs@7.8.1)(zone.js@0.14.10)
-      '@spartan-ng/ui-core': 0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@1.2.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5)))
-      '@spartan-ng/ui-dialog-brain': 0.0.1-alpha.353(@angular/cdk@18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@1.2.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))
+      '@spartan-ng/ui-core': 0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@2.1.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5)))
+      '@spartan-ng/ui-dialog-brain': 0.0.1-alpha.353(@angular/cdk@18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@2.1.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))
       tslib: 2.8.0
 
-  '@spartan-ng/ui-switch-brain@0.0.1-alpha.353(6foiyldhdkj3c7hxpchblg3gom)':
+  '@spartan-ng/ui-switch-brain@0.0.1-alpha.353(prjfgzpstqdoze5tsml4t74vpu)':
     dependencies:
       '@angular/cdk': 18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1)
       '@angular/common': 18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1)
       '@angular/core': 18.2.9(rxjs@7.8.1)(zone.js@0.14.10)
       '@angular/forms': 18.2.9(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@angular/platform-browser@18.2.9(@angular/animations@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10)))(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10)))(rxjs@7.8.1)
-      '@spartan-ng/ui-core': 0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@1.2.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5)))
+      '@spartan-ng/ui-core': 0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@2.1.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5)))
       tslib: 2.8.0
 
-  '@spartan-ng/ui-table-brain@0.0.1-alpha.353(@angular/cdk@18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@1.2.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))':
+  '@spartan-ng/ui-table-brain@0.0.1-alpha.353(@angular/cdk@18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@2.1.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))':
     dependencies:
       '@angular/cdk': 18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1)
       '@angular/core': 18.2.9(rxjs@7.8.1)(zone.js@0.14.10)
-      '@spartan-ng/ui-core': 0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@1.2.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5)))
+      '@spartan-ng/ui-core': 0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@2.1.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5)))
       tslib: 2.8.0
 
-  '@spartan-ng/ui-tabs-brain@0.0.1-alpha.353(@angular/cdk@18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@1.2.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(rxjs@7.8.1)':
+  '@spartan-ng/ui-tabs-brain@0.0.1-alpha.353(@angular/cdk@18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@2.1.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(rxjs@7.8.1)':
     dependencies:
       '@angular/cdk': 18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1)
       '@angular/core': 18.2.9(rxjs@7.8.1)(zone.js@0.14.10)
-      '@spartan-ng/ui-core': 0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@1.2.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5)))
+      '@spartan-ng/ui-core': 0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@2.1.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5)))
       rxjs: 7.8.1
       tslib: 2.8.0
 
@@ -10008,12 +9972,12 @@ snapshots:
       '@angular/forms': 18.2.9(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@angular/platform-browser@18.2.9(@angular/animations@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10)))(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10)))(rxjs@7.8.1)
       tslib: 2.8.0
 
-  '@spartan-ng/ui-tooltip-brain@0.0.1-alpha.353(@angular/cdk@18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@1.2.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(rxjs@7.8.1)':
+  '@spartan-ng/ui-tooltip-brain@0.0.1-alpha.353(@angular/cdk@18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(@spartan-ng/ui-core@0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@2.1.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(rxjs@7.8.1)':
     dependencies:
       '@angular/cdk': 18.2.10(@angular/common@18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1))(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1)
       '@angular/common': 18.2.9(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(rxjs@7.8.1)
       '@angular/core': 18.2.9(rxjs@7.8.1)(zone.js@0.14.10)
-      '@spartan-ng/ui-core': 0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@1.2.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5)))
+      '@spartan-ng/ui-core': 0.0.1-alpha.356(@angular/core@18.2.9(rxjs@7.8.1)(zone.js@0.14.10))(clsx@2.1.1)(rxjs@7.8.1)(tailwind-merge@2.5.4)(tailwindcss-animate@1.0.7(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5))))(tailwindcss@3.4.14(ts-node@10.9.1(@types/node@18.19.61)(typescript@5.4.5)))
       rxjs: 7.8.1
       tslib: 2.8.0
 
@@ -10218,16 +10182,6 @@ snapshots:
     dependencies:
       '@typescript-eslint/types': 8.12.2
       eslint-visitor-keys: 3.4.3
-
-  '@vercel/analytics@1.3.2(react@18.3.1)':
-    dependencies:
-      server-only: 0.0.1
-    optionalDependencies:
-      react: 18.3.1
-
-  '@vercel/speed-insights@1.0.14(react@18.3.1)':
-    optionalDependencies:
-      react: 18.3.1
 
   '@vitejs/plugin-basic-ssl@1.1.0(vite@5.4.6(@types/node@18.19.61)(less@4.2.0)(sass@1.77.6)(stylus@0.59.0)(terser@5.31.6))':
     dependencies:
@@ -10784,6 +10738,8 @@ snapshots:
   clone@1.0.4: {}
 
   clsx@1.2.1: {}
+
+  clsx@2.1.1: {}
 
   co@4.6.0: {}
 
@@ -13784,8 +13740,6 @@ snapshots:
       send: 0.19.0
     transitivePeerDependencies:
       - supports-color
-
-  server-only@0.0.1: {}
 
   set-function-length@1.2.2:
     dependencies:

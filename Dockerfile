@@ -11,11 +11,11 @@ RUN npm cache clean --force
 
 RUN pnpm install
 
-# RUN pnpm install -g @angular/cli
+RUN pnpm install -g @angular/cli
 
 COPY . .
 
-RUN pnpm run build
+RUN ng build --configuration=production
 
 FROM nginx:alpine
 

@@ -1,4 +1,4 @@
-FROM node:20.17.0 AS build
+FROM node:23 AS build
 
 WORKDIR /app
 
@@ -6,6 +6,8 @@ COPY package*.json ./
 COPY pnpm-lock.yaml ./
 
 RUN npm install -g pnpm
+
+RUN npm cache clean --force
 
 RUN pnpm install
 

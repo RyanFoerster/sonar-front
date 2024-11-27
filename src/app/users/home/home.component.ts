@@ -2,7 +2,7 @@ import { JsonPipe } from '@angular/common';
 import { Component, inject, signal, WritableSignal } from '@angular/core';
 import { BrnAccordionContentComponent } from '@spartan-ng/ui-accordion-brain';
 import {
-  HlmAccordionContentDirective,
+  HlmAccordionContentComponent,
   HlmAccordionDirective,
   HlmAccordionIconDirective,
   HlmAccordionItemDirective,
@@ -45,7 +45,8 @@ import {
   selector: 'app-home',
   standalone: true,
   imports: [
-    HlmAccordionContentDirective,
+    BrnAccordionContentComponent,
+    HlmAccordionContentComponent,
     HlmAccordionDirective,
     HlmAccordionIconDirective,
     HlmAccordionItemDirective,

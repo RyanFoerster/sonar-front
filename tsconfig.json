@@ -51,11 +51,23 @@
       "@spartan-ng/ui-card-helm": [
         "./components/ui-card-helm/src/index.ts"
       ],
+      "@spartan-ng/ui-carousel-helm": [
+        "./components/ui-carousel-helm/src/index.ts"
+      ],
+      "@spartan-ng/ui-checkbox-helm": [
+        "./components/ui-checkbox-helm/src/index.ts"
+      ],
       "@spartan-ng/ui-command-helm": [
         "./components/ui-command-helm/src/index.ts"
       ],
       "@spartan-ng/ui-dialog-helm": [
         "./components/ui-dialog-helm/src/index.ts"
+      ],
+      "@spartan-ng/ui-formfield-helm": [
+        "./components/ui-formfield-helm/src/index.ts"
+      ],
+      "@spartan-ng/ui-hovercard-helm": [
+        "./components/ui-hovercard-helm/src/index.ts"
       ],
       "@spartan-ng/ui-icon-helm": [
         "./components/ui-icon-helm/src/index.ts"
@@ -69,6 +81,9 @@
       "@spartan-ng/ui-menu-helm": [
         "./components/ui-menu-helm/src/index.ts"
       ],
+      "@spartan-ng/ui-pagination-helm": [
+        "./components/ui-pagination-helm/src/index.ts"
+      ],
       "@spartan-ng/ui-popover-helm": [
         "./components/ui-popover-helm/src/index.ts"
       ],
@@ -81,6 +96,9 @@
       "@spartan-ng/ui-scrollarea-helm": [
         "./components/ui-scrollarea-helm/src/index.ts"
       ],
+      "@spartan-ng/ui-select-helm": [
+        "./components/ui-select-helm/src/index.ts"
+      ],
       "@spartan-ng/ui-separator-helm": [
         "./components/ui-separator-helm/src/index.ts"
       ],
@@ -90,11 +108,20 @@
       "@spartan-ng/ui-skeleton-helm": [
         "./components/ui-skeleton-helm/src/index.ts"
       ],
+      "@spartan-ng/ui-slider-helm": [
+        "./components/ui-slider-helm/src/index.ts"
+      ],
+      "@spartan-ng/ui-sonner-helm": [
+        "./components/ui-sonner-helm/src/index.ts"
+      ],
       "@spartan-ng/ui-spinner-helm": [
         "./components/ui-spinner-helm/src/index.ts"
       ],
       "@spartan-ng/ui-switch-helm": [
         "./components/ui-switch-helm/src/index.ts"
+      ],
+      "@spartan-ng/ui-table-helm": [
+        "./components/ui-table-helm/src/index.ts"
       ],
       "@spartan-ng/ui-tabs-helm": [
         "./components/ui-tabs-helm/src/index.ts"
@@ -102,38 +129,11 @@
       "@spartan-ng/ui-toggle-helm": [
         "./components/ui-toggle-helm/src/index.ts"
       ],
-      "@spartan-ng/ui-typography-helm": [
-        "./components/ui-typography-helm/src/index.ts"
-      ],
-      "@spartan-ng/ui-table-helm": [
-        "./components/ui-table-helm/src/index.ts"
-      ],
-      "@spartan-ng/ui-hovercard-helm": [
-        "./components/ui-hovercard-helm/src/index.ts"
-      ],
-      "@spartan-ng/ui-checkbox-helm": [
-        "./components/ui-checkbox-helm/src/index.ts"
-      ],
       "@spartan-ng/ui-tooltip-helm": [
         "./components/ui-tooltip-helm/src/index.ts"
       ],
-      "@spartan-ng/ui-pagination-helm": [
-        "./components/ui-pagination-helm/src/index.ts"
-      ],
-      "@spartan-ng/ui-carousel-helm": [
-        "./components/ui-carousel-helm/src/index.ts"
-      ],
-      "@spartan-ng/ui-select-helm": [
-        "./components/ui-select-helm/src/index.ts"
-      ],
-      "@spartan-ng/ui-sonner-helm": [
-        "./components/ui-sonner-helm/src/index.ts"
-      ],
-      "@spartan-ng/ui-helm-helm": [
-        "./components/ui-helm-helm/src/index.ts"
-      ],
-      "@spartan-ng/ui-formfield-helm": [
-        "./components/ui-formfield-helm/src/index.ts"
+      "@spartan-ng/ui-typography-helm": [
+        "./components/ui-typography-helm/src/index.ts"
       ]
     }
   },

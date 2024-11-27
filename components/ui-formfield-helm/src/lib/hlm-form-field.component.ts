@@ -1,6 +1,6 @@
 import { Component, type Signal, computed, contentChild, contentChildren, effect } from '@angular/core';
 
-import { BrnFormFieldControl } from '@spartan-ng/ui-form-field-brain';
+import { BrnFormFieldControl } from '@spartan-ng/ui-formfield-brain';
 import { HlmErrorDirective } from './hlm-error.directive';
 
 @Component({
@@ -33,9 +33,9 @@ export class HlmFormFieldComponent {
 
 	constructor() {
 		effect(() => {
-			if(!this.control()) {
+			if (!this.control()) {
 				throw new Error('hlm-form-field must contain a BrnFormFieldControl.');
 			}
-		})
+		});
 	}
 }

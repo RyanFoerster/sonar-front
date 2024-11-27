@@ -42,7 +42,7 @@ import { catchError, delay, EMPTY, forkJoin, of, switchMap, tap } from 'rxjs';
 import { DatePipe, JsonPipe, Location, NgClass } from '@angular/common';
 import { HlmIconComponent, provideIcons } from '@spartan-ng/ui-icon-helm';
 import {
-  HlmAccordionContentDirective,
+  HlmAccordionContentComponent,
   HlmAccordionDirective,
   HlmAccordionIconDirective,
   HlmAccordionItemDirective,
@@ -91,7 +91,7 @@ import { lucideCornerDownLeft } from '@ng-icons/lucide';
     HlmAccordionItemDirective,
     HlmAccordionDirective,
     HlmAccordionIconDirective,
-    HlmAccordionContentDirective,
+    HlmAccordionContentComponent,
     HlmThComponent,
     HlmThComponent,
     HlmThComponent,

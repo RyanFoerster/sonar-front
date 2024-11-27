@@ -307,7 +307,7 @@
                     Destinataires multiples
                     <hlm-icon hlmAccIcon />
                   </button>
-                  <brn-accordion-content hlm>
+                  <hlm-accordion-content hlm>
                     @for (recipient of transaction.recipientGroup; track
                     recipient.id) { @if (recipient.username !==
                     accountGroup()?.username) {
@@ -321,7 +321,7 @@
                       recipient.username
                     }}</hlm-th>
                     } }
-                  </brn-accordion-content>
+                  </hlm-accordion-content>
                 </div>
               </div>
               } @else {

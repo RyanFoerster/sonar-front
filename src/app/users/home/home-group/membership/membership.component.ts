@@ -1,19 +1,28 @@
+import { DatePipe, JsonPipe, Location } from '@angular/common';
+import { AfterViewInit, Component, inject, input, signal } from '@angular/core';
+import { Meta, Title } from '@angular/platform-browser';
+import { provideIcons } from '@ng-icons/core';
 import {
-  AfterViewInit,
-  Component,
-  importProvidersFrom,
-  inject,
-  input,
-  signal,
-} from '@angular/core';
+  lucideCheck,
+  lucideChevronsUpDown,
+  lucideCornerDownLeft,
+  lucideSearch,
+} from '@ng-icons/lucide';
+import { delay, map, tap } from 'rxjs';
+
+// Spartan UI imports
+import { BrnAccordionContentComponent } from '@spartan-ng/ui-accordion-brain';
 import {
-  HlmCaptionComponent,
-  HlmTableComponent,
-  HlmTdComponent,
-  HlmThComponent,
-  HlmTrowComponent,
-} from '@spartan-ng/ui-table-helm';
+  HlmAccordionContentComponent,
+  HlmAccordionDirective,
+  HlmAccordionIconDirective,
+  HlmAccordionItemDirective,
+  HlmAccordionTriggerDirective,
+} from '@spartan-ng/ui-accordion-helm';
 import { HlmButtonDirective } from '@spartan-ng/ui-button-helm';
+import { HlmCheckboxComponent } from '@spartan-ng/ui-checkbox-helm';
+import { BrnCommandImports } from '@spartan-ng/ui-command-brain';
+import { HlmCommandImports } from '@spartan-ng/ui-command-helm';
 import {
   BrnDialogContentDirective,
   BrnDialogTriggerDirective,
@@ -26,63 +35,51 @@ import {
   HlmDialogHeaderComponent,
   HlmDialogTitleDirective,
 } from '@spartan-ng/ui-dialog-helm';
+import { HlmIconComponent } from '@spartan-ng/ui-icon-helm';
+import { HlmInputDirective } from '@spartan-ng/ui-input-helm';
+import { HlmLabelDirective } from '@spartan-ng/ui-label-helm';
 import {
   BrnPopoverComponent,
   BrnPopoverContentDirective,
   BrnPopoverTriggerDirective,
 } from '@spartan-ng/ui-popover-brain';
-import { HlmCommandImports } from '@spartan-ng/ui-command-helm';
-import { HlmIconComponent } from '@spartan-ng/ui-icon-helm';
 import { HlmPopoverContentDirective } from '@spartan-ng/ui-popover-helm';
-import { HlmInputDirective } from '@spartan-ng/ui-input-helm';
-import { HlmLabelDirective } from '@spartan-ng/ui-label-helm';
-import { HlmCheckboxComponent } from '@spartan-ng/ui-checkbox-helm';
 import { BrnSelectImports } from '@spartan-ng/ui-select-brain';
 import { HlmSelectImports } from '@spartan-ng/ui-select-helm';
-import { CompteGroupeEntity } from '../../../../shared/entities/compte-groupe.entity';
-import { CompteGroupeService } from '../../../../shared/services/compte-groupe.service';
-import { HlmSpinnerComponent } from '@spartan-ng/ui-spinner-helm';
-import { DatePipe, JsonPipe, Location } from '@angular/common';
-import { UsersService } from '../../../../shared/services/users.service';
-import { UserEntity } from '../../../../shared/entities/user.entity';
-import { Meta, Title } from '@angular/platform-browser';
-import { UserSecondaryAccountService } from '../../../../shared/services/user-secondary-account.service';
-import { UserSecondaryAccountEntity } from '../../../../shared/entities/user-secondary-account.entity';
-import { provideIcons } from '@ng-icons/core';
-import {
-  lucideCheck,
-  lucideChevronsUpDown,
-  lucideCornerDownLeft,
-  lucideSearch,
-} from '@ng-icons/lucide';
-import { delay, map, tap } from 'rxjs';
-import { BrnAccordionContentComponent } from '@spartan-ng/ui-accordion-brain';
-import {
-  HlmAccordionContentDirective,
-  HlmAccordionDirective,
-  HlmAccordionIconDirective,
-  HlmAccordionItemDirective,
-  HlmAccordionTriggerDirective,
-} from '@spartan-ng/ui-accordion-helm';
 import { BrnSeparatorComponent } from '@spartan-ng/ui-separator-brain';
 import { HlmSeparatorDirective } from '@spartan-ng/ui-separator-helm';
-import { BrnCommandImports } from '@spartan-ng/ui-command-brain';
+import { HlmSpinnerComponent } from '@spartan-ng/ui-spinner-helm';
+import {
+  HlmCaptionComponent,
+  HlmTableComponent,
+  HlmTdComponent,
+  HlmThComponent,
+  HlmTrowComponent,
+} from '@spartan-ng/ui-table-helm';
+
+// Local imports
+import { CompteGroupeEntity } from '../../../../shared/entities/compte-groupe.entity';
+import { UserEntity } from '../../../../shared/entities/user.entity';
+import { UserSecondaryAccountEntity } from '../../../../shared/entities/user-secondary-account.entity';
+import { CompteGroupeService } from '../../../../shared/services/compte-groupe.service';
+import { UserSecondaryAccountService } from '../../../../shared/services/user-secondary-account.service';
+import { UsersService } from '../../../../shared/services/users.service';
 
 @Component({
   selector: 'app-membership',
   standalone: true,
   imports: [
+    DatePipe,
     HlmAccordionDirective,
     HlmAccordionIconDirective,
     HlmAccordionItemDirective,
     HlmAccordionTriggerDirective,
-    HlmAccordionContentDirective,
+    HlmAccordionContentComponent,
     BrnSelectImports,
     HlmSelectImports,
     HlmCheckboxComponent,
     BrnDialogContentDirective,
     BrnDialogTriggerDirective,
-    HlmCaptionComponent,
     HlmTableComponent,
     HlmTdComponent,
     HlmThComponent,
@@ -95,25 +92,15 @@ import { BrnCommandImports } from '@spartan-ng/ui-command-brain';
     HlmDialogHeaderComponent,
     HlmDialogTitleDirective,
     HlmLabelDirective,
-    HlmInputDirective,
     HlmSpinnerComponent,
-    JsonPipe,
-    DatePipe,
-    HlmCheckboxComponent,
-    HlmCheckboxComponent,
-    HlmCheckboxComponent,
-    HlmCheckboxComponent,
     BrnPopoverComponent,
     BrnPopoverContentDirective,
     BrnPopoverTriggerDirective,
     HlmCommandImports,
     HlmIconComponent,
     HlmPopoverContentDirective,
-    HlmSpinnerComponent,
     BrnSeparatorComponent,
     HlmSeparatorDirective,
-    HlmIconComponent,
-    BrnCommandImports,
   ],
   providers: [
     provideIcons({

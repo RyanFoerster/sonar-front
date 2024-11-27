@@ -3,7 +3,6 @@ FROM node:23 AS build
 WORKDIR /app
 
 COPY package*.json ./
-COPY pnpm-lock.yaml ./
 
 RUN npm install -g pnpm
 

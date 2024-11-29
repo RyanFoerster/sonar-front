@@ -292,8 +292,8 @@
               <hlm-th class="w-2/12 font-bold text-[10px]"
                 >{{
                   transaction.senderPrincipal !== null
-                    ? transaction.senderPrincipal.username
-                    : transaction.senderGroup.username
+                    ? transaction.senderPrincipal.username || ""
+                    : transaction.senderGroup.username || ""
                 }}
               </hlm-th>
               @if (transaction.recipientGroup.length > 1 ||
@@ -374,8 +374,8 @@
               <hlm-th class="w-2/12 font-bold text-[10px]"
                 >{{
                   transaction.senderGroup !== null
-                    ? transaction.senderGroup.username
-                    : transaction.senderPrincipal.username
+                    ? transaction.senderGroup.username || ""
+                    : transaction.senderPrincipal.username || ""
                 }}
               </hlm-th>
               <hlm-th class="w-2/12 font-bold text-[10px]"

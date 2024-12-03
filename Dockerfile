@@ -1,22 +1,16 @@
-FROM node:23 AS build
+FROM node:23-alpine3.19 AS build
 
 WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm install -g pnpm
-
-RUN npm cache clean --force
-
-RUN pnpm install
-
-RUN npm install -g @angular/cli
+RUN npm install
 
 COPY . .
 
-RUN ng build --configuration=production
+RUN npm run build
 
-FROM nginx:alpine
+FROM nginx:1.27-alpine-slim AS prod
 
 COPY --from=build app/dist/sonar-front/browser /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf

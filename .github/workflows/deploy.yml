@@ -10,14 +10,15 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Pull the Docker image
+      - name: Pull the repository
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
           script: |
-            docker pull ${{ secrets.DOCKER_USERNAME }}/sonar-front:latest
+            cd sonar-front
+            git pull
 
       - name: Run the docker container
         uses: appleboy/ssh-action@master
@@ -26,6 +27,7 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
           script: |
-            docker stop sonar-front || true
-            docker rm sonar-front || true
-            docker run --network=sonar-back_sonar-network -d -p ${{ secrets.SONAR_FRONTEND_PORT }}:80 --name sonar-front ${{ secrets.DOCKER_USERNAME }}/sonar-front:latest
+            cd sonar-front
+            UID=$(id -u) GID=$(id -g) docker compose down
+            UID=$(id -u) GID=$(id -g) docker compose pull
+            UID=$(id -u) GID=$(id -g) docker compose up -d --force-recreate

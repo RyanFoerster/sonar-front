@@ -1,35 +1,82 @@
-import {inject, Injectable} from '@angular/core';
-import {HttpClient} from "@angular/common/http";
-import {TransactionEntity} from "../entities/transaction.entity";
-import {environment} from "../../../environments/environment";
-import {TransactionDto} from "../dtos/transaction.dto";
+import { inject, Injectable } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { TransactionEntity } from '../entities/transaction.entity';
+import { environment } from '../../../environments/environment';
+import { TransactionDto } from '../dtos/transaction.dto';
+import { PaginatedResponse } from '../interfaces/paginated-response.interface';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class TransactionService {
-
   private httpClient: HttpClient = inject(HttpClient);
 
-  constructor() { }
+  constructor() {}
 
   createTransaction(createTransactionDto: TransactionDto) {
-    return this.httpClient.post<TransactionDto>(`${environment.API_URL}/transaction`, createTransactionDto)
+    return this.httpClient.post<TransactionDto>(
+      `${environment.API_URL}/transaction`,
+      createTransactionDto
+    );
   }
 
-  getRecipientPrincipalTransactionById(id: number) {
-    return this.httpClient.get<TransactionEntity[]>(`${environment.API_URL}/transaction/recipient-principal/${id}`)
+  getRecipientPrincipalTransactionById(
+    id: number,
+    page: number = 1,
+    limit: number = 10
+  ) {
+    const params = new HttpParams()
+      .set('page', page.toString())
+      .set('limit', limit.toString());
+
+    return this.httpClient.get<PaginatedResponse<TransactionEntity>>(
+      `${environment.API_URL}/transaction/recipient-principal/${id}`,
+      { params }
+    );
   }
 
-  getSenderPrincipalTransactionById(id: number) {
-    return this.httpClient.get<TransactionEntity[]>(`${environment.API_URL}/transaction/sender-principal/${id}`)
+  getSenderPrincipalTransactionById(
+    id: number,
+    page: number = 1,
+    limit: number = 10
+  ) {
+    const params = new HttpParams()
+      .set('page', page.toString())
+      .set('limit', limit.toString());
+
+    return this.httpClient.get<PaginatedResponse<TransactionEntity>>(
+      `${environment.API_URL}/transaction/sender-principal/${id}`,
+      { params }
+    );
   }
 
-  getRecipientGroupTransactionById(id: number) {
-    return this.httpClient.get<TransactionEntity[]>(`${environment.API_URL}/transaction/recipient-group/${id}`)
+  getRecipientGroupTransactionById(
+    id: number,
+    page: number = 1,
+    limit: number = 10
+  ) {
+    const params = new HttpParams()
+      .set('page', page.toString())
+      .set('limit', limit.toString());
+
+    return this.httpClient.get<PaginatedResponse<TransactionEntity>>(
+      `${environment.API_URL}/transaction/recipient-group/${id}`,
+      { params }
+    );
   }
 
-  getSenderGroupTransactionById(id: number) {
-    return this.httpClient.get<TransactionEntity[]>(`${environment.API_URL}/transaction/sender-group/${id}`)
+  getSenderGroupTransactionById(
+    id: number,
+    page: number = 1,
+    limit: number = 10
+  ) {
+    const params = new HttpParams()
+      .set('page', page.toString())
+      .set('limit', limit.toString());
+
+    return this.httpClient.get<PaginatedResponse<TransactionEntity>>(
+      `${environment.API_URL}/transaction/sender-group/${id}`,
+      { params }
+    );
   }
 }

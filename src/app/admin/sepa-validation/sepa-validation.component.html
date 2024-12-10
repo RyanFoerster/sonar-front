@@ -1,42 +1,60 @@
-<div class="px-5 flex flex-col  gap-5 2xl:hidden">
-
-
+<div class="px-5 flex flex-col gap-5 2xl:hidden">
   <p class="font-bold text-lg px-3">Validation virements SEPA</p>
   <hlm-table class="overflow-x-auto px-4 bg-gray-sonar rounded-xl shadow-lg">
-      <p class="font-bold text-sm p-3">Virements SEPA en attente de validation</p>
-      <div class="overflow-auto touch-none">
-      <hlm-trow class="flex ">
+    <p class="font-bold text-sm p-3">Virements SEPA en attente de validation</p>
+    <div class="overflow-auto touch-none">
+      <hlm-trow class="flex">
         <hlm-th class="w-28 font-bold text-[10px]">Date </hlm-th>
-        <hlm-th class="w-36 font-bold  text-[10px]">Titulaire du compte</hlm-th>
+        <hlm-th class="w-36 font-bold text-[10px]">Titulaire du compte</hlm-th>
         <hlm-th class="w-44 font-bold text-[10px]">IBAN</hlm-th>
         <hlm-th class="w-28 font-bold text-[10px]">Montant TVAC</hlm-th>
         <hlm-th class="w-28 font-bold text-[10px]">Montant HTVA</hlm-th>
         <hlm-th class="w-28 font-bold text-[10px]">Montant TVA</hlm-th>
         <hlm-th class="w-36 font-bold text-[10px]">Communication libre</hlm-th>
-        <hlm-th class="w-44 font-bold text-[10px]">Communication structurée</hlm-th>
+        <hlm-th class="w-44 font-bold text-[10px]"
+          >Communication structurée</hlm-th
+        >
         <hlm-th class="w-36 font-bold text-[10px]">Projet</hlm-th>
       </hlm-trow>
       @for (virement of virementsSepaInPending(); track virement.id) {
-        <hlm-trow class="flex border-none relative sm:flex-row">
-          <hlm-td class="w-28 text-[10px]">{{virement.created_at}}</hlm-td>
-          <hlm-td class="w-36 text-[10px]">{{virement.account_owner}}</hlm-td>
-          <hlm-td class="w-44 text-[10px]">{{virement.iban}}</hlm-td>
-          <hlm-td class="w-28 text-[10px]">{{virement.amount_total}}</hlm-td>
-          <hlm-td class="w-28 text-[10px]">{{virement.amount_htva}}</hlm-td>
-          <hlm-td class="w-28 text-[10px]">{{virement.amount_tva}}</hlm-td>
-          <hlm-td class="w-36 text-[10px]">{{virement.communication}}</hlm-td>
-          <hlm-td class="w-44 text-[10px]">{{virement.structured_communication}}</hlm-td>
-          <hlm-td class="w-36 text-[10px]">{{virement.projet_username}}</hlm-td>
-
-
-        </hlm-trow>
-        <div class="mb-3 max-w-80 flex justify-between sticky bottom-0 left-0">
-            <button class="rounded-full pt-0 pb-0 h-auto text-[10px]" hlmBtn>Voir la facture</button>
-            <div class="flex gap-2">
-              <button class="rounded-full pt-0 pb-0 h-auto bg-red-600 text-[10px]" (click)="rejectVirement(virement.id)" hlmBtn>Refuser</button>
-              <button class="rounded-full pt-0 pb-0 h-auto text-[10px]" (click)="acceptVirement(virement.id)" hlmBtn>Accepter</button>
-            </div>
+      <hlm-trow class="flex border-none relative sm:flex-row">
+        <hlm-td class="w-28 text-[10px]">{{ virement.created_at }}</hlm-td>
+        <hlm-td class="w-36 text-[10px]">{{ virement.account_owner }}</hlm-td>
+        <hlm-td class="w-44 text-[10px]">{{ virement.iban }}</hlm-td>
+        <hlm-td class="w-28 text-[10px]">{{ virement.amount_total }}</hlm-td>
+        <hlm-td class="w-28 text-[10px]">{{ virement.amount_htva }}</hlm-td>
+        <hlm-td class="w-28 text-[10px]">{{ virement.amount_tva }}</hlm-td>
+        <hlm-td class="w-36 text-[10px]">{{ virement.communication }}</hlm-td>
+        <hlm-td class="w-44 text-[10px]">{{
+          virement.structured_communication
+        }}</hlm-td>
+        <hlm-td class="w-36 text-[10px]">{{ virement.projet_username }}</hlm-td>
+      </hlm-trow>
+      <div class="mb-3 max-w-80 flex justify-between sticky bottom-0 left-0">
+        <a
+          [href]="virement.invoice_url"
+          target="_blank"
+          class="rounded-full pt-0 pb-0 h-auto text-[10px]"
+          hlmBtn
+          >Voir la facture</a
+        >
+        <div class="flex gap-2">
+          <button
+            class="rounded-full pt-0 pb-0 h-auto bg-red-600 text-[10px]"
+            (click)="rejectVirement(virement.id)"
+            hlmBtn
+          >
+            Refuser
+          </button>
+          <button
+            class="rounded-full pt-0 pb-0 h-auto text-[10px]"
+            (click)="acceptVirement(virement.id)"
+            hlmBtn
+          >
+            Accepter
+          </button>
         </div>
+      </div>
       }
     </div>
   </hlm-table>
@@ -44,97 +62,151 @@
   <hlm-table class="overflow-x-auto p-4 bg-gray-sonar rounded-xl shadow-lg">
     <p class="font-bold text-sm p-3">Virements SEPA validés</p>
     <div class="overflow-auto touch-none">
-    <hlm-trow class="flex ">
+      <hlm-trow class="flex">
+        <hlm-th class="w-28 font-bold text-[10px]">Date </hlm-th>
+        <hlm-th class="w-36 font-bold text-[10px]">Titulaire du compte</hlm-th>
+        <hlm-th class="w-44 font-bold text-[10px]">IBAN</hlm-th>
+        <hlm-th class="w-28 font-bold text-[10px]">Montant TVAC</hlm-th>
+        <hlm-th class="w-28 font-bold text-[10px]">Montant HTVA</hlm-th>
+        <hlm-th class="w-28 font-bold text-[10px]">Montant TVA</hlm-th>
+        <hlm-th class="w-36 font-bold text-[10px]">Communication libre</hlm-th>
+        <hlm-th class="w-44 font-bold text-[10px]"
+          >Communication structurée</hlm-th
+        >
+        <hlm-th class="w-36 font-bold text-[10px]">Projet</hlm-th>
+      </hlm-trow>
+      @for (virement of virementsSepaAccepted(); track virement.id) {
+      <hlm-trow class="flex flex-col sm:flex-row">
+        <hlm-td class="w-28 text-[10px]">{{
+          virement.created_at | date
+        }}</hlm-td>
+        <hlm-td class="w-36 text-[10px]">{{ virement.account_owner }}</hlm-td>
+        <hlm-td class="w-44 text-[10px]">{{ virement.iban }}</hlm-td>
+        <hlm-td class="w-28 text-[10px]">{{
+          virement.amount_total | euroFormat
+        }}</hlm-td>
+        <hlm-td class="w-28 text-[10px]">{{
+          virement.amount_htva | euroFormat
+        }}</hlm-td>
+        <hlm-td class="w-28 text-[10px]">{{
+          virement.amount_tva | euroFormat
+        }}</hlm-td>
+        <hlm-td class="w-36 text-[10px]">{{ virement.communication }}</hlm-td>
+        <hlm-td class="w-44 text-[10px]">{{
+          virement.structured_communication
+        }}</hlm-td>
+        <hlm-td class="w-36 text-[10px]">{{ virement.projet_username }}</hlm-td>
+      </hlm-trow>
+      }
+    </div>
+    <button
+      class="flex justify-center rounded-full text[10px] h-auto w-auto"
+      hlmBtn
+    >
+      Initier le virement SEPA
+    </button>
+  </hlm-table>
+</div>
+
+<div class="p-5 flex-col items-center gap-5 hidden 2xl:block">
+  <hlm-table class="overflow-x-auto p-4 bg-gray-sonar rounded-xl shadow-lg">
+    <p class="font-bold text-lg p-3">Virements SEPA en attente de validation</p>
+    <hlm-trow class="flex flex-col sm:flex-row">
       <hlm-th class="w-28 font-bold text-[10px]">Date </hlm-th>
-      <hlm-th class="w-36 font-bold  text-[10px]">Titulaire du compte</hlm-th>
+      <hlm-th class="w-36 font-bold text-[10px]">Titulaire du compte</hlm-th>
       <hlm-th class="w-44 font-bold text-[10px]">IBAN</hlm-th>
       <hlm-th class="w-28 font-bold text-[10px]">Montant TVAC</hlm-th>
       <hlm-th class="w-28 font-bold text-[10px]">Montant HTVA</hlm-th>
       <hlm-th class="w-28 font-bold text-[10px]">Montant TVA</hlm-th>
       <hlm-th class="w-36 font-bold text-[10px]">Communication libre</hlm-th>
-      <hlm-th class="w-44 font-bold text-[10px]">Communication structurée</hlm-th>
+      <hlm-th class="w-44 font-bold text-[10px]"
+        >Communication structurée</hlm-th
+      >
       <hlm-th class="w-36 font-bold text-[10px]">Projet</hlm-th>
     </hlm-trow>
-      @for (virement of virementsSepaAccepted(); track virement.id) {
-        <hlm-trow class="flex flex-col sm:flex-row">
-          <hlm-td class="w-28 text-[10px]">{{virement.created_at | date}}</hlm-td>
-          <hlm-td class="w-36 text-[10px]">{{virement.account_owner}}</hlm-td>
-          <hlm-td class="w-44 text-[10px]">{{virement.iban}}</hlm-td>
-          <hlm-td class="w-28 text-[10px]">{{virement.amount_total | euroFormat}}</hlm-td>
-          <hlm-td class="w-28 text-[10px]">{{virement.amount_htva | euroFormat}}</hlm-td>
-          <hlm-td class="w-28 text-[10px]">{{virement.amount_tva | euroFormat}}</hlm-td>
-          <hlm-td class="w-36 text-[10px]">{{virement.communication}}</hlm-td>
-          <hlm-td class="w-44 text-[10px]">{{virement.structured_communication}}</hlm-td>
-          <hlm-td class="w-36 text-[10px]">{{virement.projet_username}}</hlm-td>
-        </hlm-trow>
-      }
-  </div>
-        <button class="flex justify-center rounded-full text[10px] h-auto w-auto" hlmBtn>Initier le virement SEPA</button>
+    @for (virement of virementsSepaInPending(); track virement.id) {
+    <hlm-trow class="flex flex-col relative sm:flex-row">
+      <hlm-td class="w-28 text-[10px]">{{ virement.created_at | date }}</hlm-td>
+      <hlm-td class="w-36 text-[10px]">{{ virement.account_owner }}</hlm-td>
+      <hlm-td class="w-44 text-[10px]">{{ virement.iban }}</hlm-td>
+      <hlm-td class="w-28 text-[10px]">{{
+        virement.amount_total | euroFormat
+      }}</hlm-td>
+      <hlm-td class="w-28 text-[10px]">{{
+        virement.amount_htva | euroFormat
+      }}</hlm-td>
+      <hlm-td class="w-28 text-[10px]">{{
+        virement.amount_tva | euroFormat
+      }}</hlm-td>
+      <hlm-td class="w-36 text-[10px]">{{ virement.communication }}</hlm-td>
+      <hlm-td class="w-44 text-[10px]">{{
+        virement.structured_communication
+      }}</hlm-td>
+      <hlm-td class="w-36 text-[10px]">{{ virement.projet_username }}</hlm-td>
+      <hlm-td class="w-auto gap-3">
+        <a
+          [href]="virement.invoice_url"
+          target="_blank"
+          class="rounded-full h-auto text-[10px]"
+          hlmBtn
+        >
+          Voir la facture
+        </a>
+        <button
+          class="rounded-full h-auto bg-red-800 text-[10px]"
+          hlmBtn
+          (click)="rejectVirement(virement.id)"
+        >
+          Refuser
+        </button>
+        <button
+          class="rounded-full h-auto text-[10px]"
+          hlmBtn
+          (click)="acceptVirement(virement.id)"
+        >
+          Accepter
+        </button>
+      </hlm-td>
+    </hlm-trow>
+    }
   </hlm-table>
-</div>
 
-<div class="p-5 flex-col items-center gap-5 hidden 2xl:block">
-    <hlm-table class="overflow-x-auto p-4 bg-gray-sonar rounded-xl shadow-lg">
-        <p class="font-bold text-lg p-3">Virements SEPA en attente de validation</p>
-        <hlm-trow class="flex flex-col sm:flex-row">
-          <hlm-th class="w-28 font-bold text-[10px]">Date </hlm-th>
-          <hlm-th class="w-36 font-bold  text-[10px]">Titulaire du compte</hlm-th>
-          <hlm-th class="w-44 font-bold text-[10px]">IBAN</hlm-th>
-          <hlm-th class="w-28 font-bold text-[10px]">Montant TVAC</hlm-th>
-          <hlm-th class="w-28 font-bold text-[10px]">Montant HTVA</hlm-th>
-          <hlm-th class="w-28 font-bold text-[10px]">Montant TVA</hlm-th>
-          <hlm-th class="w-36 font-bold text-[10px]">Communication libre</hlm-th>
-          <hlm-th class="w-44 font-bold text-[10px]">Communication structurée</hlm-th>
-          <hlm-th class="w-36 font-bold text-[10px]">Projet</hlm-th>
+  <hlm-table class="overflow-x-auto p-4 bg-gray-sonar rounded-xl shadow-lg">
+    <hlm-trow class="flex flex-col sm:flex-row">
+      <hlm-th class="w-28 font-bold text-[10px]">Date </hlm-th>
+      <hlm-th class="w-36 font-bold text-[10px]">Titulaire du compte</hlm-th>
+      <hlm-th class="w-44 font-bold text-[10px]">IBAN</hlm-th>
+      <hlm-th class="w-28 font-bold text-[10px]">Montant TVAC</hlm-th>
+      <hlm-th class="w-28 font-bold text-[10px]">Montant HTVA</hlm-th>
+      <hlm-th class="w-28 font-bold text-[10px]">Montant TVA</hlm-th>
+      <hlm-th class="w-36 font-bold text-[10px]">Communication libre</hlm-th>
+      <hlm-th class="w-44 font-bold text-[10px]"
+        >Communication structurée</hlm-th
+      >
+      <hlm-th class="w-36 font-bold text-[10px]">Projet</hlm-th>
+    </hlm-trow>
+    @for (virement of virementsSepaAccepted(); track virement.id) {
+    <hlm-trow class="flex flex-col sm:flex-row">
+      <hlm-td class="w-28 text-[10px]">{{ virement.created_at | date }}</hlm-td>
+      <hlm-td class="w-36 text-[10px]">{{ virement.account_owner }}</hlm-td>
+      <hlm-td class="w-44 text-[10px]">{{ virement.iban }}</hlm-td>
+      <hlm-td class="w-28 text-[10px]">{{
+        virement.amount_total | euroFormat
+      }}</hlm-td>
+      <hlm-td class="w-28 text-[10px]">{{
+        virement.amount_htva | euroFormat
+      }}</hlm-td>
+      <hlm-td class="w-28 text-[10px]">{{
+        virement.amount_tva | euroFormat
+      }}</hlm-td>
+      <hlm-td class="w-36 text-[10px]">{{ virement.communication }}</hlm-td>
+      <hlm-td class="w-44 text-[10px]">{{
+        virement.structured_communication
+      }}</hlm-td>
+      <hlm-td class="w-36 text-[10px]">{{ virement.projet_username }}</hlm-td>
+    </hlm-trow>
+    }
+  </hlm-table>
 
-        </hlm-trow>
-        @for (virement of virementsSepaInPending(); track virement.id) {
-          <hlm-trow class="flex flex-col relative sm:flex-row">
-            <hlm-td class="w-28 text-[10px]">{{virement.created_at | date}}</hlm-td>
-            <hlm-td class="w-36 text-[10px]">{{virement.account_owner}}</hlm-td>
-            <hlm-td class="w-44 text-[10px]">{{virement.iban}}</hlm-td>
-            <hlm-td class="w-28 text-[10px]">{{virement.amount_total | euroFormat}}</hlm-td>
-            <hlm-td class="w-28 text-[10px]">{{virement.amount_htva | euroFormat}}</hlm-td>
-            <hlm-td class="w-28 text-[10px]">{{virement.amount_tva | euroFormat}}</hlm-td>
-            <hlm-td class="w-36 text-[10px]">{{virement.communication}}</hlm-td>
-            <hlm-td class="w-44 text-[10px]">{{virement.structured_communication}}</hlm-td>
-            <hlm-td class="w-36 text-[10px]">{{virement.projet_username}}</hlm-td>
-            <hlm-td class="w-auto gap-3">
-              <button class="rounded-full h-auto text-[10px]" hlmBtn>Voir la facture</button>
-              <button class="rounded-full h-auto bg-red-800 text-[10px]" hlmBtn (click)="rejectVirement(virement.id)">Refuser</button>
-              <button class="rounded-full h-auto text-[10px]" hlmBtn (click)="acceptVirement(virement.id)">Accepter</button>
-            </hlm-td>
-          </hlm-trow>
-        }
-    </hlm-table>
-
-    <hlm-table class="overflow-x-auto p-4 bg-gray-sonar rounded-xl shadow-lg">
-        <hlm-trow class="flex flex-col sm:flex-row">
-          <hlm-th class="w-28 font-bold text-[10px]">Date </hlm-th>
-          <hlm-th class="w-36 font-bold  text-[10px]">Titulaire du compte</hlm-th>
-          <hlm-th class="w-44 font-bold text-[10px]">IBAN</hlm-th>
-          <hlm-th class="w-28 font-bold text-[10px]">Montant TVAC</hlm-th>
-          <hlm-th class="w-28 font-bold text-[10px]">Montant HTVA</hlm-th>
-          <hlm-th class="w-28 font-bold text-[10px]">Montant TVA</hlm-th>
-          <hlm-th class="w-36 font-bold text-[10px]">Communication libre</hlm-th>
-          <hlm-th class="w-44 font-bold text-[10px]">Communication structurée</hlm-th>
-          <hlm-th class="w-36 font-bold text-[10px]">Projet</hlm-th>
-
-        </hlm-trow>
-        @for (virement of virementsSepaAccepted(); track virement.id) {
-          <hlm-trow class="flex flex-col sm:flex-row">
-            <hlm-td class="w-28 text-[10px]">{{virement.created_at | date}}</hlm-td>
-            <hlm-td class="w-36 text-[10px]">{{virement.account_owner}}</hlm-td>
-            <hlm-td class="w-44 text-[10px]">{{virement.iban}}</hlm-td>
-            <hlm-td class="w-28 text-[10px]">{{virement.amount_total | euroFormat}}</hlm-td>
-            <hlm-td class="w-28 text-[10px]">{{virement.amount_htva | euroFormat}}</hlm-td>
-            <hlm-td class="w-28 text-[10px]">{{virement.amount_tva | euroFormat}}</hlm-td>
-            <hlm-td class="w-36 text-[10px]">{{virement.communication}}</hlm-td>
-            <hlm-td class="w-44 text-[10px]">{{virement.structured_communication}}</hlm-td>
-            <hlm-td class="w-36 text-[10px]">{{virement.projet_username}}</hlm-td>
-          </hlm-trow>
-        }
-    </hlm-table>
-
-    <button class="rounded-full w-80" hlmBtn>Initier le virement SEPA</button>
+  <button class="rounded-full w-80" hlmBtn>Initier le virement SEPA</button>
 </div>

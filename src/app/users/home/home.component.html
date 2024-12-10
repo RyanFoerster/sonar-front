@@ -1,166 +1,175 @@
 <div class="md:hidden bg-gray-sonar p-6 m-10 rounded-2xl shadow-lg">
   <div hlmAccordion>
-    @if (userConnected()?.role === "ADMIN") {
-    <div class="border-none" hlmAccordionItem>
-      <button class="font-bold w-fit" hlmAccordionTrigger>
+    @if (getUserConnected()()?.role === "ADMIN") {
+    <div hlmAccordionItem>
+      <button
+        class="font-bold w-full flex justify-between items-center"
+        hlmAccordionTrigger
+      >
         Compte administrateur
-        <hlm-icon hlmAccIcon/>
+        <hlm-icon hlmAccIcon />
       </button>
-      <brn-accordion-content hlm>
-        <button class="rounded-full w-full text-xs h-auto mb-4" hlmBtn>
-          Mettre à jour
-        </button>
+      <hlm-accordion-content>
+        <div class="flex flex-col gap-4">
+          <button class="rounded-full w-full text-xs h-auto mb-4" hlmBtn>
+            Mettre à jour
+          </button>
 
-        <button
-          class="bg-white flex flex-col justify-center items-center w-full rounded-2xl h-32 gap-2 shadow-lg"
-        >
-          <div>
-            <p class="font-bold">Solde compte Crélan</p>
-            <p class="font-bold text-[9px]">000001</p>
-          </div>
-          <p>100 000€</p>
-        </button>
-      </brn-accordion-content>
-
-      <brn-accordion-content hlm>
-        <a
-          class="bg-white flex flex-col justify-center items-center w-full rounded-2xl h-32 gap-2 shadow-lg"
-        >
-          <div class="flex flex-col justify-center items-center">
-            <p class="font-bold">Sonar Artists</p>
-            <p class="font-bold text-[9px]">000001</p>
-          </div>
-          <p>100 000€</p>
-        </a>
-      </brn-accordion-content>
-
-      <brn-accordion-content hlm>
-        <button
-          class="bg-white flex flex-col justify-center items-center w-full rounded-2xl h-32 gap-2 shadow-lg"
-        >
-          <div>
-            <p class="font-bold">Balance des comptes</p>
-            <p class="font-bold text-[9px]">000001</p>
-          </div>
-          <p>100 000€</p>
-        </button>
-      </brn-accordion-content>
+          <button
+            class="bg-white flex flex-col justify-center items-center w-full rounded-2xl h-32 gap-2 shadow-lg"
+          >
+            <div>
+              <p class="font-bold">Solde compte Crélan</p>
+              <p class="font-bold text-[9px]">000001</p>
+            </div>
+            <p>100 000€</p>
+          </button>
+        </div>
+      </hlm-accordion-content>
     </div>
-    }
-
-    @if (userConnected()?.role === "USER") {
-    <div class="border-none" hlmAccordionItem>
-      <button class="font-bold" hlmAccordionTrigger>
+    } @if (getUserConnected()()?.role === "USER") {
+    <div hlmAccordionItem>
+      <button
+        class="font-bold w-full flex justify-between items-center"
+        hlmAccordionTrigger
+      >
         Projet principal
-        <hlm-icon hlmAccIcon/>
+        <hlm-icon hlmAccIcon />
       </button>
-      <brn-accordion-content class="mx-0" hlm>
+      <hlm-accordion-content>
         <app-account-component
-          [name]="userConnected()?.comptePrincipal?.username || ''"
-          [id]="userConnected()?.comptePrincipal?.id || 0"
-          [solde]="userConnected()?.comptePrincipal?.solde || 0"
+          [name]="getUserConnected()()?.comptePrincipal?.username || ''"
+          [id]="getUserConnected()()?.comptePrincipal?.id || 0"
+          [solde]="getUserConnected()()?.comptePrincipal?.solde || 0"
           typeOfProjet="PRINCIPAL"
         />
-      </brn-accordion-content>
+      </hlm-accordion-content>
     </div>
     }
 
-    <div class="flex flex-col bg-gray-sonar shadow-xl p-4 gap-4 rounded-2xl">
-      <p-iconField iconPosition="right">
-        <p-inputIcon styleClass="pi pi-search"/>
-        <input
-          class="w-full p-2 rounded-full text-xs"
-          type="text"
-          pInputText
-          placeholder="Exemple : Sonar Artists"
-        />
-      </p-iconField>
-
+    <div
+      class="flex flex-col bg-gray-sonar shadow-xl p-4 gap-4 rounded-2xl my-4"
+    >
+      <input
+        class="w-full p-2 rounded-full text-xs"
+        type="text"
+        hlmInput
+        placeholder="Exemple : Sonar Artists"
+        (input)="onSearch($event)"
+        [value]="getSearchTermValue()"
+      />
       <button class="rounded-full w-full text-xs h-auto" hlmBtn>
         Rechercher un projet
       </button>
     </div>
 
-    @if (userConnected()?.role === "ADMIN") {
-    <div class="border-none" hlmAccordionItem>
-      <button class="font-bold" hlmAccordionTrigger>
+    @if (isAdmin()) {
+    <div hlmAccordionItem>
+      <button
+        class="font-bold w-full flex justify-between items-center"
+        hlmAccordionTrigger
+      >
         Projets individuels
-        <hlm-icon hlmAccIcon/>
+        <hlm-icon hlmAccIcon />
       </button>
-      <brn-accordion-content hlm>
-      <span class="flex flex-col gap-3">
-        @for (projet of comptePrincipal(); track $index) {
-    <app-account-component
-      [id]="projet.id"
-      [name]="projet.username"
-      [solde]="projet.solde"
-      typeOfProjet="PRINCIPAL"
-    />
-    }
-    </span>
-    </brn-accordion-content>
-  </div>
+      <hlm-accordion-content>
+        <div class="flex flex-col gap-3">
+          @if (filteredPrincipalAccounts(); as accounts) { @if
+          (!accounts.length) {
+          <p class="text-gray-500 text-center py-4">Aucun résultat trouvé</p>
+          } @else { @for (projet of accounts; track projet.id) {
+          <app-account-component
+            [id]="projet.id"
+            [name]="projet.username"
+            [solde]="projet.solde"
+            typeOfProjet="PRINCIPAL"
+          />
+          } } }
+        </div>
+      </hlm-accordion-content>
+    </div>
     }
 
-    <div class="border-none" hlmAccordionItem>
-      <button class="font-bold" hlmAccordionTrigger>
+    <div hlmAccordionItem>
+      <button
+        class="font-bold w-full flex justify-between items-center"
+        hlmAccordionTrigger
+      >
         Projets de groupes
-        <hlm-icon hlmAccIcon/>
+        <hlm-icon hlmAccIcon />
       </button>
-      <brn-accordion-content hlm>
-        <span class="flex flex-col gap-3">
-          @if (userConnected()?.role === "ADMIN") {
+      <hlm-accordion-content>
+        <div class="flex flex-col gap-3">
+          @if (isAdmin()) { @if (filteredGroupAccounts(); as accounts) { @if
+          (!accounts.length) {
+          <p class="text-gray-500 text-center py-4">Aucun résultat trouvé</p>
+          } @else { @for (projet of accounts; track projet.id) {
+          <app-account-component
+            [id]="projet.id"
+            [name]="projet.username"
+            [solde]="projet.solde"
+            typeOfProjet="GROUP"
+          />
+          } } } } @else { @if (userSecondaryAccounts(); as accounts) { @for
+          (projet of accounts; track $index) {
+          <app-account-component
+            [id]="projet.group_account.id"
+            [name]="projet.group_account.username"
+            [solde]="projet.group_account.solde"
+            typeOfProjet="GROUP"
+          />
+          } } }
+        </div>
+      </hlm-accordion-content>
+    </div>
 
-          @for (projet of groupAccounts(); track $index) {
-              <app-account-component
-                [id]="projet.id"
-                [name]="projet.username"
-                [solde]="projet.solde"
-                typeOfProjet="GROUP"
+    <div class="mt-4">
+      <hlm-dialog>
+        <button
+          class="rounded-full w-full text-xs h-auto"
+          id="edit-group"
+          brnDialogTrigger
+          hlmBtn
+        >
+          Nouveau projet de groupe
+        </button>
+        <hlm-dialog-content
+          class="sm:max-w-[425px] rounded-xl"
+          *brnDialogContent="let ctx"
+        >
+          <hlm-dialog-header>
+            <h3 hlmDialogTitle>Nouveau projet de groupe</h3>
+            <p hlmDialogDescription>Créer un nouveau projet de groupe.</p>
+          </hlm-dialog-header>
+          <div class="py-4 grid gap-4">
+            <form
+              [formGroup]="createGroupProjectForm"
+              class="items-center grid grid-cols-4 gap-4"
+              (ngSubmit)="createGroupProject()"
+            >
+              <label hlmLabel for="name" class="text-right">Nom</label>
+              <input
+                formControlName="username"
+                hlmInput
+                id="name"
+                placeholder="Nom du compte"
+                class="col-span-3"
               />
-            }
-          } @else {
-          @for (projet of userConnected()?.userSecondaryAccounts;
-            track $index) {
-              <app-account-component
-                [id]="projet.group_account.id"
-                [name]="projet.group_account.username"
-                [solde]="projet.group_account.solde"
-                typeOfProjet="GROUP"
-              />
-            }
-          }
-        </span>
-      </brn-accordion-content>
+              <button
+                class="rounded-full w-full text-xs h-auto"
+                hlmBtn
+                type="submit"
+                (click)="ctx.close()"
+              >
+                Créer
+              </button>
+            </form>
+          </div>
+        </hlm-dialog-content>
+      </hlm-dialog>
     </div>
   </div>
-  <div>
-    <hlm-dialog>
-      <button class="rounded-full w-full text-xs h-auto" id="edit-group" brnDialogTrigger hlmBtn>Nouveau projet de
-        groupe
-      </button>
-      <hlm-dialog-content class="sm:max-w-[425px] rounded-xl" *brnDialogContent="let ctx">
-        <hlm-dialog-header>
-          <h3 hlmDialogTitle>Nouveau projet de groupe</h3>
-          <p hlmDialogDescription>Créer un nouveau projet de groupe.</p>
-        </hlm-dialog-header>
-        <div class="py-4 grid gap-4">
-          <form [formGroup]="createGroupProjectForm" class="items-center grid grid-cols-4 gap-4"
-                (ngSubmit)="createGroupProject()">
-            <label hlmLabel for="name" class="text-right">Nom</label>
-            <input formControlName="username" hlmInput id="name" placeholder="Nom du compte" class="col-span-3"/>
-            <button class="rounded-full w-full text-xs h-auto" hlmBtn type="submit" (click)="ctx.close()">Créer</button>
-          </form>
-        </div>
-
-        <hlm-dialog-footer>
-        </hlm-dialog-footer>
-
-      </hlm-dialog-content>
-    </hlm-dialog>
-  </div>
 </div>
-
 
 <!-- * VUE BUREAU -->
 
@@ -168,7 +177,7 @@
   class="hidden md:block flex-col bg-gray-sonar h-auto p-6 mx-28 my-6 rounded-2xl shadow-md"
 >
   <div class="flex flex-col gap-10">
-    @if (userConnected()?.role === "ADMIN") {
+    @if (getUserConnected()()?.role === "ADMIN") {
     <div class="flex flex-col gap-3">
       <p class="font-bold text-2xl w-fit">Compte administrateur</p>
       <div class="flex gap-10">
@@ -182,129 +191,150 @@
           <p>100 000€</p>
         </button>
 
-      @if (userConnected()?.role === "ADMIN") {
+        @if (getUserConnected()()?.role === "ADMIN") {
         <app-account-component
           class="w-1/3"
-          [id]="userConnected()?.comptePrincipal?.id!"
-          [name]="userConnected()?.comptePrincipal?.username!"
-          [solde]="userConnected()?.comptePrincipal?.solde!"
+          [id]="getUserConnected()()?.comptePrincipal?.id!"
+          [name]="getUserConnected()()?.comptePrincipal?.username!"
+          [solde]="getUserConnected()()?.comptePrincipal?.solde!"
           typeOfProjet="PRINCIPAL"
         />
-    }
+        }
 
-    <a
-      class="bg-white flex flex-col justify-center items-center w-1/3 rounded-2xl h-32 p-6 gap-2 shadow-lg"
-    >
-      <p class="font-bold">Balance</p>
-      <p>0€</p>
-      <button class="rounded-full w-full text-xs h-auto mb-4" hlmBtn>
-        Mettre à jour
-      </button>
-    </a>
-  </div>
-</div>
-    }
-    @if (userConnected()?.role === "USER") {
+        <a
+          class="bg-white flex flex-col justify-center items-center w-1/3 rounded-2xl h-32 p-6 gap-2 shadow-lg"
+        >
+          <p class="font-bold">Balance</p>
+          <p>0€</p>
+          <button class="rounded-full w-full text-xs h-auto mb-4" hlmBtn>
+            Mettre à jour
+          </button>
+        </a>
+      </div>
+    </div>
+    } @if (getUserConnected()()?.role === "USER") {
     <div class="flex flex-col gap-3">
       <p class="font-bold text-2xl">Projet principal</p>
-      <div class="w-1/3 ">
+      <div class="w-1/3">
         <app-account-component
-          [id]="userConnected()?.comptePrincipal?.id!"
-          [name]="userConnected()?.comptePrincipal?.username!"
-          [solde]="userConnected()?.comptePrincipal?.solde!"
+          [id]="getUserConnected()()?.comptePrincipal?.id!"
+          [name]="getUserConnected()()?.comptePrincipal?.username!"
+          [solde]="getUserConnected()()?.comptePrincipal?.solde!"
           typeOfProjet="PRINCIPAL"
         />
       </div>
     </div>
     }
 
-    <div class="flex w-9/12 bg-gray-sonar shadow-2xl p-4 gap-4 rounded-full">
-      <div class="flex flex-col w-full max-w-full">
-        <p-iconField iconPosition="right">
-          <p-inputIcon styleClass="pi pi-search"/>
-          <input
-            class="flex flex-col p-2 rounded-full min-w-full text-xs"
-            type="text"
-            pInputText
-            placeholder="Exemple : Sonar Artists"
-          />
-        </p-iconField>
-      </div>
-      <div class="flex w-auto min-w-36 justify-end">
-        <button class="rounded-full text-[10px] h-auto" hlmBtn>
-          Rechercher un projet
-        </button>
-      </div>
+    <div
+      class="flex items-center w-1/3 bg-gray-sonar shadow-2xl p-2 gap-4 rounded-full"
+    >
+      <input
+        class="flex flex-col w-full bg-white/80 p-2 rounded-full text-xs"
+        type="text"
+        hlmInput
+        placeholder="Exemple : Sonar Artists"
+        (input)="onSearch($event)"
+        [value]="getSearchTermValue()"
+      />
+      <!-- <button class="rounded-full text-[10px]" hlmBtn>
+        Rechercher un projet
+      </button> -->
     </div>
 
-    @if (userConnected()?.role === "ADMIN") {
-      <div class="flex flex-col gap-3">
-        <p class="font-bold text-2xl">Projets individuels</p>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
-          @for (projet of comptePrincipal(); track $index) {
-      @if(projet.id !== userConnected()?.comptePrincipal?.id) {
+    @if (getUserConnected()()?.role === "ADMIN") {
+    <div class="flex flex-col gap-3">
+      <p class="font-bold text-2xl">Projets individuels</p>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
+        @if (getUserConnected()()?.role === "ADMIN") { @if
+        (filteredPrincipalAccounts()?.length === 0) {
+        <p class="text-gray-500 col-span-full text-center py-4">
+          Aucun résultat trouvé
+        </p>
+        } @else { @for (projet of filteredPrincipalAccounts(); track projet.id)
+        {
         <app-account-component
           [id]="projet.id"
           [name]="projet.username"
           [solde]="projet.solde"
           typeOfProjet="PRINCIPAL"
         />
-      }
-    }
+        } } }
+      </div>
     </div>
-  </div>
     }
 
     <div class="flex flex-col gap-3">
       <div class="flex justify-between w-full">
         <p class="flex font-bold text-2xl">Projets de groupes</p>
         <hlm-dialog>
-          <button class="rounded-full w-full text-xs h-auto" id="edit-group" brnDialogTrigger hlmBtn>Nouveau projet de
-            groupe
+          <button
+            class="rounded-full w-full text-xs h-auto"
+            id="edit-group"
+            brnDialogTrigger
+            hlmBtn
+          >
+            Nouveau projet de groupe
           </button>
-          <hlm-dialog-content class="sm:max-w-[425px] rounded-xl" *brnDialogContent="let ctx">
+          <hlm-dialog-content
+            class="sm:max-w-[425px] rounded-xl"
+            *brnDialogContent="let ctx"
+          >
             <hlm-dialog-header>
               <h3 hlmDialogTitle>Nouveau projet de groupe</h3>
               <p hlmDialogDescription>Créer un nouveau projet de groupe.</p>
             </hlm-dialog-header>
             <div class="py-4 grid gap-4">
-              <form [formGroup]="createGroupProjectForm" class="items-center grid grid-cols-4 gap-4"
-                    (ngSubmit)="createGroupProject()">
+              <form
+                [formGroup]="createGroupProjectForm"
+                class="items-center grid grid-cols-4 gap-4"
+                (ngSubmit)="createGroupProject()"
+              >
                 <label hlmLabel for="name" class="text-right">Nom</label>
-                <input formControlName="username" hlmInput id="name" placeholder="Nom du compte" class="col-span-3"/>
-                <button class="rounded-full w-full text-xs h-auto" hlmBtn type="submit" (click)="ctx.close()">Créer
+                <input
+                  formControlName="username"
+                  hlmInput
+                  id="name"
+                  placeholder="Nom du compte"
+                  class="col-span-3"
+                />
+                <button
+                  class="rounded-full w-full text-xs h-auto"
+                  hlmBtn
+                  type="submit"
+                  (click)="ctx.close()"
+                >
+                  Créer
                 </button>
               </form>
             </div>
 
-            <hlm-dialog-footer>
-            </hlm-dialog-footer>
-
+            <hlm-dialog-footer> </hlm-dialog-footer>
           </hlm-dialog-content>
         </hlm-dialog>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
-        @if (userConnected()?.role === "ADMIN") {
-
-        @for (projet of groupAccounts(); track $index) {
+        @if (getUserConnected()()?.role === "ADMIN") { @if
+        (filteredGroupAccounts()?.length === 0) {
+        <p class="text-gray-500 col-span-full text-center py-4">
+          Aucun résultat trouvé
+        </p>
+        } @else { @for (projet of filteredGroupAccounts(); track projet.id) {
         <app-account-component
           [id]="projet.id"
           [name]="projet.username"
           [solde]="projet.solde"
           typeOfProjet="GROUP"
         />
-        }
-        } @else {
-        @for (projet of userConnected()?.userSecondaryAccounts;
-          track $index) {
+        } } } @else { @for (projet of
+        getUserConnected()()?.userSecondaryAccounts; track $index) {
         <app-account-component
           [id]="projet.group_account.id"
           [name]="projet.group_account.username"
           [solde]="projet.group_account.solde"
           typeOfProjet="GROUP"
         />
-        }
-        }
+        } }
       </div>
     </div>
   </div>

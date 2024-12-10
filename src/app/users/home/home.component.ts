@@ -1,6 +1,18 @@
+import {
+  Component,
+  computed,
+  inject,
+  signal,
+  WritableSignal,
+} from '@angular/core';
+import {
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { JsonPipe } from '@angular/common';
-import { Component, inject, signal, WritableSignal } from '@angular/core';
-import { BrnAccordionContentComponent } from '@spartan-ng/ui-accordion-brain';
+import { tap } from 'rxjs';
 import {
   HlmAccordionContentComponent,
   HlmAccordionDirective,
@@ -9,19 +21,8 @@ import {
   HlmAccordionTriggerDirective,
 } from '@spartan-ng/ui-accordion-helm';
 import { HlmIconComponent } from '@spartan-ng/ui-icon-helm';
-import { AccordionModule } from 'primeng/accordion';
-import { IconFieldModule } from 'primeng/iconfield';
-import { InputIconModule } from 'primeng/inputicon';
-import { InputTextModule } from 'primeng/inputtext';
+import { HlmInputDirective } from '@spartan-ng/ui-input-helm';
 import { HlmButtonDirective } from '@spartan-ng/ui-button-helm';
-import { AccountComponentComponent } from './account-component/account-component.component';
-import { UserEntity } from '../../shared/entities/user.entity';
-import { UsersService } from '../../shared/services/users.service';
-import { tap } from 'rxjs';
-import { CompteGroupeEntity } from '../../shared/entities/compte-groupe.entity';
-import { CompteGroupeService } from '../../shared/services/compte-groupe.service';
-import { ComptePrincipalService } from '../../shared/services/compte-principal.service';
-import { PrincipalAccountEntity } from '../../shared/entities/principal-account.entity';
 import {
   BrnDialogContentDirective,
   BrnDialogTriggerDirective,
@@ -34,28 +35,26 @@ import {
   HlmDialogHeaderComponent,
   HlmDialogTitleDirective,
 } from '@spartan-ng/ui-dialog-helm';
-import {
-  FormBuilder,
-  FormGroup,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
+import { AccountComponentComponent } from './account-component/account-component.component';
+import { UsersService } from '../../shared/services/users.service';
+import { CompteGroupeService } from '../../shared/services/compte-groupe.service';
+import { ComptePrincipalService } from '../../shared/services/compte-principal.service';
+import { UserEntity } from '../../shared/entities/user.entity';
+import { CompteGroupeEntity } from '../../shared/entities/compte-groupe.entity';
+import { PrincipalAccountEntity } from '../../shared/entities/principal-account.entity';
+import { GroupProjectDto } from '../../shared/dtos/group-project.dto';
 
 @Component({
   selector: 'app-home',
   standalone: true,
   imports: [
-    BrnAccordionContentComponent,
     HlmAccordionContentComponent,
     HlmAccordionDirective,
     HlmAccordionIconDirective,
     HlmAccordionItemDirective,
     HlmAccordionTriggerDirective,
     HlmIconComponent,
-    AccordionModule,
-    InputTextModule,
-    InputIconModule,
-    IconFieldModule,
+    HlmInputDirective,
     HlmButtonDirective,
     AccountComponentComponent,
     JsonPipe,
@@ -68,62 +67,123 @@ import {
     BrnDialogContentDirective,
     BrnDialogTriggerDirective,
     ReactiveFormsModule,
-    HlmDialogFooterComponent,
   ],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css',
 })
 export class HomeComponent {
-  createGroupProjectForm!: FormGroup;
+  private readonly usersService = inject(UsersService);
+  private readonly groupAccountService = inject(CompteGroupeService);
+  private readonly comptePrincipalService = inject(ComptePrincipalService);
+  private readonly formBuilder = inject(FormBuilder);
 
-  userConnected: WritableSignal<UserEntity | null> = signal(null);
-  groupAccounts: WritableSignal<CompteGroupeEntity[] | null> = signal(null);
-  comptePrincipal: WritableSignal<PrincipalAccountEntity[] | null> =
-    signal(null);
+  readonly createGroupProjectForm = this.formBuilder.group({
+    username: ['', [Validators.required]],
+  });
 
-  usersService: UsersService = inject(UsersService);
-  groupAccountService: CompteGroupeService = inject(CompteGroupeService);
-  comptePrincipalService: ComptePrincipalService = inject(
-    ComptePrincipalService
+  private readonly userConnected = signal<UserEntity | null>(null);
+  private readonly groupAccounts = signal<CompteGroupeEntity[] | null>(null);
+  private readonly comptePrincipal = signal<PrincipalAccountEntity[] | null>(
+    null
   );
-  formBuilder: FormBuilder = inject(FormBuilder);
+  private readonly searchTerm = signal<string>('');
+
+  // Computed signals pour les données filtrées
+  readonly filteredGroupAccounts = computed(() => {
+    const accounts = this.groupAccounts();
+    const term = this.searchTerm().toLowerCase().trim();
+
+    if (!accounts || !term) return accounts;
+
+    return accounts.filter(
+      (account) =>
+        account.username.toLowerCase().includes(term) ||
+        account.id.toString().includes(term)
+    );
+  });
+
+  readonly filteredPrincipalAccounts = computed(() => {
+    const accounts = this.comptePrincipal();
+    const term = this.searchTerm().toLowerCase().trim();
+
+    if (!accounts || !term) return accounts;
+
+    return accounts.filter(
+      (account) =>
+        account.username.toLowerCase().includes(term) ||
+        account.id.toString().includes(term)
+    );
+  });
+
+  // Computed signal pour l'utilisateur connecté
+  readonly isAdmin = computed(() => this.userConnected()?.role === 'ADMIN');
+  readonly userPrincipalAccount = computed(
+    () => this.userConnected()?.comptePrincipal
+  );
+  readonly userSecondaryAccounts = computed(
+    () => this.userConnected()?.userSecondaryAccounts
+  );
 
   constructor() {
-    this.setConnectedUser();
-
-    this.createGroupProjectForm = this.formBuilder.group({
-      username: ['', [Validators.required]],
-    });
+    this.initializeData();
   }
 
-  createGroupProject() {
-    if (this.createGroupProjectForm.valid) {
-      this.groupAccountService
-        .createGroupeProject(this.createGroupProjectForm.value)
-        .pipe(tap(() => this.setConnectedUser()))
-        .subscribe();
-    }
-  }
-
-  setConnectedUser() {
+  private initializeData(): void {
     this.usersService
       .getInfo()
       .pipe(
-        tap((data) => this.userConnected.set(data)),
-        tap(() => {
-          if (this.userConnected()?.role === 'ADMIN') {
-            this.groupAccountService
-              .getAllGroupAccount()
-              .pipe(tap((data) => this.groupAccounts.set(data)))
-              .subscribe();
-
-            this.comptePrincipalService
-              .getAllGroupPrincipal()
-              .pipe(tap((data) => this.comptePrincipal.set(data)))
-              .subscribe();
+        tap((user) => {
+          this.userConnected.set(user);
+          if (this.isAdmin()) {
+            this.loadAdminData();
           }
         })
       )
       .subscribe();
+  }
+
+  private loadAdminData(): void {
+    this.groupAccountService
+      .getAllGroupAccount()
+      .pipe(
+        tap((data) => this.groupAccounts.set(data.sort((a, b) => a.id - b.id)))
+      )
+      .subscribe();
+
+    this.comptePrincipalService
+      .getAllGroupPrincipal()
+      .pipe(
+        tap((data) =>
+          this.comptePrincipal.set(data.sort((a, b) => a.id - b.id))
+        )
+      )
+      .subscribe();
+  }
+
+  onSearch(event: Event): void {
+    const searchValue = (event.target as HTMLInputElement).value;
+    this.searchTerm.set(searchValue);
+  }
+
+  createGroupProject(): void {
+    if (this.createGroupProjectForm.valid) {
+      const formValue = this.createGroupProjectForm.value;
+      const groupProjectDto: GroupProjectDto = {
+        username: formValue.username || '',
+      };
+
+      this.groupAccountService
+        .createGroupeProject(groupProjectDto)
+        .pipe(tap(() => this.initializeData()))
+        .subscribe();
+    }
+  }
+
+  // Getters publics pour le template
+  getUserConnected() {
+    return this.userConnected;
+  }
+  getSearchTermValue() {
+    return this.searchTerm();
   }
 }

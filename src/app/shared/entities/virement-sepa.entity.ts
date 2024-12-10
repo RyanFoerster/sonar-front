@@ -1,30 +1,34 @@
-import {PrincipalAccountEntity} from "./principal-account.entity";
-import {CompteGroupeEntity} from "./compte-groupe.entity";
+import { PrincipalAccountEntity } from './principal-account.entity';
+import { CompteGroupeEntity } from './compte-groupe.entity';
 
 export interface VirementSepaEntity {
   id: number;
 
-  account_owner: string
+  account_owner: string;
 
-  iban: string
+  iban: string;
 
-  amount_htva: number
+  amount_htva: number;
 
-  amount_tva: number
+  amount_tva: number;
 
-  amount_total: number
+  amount_total: number;
 
-  communication?: string
+  communication?: string;
 
-  structured_communication?: string
+  structured_communication?: string;
 
-  comptePrincipal?: PrincipalAccountEntity
+  invoice_url?: string;
 
-  compteGroupe?: CompteGroupeEntity
+  invoice_key?: string;
 
-  status: "PENDING" | "REJECTED" | "ACCEPTED"
+  comptePrincipal?: PrincipalAccountEntity;
 
-  projet_username: string
+  compteGroupe?: CompteGroupeEntity;
 
-  created_at: Date
+  status: 'PENDING' | 'REJECTED' | 'ACCEPTED';
+
+  projet_username: string;
+
+  created_at: Date;
 }

@@ -28,6 +28,8 @@ export interface VirementSepaEntity {
 
   status: 'PENDING' | 'REJECTED' | 'ACCEPTED';
 
+  rejected_reason?: string;
+
   projet_username: string;
 
   created_at: Date;

@@ -18,8 +18,40 @@
   </div>
 
   <div class="grid grid-col justify-around px-10">
-    <div class="grid grid-cols-2 py-4 md:text-2xl font-bold">
+    <div class="flex items-center gap-4 py-4 md:text-2xl font-bold">
       <p>{{ projet()?.username }}</p>
+      <brn-popover>
+        <button
+          brnPopoverTrigger
+          class="text-sm flex items-center gap-2 hover:text-primary transition-colors duration-200"
+        >
+          Voir les informations
+          <hlm-icon name="lucideChevronDown" />
+        </button>
+        <div
+          hlmPopoverContent
+          *brnPopoverContent="let ctx"
+          class="p-4 space-y-3 min-w-[250px] rounded-lg shadow-lg"
+        >
+          <div class="space-y-1">
+            <p class="font-bold text-lg">
+              {{ userInfo()?.firstName }} {{ userInfo()?.name }}
+            </p>
+            <p class="text-gray-600">{{ userInfo()?.email }}</p>
+          </div>
+
+          <div class="space-y-2 pt-2 border-t">
+            <div class="flex gap-2">
+              <span class="text-gray-500">IBAN:</span>
+              <span>{{ userInfo()?.iban }}</span>
+            </div>
+            <div class="flex gap-2">
+              <span class="text-gray-500">N° National:</span>
+              <span>{{ userInfo()?.numeroNational }}</span>
+            </div>
+          </div>
+        </div>
+      </brn-popover>
     </div>
 
     <div class="grid justify-between md:justify-start">

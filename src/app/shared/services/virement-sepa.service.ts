@@ -53,10 +53,12 @@ export class VirementSepaService {
     );
   }
 
-  rejectVirement(id: number) {
+  rejectVirement(id: number, rejected_reason: string) {
     return this.httpClient.patch(
       `${environment.API_URL}/virement-sepa/${id}/reject`,
-      {}
+      {
+        rejected_reason,
+      }
     );
   }
 }

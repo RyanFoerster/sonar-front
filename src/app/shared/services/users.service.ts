@@ -18,7 +18,7 @@ export class UsersService {
   signUp(createuserDto: CreateUserDto) {
     return this.httpClient.post<boolean>(
       `${environment.API_URL}/auth/register`,
-      createuserDto,
+      createuserDto
     );
   }
 
@@ -26,14 +26,14 @@ export class UsersService {
     return this.httpClient.post<boolean>(
       `${environment.API_URL}/auth/register-from-admin`,
 
-      createuserDto,
+      createuserDto
     );
   }
 
   signIn(credentials: SignInDto) {
     return this.httpClient.post<LoggedUser>(
       `${environment.API_URL}/auth/login`,
-      credentials,
+      credentials
     );
   }
 
@@ -45,7 +45,7 @@ export class UsersService {
     return this.httpClient.patch<UserEntity>(
       `${environment.API_URL}/users`,
 
-      updteUserDto,
+      updteUserDto
     );
   }
 
@@ -53,19 +53,31 @@ export class UsersService {
     return this.httpClient.get<UserEntity[]>(
       `${environment.API_URL}/users/groups`,
 
-      { params: { id } },
+      { params: { id } }
+    );
+  }
+
+  getUserInfoByPrincipalAccount(id: number) {
+    return this.httpClient.get<UserEntity>(
+      `${environment.API_URL}/users/principal-account/${id}`
+    );
+  }
+
+  getUserInfoBySecondaryAccount(id: number) {
+    return this.httpClient.get<UserEntity>(
+      `${environment.API_URL}/users/secondary-account/${id}`
     );
   }
 
   findAll() {
     return this.httpClient.get<UserEntity[]>(
-      `${environment.API_URL}/users/all`,
+      `${environment.API_URL}/users/all`
     );
   }
 
   findAllPendingUser() {
     return this.httpClient.get<UserEntity[]>(
-      `${environment.API_URL}/users/pending`,
+      `${environment.API_URL}/users/pending`
     );
   }
 
@@ -78,7 +90,7 @@ export class UsersService {
   toggleActiveUser(user: UserEntity) {
     return this.httpClient.patch(
       `${environment.API_URL}/users/toggleActive`,
-      user,
+      user
     );
   }
 

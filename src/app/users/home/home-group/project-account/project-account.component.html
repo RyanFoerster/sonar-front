@@ -756,7 +756,9 @@
               <span
                 class="text-sm px-2 py-1 rounded-full cursor-pointer"
                 [ngClass]="{
-                  'bg-green-100 text-green-800': virement.status === 'ACCEPTED',
+                  'bg-green-100 text-green-800':
+                    virement.status === 'ACCEPTED' ||
+                    virement.status === 'PAID',
                   'bg-yellow-100 text-yellow-800':
                     virement.status === 'PENDING',
                   'bg-red-100 text-red-800': virement.status === 'REJECTED'
@@ -781,7 +783,13 @@
                   </div>
                 </brn-popover>
                 } @else {
-                {{ virement.status === "ACCEPTED" ? "Accepté" : "En attente" }}
+                {{
+                  virement.status === "ACCEPTED"
+                    ? "Accepté"
+                    : virement.status === "PAID"
+                    ? "Payé"
+                    : "En attente"
+                }}
                 }
               </span>
             </div>
@@ -833,7 +841,9 @@
               <span
                 class="px-2 py-1 rounded-full cursor-pointer"
                 [ngClass]="{
-                  'bg-green-100 text-green-800': virement.status === 'ACCEPTED',
+                  'bg-green-100 text-green-800':
+                    virement.status === 'ACCEPTED' ||
+                    virement.status === 'PAID',
                   'bg-yellow-100 text-yellow-800':
                     virement.status === 'PENDING',
                   'bg-red-100 text-red-800': virement.status === 'REJECTED'
@@ -850,15 +860,17 @@
                     class="p-2 text-[10px] bg-white rounded shadow-lg"
                     *brnPopoverContent="let ctx"
                   >
-                    {{
-                      virement.rejected_reason === null
-                        ? "Aucun motif de rejet"
-                        : virement.rejected_reason
-                    }}
+                    {{ virement.rejected_reason }}
                   </div>
                 </brn-popover>
                 } @else {
-                {{ virement.status === "ACCEPTED" ? "Accepté" : "En attente" }}
+                {{
+                  virement.status === "ACCEPTED"
+                    ? "Accepté"
+                    : virement.status === "PAID"
+                    ? "Payé"
+                    : "En attente"
+                }}
                 }
               </span>
             </hlm-td>
@@ -932,7 +944,9 @@
               <span
                 class="text-sm px-2 py-1 rounded-full cursor-pointer"
                 [ngClass]="{
-                  'bg-green-100 text-green-800': virement.status === 'ACCEPTED',
+                  'bg-green-100 text-green-800':
+                    virement.status === 'ACCEPTED' ||
+                    virement.status === 'PAID',
                   'bg-yellow-100 text-yellow-800':
                     virement.status === 'PENDING',
                   'bg-red-100 text-red-800': virement.status === 'REJECTED'
@@ -953,7 +967,13 @@
                   </div>
                 </brn-popover>
                 } @else {
-                {{ virement.status === "ACCEPTED" ? "Accepté" : "En attente" }}
+                {{
+                  virement.status === "ACCEPTED"
+                    ? "Accepté"
+                    : virement.status === "PAID"
+                    ? "Payé"
+                    : "En attente"
+                }}
                 }
               </span>
             </div>
@@ -1005,7 +1025,9 @@
               <span
                 class="px-2 py-1 rounded-full cursor-pointer"
                 [ngClass]="{
-                  'bg-green-100 text-green-800': virement.status === 'ACCEPTED',
+                  'bg-green-100 text-green-800':
+                    virement.status === 'ACCEPTED' ||
+                    virement.status === 'PAID',
                   'bg-yellow-100 text-yellow-800':
                     virement.status === 'PENDING',
                   'bg-red-100 text-red-800': virement.status === 'REJECTED'
@@ -1026,7 +1048,13 @@
                   </div>
                 </brn-popover>
                 } @else {
-                {{ virement.status === "ACCEPTED" ? "Accepté" : "En attente" }}
+                {{
+                  virement.status === "ACCEPTED"
+                    ? "Accepté"
+                    : virement.status === "PAID"
+                    ? "Payé"
+                    : "En attente"
+                }}
                 }
               </span>
             </hlm-td>

@@ -26,7 +26,7 @@ export interface VirementSepaEntity {
 
   compteGroupe?: CompteGroupeEntity;
 
-  status: 'PENDING' | 'REJECTED' | 'ACCEPTED';
+  status: 'PENDING' | 'REJECTED' | 'ACCEPTED' | 'PAID';
 
   rejected_reason?: string;
 

@@ -5,11 +5,11 @@ export interface VirementSepaDto {
 
   amount_htva: number;
 
-  amount_tva: number;
+  amount_tva?: number;
 
   amount_total: number;
 
-  communication?: string;
+  communication: string;
 
   structured_communication?: string;
 

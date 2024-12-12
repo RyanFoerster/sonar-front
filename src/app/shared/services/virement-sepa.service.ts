@@ -18,15 +18,16 @@ export class VirementSepaService {
     typeOfProjet: string,
     invoice: File | null
   ) {
-    // Créer un FormData pour envoyer à la fois les données du formulaire et le fichier
     const form = new FormData();
 
     // Ajouter le fichier
     form.append('invoice', invoice!);
 
-    // Ajouter chaque champ du formulaire
+    // Ajouter chaque champ non-null du formulaire
     Object.entries(createVirementSepaDto).forEach(([key, value]) => {
-      form.append(key, value.toString());
+      if (value !== null && value !== undefined) {
+        form.append(key, value.toString());
+      }
     });
     return this.httpClient.post<VirementSepaEntity>(
       `${environment.API_URL}/virement-sepa`,

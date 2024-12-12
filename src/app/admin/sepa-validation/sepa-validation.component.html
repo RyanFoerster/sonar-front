@@ -2,210 +2,260 @@
   <!-- En-tête -->
   <div class="flex justify-between items-center">
     <h1 class="text-2xl font-bold text-gray-800">Validation virements SEPA</h1>
-    <button
-      class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-      hlmBtn
-    >
-      Initier le virement SEPA
-    </button>
-  </div>
+    <div class="flex gap-2">
+      <hlm-dialog>
+        @if (virementsSepaInPending().length > 0) {
+        <button
+          class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          hlmBtn
+          brnDialogTrigger
+          (click)="currentVirementsIndex.set(0)"
+        >
+          <hlm-icon name="lucideInbox" class="w-4 h-4 mr-2" />
+          {{ virementsSepaInPending().length }} virement{{
+            virementsSepaInPending().length > 1 ? "s" : ""
+          }}
+          en attente
+        </button>
+        }
 
-  <!-- Section virements en attente -->
-  <div class="space-y-4">
-    <h2 class="text-xl font-semibold text-gray-700">
-      Virements en attente de validation
-    </h2>
-
-    <div class="grid gap-4 grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3">
-      @for (virement of virementsSepaInPending(); track virement.id) {
-      <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-        <!-- En-tête de la carte -->
-        <div class="p-4 bg-gray-50 border-b border-gray-100">
-          <div class="flex justify-between items-start">
-            <div>
-              <p class="text-sm text-gray-600">
-                {{ virement.created_at | date : "dd/MM/yy" }}
-              </p>
-              <p class="font-medium text-gray-900">
-                {{ virement.account_owner }}
-              </p>
+        <hlm-dialog-content
+          *brnDialogContent="let ctx"
+          class="fixed inset-0 w-screen h-screen max-w-none m-0 p-0 rounded-none"
+        >
+          <div class="h-full flex flex-col">
+            <!-- Header avec navigation -->
+            <div
+              class="p-4 bg-gray-50 border-b flex items-center justify-between"
+            >
+              <div class="flex items-center gap-4">
+                <button
+                  hlmBtn
+                  variant="ghost"
+                  size="icon"
+                  [disabled]="currentVirementsIndex() === 0"
+                  (click)="
+                    currentVirementsIndex.set(currentVirementsIndex() - 1)
+                  "
+                >
+                  <hlm-icon name="lucideChevronLeft" />
+                </button>
+                <span class="text-sm text-gray-600">
+                  Virement {{ currentVirementsIndex() + 1 }} sur
+                  {{ virementsSepaInPending().length }}
+                </span>
+                <button
+                  hlmBtn
+                  variant="ghost"
+                  size="icon"
+                  [disabled]="
+                    currentVirementsIndex() ===
+                    virementsSepaInPending().length - 1
+                  "
+                  (click)="
+                    currentVirementsIndex.set(currentVirementsIndex() + 1)
+                  "
+                >
+                  <hlm-icon name="lucideChevronRight" />
+                </button>
+              </div>
             </div>
-            <div class="flex gap-2">
-              <a
-                [href]="virement.invoice_url"
-                target="_blank"
-                download
-                class="inline-flex items-center justify-center text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                hlmBtn
-                [title]="'Télécharger la facture'"
-              >
-                <hlm-icon name="lucideDownload" size="sm" />
-              </a>
-              <button
-                (click)="togglePdfViewer(virement)"
-                class="inline-flex items-center justify-center text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                hlmBtn
-                [title]="
-                  isPdfVisible(virement.id)
-                    ? 'Masquer la facture'
-                    : 'Voir la facture'
-                "
-              >
-                @if (isPdfVisible(virement.id)) {
-                <hlm-icon name="lucideEyeOff" class="w-4 h-4" size="sm" />
-                } @else {
-                <hlm-icon name="lucideEye" class="w-4 h-4" size="sm" />
-                }
-              </button>
-            </div>
-          </div>
-        </div>
 
-        <!-- Corps de la carte -->
-        <div class="p-4 space-y-3">
-          <!-- Informations bancaires -->
-          <div>
-            <p class="text-sm font-medium text-gray-500">IBAN</p>
-            <p class="text-sm text-gray-900">{{ virement.iban }}</p>
-          </div>
-
-          <!-- Montants -->
-          <div class="grid grid-cols-3 gap-4">
-            <div>
-              <p class="text-sm font-medium text-gray-500">TVAC</p>
-              <p class="text-sm text-gray-900">
-                {{ virement.amount_total | euroFormat }}
-              </p>
-            </div>
-            <div>
-              <p class="text-sm font-medium text-gray-500">HTVA</p>
-              <p class="text-sm text-gray-900">
-                {{ virement.amount_htva | euroFormat }}
-              </p>
-            </div>
-            <div>
-              <p class="text-sm font-medium text-gray-500">TVA</p>
-              <p class="text-sm text-gray-900">
-                {{ virement.amount_tva | euroFormat }}
-              </p>
-            </div>
-          </div>
-
-          <!-- Communications -->
-          <div>
-            <p class="text-sm font-medium text-gray-500">Communication</p>
-            <p class="text-sm text-gray-900">
-              {{ virement.communication || "-" }}
-            </p>
-          </div>
-          <div>
-            <p class="text-sm font-medium text-gray-500">
-              Communication structurée
-            </p>
-            <p class="text-sm text-gray-900">
-              {{ virement.structured_communication || "-" }}
-            </p>
-          </div>
-
-          <!-- Projet -->
-          <div>
-            <p class="text-sm font-medium text-gray-500">Projet</p>
-            <p class="text-sm text-gray-900">{{ virement.projet_username }}</p>
-          </div>
-        </div>
-
-        <!-- Actions -->
-        <div class="p-4 bg-gray-50 border-t border-gray-100">
-          <div class="flex justify-end gap-2">
-            <hlm-dialog>
-              <button
-                class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                hlmBtn
-                brnDialogTrigger
-              >
-                <hlm-icon name="lucideXCircle" class="w-4 h-4 mr-1" size="sm" />
-                Refuser
-              </button>
-
-              <hlm-dialog-content *brnDialogContent="let ctx">
-                <hlm-dialog-header>
-                  <h3
-                    hlmDialogTitle
-                    class="text-lg font-semibold text-gray-900"
-                  >
-                    Motif du refus
-                  </h3>
-                  <p hlmDialogDescription class="text-sm text-gray-500 mt-2">
-                    Veuillez indiquer la raison du refus de ce virement.
-                  </p>
-                </hlm-dialog-header>
-
-                <div class="mt-4">
-                  <textarea
-                    [ngModel]="rejectedReason()"
-                    (ngModelChange)="rejectedReason.set($event)"
-                    class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    rows="4"
-                    placeholder="Saisissez le motif du refus..."
-                  ></textarea>
+            <!-- Contenu principal -->
+            <div class="flex-1 grid grid-cols-2 gap-4 p-4 overflow-auto">
+              <!-- Informations du virement -->
+              <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                @if (currentVirement()) {
+                <!-- En-tête de la carte -->
+                <div class="p-4 bg-gray-50 border-b border-gray-100">
+                  <div class="flex justify-between items-start">
+                    <div>
+                      <p class="text-sm text-gray-600">
+                        {{ currentVirement().created_at | date : "dd/MM/yy" }}
+                      </p>
+                      <p class="font-medium text-gray-900">
+                        {{ currentVirement().account_owner }}
+                      </p>
+                    </div>
+                    <div class="flex gap-2">
+                      <a
+                        [href]="currentVirement().invoice_url"
+                        target="_blank"
+                        download
+                        class="inline-flex items-center justify-center text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        hlmBtn
+                        [title]="'Télécharger la facture'"
+                      >
+                        <hlm-icon name="lucideDownload" size="sm" />
+                      </a>
+                    </div>
+                  </div>
                 </div>
 
-                <hlm-dialog-footer class="mt-6 flex justify-end gap-3">
-                  <button
-                    type="button"
-                    class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                    hlmBtn
-                    (click)="rejectedReason.set(''); ctx.close()"
-                  >
-                    Annuler
-                  </button>
-                  <button
-                    type="button"
-                    class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                    hlmBtn
-                    (click)="
-                      rejectVirement(virement.id);
-                      rejectedReason.set('');
-                      ctx.close()
-                    "
-                    [disabled]="!rejectedReason()"
-                  >
-                    Confirmer le refus
-                  </button>
-                </hlm-dialog-footer>
-              </hlm-dialog-content>
-            </hlm-dialog>
-            <button
-              (click)="acceptVirement(virement.id)"
-              class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-              hlmBtn
-            >
-              <hlm-icon
-                name="lucideCheckCircle2"
-                class="w-4 h-4 mr-1"
-                size="sm"
-              />
-              Accepter
-            </button>
-          </div>
-        </div>
+                <!-- Corps de la carte -->
+                <div class="p-4 space-y-3">
+                  <!-- Informations bancaires -->
+                  <div>
+                    <p class="text-sm font-medium text-gray-500">IBAN</p>
+                    <p class="text-sm text-gray-900">
+                      {{ currentVirement().iban }}
+                    </p>
+                  </div>
 
-        <!-- PDF Viewer -->
-        @if (isPdfVisible(virement.id)) {
-        <div class="p-4 bg-gray-50 border-t border-gray-100">
-          <object
-            [data]="getSafeUrl(virement.invoice_url)"
-            type="application/pdf"
-            class="w-full h-[400px] rounded-lg shadow-inner"
-          >
-            <p class="text-sm text-gray-500 text-center">
-              Impossible de charger le PDF
-            </p>
-          </object>
-        </div>
-        }
-      </div>
-      }
+                  <!-- Montants -->
+                  <div class="grid grid-cols-3 gap-4">
+                    <div>
+                      <p class="text-sm font-medium text-gray-500">TVAC</p>
+                      <p class="text-sm text-gray-900">
+                        {{ currentVirement().amount_total! | euroFormat }}
+                      </p>
+                    </div>
+                    <div>
+                      <p class="text-sm font-medium text-gray-500">HTVA</p>
+                      <p class="text-sm text-gray-900">
+                        {{ currentVirement().amount_htva! | euroFormat }}
+                      </p>
+                    </div>
+                    <div>
+                      <p class="text-sm font-medium text-gray-500">TVA</p>
+                      <p class="text-sm text-gray-900">
+                        {{ currentVirement().amount_tva! | euroFormat }}
+                      </p>
+                    </div>
+                  </div>
+
+                  <!-- Communications -->
+                  <div>
+                    <p class="text-sm font-medium text-gray-500">
+                      Communication
+                    </p>
+                    <p class="text-sm text-gray-900">
+                      {{ currentVirement().communication || "-" }}
+                    </p>
+                  </div>
+                  <div>
+                    <p class="text-sm font-medium text-gray-500">
+                      Communication structurée
+                    </p>
+                    <p class="text-sm text-gray-900">
+                      {{ currentVirement().structured_communication || "-" }}
+                    </p>
+                  </div>
+
+                  <!-- Projet -->
+                  <div>
+                    <p class="text-sm font-medium text-gray-500">Projet</p>
+                    <p class="text-sm text-gray-900">
+                      {{ currentVirement().projet_username }}
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="p-4 bg-gray-50 border-t border-gray-100">
+                  <div class="flex justify-end gap-2">
+                    <hlm-dialog>
+                      <button
+                        class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                        hlmBtn
+                        brnDialogTrigger
+                      >
+                        <hlm-icon
+                          name="lucideXCircle"
+                          class="w-4 h-4 mr-1"
+                          size="sm"
+                        />
+                        Refuser
+                      </button>
+
+                      <hlm-dialog-content *brnDialogContent="let rejectCtx">
+                        <hlm-dialog-header>
+                          <h3
+                            hlmDialogTitle
+                            class="text-lg font-semibold text-gray-900"
+                          >
+                            Motif du refus
+                          </h3>
+                          <p
+                            hlmDialogDescription
+                            class="text-sm text-gray-500 mt-2"
+                          >
+                            Veuillez indiquer la raison du refus de ce virement.
+                          </p>
+                        </hlm-dialog-header>
+
+                        <div class="mt-4">
+                          <textarea
+                            [ngModel]="rejectedReason()"
+                            (ngModelChange)="rejectedReason.set($event)"
+                            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            rows="4"
+                            placeholder="Saisissez le motif du refus..."
+                          ></textarea>
+                        </div>
+
+                        <hlm-dialog-footer class="mt-6 flex justify-end gap-3">
+                          <button
+                            type="button"
+                            class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                            hlmBtn
+                            (click)="rejectedReason.set(''); rejectCtx.close()"
+                          >
+                            Annuler
+                          </button>
+                          <button
+                            type="button"
+                            class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                            hlmBtn
+                            (click)="
+                              handleRejectVirement(
+                                currentVirement()!.id,
+                                rejectCtx,
+                                ctx
+                              )
+                            "
+                            [disabled]="!rejectedReason()"
+                          >
+                            Confirmer le refus
+                          </button>
+                        </hlm-dialog-footer>
+                      </hlm-dialog-content>
+                    </hlm-dialog>
+                    <button
+                      (click)="handleAcceptVirement(currentVirement()!.id, ctx)"
+                      class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                      hlmBtn
+                    >
+                      <hlm-icon
+                        name="lucideCheckCircle2"
+                        class="w-4 h-4 mr-1"
+                        size="sm"
+                      />
+                      Accepter
+                    </button>
+                  </div>
+                </div>
+                }
+              </div>
+
+              <!-- PDF Viewer -->
+              <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                @if (currentVirement()) {
+                <app-pdf-viewer
+                  [pdfUrl]="currentVirement().invoice_url!"
+                ></app-pdf-viewer>
+                }
+              </div>
+            </div>
+          </div>
+        </hlm-dialog-content>
+      </hlm-dialog>
+      <button
+        class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+        hlmBtn
+      >
+        Initier le virement SEPA
+      </button>
     </div>
   </div>
 
@@ -238,93 +288,90 @@
               >
                 <hlm-icon name="lucideDownload" class="w-4 h-4" size="sm" />
               </a>
-              <button
-                (click)="togglePdfViewer(virement)"
-                class="inline-flex items-center justify-center text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                hlmBtn
-                [title]="
-                  isPdfVisible(virement.id)
-                    ? 'Masquer la facture'
-                    : 'Voir la facture'
-                "
-              >
-                @if (isPdfVisible(virement.id)) {
-                <hlm-icon name="lucideEyeOff" class="w-4 h-4" size="sm" />
-                } @else {
-                <hlm-icon name="lucideEye" class="w-4 h-4" size="sm" />
-                }
-              </button>
             </div>
           </div>
         </div>
 
-        <!-- Corps de la carte -->
-        <div class="p-4 space-y-3">
+        <!-- Corps de la carte des virements validés -->
+        <div class="p-4 space-y-4">
           <!-- Informations bancaires -->
-          <div>
-            <p class="text-sm font-medium text-gray-500">IBAN</p>
-            <p class="text-sm text-gray-900">{{ virement.iban }}</p>
+          <div class="border-b border-gray-100 pb-3">
+            <dt
+              class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1"
+            >
+              IBAN
+            </dt>
+            <dd class="text-sm text-gray-900">{{ virement.iban }}</dd>
           </div>
 
           <!-- Montants -->
-          <div class="grid grid-cols-3 gap-4">
-            <div>
-              <p class="text-sm font-medium text-gray-500">TVAC</p>
-              <p class="text-sm text-gray-900">
+          <div class="grid grid-cols-3 gap-6">
+            <div class="border-b border-gray-100 pb-3">
+              <dt
+                class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1"
+              >
+                TVAC
+              </dt>
+              <dd class="text-sm font-medium text-gray-900">
                 {{ virement.amount_total | euroFormat }}
-              </p>
+              </dd>
             </div>
-            <div>
-              <p class="text-sm font-medium text-gray-500">HTVA</p>
-              <p class="text-sm text-gray-900">
+            <div class="border-b border-gray-100 pb-3">
+              <dt
+                class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1"
+              >
+                HTVA
+              </dt>
+              <dd class="text-sm font-medium text-gray-900">
                 {{ virement.amount_htva | euroFormat }}
-              </p>
+              </dd>
             </div>
-            <div>
-              <p class="text-sm font-medium text-gray-500">TVA</p>
-              <p class="text-sm text-gray-900">
+            <div class="border-b border-gray-100 pb-3">
+              <dt
+                class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1"
+              >
+                TVA
+              </dt>
+              <dd class="text-sm font-medium text-gray-900">
                 {{ virement.amount_tva | euroFormat }}
-              </p>
+              </dd>
             </div>
           </div>
 
           <!-- Communications -->
-          <div>
-            <p class="text-sm font-medium text-gray-500">Communication</p>
-            <p class="text-sm text-gray-900">
+          <div class="border-b border-gray-100 pb-3">
+            <dt
+              class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1"
+            >
+              Communication
+            </dt>
+            <dd class="text-sm text-gray-900">
               {{ virement.communication || "-" }}
-            </p>
+            </dd>
           </div>
-          <div>
-            <p class="text-sm font-medium text-gray-500">
+          <div class="border-b border-gray-100 pb-3">
+            <dt
+              class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1"
+            >
               Communication structurée
-            </p>
-            <p class="text-sm text-gray-900">
+            </dt>
+            <dd class="text-sm text-gray-900">
               {{ virement.structured_communication || "-" }}
-            </p>
+            </dd>
           </div>
 
           <!-- Projet -->
           <div>
-            <p class="text-sm font-medium text-gray-500">Projet</p>
-            <p class="text-sm text-gray-900">{{ virement.projet_username }}</p>
+            <dt
+              class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1"
+            >
+              Projet
+            </dt>
+            <dd class="text-sm text-gray-900">
+              {{ virement.projet_username }}
+            </dd>
           </div>
         </div>
-
-        <!-- PDF Viewer -->
-        @if (isPdfVisible(virement.id)) {
-        <div class="p-4 bg-gray-50 border-t border-gray-100">
-          <object
-            [data]="getSafeUrl(virement.invoice_url)"
-            type="application/pdf"
-            class="w-full h-[400px] rounded-lg shadow-inner"
-          >
-            <p class="text-sm text-gray-500 text-center">
-              Impossible de charger le PDF
-            </p>
-          </object>
-        </div>
-        }
       </div>
       }
     </div>

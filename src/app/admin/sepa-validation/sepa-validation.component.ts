@@ -1,4 +1,11 @@
-import { AfterViewInit, Component, inject, model, signal } from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  inject,
+  model,
+  signal,
+  computed,
+} from '@angular/core';
 import {
   HlmCaptionComponent,
   HlmTableComponent,
@@ -28,14 +35,24 @@ import {
   HlmDialogHeaderComponent,
   HlmDialogTitleDirective,
 } from '@spartan-ng/ui-dialog-helm';
+
 import {
   lucideCheckCircle2,
   lucideDownload,
   lucideEye,
   lucideEyeOff,
   lucideXCircle,
+  lucideChevronLeft,
+  lucideChevronRight,
+  lucideX,
+  lucideMaximize2,
+  lucideInbox,
 } from '@ng-icons/lucide';
 import { provideIcons } from '@ng-icons/core';
+import { PdfViewerComponent } from '../../shared/components/pdf-viewer/pdf-viewer.component';
+
+import { HlmSeparatorDirective } from '@spartan-ng/ui-separator-helm';
+import { BrnSeparatorComponent } from '@spartan-ng/ui-separator-brain';
 
 @Component({
   selector: 'app-sepa-validation',
@@ -60,6 +77,9 @@ import { provideIcons } from '@ng-icons/core';
     HlmDialogFooterComponent,
     HlmDialogHeaderComponent,
     HlmDialogTitleDirective,
+    PdfViewerComponent,
+    HlmSeparatorDirective,
+    BrnSeparatorComponent,
   ],
   providers: [
     provideIcons({
@@ -68,6 +88,11 @@ import { provideIcons } from '@ng-icons/core';
       lucideEyeOff,
       lucideXCircle,
       lucideCheckCircle2,
+      lucideChevronLeft,
+      lucideChevronRight,
+      lucideX,
+      lucideMaximize2,
+      lucideInbox,
     }),
   ],
   templateUrl: './sepa-validation.component.html',
@@ -79,9 +104,14 @@ export class SepaValidationComponent implements AfterViewInit {
   private sanitizer = inject(DomSanitizer);
   protected virementsSepaInPending = signal<VirementSepaEntity[]>([]);
   protected virementsSepaAccepted = signal<VirementSepaEntity[]>([]);
-  protected selectedVirementId = signal<number | null>(null);
-
+  protected currentVirementsIndex = signal(0);
   protected rejectedReason = model<string>('');
+
+  protected currentVirement = computed(() => {
+    const virements = this.virementsSepaInPending();
+    const index = this.currentVirementsIndex();
+    return virements[index] || null;
+  });
 
   ngAfterViewInit() {
     this.virementSepaService
@@ -104,6 +134,10 @@ export class SepaValidationComponent implements AfterViewInit {
       .subscribe();
   }
 
+  getSafeUrl(url: string): SafeResourceUrl {
+    return this.sanitizer.bypassSecurityTrustResourceUrl(url);
+  }
+
   rejectVirement(id: number) {
     this.virementSepaService
       .rejectVirement(id, this.rejectedReason())
@@ -116,45 +150,42 @@ export class SepaValidationComponent implements AfterViewInit {
 
   acceptVirement(id: number) {
     this.virementSepaService.acceptVirement(id).subscribe(() => {
-      const virementFinded = this.virementsSepaInPending().find(
+      const acceptedVirement = this.virementsSepaInPending().find(
         (virement) => virement.id === id
       );
-
-      if (!virementFinded) {
-        throw new Error('Une erreur est survenue');
+      if (acceptedVirement) {
+        this.virementsSepaInPending.update((virements) => {
+          return [...virements.filter((virement) => virement.id !== id)];
+        });
+        this.virementsSepaAccepted.update((virements) => {
+          return [...virements, { ...acceptedVirement, status: 'ACCEPTED' }];
+        });
       }
-
-      this.virementsSepaInPending.update((virements) => {
-        return [
-          ...virements.filter((virement) => virement.id !== virementFinded.id),
-        ];
-      });
-
-      this.virementsSepaAccepted.update((virements) => [
-        ...virements,
-        virementFinded,
-      ]);
     });
   }
 
-  togglePdfViewer(virement: VirementSepaEntity) {
-    if (this.selectedVirementId() === virement.id) {
-      this.selectedVirementId.set(null);
-    } else {
-      this.selectedVirementId.set(virement.id);
+  protected openDetailedView(virement: VirementSepaEntity) {
+    const index = this.virementsSepaInPending().findIndex(
+      (v) => v.id === virement.id
+    );
+    if (index !== -1) {
+      this.currentVirementsIndex.set(index);
     }
   }
 
-  isPdfVisible(virementId: number): boolean {
-    return this.selectedVirementId() === virementId;
+  protected handleRejectVirement(id: number, rejectCtx: any, mainCtx: any) {
+    this.rejectVirement(id);
+    this.rejectedReason.set('');
+    rejectCtx.close();
+    if (this.virementsSepaInPending().length <= 1) {
+      mainCtx.close();
+    }
   }
 
-  getSafeUrl(url: string | undefined): SafeResourceUrl | null {
-    if (!url) return null;
-    return this.sanitizer.bypassSecurityTrustResourceUrl(url);
-  }
-
-  setRejectedReason(reason: any) {
-    console.log(reason);
+  protected handleAcceptVirement(id: number, ctx: any) {
+    this.acceptVirement(id);
+    if (this.virementsSepaInPending().length <= 1) {
+      ctx.close();
+    }
   }
 }

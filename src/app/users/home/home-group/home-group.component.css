@@ -1,6 +1,6 @@
 .background-div {
-  background-image: url('/assets/images/whatsapp.jpeg');
+  background-image: url("/assets/images/fond-groupe.jpeg");
   background-repeat: no-repeat;
-  background-position: bottom center;
+  background-position: center center;
   background-size: cover;
 }

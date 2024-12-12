@@ -70,7 +70,7 @@ import { HlmSpinnerComponent } from '@spartan-ng/ui-spinner-helm';
 import { atLeastOneRequired } from '../../../../shared/validators/at-least-one-required.validator';
 import { VirementSepaService } from '../../../../shared/services/virement-sepa.service';
 import { VirementSepaDto } from '../../../../shared/dtos/virement-sepa.dto';
-import { lucideCornerDownLeft } from '@ng-icons/lucide';
+import { lucideBell, lucideCornerDownLeft } from '@ng-icons/lucide';
 import {
   BrnPopoverCloseDirective,
   BrnPopoverComponent,
@@ -131,7 +131,7 @@ import {
     HlmPopoverCloseDirective,
     HlmPopoverContentDirective,
   ],
-  providers: [provideIcons({ lucideCornerDownLeft })],
+  providers: [provideIcons({ lucideCornerDownLeft, lucideBell })],
   templateUrl: './project-account.component.html',
   styleUrl: './project-account.component.css',
 })
@@ -287,8 +287,8 @@ export class ProjectAccountComponent implements AfterViewInit {
         account_owner: ['', [Validators.required]],
         iban: ['', [Validators.required]],
         amount_htva: ['', [Validators.required]],
-        amount_tva: ['', [Validators.required]],
-        communication: [''],
+        amount_tva: [null],
+        communication: ['', [Validators.required]],
         structured_communication: [''],
       },
       {

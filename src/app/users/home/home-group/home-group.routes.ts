@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from '../../../shared/guards/auth.guard';
+import { adminGuard } from '../../../shared/guards/admin.guard';
 
 export default [
   {
@@ -8,13 +9,13 @@ export default [
       import('./home-group.component').then((m) => m.HomeGroupComponent),
     canActivate: [authGuard],
   },
-  /* {
+  {
     path: ':id/facturation',
     loadComponent: () =>
       import('./facturation/facturation.component').then(
         (m) => m.FacturationComponent
       ),
-    canActivate: [authGuard],
+    canActivate: [authGuard, adminGuard],
   },
   {
     path: ':id/facturation/new-quote',
@@ -22,7 +23,7 @@ export default [
       import('./facturation/new-quote/new-quote.component').then(
         (m) => m.NewQuoteComponent
       ),
-    canActivate: [authGuard],
+    canActivate: [authGuard, adminGuard],
   },
   {
     path: ':id/facturation/credit-note',
@@ -30,8 +31,8 @@ export default [
       import('./facturation/credit-note/credit-note.component').then(
         (m) => m.CreditNoteComponent
       ),
-    canActivate: [authGuard],
-  }, */
+    canActivate: [authGuard, adminGuard],
+  },
   {
     path: ':id/membership',
     loadComponent: () =>

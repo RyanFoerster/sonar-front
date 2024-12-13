@@ -79,7 +79,8 @@
           name="lucideChevronRight"
         />
       </a>
-      <!-- <a
+      @if(connectedUser()?.role === "ADMIN"){
+      <a
         routerLink="facturation"
         [queryParams]="{ typeOfProjet: typeOfProjet() }"
         class="rounded-full w-full text-[10px] font-semibold h-auto bg-gray-sonar text-black md:flex md:justify-center md:items-center md:gap-2 md:min-w-4/5 md:px-10 md:text-lg hover:bg-gray-200"
@@ -89,7 +90,8 @@
           class="hidden md:block md:text-center w-4"
           name="lucideChevronRight"
         />
-      </a> -->
+      </a>
+      }
     </div>
   </div>
 </div>

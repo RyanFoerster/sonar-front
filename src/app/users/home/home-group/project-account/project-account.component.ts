@@ -1,3 +1,4 @@
+import { DatePipe, JsonPipe, Location, NgClass } from '@angular/common';
 import {
   AfterViewInit,
   Component,
@@ -6,14 +7,15 @@ import {
   input,
   signal,
 } from '@angular/core';
-import { HlmButtonDirective } from '@spartan-ng/ui-button-helm';
+import { Router } from '@angular/router';
 import {
-  HlmCaptionComponent,
-  HlmTableComponent,
-  HlmTdComponent,
-  HlmThComponent,
-  HlmTrowComponent,
-} from '@spartan-ng/ui-table-helm';
+  HlmAccordionContentComponent,
+  HlmAccordionDirective,
+  HlmAccordionIconDirective,
+  HlmAccordionItemDirective,
+  HlmAccordionTriggerDirective,
+} from '@spartan-ng/ui-accordion-helm';
+import { HlmButtonDirective } from '@spartan-ng/ui-button-helm';
 import {
   BrnDialogContentDirective,
   BrnDialogTriggerDirective,
@@ -26,10 +28,9 @@ import {
   HlmDialogHeaderComponent,
   HlmDialogTitleDirective,
 } from '@spartan-ng/ui-dialog-helm';
+import { HlmIconComponent, provideIcons } from '@spartan-ng/ui-icon-helm';
 import { HlmInputDirective } from '@spartan-ng/ui-input-helm';
 import { HlmLabelDirective } from '@spartan-ng/ui-label-helm';
-import { BrnSelectImports } from '@spartan-ng/ui-select-brain';
-import { HlmSelectImports } from '@spartan-ng/ui-select-helm';
 import {
   HlmPaginationContentDirective,
   HlmPaginationDirective,
@@ -39,25 +40,23 @@ import {
   HlmPaginationNextComponent,
   HlmPaginationPreviousComponent,
 } from '@spartan-ng/ui-pagination-helm';
-import { ComptePrincipalService } from '../../../../shared/services/compte-principal.service';
-import { CompteGroupeService } from '../../../../shared/services/compte-groupe.service';
-import { PrincipalAccountEntity } from '../../../../shared/entities/principal-account.entity';
-import { CompteGroupeEntity } from '../../../../shared/entities/compte-groupe.entity';
-import { Router } from '@angular/router';
-import { EuroFormatPipe } from '../../../../shared/pipes/euro-format.pipe';
-import { TransactionService } from '../../../../shared/services/transaction.service';
-import { TransactionEntity } from '../../../../shared/entities/transaction.entity';
-import { catchError, delay, EMPTY, forkJoin, of, switchMap, tap } from 'rxjs';
-import { DatePipe, JsonPipe, Location, NgClass } from '@angular/common';
-import { HlmIconComponent, provideIcons } from '@spartan-ng/ui-icon-helm';
+import { BrnSelectImports } from '@spartan-ng/ui-select-brain';
+import { HlmSelectImports } from '@spartan-ng/ui-select-helm';
 import {
-  HlmAccordionContentComponent,
-  HlmAccordionDirective,
-  HlmAccordionIconDirective,
-  HlmAccordionItemDirective,
-  HlmAccordionTriggerDirective,
-} from '@spartan-ng/ui-accordion-helm';
-import { BrnAccordionContentComponent } from '@spartan-ng/ui-accordion-brain';
+  HlmCaptionComponent,
+  HlmTableComponent,
+  HlmTdComponent,
+  HlmThComponent,
+  HlmTrowComponent,
+} from '@spartan-ng/ui-table-helm';
+import { catchError, delay, EMPTY, forkJoin, of, switchMap, tap } from 'rxjs';
+import { CompteGroupeEntity } from '../../../../shared/entities/compte-groupe.entity';
+import { PrincipalAccountEntity } from '../../../../shared/entities/principal-account.entity';
+import { TransactionEntity } from '../../../../shared/entities/transaction.entity';
+import { EuroFormatPipe } from '../../../../shared/pipes/euro-format.pipe';
+import { CompteGroupeService } from '../../../../shared/services/compte-groupe.service';
+import { ComptePrincipalService } from '../../../../shared/services/compte-principal.service';
+import { TransactionService } from '../../../../shared/services/transaction.service';
 
 import {
   FormBuilder,
@@ -65,11 +64,6 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { TransactionDto } from '../../../../shared/dtos/transaction.dto';
-import { HlmSpinnerComponent } from '@spartan-ng/ui-spinner-helm';
-import { atLeastOneRequired } from '../../../../shared/validators/at-least-one-required.validator';
-import { VirementSepaService } from '../../../../shared/services/virement-sepa.service';
-import { VirementSepaDto } from '../../../../shared/dtos/virement-sepa.dto';
 import { lucideBell, lucideCornerDownLeft } from '@ng-icons/lucide';
 import {
   BrnPopoverCloseDirective,
@@ -81,6 +75,11 @@ import {
   HlmPopoverCloseDirective,
   HlmPopoverContentDirective,
 } from '@spartan-ng/ui-popover-helm';
+import { HlmSpinnerComponent } from '@spartan-ng/ui-spinner-helm';
+import { TransactionDto } from '../../../../shared/dtos/transaction.dto';
+import { VirementSepaDto } from '../../../../shared/dtos/virement-sepa.dto';
+import { VirementSepaService } from '../../../../shared/services/virement-sepa.service';
+import { atLeastOneRequired } from '../../../../shared/validators/at-least-one-required.validator';
 
 @Component({
   selector: 'app-project-account',
@@ -286,7 +285,7 @@ export class ProjectAccountComponent implements AfterViewInit {
       {
         account_owner: ['', [Validators.required]],
         iban: ['', [Validators.required]],
-        amount_htva: ['', [Validators.required]],
+        amount_htva: [0, [Validators.required]],
         amount_tva: [null],
         communication: ['', [Validators.required]],
         structured_communication: [''],
@@ -423,11 +422,16 @@ export class ProjectAccountComponent implements AfterViewInit {
         )
         .pipe(
           tap(async (data) => {
-            console.log(data);
             ctx.close();
             await this.fetchTransaction();
             this.isSpinner.set(true);
             this.virementSepaForm.reset();
+            this.virementSepaForm.patchValue({
+              amount_htva: 0,
+              amount_tva: 0,
+              structured_communication: '',
+              communication: '',
+            });
           }),
           delay(500),
           tap(() => this.isSpinner.set(false)),

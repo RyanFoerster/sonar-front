@@ -1,4 +1,4 @@
-@defer () { @if (!isSpinner()) {
+@defer () { @if (!state.isSpinner()) {
 <button
   (click)="goBack()"
   class="w-fit mx-5 mb-5 rounded-full flex items-center gap-3"
@@ -10,24 +10,24 @@
 <div class="bg-gray-sonar p-5 mx-5 rounded-xl flex flex-col gap-5">
   <div class="md:flex md:justify-between">
     <div class="flex justify-start w-full md:w-1/3">
-      @if (accountPrincipal()) {
+      @if (state.accountPrincipal()) {
       <button
         class="bg-white flex flex-col justify-center items-center w-full rounded-2xl h-32 gap-2 shadow-lg"
       >
         <div>
           <p class="text-lg font-semibold">
-            {{ accountPrincipal()?.username }}
+            {{ state.accountPrincipal()?.username }}
           </p>
-          <p class="text-xs font-medium">{{ accountPrincipal()?.id }}</p>
+          <p class="text-xs font-medium">{{ state.accountPrincipal()?.id }}</p>
         </div>
         <p
           class="text-xl font-bold"
           [ngClass]="{
-            'text-red-400': accountPrincipal()?.solde! < 0,
-            'text-green-400': accountPrincipal()?.solde! > 0
+            'text-red-400': state.accountPrincipal()?.solde! < 0,
+            'text-green-400': state.accountPrincipal()?.solde! > 0
           }"
         >
-          {{ accountPrincipal()?.solde! | euroFormat }}
+          {{ state.accountPrincipal()?.solde! | euroFormat }}
         </p>
       </button>
       } @else {
@@ -35,17 +35,19 @@
         class="bg-white flex flex-col justify-center items-center w-full rounded-2xl h-32 gap-2 shadow-lg"
       >
         <div>
-          <p class="text-lg font-semibold">{{ accountGroup()?.username }}</p>
-          <p class="text-xs font-medium">{{ accountGroup()?.id }}</p>
+          <p class="text-lg font-semibold">
+            {{ state.accountGroup()?.username }}
+          </p>
+          <p class="text-xs font-medium">{{ state.accountGroup()?.id }}</p>
         </div>
         <p
           class="text-xl font-bold"
           [ngClass]="{
-            'text-red-400': accountGroup()?.solde! < 0,
-            'text-green-400': accountGroup()?.solde! > 0
+            'text-red-400': state.accountGroup()?.solde! < 0,
+            'text-green-400': state.accountGroup()?.solde! > 0
           }"
         >
-          {{ accountGroup()?.solde! | euroFormat }}
+          {{ state.accountGroup()?.solde! | euroFormat }}
         </p>
       </button>
       }
@@ -91,9 +93,9 @@
                     <hlm-select-value />
                   </hlm-select-trigger>
                   <hlm-select-content>
-                    @for (principalAccount of principalAccounts(); track
+                    @for (principalAccount of state.principalAccounts(); track
                     principalAccount.id) { @if (principalAccount.username !==
-                    accountPrincipal()?.username) {
+                    state.accountPrincipal()?.username) {
                     <hlm-option [value]="principalAccount.id">{{
                       principalAccount.username
                     }}</hlm-option>
@@ -110,9 +112,9 @@
                     <hlm-select-value />
                   </hlm-select-trigger>
                   <hlm-select-content>
-                    @for (groupAccount of groupAccounts(); track
+                    @for (groupAccount of state.groupAccounts(); track
                     groupAccount.id) { @if (groupAccount.username !==
-                    accountGroup()?.username) {
+                    state.accountGroup()?.username) {
                     <hlm-option [value]="groupAccount.id">{{
                       groupAccount.username
                     }}</hlm-option>
@@ -269,8 +271,8 @@
             </div>
             <button class="rounded-full" hlmBtn type="submit">Envoyer</button>
           </form>
-          @if(errorMessage() !== '') {
-          <p class="text-red-600">{{ errorMessage() }}</p>
+          @if(state.errorMessage() !== '') {
+          <p class="text-red-600">{{ state.errorMessage() }}</p>
           }
         </hlm-dialog-content>
       </hlm-dialog>
@@ -293,7 +295,8 @@
             >
             <hlm-th class="lg:w-[20%] text-sm font-semibold">Montant</hlm-th>
           </hlm-trow>
-          @for (transaction of transactionSender(); track transaction.id) {
+          @for (transaction of state.transactionSender(); track transaction.id)
+          {
           <hlm-trow
             class="flex flex-col lg:flex-row lg:justify-between border-b lg:border-none p-2 lg:p-0"
           >
@@ -321,11 +324,11 @@
                   <div class="mt-1">
                     @for (recipient of transaction.recipientGroup; track
                     recipient.id) { @if (recipient.username !==
-                    accountGroup()?.username) {
+                    state.accountGroup()?.username) {
                     <div class="text-sm">{{ recipient.username }}</div>
                     } } @for (recipient of transaction.recipientPrincipal; track
                     recipient.id) { @if (recipient.username !==
-                    accountPrincipal()?.username) {
+                    state.accountPrincipal()?.username) {
                     <div class="text-sm">{{ recipient.username }}</div>
                     } }
                   </div>
@@ -392,13 +395,13 @@
                   <hlm-accordion-content hlm>
                     @for (recipient of transaction.recipientGroup; track
                     recipient.id) { @if (recipient.username !==
-                    accountGroup()?.username) {
+                    state.accountGroup()?.username) {
                     <hlm-th class="lg:w-[20%] font-bold text-[10px]">{{
                       recipient.username
                     }}</hlm-th>
                     } } @for (recipient of transaction.recipientPrincipal; track
                     recipient.id) { @if (recipient.username !==
-                    accountPrincipal()?.username) {
+                    state.accountPrincipal()?.username) {
                     <hlm-th class="lg:w-[20%] font-bold text-[10px]">{{
                       recipient.username
                     }}</hlm-th>
@@ -444,7 +447,7 @@
         </div>
       </hlm-table>
 
-      @if (transactionSender()?.length) {
+      @if (state.transactionSender()?.length) {
       <nav hlmPagination class="mt-4 flex justify-center">
         <ul
           hlmPaginationContent
@@ -453,19 +456,20 @@
           <li hlmPaginationItem class="md:mx-1">
             <button
               class="px-3 py-1.5 text-sm font-medium transition-colors hover:bg-gray-100 rounded-md"
-              [class.opacity-50]="currentPageSender() === 1"
-              [disabled]="currentPageSender() === 1"
+              [class.opacity-50]="pagination.sender.currentPage() === 1"
+              [disabled]="pagination.sender.currentPage() === 1"
               (click)="
-                currentPageSender() > 1 &&
-                  onPageChangeSender(currentPageSender() - 1)
+                pagination.sender.currentPage() > 1 &&
+                  onPageChangeSender(pagination.sender.currentPage() - 1)
               "
             >
               Précédent
             </button>
           </li>
 
-          @for (page of getVisiblePages(currentPageSender(),
-          totalPagesSender()); track $index) { @if (page === 'ellipsis') {
+          @for (page of getVisiblePages(pagination.sender.currentPage(),
+          pagination.sender.totalPages()); track $index) { @if (page ===
+          'ellipsis') {
           <li hlmPaginationItem class="md:mx-1">
             <span class="px-3 py-1.5">...</span>
           </li>
@@ -473,9 +477,11 @@
           <li hlmPaginationItem class="md:mx-1">
             <button
               class="min-w-[40px] h-9 px-3 py-1.5 text-sm font-medium transition-colors rounded-md"
-              [class.bg-zinc-800]="currentPageSender() === page"
-              [class.text-white]="currentPageSender() === page"
-              [class.hover:bg-gray-100]="currentPageSender() !== page"
+              [class.bg-zinc-800]="pagination.sender.currentPage() === page"
+              [class.text-white]="pagination.sender.currentPage() === page"
+              [class.hover:bg-gray-100]="
+                pagination.sender.currentPage() !== page
+              "
               (click)="onPageChangeSender(page)"
             >
               {{ page }}
@@ -486,11 +492,18 @@
           <li hlmPaginationItem class="md:mx-1">
             <button
               class="px-3 py-1.5 text-sm font-medium transition-colors hover:bg-gray-100 rounded-md"
-              [class.opacity-50]="currentPageSender() === totalPagesSender()"
-              [disabled]="currentPageSender() === totalPagesSender()"
+              [class.opacity-50]="
+                pagination.sender.currentPage() ===
+                pagination.sender.totalPages()
+              "
+              [disabled]="
+                pagination.sender.currentPage() ===
+                pagination.sender.totalPages()
+              "
               (click)="
-                currentPageSender() < totalPagesSender() &&
-                  onPageChangeSender(currentPageSender() + 1)
+                pagination.sender.currentPage() <
+                  pagination.sender.totalPages() &&
+                  onPageChangeSender(pagination.sender.currentPage() + 1)
               "
             >
               Suivant
@@ -517,7 +530,8 @@
             <hlm-th class="lg:w-[20%] text-sm font-semibold">Montant</hlm-th>
           </hlm-trow>
 
-          @for (transaction of transactionRecipient(); track transaction.id) {
+          @for (transaction of state.transactionRecipient(); track
+          transaction.id) {
           <hlm-trow
             class="flex flex-col lg:flex-row lg:justify-between border-b lg:border-none p-2 lg:p-0"
           >
@@ -537,7 +551,8 @@
               <div class="flex justify-between items-center">
                 <span class="text-sm font-semibold">Destinataire:</span>
                 <span class="text-sm">{{
-                  accountPrincipal()?.username || accountGroup()?.username
+                  state.accountPrincipal()?.username ||
+                    state.accountGroup()?.username
                 }}</span>
               </div>
               <div class="flex justify-between items-center">
@@ -576,7 +591,8 @@
                   : transaction.senderPrincipal.username || ""
               }}</hlm-td>
               <hlm-td class="lg:w-[20%] text-sm">{{
-                accountPrincipal()?.username || accountGroup()?.username
+                state.accountPrincipal()?.username ||
+                  state.accountGroup()?.username
               }}</hlm-td>
               <hlm-td class="lg:w-[20%] font-bold text-[10px]">
                 <brn-popover>
@@ -604,7 +620,7 @@
         </div>
       </hlm-table>
 
-      @if (transactionRecipient()?.length) {
+      @if (state.transactionRecipient()?.length) {
       <nav hlmPagination class="mt-4 flex justify-center">
         <ul
           hlmPaginationContent
@@ -613,19 +629,20 @@
           <li hlmPaginationItem class="md:mx-1">
             <button
               class="px-3 py-1.5 text-sm font-medium transition-colors hover:bg-gray-100 rounded-md"
-              [class.opacity-50]="currentPageRecipient() === 1"
-              [disabled]="currentPageRecipient() === 1"
+              [class.opacity-50]="pagination.recipient.currentPage() === 1"
+              [disabled]="pagination.recipient.currentPage() === 1"
               (click)="
-                currentPageRecipient() > 1 &&
-                  onPageChangeRecipient(currentPageRecipient() - 1)
+                pagination.recipient.currentPage() > 1 &&
+                  onPageChangeRecipient(pagination.recipient.currentPage() - 1)
               "
             >
               Précédent
             </button>
           </li>
 
-          @for (page of getVisiblePages(currentPageRecipient(),
-          totalPagesRecipient()); track $index) { @if (page === 'ellipsis') {
+          @for (page of getVisiblePages(pagination.recipient.currentPage(),
+          pagination.recipient.totalPages()); track $index) { @if (page ===
+          'ellipsis') {
           <li hlmPaginationItem class="md:mx-1">
             <span class="px-3 py-1.5">...</span>
           </li>
@@ -633,9 +650,11 @@
           <li hlmPaginationItem class="md:mx-1">
             <button
               class="min-w-[40px] h-9 px-3 py-1.5 text-sm font-medium transition-colors rounded-md"
-              [class.bg-zinc-800]="currentPageRecipient() === page"
-              [class.text-white]="currentPageRecipient() === page"
-              [class.hover:bg-gray-100]="currentPageRecipient() !== page"
+              [class.bg-zinc-800]="pagination.recipient.currentPage() === page"
+              [class.text-white]="pagination.recipient.currentPage() === page"
+              [class.hover:bg-gray-100]="
+                pagination.recipient.currentPage() !== page
+              "
               (click)="onPageChangeRecipient(page)"
             >
               {{ page }}
@@ -647,12 +666,17 @@
             <button
               class="px-3 py-1.5 text-sm font-medium transition-colors hover:bg-gray-100 rounded-md"
               [class.opacity-50]="
-                currentPageRecipient() === totalPagesRecipient()
+                pagination.recipient.currentPage() ===
+                pagination.recipient.totalPages()
               "
-              [disabled]="currentPageRecipient() === totalPagesRecipient()"
+              [disabled]="
+                pagination.recipient.currentPage() ===
+                pagination.recipient.totalPages()
+              "
               (click)="
-                currentPageRecipient() < totalPagesRecipient() &&
-                  onPageChangeRecipient(currentPageRecipient() + 1)
+                pagination.recipient.currentPage() <
+                  pagination.recipient.totalPages() &&
+                  onPageChangeRecipient(pagination.recipient.currentPage() + 1)
               "
             >
               Suivant
@@ -688,8 +712,8 @@
           <hlm-th class="lg:w-[9%] text-sm font-semibold">Statut</hlm-th>
         </hlm-trow>
 
-        @if(accountPrincipal()) { @for(virement of
-        accountPrincipal()?.virementSepa; track virement.id) {
+        @if(state.accountPrincipal()) { @for(virement of
+        state.accountPrincipal()?.virementSepa; track virement.id) {
         <hlm-trow
           class="flex flex-col lg:flex-row lg:justify-between border-b lg:border-none p-2 lg:p-0"
         >
@@ -824,10 +848,10 @@
               virement.structured_communication
             }}</hlm-td>
             <hlm-td class="lg:w-[11%] text-sm">{{
-              virement.amount_htva | euroFormat
+              virement.amount_total | euroFormat
             }}</hlm-td>
             <hlm-td class="lg:w-[11%] text-sm">{{
-              virement.amount_total | euroFormat
+              virement.amount_htva | euroFormat
             }}</hlm-td>
             <hlm-td class="lg:w-[8%] text-sm">
               <a
@@ -857,7 +881,7 @@
                   </button>
                   <div
                     hlmPopoverContent
-                    class="p-2 text-[10px] bg-white rounded shadow-lg"
+                    class="p-2 text-sm bg-white rounded shadow-lg"
                     *brnPopoverContent="let ctx"
                   >
                     {{ virement.rejected_reason }}
@@ -876,8 +900,8 @@
             </hlm-td>
           </div>
         </hlm-trow>
-        } } @else if (accountGroup()) { @for(virement of
-        accountGroup()?.virementSepa; track virement.id) {
+        } } @else if (state.accountGroup()) { @for(virement of
+        state.accountGroup()?.virementSepa; track virement.id) {
         <hlm-trow
           class="flex flex-col lg:flex-row lg:justify-between border-b lg:border-none p-2 lg:p-0"
         >
@@ -921,13 +945,13 @@
             <div class="flex justify-between items-center">
               <span class="text-sm font-semibold">Montant total:</span>
               <span class="text-sm">{{
-                virement.amount_htva | euroFormat
+                virement.amount_total | euroFormat
               }}</span>
             </div>
             <div class="flex justify-between items-center">
               <span class="text-sm font-semibold">Montant débité:</span>
               <span class="text-sm">{{
-                virement.amount_total | euroFormat
+                virement.amount_htva | euroFormat
               }}</span>
             </div>
             <div class="flex justify-between items-center">
@@ -1008,10 +1032,10 @@
               virement.structured_communication
             }}</hlm-td>
             <hlm-td class="lg:w-[11%] text-sm">{{
-              virement.amount_htva | euroFormat
+              virement.amount_total | euroFormat
             }}</hlm-td>
             <hlm-td class="lg:w-[11%] text-sm">{{
-              virement.amount_total | euroFormat
+              virement.amount_htva | euroFormat
             }}</hlm-td>
             <hlm-td class="lg:w-[8%] text-sm">
               <a
@@ -1064,8 +1088,8 @@
       </div>
     </hlm-table>
 
-    @if (accountPrincipal()?.virementSepa?.length ||
-    accountGroup()?.virementSepa?.length) {
+    @if (state.accountPrincipal()?.virementSepa?.length ||
+    state.accountGroup()?.virementSepa?.length) {
     <nav hlmPagination class="mt-4 flex justify-center">
       <ul
         hlmPaginationContent
@@ -1074,19 +1098,20 @@
         <li hlmPaginationItem class="md:mx-1">
           <button
             class="px-3 py-1.5 text-sm font-medium transition-colors hover:bg-gray-100 rounded-md"
-            [class.opacity-50]="currentPageVirement() === 1"
-            [disabled]="currentPageVirement() === 1"
+            [class.opacity-50]="pagination.virement.currentPage() === 1"
+            [disabled]="pagination.virement.currentPage() === 1"
             (click)="
-              currentPageVirement() > 1 &&
-                onPageChangeVirement(currentPageVirement() - 1)
+              pagination.virement.currentPage() > 1 &&
+                onPageChangeVirement(pagination.virement.currentPage() - 1)
             "
           >
             Précédent
           </button>
         </li>
 
-        @for (page of getVisiblePages(currentPageVirement(),
-        totalPagesVirement()); track $index) { @if (page === 'ellipsis') {
+        @for (page of getVisiblePages(pagination.virement.currentPage(),
+        pagination.virement.totalPages()); track $index) { @if (page ===
+        'ellipsis') {
         <li hlmPaginationItem class="md:mx-1">
           <span class="px-3 py-1.5">...</span>
         </li>
@@ -1094,9 +1119,11 @@
         <li hlmPaginationItem class="md:mx-1">
           <button
             class="min-w-[40px] h-9 px-3 py-1.5 text-sm font-medium transition-colors rounded-md"
-            [class.bg-zinc-800]="currentPageVirement() === page"
-            [class.text-white]="currentPageVirement() === page"
-            [class.hover:bg-gray-100]="currentPageVirement() !== page"
+            [class.bg-zinc-800]="pagination.virement.currentPage() === page"
+            [class.text-white]="pagination.virement.currentPage() === page"
+            [class.hover:bg-gray-100]="
+              pagination.virement.currentPage() !== page
+            "
             (click)="onPageChangeVirement(page)"
           >
             {{ page }}
@@ -1107,11 +1134,18 @@
         <li hlmPaginationItem class="md:mx-1">
           <button
             class="px-3 py-1.5 text-sm font-medium transition-colors hover:bg-gray-100 rounded-md"
-            [class.opacity-50]="currentPageVirement() === totalPagesVirement()"
-            [disabled]="currentPageVirement() === totalPagesVirement()"
+            [class.opacity-50]="
+              pagination.virement.currentPage() ===
+              pagination.virement.totalPages()
+            "
+            [disabled]="
+              pagination.virement.currentPage() ===
+              pagination.virement.totalPages()
+            "
             (click)="
-              currentPageVirement() < totalPagesVirement() &&
-                onPageChangeVirement(currentPageVirement() + 1)
+              pagination.virement.currentPage() <
+                pagination.virement.totalPages() &&
+                onPageChangeVirement(pagination.virement.currentPage() + 1)
             "
           >
             Suivant

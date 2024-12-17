@@ -6,6 +6,8 @@ import {
   inject,
   input,
   signal,
+  type Signal,
+  type WritableSignal,
 } from '@angular/core';
 import { Router } from '@angular/router';
 import {
@@ -60,6 +62,7 @@ import { TransactionService } from '../../../../shared/services/transaction.serv
 
 import {
   FormBuilder,
+  FormControl,
   FormGroup,
   ReactiveFormsModule,
   Validators,
@@ -80,6 +83,26 @@ import { TransactionDto } from '../../../../shared/dtos/transaction.dto';
 import { VirementSepaDto } from '../../../../shared/dtos/virement-sepa.dto';
 import { VirementSepaService } from '../../../../shared/services/virement-sepa.service';
 import { atLeastOneRequired } from '../../../../shared/validators/at-least-one-required.validator';
+
+// Constantes
+const ITEMS_PER_PAGE = 10;
+const INITIAL_PAGE = 1;
+
+// Interfaces
+interface PaginationState {
+  currentPage: WritableSignal<number>;
+  totalPages: WritableSignal<number>;
+  totalItems: WritableSignal<number>;
+}
+
+interface FormState {
+  amount_htva: FormControl<number>;
+  amount_tva: FormControl<number | null>;
+  communication: FormControl<string>;
+  structured_communication: FormControl<string>;
+  account_owner: FormControl<string>;
+  iban: FormControl<string>;
+}
 
 @Component({
   selector: 'app-project-account',
@@ -135,73 +158,182 @@ import { atLeastOneRequired } from '../../../../shared/validators/at-least-one-r
   styleUrl: './project-account.component.css',
 })
 export class ProjectAccountComponent implements AfterViewInit {
-  private principalAccountService: ComptePrincipalService = inject(
-    ComptePrincipalService
-  );
-  private groupAccountService: CompteGroupeService =
-    inject(CompteGroupeService);
-  private transactionService: TransactionService = inject(TransactionService);
-  private virementSepaService: VirementSepaService =
-    inject(VirementSepaService);
-  private formBuilder: FormBuilder = inject(FormBuilder);
-  private router: Router = inject(Router);
+  // Services injection
+  private readonly services = {
+    principalAccount: inject(ComptePrincipalService),
+    groupAccount: inject(CompteGroupeService),
+    transaction: inject(TransactionService),
+    virementSepa: inject(VirementSepaService),
+    formBuilder: inject(FormBuilder),
+    router: inject(Router),
+    location: inject(Location),
+  };
 
-  protected id = input<string>();
-  protected typeOfProjet = input<string>();
+  // Inputs
+  protected readonly id = input<string>();
+  protected readonly typeOfProjet = input<string>();
 
-  protected isSpinner = signal(false);
-  protected accountPrincipal = signal<PrincipalAccountEntity | undefined>(
-    undefined
+  // State signals
+  protected readonly state = {
+    isSpinner: signal(false),
+    accountPrincipal: signal<PrincipalAccountEntity | undefined>(undefined),
+    accountGroup: signal<CompteGroupeEntity | undefined>(undefined),
+    transactionRecipient: signal<TransactionEntity[] | undefined>(undefined),
+    transactionSender: signal<TransactionEntity[] | undefined>(undefined),
+    principalAccounts: signal<PrincipalAccountEntity[] | undefined>(undefined),
+    groupAccounts: signal<CompteGroupeEntity[] | undefined>(undefined),
+    amountHtva: signal(0),
+    amountTva: signal(0),
+    errorMessage: signal(''),
+  };
+
+  // Computed values
+  protected readonly amount_total = computed(
+    () => +this.state.amountHtva() + +this.state.amountTva()
   );
-  protected accountGroup = signal<CompteGroupeEntity | undefined>(undefined);
-  protected transactionRecipient = signal<TransactionEntity[] | undefined>(
-    undefined
-  );
-  protected transactionSender = signal<TransactionEntity[] | undefined>(
-    undefined
-  );
-  protected principalAccounts = signal<PrincipalAccountEntity[] | undefined>(
-    undefined
-  );
-  protected groupAccounts = signal<CompteGroupeEntity[] | undefined>(undefined);
-  protected amountHtva = signal(0);
-  protected amountTva = signal(0);
-  protected errorMessage = signal('');
+
+  // Pagination states
+  protected readonly pagination = {
+    sender: {
+      currentPage: signal(INITIAL_PAGE),
+      totalPages: signal(0),
+      totalItems: signal(0),
+    } as PaginationState,
+    recipient: {
+      currentPage: signal(INITIAL_PAGE),
+      totalPages: signal(0),
+      totalItems: signal(0),
+    } as PaginationState,
+    virement: {
+      currentPage: signal(INITIAL_PAGE),
+      totalPages: signal(0),
+      totalItems: signal(0),
+    } as PaginationState,
+  };
+
+  protected readonly itemsPerPage = signal(ITEMS_PER_PAGE);
   protected selectedFile: File | null = null;
 
-  protected amount_total = computed(
-    () => +this.amountHtva() - +this.amountTva()
-  );
-
+  // Forms
   protected transactionForm!: FormGroup;
   protected virementSepaForm!: FormGroup;
 
-  // Pagination pour les transactions sortantes
-  protected currentPageSender = signal(1);
-  protected totalPagesSender = signal(0);
-  protected totalItemsSender = signal(0);
+  constructor() {
+    this.initializeForms();
+  }
 
-  // Pagination pour les transactions entrantes
-  protected currentPageRecipient = signal(1);
-  protected totalPagesRecipient = signal(0);
-  protected totalItemsRecipient = signal(0);
+  private initializeForms(): void {
+    this.transactionForm = this.services.formBuilder.group({
+      communication: ['', [Validators.required]],
+      amount: ['', [Validators.required]],
+      recipientGroup: [''],
+      recipientPrincipal: [''],
+    });
 
-  // Pagination pour les virements
-  protected currentPageVirement = signal(1);
-  protected totalPagesVirement = signal(0);
-  protected totalItemsVirement = signal(0);
+    this.virementSepaForm = this.services.formBuilder.group<FormState>(
+      {
+        account_owner: new FormControl('', {
+          nonNullable: true,
+          validators: [Validators.required],
+        }),
+        iban: new FormControl('', {
+          nonNullable: true,
+          validators: [Validators.required],
+        }),
+        amount_htva: new FormControl(0, {
+          nonNullable: true,
+          validators: [Validators.required],
+        }),
+        amount_tva: new FormControl(null),
+        communication: new FormControl('', {
+          nonNullable: true,
+          validators: [Validators.required],
+        }),
+        structured_communication: new FormControl('', { nonNullable: true }),
+      },
+      {
+        validators: [atLeastOneRequired()],
+      }
+    );
+  }
 
-  // Nombre d'éléments par page
-  protected itemsPerPage = signal(10);
+  async ngAfterViewInit() {
+    await this.fetchTransaction();
+    this.fetchVirements();
+  }
+
+  protected setAmountHtva(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    this.state.amountHtva.set(Number(target.value));
+  }
+
+  protected setAmountTva(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    this.state.amountTva.set(Number(target.value));
+  }
+
+  protected createVirementSepa(ctx: { close: () => void }): void {
+    if (this.virementSepaForm.valid) {
+      const virementSepa: VirementSepaDto = {
+        ...this.virementSepaForm.value,
+        amount_total: this.amount_total(),
+      };
+
+      this.services.virementSepa
+        .createVirementSepa(
+          virementSepa,
+          +this.id()!,
+          this.typeOfProjet()!,
+          this.selectedFile
+        )
+        .pipe(
+          tap(async () => {
+            ctx.close();
+            await this.fetchTransaction();
+            this.state.isSpinner.set(true);
+            this.resetFormState();
+          }),
+          delay(500),
+          tap(() => this.state.isSpinner.set(false)),
+          catchError((err) => {
+            this.state.isSpinner.set(false);
+            this.state.errorMessage.set(err.error.message);
+            return of(null);
+          })
+        )
+        .subscribe();
+    }
+  }
+
+  private resetFormState(): void {
+    this.virementSepaForm.reset();
+    this.virementSepaForm.patchValue({
+      amount_htva: 0,
+      amount_tva: null,
+      structured_communication: '',
+      communication: '',
+    });
+    this.state.amountHtva.set(0);
+    this.state.amountTva.set(0);
+  }
+
+  protected onFileSelected(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    this.selectedFile = target.files?.[0] ?? null;
+  }
+
+  protected goBack(): void {
+    this.services.location.back();
+  }
 
   protected getPagesForSender(): number[] {
-    return Array(this.totalPagesSender())
+    return Array(this.pagination.sender.totalPages())
       .fill(0)
       .map((_, i) => i + 1);
   }
 
   protected getPagesForRecipient(): number[] {
-    return Array(this.totalPagesRecipient())
+    return Array(this.pagination.recipient.totalPages())
       .fill(0)
       .map((_, i) => i + 1);
   }
@@ -253,64 +385,36 @@ export class ProjectAccountComponent implements AfterViewInit {
   }
 
   protected onPageChangeSender(page: number): void {
-    if (page >= 1 && page <= this.totalPagesSender()) {
-      this.currentPageSender.set(page);
+    if (page >= 1 && page <= this.pagination.sender.totalPages()) {
+      this.pagination.sender.currentPage.set(page);
       this.fetchTransaction();
     }
   }
 
   protected onPageChangeRecipient(page: number): void {
-    if (page >= 1 && page <= this.totalPagesRecipient()) {
-      this.currentPageRecipient.set(page);
+    if (page >= 1 && page <= this.pagination.recipient.totalPages()) {
+      this.pagination.recipient.currentPage.set(page);
       this.fetchTransaction();
     }
   }
 
   protected onPageChangeVirement(page: number): void {
-    if (page >= 1 && page <= this.totalPagesVirement()) {
-      this.currentPageVirement.set(page);
+    if (page >= 1 && page <= this.pagination.virement.totalPages()) {
+      this.pagination.virement.currentPage.set(page);
       this.fetchVirements();
     }
   }
 
-  constructor(private location: Location) {
-    this.transactionForm = this.formBuilder.group({
-      communication: ['', [Validators.required]],
-      amount: ['', [Validators.required]],
-      recipientGroup: ['', []],
-      recipientPrincipal: ['', []],
-    });
-
-    this.virementSepaForm = this.formBuilder.group(
-      {
-        account_owner: ['', [Validators.required]],
-        iban: ['', [Validators.required]],
-        amount_htva: [0, [Validators.required]],
-        amount_tva: [null],
-        communication: ['', [Validators.required]],
-        structured_communication: [''],
-      },
-      {
-        validators: atLeastOneRequired(),
-      }
-    );
-  }
-
-  async ngAfterViewInit() {
-    await this.fetchTransaction();
-    this.fetchVirements();
-  }
-
   getAllPrincipalAccount() {
-    this.principalAccountService
+    this.services.principalAccount
       .getAllGroupPrincipal()
-      .subscribe((data) => this.principalAccounts.set(data));
+      .subscribe((data) => this.state.principalAccounts.set(data));
   }
 
   getAllGroupAccount() {
-    this.groupAccountService
+    this.services.groupAccount
       .getAllGroupAccount()
-      .subscribe((data) => this.groupAccounts.set(data));
+      .subscribe((data) => this.state.groupAccounts.set(data));
   }
 
   fetchAllAccount() {
@@ -321,10 +425,10 @@ export class ProjectAccountComponent implements AfterViewInit {
   sendTransaction(ctx: any) {
     if (this.transactionForm.valid) {
       let transactionDto: TransactionDto = { ...this.transactionForm.value };
-      if (this.accountPrincipal()) {
-        transactionDto.senderPrincipal = this.accountPrincipal()?.id;
+      if (this.state.accountPrincipal()) {
+        transactionDto.senderPrincipal = this.state.accountPrincipal()?.id;
       } else {
-        transactionDto.senderGroup = this.accountGroup()?.id;
+        transactionDto.senderGroup = this.state.accountGroup()?.id;
       }
 
       if (
@@ -334,16 +438,16 @@ export class ProjectAccountComponent implements AfterViewInit {
         throw new Error('Aucun destinataire');
       }
 
-      this.transactionService
+      this.services.transaction
         .createTransaction(transactionDto)
         .pipe(
           tap(async () => {
             ctx.close();
             await this.fetchTransaction();
-            this.isSpinner.set(true);
+            this.state.isSpinner.set(true);
           }),
           delay(1000),
-          tap(() => this.isSpinner.set(false))
+          tap(() => this.state.isSpinner.set(false))
         )
         .subscribe();
     }
@@ -352,16 +456,16 @@ export class ProjectAccountComponent implements AfterViewInit {
   async fetchTransaction() {
     const projectType = this.typeOfProjet();
     if (projectType !== 'PRINCIPAL' && projectType !== 'GROUP') {
-      return this.router.navigate(['/home']);
+      return this.services.router.navigate(['/home']);
     }
 
     const isPrincipal = projectType === 'PRINCIPAL';
     const service = isPrincipal
-      ? this.principalAccountService
-      : this.groupAccountService;
+      ? this.services.principalAccount
+      : this.services.groupAccount;
     const accountSetter = isPrincipal
-      ? this.accountPrincipal
-      : this.accountGroup;
+      ? this.state.accountPrincipal
+      : this.state.accountGroup;
 
     return service
       .getGroupById(+this.id()!)
@@ -370,27 +474,41 @@ export class ProjectAccountComponent implements AfterViewInit {
         switchMap((data) => {
           const accountId = data.id;
           return forkJoin({
-            recipientTransactions: this.transactionService[
+            recipientTransactions: this.services.transaction[
               isPrincipal
                 ? 'getRecipientPrincipalTransactionById'
                 : 'getRecipientGroupTransactionById'
-            ](accountId, this.currentPageRecipient(), this.itemsPerPage()),
-            senderTransactions: this.transactionService[
+            ](
+              accountId,
+              this.pagination.recipient.currentPage(),
+              this.itemsPerPage()
+            ),
+            senderTransactions: this.services.transaction[
               isPrincipal
                 ? 'getSenderPrincipalTransactionById'
                 : 'getSenderGroupTransactionById'
-            ](accountId, this.currentPageSender(), this.itemsPerPage()),
+            ](
+              accountId,
+              this.pagination.sender.currentPage(),
+              this.itemsPerPage()
+            ),
           });
         }),
         tap(({ recipientTransactions, senderTransactions }) => {
-          this.transactionRecipient.set(recipientTransactions.data);
-          this.transactionSender.set(senderTransactions.data);
+          this.state.transactionRecipient.set(recipientTransactions.data);
+          this.state.transactionSender.set(senderTransactions.data);
 
-          this.totalItemsRecipient.set(recipientTransactions.meta.total);
-          this.totalPagesRecipient.set(recipientTransactions.meta.totalPages);
+          this.pagination.recipient.totalItems.set(
+            recipientTransactions.meta.total
+          );
+          this.pagination.recipient.totalPages.set(
+            recipientTransactions.meta.totalPages
+          );
 
-          this.totalItemsSender.set(senderTransactions.meta.total);
-          this.totalPagesSender.set(senderTransactions.meta.totalPages);
+          this.pagination.sender.totalItems.set(senderTransactions.meta.total);
+          this.pagination.sender.totalPages.set(
+            senderTransactions.meta.totalPages
+          );
         }),
         catchError((error) => {
           console.error('Erreur lors de la récupération des données :', error);
@@ -398,59 +516,6 @@ export class ProjectAccountComponent implements AfterViewInit {
         })
       )
       .subscribe();
-  }
-
-  setAmountHtva(event: any) {
-    this.amountHtva.set(event.target.value);
-  }
-
-  setAmountTva(event: any) {
-    this.amountTva.set(event.target.value);
-  }
-
-  createVirementSepa(ctx: any) {
-    console.log(this.virementSepaForm.value);
-    if (this.virementSepaForm.valid) {
-      const virementSepa: VirementSepaDto = this.virementSepaForm.value;
-      virementSepa.amount_total = this.amount_total();
-      this.virementSepaService
-        .createVirementSepa(
-          virementSepa,
-          +this.id()!,
-          this.typeOfProjet()!,
-          this.selectedFile
-        )
-        .pipe(
-          tap(async (data) => {
-            ctx.close();
-            await this.fetchTransaction();
-            this.isSpinner.set(true);
-            this.virementSepaForm.reset();
-            this.virementSepaForm.patchValue({
-              amount_htva: 0,
-              amount_tva: 0,
-              structured_communication: '',
-              communication: '',
-            });
-          }),
-          delay(500),
-          tap(() => this.isSpinner.set(false)),
-          catchError((err) => {
-            this.isSpinner.set(false); // Assurez-vous d'arrêter le spinner en cas d'erreur
-            this.errorMessage.set(err.error.message); // Affichez un message d'erreur
-            return of(null); // Retournez une valeur par défaut pour éviter la propagation de l'erreur
-          })
-        )
-        .subscribe();
-    }
-  }
-
-  goBack() {
-    this.location.back();
-  }
-
-  onFileSelected(event: any) {
-    this.selectedFile = event.target.files[0];
   }
 
   protected fetchVirements(): void {
@@ -461,31 +526,32 @@ export class ProjectAccountComponent implements AfterViewInit {
 
     const service =
       projectType === 'PRINCIPAL'
-        ? this.principalAccountService
-        : this.groupAccountService;
+        ? this.services.principalAccount
+        : this.services.groupAccount;
 
     service
       .getGroupById(+id)
       .pipe(
         tap((data) => {
           const virements = data.virementSepa || [];
-          const start = (this.currentPageVirement() - 1) * this.itemsPerPage();
+          const start =
+            (this.pagination.virement.currentPage() - 1) * this.itemsPerPage();
           const end = start + this.itemsPerPage();
 
           // Calculer le nombre total de pages
-          this.totalItemsVirement.set(virements.length);
-          this.totalPagesVirement.set(
+          this.pagination.virement.totalItems.set(virements.length);
+          this.pagination.virement.totalPages.set(
             Math.ceil(virements.length / this.itemsPerPage())
           );
 
           // Mettre à jour les virements pour la page actuelle
           if (projectType === 'PRINCIPAL') {
-            this.accountPrincipal.set({
+            this.state.accountPrincipal.set({
               ...data,
               virementSepa: virements.slice(start, end),
             });
           } else {
-            this.accountGroup.set({
+            this.state.accountGroup.set({
               ...data,
               virementSepa: virements.slice(start, end),
             });

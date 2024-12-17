@@ -334,11 +334,17 @@
                   </div>
                 </div>
                 } @else {
-                <span class="text-sm">{{
-                  transaction.recipientGroup.length > 0
-                    ? transaction.recipientGroup[0].username
-                    : transaction.recipientPrincipal[0].username
-                }}</span>
+                <span class="text-sm">
+                  @if(transaction.recipientGroup!.length > 0 &&
+                  transaction.recipientGroup[0]) {
+                  {{ transaction.recipientGroup[0].username || "" }}
+                  } @else if(transaction.recipientPrincipal!.length > 0 &&
+                  transaction.recipientPrincipal[0]) {
+                  {{ transaction.recipientPrincipal[0].username || "" }}
+                  } @else {
+                  {{ "" }}
+                  }
+                </span>
                 }
               </div>
               <div class="flex justify-between items-center">
@@ -410,11 +416,17 @@
                 </div>
               </div>
               } @else {
-              <hlm-th class="lg:w-[20%] font-bold text-[10px]">{{
-                transaction.recipientGroup.length > 0
-                  ? transaction.recipientGroup[0].username
-                  : transaction.recipientPrincipal[0].username
-              }}</hlm-th>
+              <hlm-th class="lg:w-[20%] font-bold text-[10px]">
+                @if(transaction.recipientGroup!.length > 0 &&
+                transaction.recipientGroup![0]) {
+                {{ transaction.recipientGroup![0].username || "" }}
+                } @else if(transaction.recipientPrincipal!.length > 0 &&
+                transaction.recipientPrincipal![0]) {
+                {{ transaction.recipientPrincipal![0].username || "" }}
+                } @else {
+                {{ "" }}
+                }
+              </hlm-th>
               }
 
               <hlm-th class="lg:w-[20%] font-bold text-[10px]">

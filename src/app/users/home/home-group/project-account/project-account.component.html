@@ -554,11 +554,15 @@
               </div>
               <div class="flex justify-between items-center">
                 <span class="text-sm font-semibold">Expéditeur:</span>
-                <span class="text-sm">{{
-                  transaction.senderGroup !== null
-                    ? transaction.senderGroup.username || ""
-                    : transaction.senderPrincipal.username || ""
-                }}</span>
+                <span class="text-sm">
+                  @if(transaction.senderGroup !== null) {
+                  {{ transaction.senderGroup.username || "" }}
+                  } @else if(transaction.senderPrincipal !== null) {
+                  {{ transaction.senderPrincipal.username || "" }}
+                  } @else {
+                  {{ "" }}
+                  }
+                </span>
               </div>
               <div class="flex justify-between items-center">
                 <span class="text-sm font-semibold">Destinataire:</span>
@@ -597,11 +601,15 @@
               <hlm-td class="lg:w-[20%] text-sm">{{
                 transaction.date | date
               }}</hlm-td>
-              <hlm-td class="lg:w-[20%] text-sm">{{
-                transaction.senderGroup !== null
-                  ? transaction.senderGroup.username || ""
-                  : transaction.senderPrincipal.username || ""
-              }}</hlm-td>
+              <hlm-td class="lg:w-[20%] text-sm">
+                @if(transaction.senderGroup !== null) {
+                {{ transaction.senderGroup.username || "" }}
+                } @else if(transaction.senderPrincipal !== null) {
+                {{ transaction.senderPrincipal.username || "" }}
+                } @else {
+                {{ "" }}
+                }
+              </hlm-td>
               <hlm-td class="lg:w-[20%] text-sm">{{
                 state.accountPrincipal()?.username ||
                   state.accountGroup()?.username

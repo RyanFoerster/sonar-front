@@ -51,7 +51,16 @@ import {
   HlmThComponent,
   HlmTrowComponent,
 } from '@spartan-ng/ui-table-helm';
-import { catchError, delay, EMPTY, forkJoin, of, switchMap, tap } from 'rxjs';
+import {
+  catchError,
+  delay,
+  EMPTY,
+  forkJoin,
+  from,
+  of,
+  switchMap,
+  tap,
+} from 'rxjs';
 import { CompteGroupeEntity } from '../../../../shared/entities/compte-groupe.entity';
 import { PrincipalAccountEntity } from '../../../../shared/entities/principal-account.entity';
 import { TransactionEntity } from '../../../../shared/entities/transaction.entity';
@@ -304,12 +313,17 @@ export class ProjectAccountComponent implements AfterViewInit {
           this.selectedFile
         )
         .pipe(
-          tap(async () => {
+          tap(() => {
             ctx.close();
-            await this.fetchTransaction();
             this.resetFormState();
           }),
-          delay(500),
+          switchMap(() => {
+            return forkJoin([
+              from(this.fetchTransaction()),
+              from(this.fetchVirements()),
+            ]);
+          }),
+          delay(300),
           tap(() => {
             this.state.isLoadingVirement.set(false);
             this.state.isSpinner.set(false);
@@ -462,13 +476,18 @@ export class ProjectAccountComponent implements AfterViewInit {
       this.services.transaction
         .createTransaction(transactionDto)
         .pipe(
-          tap(async () => {
+          tap(() => {
             ctx.close();
-            this.state.isSpinner.set(true);
-            await this.fetchTransaction();
-            await this.fetchVirements();
+            this.transactionForm.reset();
           }),
-          delay(1000),
+          switchMap(() => {
+            this.state.isSpinner.set(true);
+            return forkJoin([
+              from(this.fetchTransaction()),
+              from(this.fetchVirements()),
+            ]);
+          }),
+          delay(300),
           tap(() => {
             this.state.isLoadingTransfer.set(false);
             this.state.isSpinner.set(false);
@@ -523,22 +542,25 @@ export class ProjectAccountComponent implements AfterViewInit {
               this.pagination.sender.currentPage(),
               this.itemsPerPage()
             ),
-          });
-        }),
-        tap(({ recipientTransactions, senderTransactions }) => {
-          this.state.transactionRecipient.set(recipientTransactions.data);
-          this.state.transactionSender.set(senderTransactions.data);
+          }).pipe(
+            tap(({ recipientTransactions, senderTransactions }) => {
+              this.state.transactionRecipient.set(recipientTransactions.data);
+              this.state.transactionSender.set(senderTransactions.data);
 
-          this.pagination.recipient.totalItems.set(
-            recipientTransactions.meta.total
-          );
-          this.pagination.recipient.totalPages.set(
-            recipientTransactions.meta.totalPages
-          );
+              this.pagination.recipient.totalItems.set(
+                recipientTransactions.meta.total
+              );
+              this.pagination.recipient.totalPages.set(
+                recipientTransactions.meta.totalPages
+              );
 
-          this.pagination.sender.totalItems.set(senderTransactions.meta.total);
-          this.pagination.sender.totalPages.set(
-            senderTransactions.meta.totalPages
+              this.pagination.sender.totalItems.set(
+                senderTransactions.meta.total
+              );
+              this.pagination.sender.totalPages.set(
+                senderTransactions.meta.totalPages
+              );
+            })
           );
         }),
         catchError((error) => {
@@ -546,7 +568,7 @@ export class ProjectAccountComponent implements AfterViewInit {
           return EMPTY;
         })
       )
-      .subscribe();
+      .toPromise();
   }
 
   async fetchVirements(): Promise<void> {

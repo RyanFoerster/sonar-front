@@ -190,6 +190,8 @@ export class ProjectAccountComponent implements AfterViewInit {
   // State signals
   protected readonly state = {
     isSpinner: signal(false),
+    isLoadingTransfer: signal(false),
+    isLoadingVirement: signal(false),
     accountPrincipal: signal<PrincipalAccountEntity | undefined>(undefined),
     accountGroup: signal<CompteGroupeEntity | undefined>(undefined),
     transactionRecipient: signal<TransactionEntity[] | undefined>(undefined),
@@ -273,7 +275,7 @@ export class ProjectAccountComponent implements AfterViewInit {
 
   async ngAfterViewInit() {
     await this.fetchTransaction();
-    this.fetchVirements();
+    await this.fetchVirements();
   }
 
   protected setAmountHtva(event: Event): void {
@@ -288,6 +290,7 @@ export class ProjectAccountComponent implements AfterViewInit {
 
   protected createVirementSepa(ctx: { close: () => void }): void {
     if (this.virementSepaForm.valid) {
+      this.state.isLoadingVirement.set(true);
       const virementSepa: VirementSepaDto = {
         ...this.virementSepaForm.value,
         amount_total: this.amount_total(),
@@ -304,12 +307,15 @@ export class ProjectAccountComponent implements AfterViewInit {
           tap(async () => {
             ctx.close();
             await this.fetchTransaction();
-            this.state.isSpinner.set(true);
             this.resetFormState();
           }),
           delay(500),
-          tap(() => this.state.isSpinner.set(false)),
+          tap(() => {
+            this.state.isLoadingVirement.set(false);
+            this.state.isSpinner.set(false);
+          }),
           catchError((err) => {
+            this.state.isLoadingVirement.set(false);
             this.state.isSpinner.set(false);
             this.state.errorMessage.set(err.error.message);
             return of(null);
@@ -438,6 +444,7 @@ export class ProjectAccountComponent implements AfterViewInit {
 
   sendTransaction(ctx: any) {
     if (this.transactionForm.valid) {
+      this.state.isLoadingTransfer.set(true);
       let transactionDto: TransactionDto = { ...this.transactionForm.value };
       if (this.state.accountPrincipal()) {
         transactionDto.senderPrincipal = this.state.accountPrincipal()?.id;
@@ -457,11 +464,21 @@ export class ProjectAccountComponent implements AfterViewInit {
         .pipe(
           tap(async () => {
             ctx.close();
-            await this.fetchTransaction();
             this.state.isSpinner.set(true);
+            await this.fetchTransaction();
+            await this.fetchVirements();
           }),
           delay(1000),
-          tap(() => this.state.isSpinner.set(false))
+          tap(() => {
+            this.state.isLoadingTransfer.set(false);
+            this.state.isSpinner.set(false);
+          }),
+          catchError((err) => {
+            this.state.isLoadingTransfer.set(false);
+            this.state.isSpinner.set(false);
+            this.state.errorMessage.set(err.error.message);
+            return of(null);
+          })
         )
         .subscribe();
     }
@@ -532,7 +549,7 @@ export class ProjectAccountComponent implements AfterViewInit {
       .subscribe();
   }
 
-  protected fetchVirements(): void {
+  async fetchVirements(): Promise<void> {
     const projectType = this.typeOfProjet();
     const id = this.id();
 

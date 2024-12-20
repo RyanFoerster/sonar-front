@@ -171,11 +171,26 @@
                 hlmBtn
                 variant="outline"
                 (click)="ctx.close()"
+                [disabled]="state.isLoadingTransfer()"
               >
                 Annuler
               </button>
-              <button class="rounded-full px-4" hlmBtn type="submit">
-                Envoyer
+              <button
+                class="rounded-full px-4 min-w-[100px] relative"
+                hlmBtn
+                type="submit"
+                [disabled]="state.isLoadingTransfer()"
+              >
+                <span [class.opacity-0]="state.isLoadingTransfer()"
+                  >Envoyer</span
+                >
+                @if(state.isLoadingTransfer()) {
+                <div
+                  class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+                >
+                  <hlm-spinner class="h-4 w-4" />
+                </div>
+                }
               </button>
             </div>
           </form>
@@ -347,11 +362,26 @@
                   hlmBtn
                   variant="outline"
                   (click)="ctx.close()"
+                  [disabled]="state.isLoadingVirement()"
                 >
                   Annuler
                 </button>
-                <button class="rounded-full px-4" hlmBtn type="submit">
-                  Envoyer
+                <button
+                  class="rounded-full px-4 min-w-[100px] relative"
+                  hlmBtn
+                  type="submit"
+                  [disabled]="state.isLoadingVirement()"
+                >
+                  <span [class.opacity-0]="state.isLoadingVirement()"
+                    >Envoyer</span
+                  >
+                  @if(state.isLoadingVirement()) {
+                  <div
+                    class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+                  >
+                    <hlm-spinner class="h-4 w-4" />
+                  </div>
+                  }
                 </button>
               </div>
             </form>

@@ -59,18 +59,21 @@
           (click)="fetchAllAccount()"
           id="transfer"
           brnDialogTrigger
-          class="rounded-full w-full px-10"
+          class="rounded-full w-full px-10 flex items-center justify-center gap-2"
           hlmBtn
         >
+          <hlm-icon name="lucideArrowLeftRight" size="sm" />
           Transfert d'argent
         </button>
         <hlm-dialog-content
-          class="w-72 rounded-xl m-2"
+          class="sm:max-w-[425px] rounded-xl m-2"
           *brnDialogContent="let ctx"
         >
           <hlm-dialog-header>
-            <h3 hlmDialogTitle>Transfert d'argent</h3>
-            <p hlmDialogDescription>
+            <h3 hlmDialogTitle class="text-lg font-semibold">
+              Transfert d'argent
+            </h3>
+            <p hlmDialogDescription class="text-sm text-gray-500">
               Choisissez un projet, ajoutez le montant et une communication.
               Cliquez sur envoyer lorsque vous avez terminé.
             </p>
@@ -78,54 +81,66 @@
 
           <form
             [formGroup]="transactionForm"
-            class="flex flex-col gap-2"
+            class="flex flex-col gap-4 mt-4"
             (ngSubmit)="sendTransaction(ctx)"
           >
-            <div class="flex flex-col">
-              <div class="w-full flex flex-col gap-2">
+            <div class="space-y-4">
+              <div class="w-full">
+                <label class="text-sm font-medium mb-1 block"
+                  >Projets principaux</label
+                >
                 <brn-select
                   formControlName="recipientPrincipal"
                   class="rounded-full w-full"
                   placeholder="Selectionner des projets principals"
                   [multiple]="true"
                 >
-                  <hlm-select-trigger class="w-full rounded-full md:w-96">
-                    <hlm-select-value />
+                  <hlm-select-trigger class="w-full rounded-full">
+                    <hlm-select-value class="w-full" />
                   </hlm-select-trigger>
-                  <hlm-select-content>
+                  <hlm-select-content
+                    class="w-full"
+                    style="max-height: 200px; overflow-y: auto"
+                  >
                     @for (principalAccount of state.principalAccounts(); track
-                    principalAccount.id) { @if (principalAccount.username !==
-                    state.accountPrincipal()?.username) {
-                    <hlm-option [value]="principalAccount.id">{{
-                      principalAccount.username
-                    }}</hlm-option>
-                    } }
+                    principalAccount.id) {
+                    <hlm-option [value]="principalAccount.id" class="text-sm">
+                      {{ principalAccount.username }}
+                    </hlm-option>
+                    }
                   </hlm-select-content>
                 </brn-select>
+              </div>
+
+              <div class="w-full">
+                <label class="text-sm font-medium mb-1 block"
+                  >Projets de groupe</label
+                >
                 <brn-select
                   formControlName="recipientGroup"
                   class="rounded-full w-full"
                   placeholder="Selectionner des projets de groupe"
                   [multiple]="true"
                 >
-                  <hlm-select-trigger class="w-full rounded-full md:max-w-96">
+                  <hlm-select-trigger class="w-full rounded-full">
                     <hlm-select-value />
                   </hlm-select-trigger>
-                  <hlm-select-content>
+                  <hlm-select-content
+                    class="w-full"
+                    style="max-height: 200px; overflow-y: auto"
+                  >
                     @for (groupAccount of state.groupAccounts(); track
-                    groupAccount.id) { @if (groupAccount.username !==
-                    state.accountGroup()?.username) {
-                    <hlm-option [value]="groupAccount.id">{{
-                      groupAccount.username
-                    }}</hlm-option>
-                    } }
+                    groupAccount.id) {
+                    <hlm-option [value]="groupAccount.id" class="text-sm">
+                      {{ groupAccount.username }}
+                    </hlm-option>
+                    }
                   </hlm-select-content>
                 </brn-select>
               </div>
-            </div>
 
-            <div class="flex flex-col gap-2 rounded-full w-full">
-              <div>
+              <div class="w-full">
+                <label class="text-sm font-medium mb-1 block">Montant</label>
                 <input
                   formControlName="amount"
                   hlmInput
@@ -134,7 +149,11 @@
                   class="rounded-full w-full"
                 />
               </div>
-              <div>
+
+              <div class="w-full">
+                <label class="text-sm font-medium mb-1 block"
+                  >Communication</label
+                >
                 <input
                   formControlName="communication"
                   hlmInput
@@ -144,7 +163,21 @@
                 />
               </div>
             </div>
-            <button class="rounded-full" hlmBtn type="submit">Envoyer</button>
+
+            <div class="flex justify-end gap-3 mt-4">
+              <button
+                type="button"
+                class="rounded-full px-4"
+                hlmBtn
+                variant="outline"
+                (click)="ctx.close()"
+              >
+                Annuler
+              </button>
+              <button class="rounded-full px-4" hlmBtn type="submit">
+                Envoyer
+              </button>
+            </div>
           </form>
         </hlm-dialog-content>
       </hlm-dialog>
@@ -153,127 +186,180 @@
         <button
           id="paie"
           brnDialogTrigger
-          class="rounded-full w-full mt-5 px-10"
+          class="rounded-full w-full mt-5 px-10 flex items-center justify-center gap-2"
           hlmBtn
         >
+          <hlm-icon name="lucideBanknote" size="sm" />
           Paiement SEPA
         </button>
         <hlm-dialog-content
-          class="w-72 rounded-xl m-2"
+          class="sm:max-w-[425px] rounded-xl m-2 max-h-[90vh] flex flex-col"
           *brnDialogContent="let ctx"
         >
-          <hlm-dialog-header class="*:text-red-600">
-            <h3 hlmDialogTitle>Paiement SEPA</h3>
-            <p hlmDialogDescription class="text-[10px]">
-              Si le virement effectu&eacute; concerne une facture
-              adress&eacute;e &agrave; Sonar Artists ASBL
-            </p>
-            <p hlmDialogDescription class="text-[10px]">
-              6 rue Francisco Ferrer, 4460 Gr&acirc;ce-Hollogne
-            </p>
-            <p hlmDialogDescription class="text-[10px]">
-              E-mail : sonar&#64;sonar.management
-            </p>
-            <p hlmDialogDescription class="text-[10px]">
-              N&deg; de t&eacute;l&eacute;phone : +32 (0)498 62 45 65
-            </p>
-            <p hlmDialogDescription class="text-[10px]">
-              N&deg; entreprise&#8239;: 0700.273.583
-            </p>
-            <p hlmDialogDescription class="text-[10px]">
-              N&deg; TVA&#8239;: BE0700.273.583
-            </p>
-            <p hlmDialogDescription class="text-[10px]">
-              Alors dans ce cas vous pouvez indiquer le montant de la TVA.
-              Celui-ci ne sera pas d&eacute;biter de votre compte de projet.
-            </p>
+          <hlm-dialog-header class="flex-none">
+            <h3 hlmDialogTitle class="text-lg font-semibold text-red-600">
+              Paiement SEPA
+            </h3>
+            <div class="text-[11px] space-y-1 text-gray-600">
+              <p>
+                Si le virement effectué concerne une facture adressée à Sonar
+                Artists ASBL
+              </p>
+              <p>6 rue Francisco Ferrer, 4460 Grâce-Hollogne</p>
+              <p>E-mail : sonar&#64;sonar.management</p>
+              <p>N° de téléphone : +32 (0)498 62 45 65</p>
+              <p>N° entreprise : 0700.273.583</p>
+              <p>N° TVA : BE0700.273.583</p>
+              <p class="text-red-500 font-medium">
+                Alors dans ce cas vous pouvez indiquer le montant de la TVA.
+                Celui-ci ne sera pas débiter de votre compte de projet.
+              </p>
+            </div>
           </hlm-dialog-header>
 
-          <form
-            [formGroup]="virementSepaForm"
-            class="flex flex-col gap-2 w-full"
-            (ngSubmit)="createVirementSepa(ctx)"
-          >
-            <div>
-              <input
-                formControlName="account_owner"
-                class="flex w-full rounded-full"
-                hlmInput
-                placeholder="Titulaire du compte"
-                type="text"
-              />
-            </div>
-            <div>
-              <input
-                formControlName="iban"
-                class="flex w-full rounded-full"
-                hlmInput
-                placeholder="IBAN"
-                type="text"
-              />
-            </div>
-            <div>
-              <input
-                formControlName="amount_htva"
-                class="flex w-full rounded-full"
-                (input)="setAmountHtva($event)"
-                hlmInput
-                placeholder="Montant HTVA"
-                type="number"
-              />
-            </div>
-            <div>
-              <input
-                formControlName="amount_tva"
-                class="flex w-full rounded-full"
-                (input)="setAmountTva($event)"
-                hlmInput
-                placeholder="Montant TVA"
-                type="number"
-              />
-            </div>
-            <div>
-              <input
-                class="flex font-bold w-full rounded-full"
-                [value]="amount_total()"
-                hlmInput
-                disabled
-                placeholder="0€"
-                type="number"
-              />
-            </div>
-            <div>
-              <input
-                formControlName="communication"
-                class="flex w-full rounded-full"
-                hlmInput
-                placeholder="Communication"
-                type="text"
-              />
-            </div>
-            <div>
-              <input
-                formControlName="structured_communication"
-                class="flex w-full rounded-full"
-                hlmInput
-                placeholder="Communication Structurée"
-                type="text"
-              />
-            </div>
-            <div>
-              <input
-                class="flex w-full rounded-full"
-                hlmInput
-                type="file"
-                (change)="onFileSelected($event)"
-                accept=".pdf,.doc,.docx, .png, .jpg, .jpeg"
-              />
-            </div>
-            <button class="rounded-full" hlmBtn type="submit">Envoyer</button>
-          </form>
-          @if(state.errorMessage() !== '') {
-          <p class="text-red-600">{{ state.errorMessage() }}</p>
-          }
+          <div class="overflow-y-auto flex-1 mt-6">
+            <form
+              [formGroup]="virementSepaForm"
+              class="flex flex-col gap-4"
+              (ngSubmit)="createVirementSepa(ctx)"
+            >
+              <div class="space-y-4">
+                <div class="w-full">
+                  <label class="text-sm font-medium mb-1 block"
+                    >Titulaire du compte</label
+                  >
+                  <input
+                    formControlName="account_owner"
+                    class="rounded-full w-full focus:outline-none"
+                    hlmInput
+                    placeholder="Titulaire du compte"
+                    type="text"
+                  />
+                </div>
+
+                <div class="w-full">
+                  <label class="text-sm font-medium mb-1 block">IBAN</label>
+                  <input
+                    formControlName="iban"
+                    class="rounded-full w-full focus:outline-none"
+                    hlmInput
+                    placeholder="IBAN"
+                    type="text"
+                  />
+                </div>
+
+                <div class="w-full">
+                  <label class="text-sm font-medium mb-1 block"
+                    >Montant HTVA</label
+                  >
+                  <input
+                    formControlName="amount_htva"
+                    class="rounded-full w-full focus:outline-none"
+                    (input)="setAmountHtva($event)"
+                    hlmInput
+                    placeholder="Montant HTVA"
+                    type="number"
+                  />
+                </div>
+
+                <div class="w-full">
+                  <label class="text-sm font-medium mb-1 block"
+                    >Montant TVA</label
+                  >
+                  <input
+                    formControlName="amount_tva"
+                    class="rounded-full w-full focus:outline-none"
+                    (input)="setAmountTva($event)"
+                    hlmInput
+                    placeholder="Montant TVA"
+                    type="number"
+                  />
+                </div>
+
+                <div class="w-full">
+                  <label class="text-sm font-medium mb-1 block"
+                    >Montant total</label
+                  >
+                  <input
+                    class="rounded-full w-full font-bold focus:outline-none"
+                    [value]="amount_total()"
+                    hlmInput
+                    disabled
+                    placeholder="0€"
+                    type="number"
+                  />
+                </div>
+
+                <div class="w-full">
+                  <label class="text-sm font-medium mb-1 block"
+                    >Communication</label
+                  >
+                  <input
+                    formControlName="communication"
+                    class="rounded-full w-full focus:outline-none"
+                    hlmInput
+                    placeholder="Communication"
+                    type="text"
+                  />
+                </div>
+
+                <div class="w-full">
+                  <label class="text-sm font-medium mb-1 block"
+                    >Communication structurée</label
+                  >
+                  <input
+                    formControlName="structured_communication"
+                    class="rounded-full w-full focus:outline-none"
+                    hlmInput
+                    placeholder="Communication structurée"
+                    type="text"
+                  />
+                </div>
+
+                <div class="w-full">
+                  <label class="text-sm font-medium mb-1 block">Facture</label>
+                  <div class="relative">
+                    <input
+                      class="hidden"
+                      type="file"
+                      (change)="onFileSelected($event)"
+                      accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+                      #fileInput
+                    />
+                    <button
+                      type="button"
+                      class="w-full rounded-full px-4 py-2 text-sm font-medium bg-white border border-gray-200 hover:bg-gray-50 focus:outline-none flex items-center gap-2"
+                      (click)="fileInput.click()"
+                    >
+                      <hlm-icon name="lucideUpload" size="sm" />
+                      Choisir un fichier
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                class="flex justify-end gap-3 mt-4 sticky bottom-0 bg-white py-4"
+              >
+                <button
+                  type="button"
+                  class="rounded-full px-4"
+                  hlmBtn
+                  variant="outline"
+                  (click)="ctx.close()"
+                >
+                  Annuler
+                </button>
+                <button class="rounded-full px-4" hlmBtn type="submit">
+                  Envoyer
+                </button>
+              </div>
+            </form>
+
+            @if(state.errorMessage() !== '') {
+            <p class="mt-4 text-sm text-red-600">{{ state.errorMessage() }}</p>
+            }
+          </div>
         </hlm-dialog-content>
       </hlm-dialog>
     </div>
@@ -303,7 +389,9 @@
             <div class="flex flex-col gap-2 lg:hidden">
               <div class="flex justify-between items-center">
                 <span class="text-sm font-semibold">Date:</span>
-                <span class="text-sm">{{ transaction.date | date }}</span>
+                <span class="text-sm">{{
+                  transaction.date | date : "dd/MM/yyyy"
+                }}</span>
               </div>
               <div class="flex justify-between items-center">
                 <span class="text-sm font-semibold">Expéditeur:</span>
@@ -379,7 +467,7 @@
 
             <div class="hidden lg:flex lg:justify-between w-full">
               <hlm-td class="lg:w-[20%] text-sm">{{
-                transaction.date | date
+                transaction.date | date : "dd/MM/yyyy"
               }}</hlm-td>
               <hlm-td class="lg:w-[20%] text-sm">{{
                 transaction.senderPrincipal !== null
@@ -550,7 +638,9 @@
             <div class="flex flex-col gap-2 lg:hidden">
               <div class="flex justify-between items-center">
                 <span class="text-sm font-semibold">Date:</span>
-                <span class="text-sm">{{ transaction.date | date }}</span>
+                <span class="text-sm">{{
+                  transaction.date | date : "dd/MM/yyyy"
+                }}</span>
               </div>
               <div class="flex justify-between items-center">
                 <span class="text-sm font-semibold">Expéditeur:</span>
@@ -599,7 +689,7 @@
 
             <div class="hidden lg:flex lg:justify-between w-full">
               <hlm-td class="lg:w-[20%] text-sm">{{
-                transaction.date | date
+                transaction.date | date : "dd/MM/yyyy"
               }}</hlm-td>
               <hlm-td class="lg:w-[20%] text-sm">
                 @if(transaction.senderGroup !== null) {
@@ -740,7 +830,9 @@
           <div class="flex flex-col gap-2 lg:hidden">
             <div class="flex justify-between items-center">
               <span class="text-sm font-semibold">Date:</span>
-              <span class="text-sm">{{ virement.created_at | date }}</span>
+              <span class="text-sm">{{
+                virement.created_at | date : "dd/MM/yyyy"
+              }}</span>
             </div>
             <div class="flex justify-between items-center">
               <span class="text-sm font-semibold">Titulaire:</span>
@@ -841,7 +933,7 @@
 
           <div class="hidden lg:flex lg:justify-between w-full">
             <hlm-td class="lg:w-[11%] text-sm">{{
-              virement.created_at | date
+              virement.created_at | date : "dd/MM/yyyy"
             }}</hlm-td>
             <hlm-td class="lg:w-[11%] text-sm">{{
               virement.account_owner
@@ -928,7 +1020,9 @@
           <div class="flex flex-col gap-2 lg:hidden">
             <div class="flex justify-between items-center">
               <span class="text-sm font-semibold">Date:</span>
-              <span class="text-sm">{{ virement.created_at | date }}</span>
+              <span class="text-sm">{{
+                virement.created_at | date : "dd/MM/yyyy"
+              }}</span>
             </div>
             <div class="flex justify-between items-center">
               <span class="text-sm font-semibold">Titulaire:</span>
@@ -1025,7 +1119,7 @@
 
           <div class="hidden lg:flex lg:justify-between w-full">
             <hlm-td class="lg:w-[11%] text-sm">{{
-              virement.created_at | date
+              virement.created_at | date : "dd/MM/yyyy"
             }}</hlm-td>
             <hlm-td class="lg:w-[11%] text-sm">{{
               virement.account_owner

@@ -67,7 +67,13 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { lucideBell, lucideCornerDownLeft } from '@ng-icons/lucide';
+import {
+  lucideArrowLeftRight,
+  lucideBanknote,
+  lucideBell,
+  lucideCornerDownLeft,
+  lucideUpload,
+} from '@ng-icons/lucide';
 import {
   BrnPopoverCloseDirective,
   BrnPopoverComponent,
@@ -153,7 +159,15 @@ interface FormState {
     HlmPopoverCloseDirective,
     HlmPopoverContentDirective,
   ],
-  providers: [provideIcons({ lucideCornerDownLeft, lucideBell })],
+  providers: [
+    provideIcons({
+      lucideCornerDownLeft,
+      lucideBell,
+      lucideUpload,
+      lucideBanknote,
+      lucideArrowLeftRight,
+    }),
+  ],
   templateUrl: './project-account.component.html',
   styleUrl: './project-account.component.css',
 })
@@ -533,7 +547,14 @@ export class ProjectAccountComponent implements AfterViewInit {
       .getGroupById(+id)
       .pipe(
         tap((data) => {
-          const virements = data.virementSepa || [];
+          // Trier les virements par date la plus récente
+          const virements = [...(data.virementSepa || [])].sort((a, b) => {
+            return (
+              new Date(b.created_at).getTime() -
+              new Date(a.created_at).getTime()
+            );
+          });
+
           const start =
             (this.pagination.virement.currentPage() - 1) * this.itemsPerPage();
           const end = start + this.itemsPerPage();

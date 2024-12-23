@@ -487,7 +487,6 @@ export class ProjectAccountComponent implements AfterViewInit {
               from(this.fetchVirements()),
             ]);
           }),
-          delay(300),
           tap(() => {
             this.state.isLoadingTransfer.set(false);
             this.state.isSpinner.set(false);

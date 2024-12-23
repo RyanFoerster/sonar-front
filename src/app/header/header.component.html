@@ -6,92 +6,93 @@
   </a>
 
   @if (isUserConnected()) {
-    <div class="gap-2 justify-center items-center hidden md:flex">
-      <hlm-menu-bar class="w-fit border-none">
-        <a routerLink="/home" hlmMenuBarItem>Accueil</a>
-        @if (connectedUser()?.role === "ADMIN") {
-          <a hlmMenuBarItem [brnMenuTriggerFor]="admin">Admin</a>
-        }
-      </hlm-menu-bar>
+  <div class="gap-2 justify-center items-center hidden md:flex">
+    <hlm-menu-bar class="w-fit border-none">
+      <a routerLink="/home" hlmMenuBarItem>Accueil</a>
+      @if (connectedUser()?.role === "ADMIN") {
+      <a hlmMenuBarItem [brnMenuTriggerFor]="admin">Admin</a>
+      }
+    </hlm-menu-bar>
 
-      <brn-popover>
-        <button brnPopoverTrigger class="relative flex items-center mr-2">
-          <hlm-icon size="sm" name="lucideBell" />
-          <div
-            hlmBadge
-            class="absolute bottom-2 -right-3 text-[12px] size-2 p-2 mx-auto bg-blue-500 text-white flex items-center justify-center rounded-full"
-          >
-            <span>{{ invitationCount() }}</span>
-          </div>
-        </button>
-        <div class="w-96" hlmPopoverContent *brnPopoverContent="let ctx">
-          @if (invitations().length > 0) {
-            @for (invitation of invitations(); track invitation.id) {
-              <div class="flex flex-col gap-2">
-                <p class="text-lg font-bold">{{ invitation.event.title }}</p>
-                <p class="text-sm">
-                  Date de commencement :
-                  {{ invitation.event.start_time | date: "dd/MM/yyyy hh:mm" }}
-                </p>
-                <p class="text-sm">
-                  Date de fin :
-                  {{ invitation.event.end_time | date: "dd/MM/yyyy hh:mm" }}
-                </p>
-                <button
-                  (click)="updateInvitation(invitation, 'accepted', ctx)"
-                  variant="outline"
-                  class="rounded-full w-full text-[10px] h-auto border-2 border-black hover:bg-black hover:text-white"
-                  hlmBtn
-                >
-                  Accepter
-                </button>
-                <button
-                  (click)="updateInvitation(invitation, 'refused', ctx)"
-                  variant="outline"
-                  class="rounded-full w-full text-[10px] h-auto border-2 border-black hover:bg-black hover:text-white"
-                  hlmBtn
-                >
-                  Refuser
-                </button>
-              </div>
-              <brn-separator hlmSeparator />
-            }
-          } @else {
-            <div class="flex flex-col gap-2">
-              <p class="text-lg font-bold">Vous n'avez pas de notification</p>
-            </div>
-          }
+    <brn-popover>
+      <button brnPopoverTrigger class="relative flex items-center mr-2">
+        <hlm-icon size="sm" name="lucideBell" />
+        <div
+          hlmBadge
+          class="absolute bottom-2 -right-3 text-[12px] size-2 p-2 mx-auto bg-blue-500 text-white flex items-center justify-center rounded-full"
+        >
+          <span>{{ invitationCount() }}</span>
         </div>
-      </brn-popover>
-      <a href="/profile">
-        <img
-          class="size-10 rounded-full ring ring-black"
-          [src]="connectedUser()?.profilePicture"
-          [alt]="connectedUser()?.firstName"
-        />
-      </a>
-      <a (click)="logout()" class="cursor-pointer rounded-full" hlmBtn
-        >Déconnexion</a
-      >
-    </div>
-    <app-header-mobile class="md:hidden" />
+      </button>
+      <div class="w-96" hlmPopoverContent *brnPopoverContent="let ctx">
+        @if (invitations().length > 0) { @for (invitation of invitations();
+        track invitation.id) {
+        <div class="flex flex-col gap-2">
+          <p class="text-lg font-bold">{{ invitation.event.title }}</p>
+          <p class="text-sm">
+            Date de commencement :
+            {{ invitation.event.start_time | date : "dd/MM/yyyy hh:mm" }}
+          </p>
+          <p class="text-sm">
+            Date de fin :
+            {{ invitation.event.end_time | date : "dd/MM/yyyy hh:mm" }}
+          </p>
+          <button
+            (click)="updateInvitation(invitation, 'accepted', ctx)"
+            variant="outline"
+            class="rounded-full w-full text-[10px] h-auto border-2 border-black hover:bg-black hover:text-white"
+            hlmBtn
+          >
+            Accepter
+          </button>
+          <button
+            (click)="updateInvitation(invitation, 'refused', ctx)"
+            variant="outline"
+            class="rounded-full w-full text-[10px] h-auto border-2 border-black hover:bg-black hover:text-white"
+            hlmBtn
+          >
+            Refuser
+          </button>
+        </div>
+        <brn-separator hlmSeparator />
+        } } @else {
+        <div class="flex flex-col gap-2">
+          <p class="text-lg font-bold">Vous n'avez pas de notification</p>
+        </div>
+        }
+      </div>
+    </brn-popover>
+    <a
+      href="/profile"
+      class="rounded-full size-10 flex justify-center items-center bg-gray-sonar text-black border border-black"
+    >
+      {{
+        connectedUser()?.firstName?.slice(0, 1) ||
+          connectedUser()?.name?.slice(0, 1)
+      }}
+    </a>
+    <a (click)="logout()" class="cursor-pointer rounded-full" hlmBtn
+      >Déconnexion</a
+    >
+  </div>
+  <app-header-mobile class="md:hidden" />
   } @else {
-    <div class="flex gap-2 justify-center items-center">
-      <a
-        routerLink="login"
-        hlmBtn
-        class="cursor-pointer hidden md:block rounded-full"
-        [ngClass]="{ 'md:hidden': router.url === '/login' }"
-        >Connexion</a
-      >
-      <a
-        routerLink="register"
-        hlmBtn
-        class="cursor-pointer hidden rounded-full"
-        [ngClass]="{ 'md:block': router.url === '/login' }"
-        >Inscription</a
-      >
-    </div>
+  <div class="flex gap-2 justify-center items-center">
+    <a
+      routerLink="login"
+      hlmBtn
+      class="cursor-pointer hidden md:block rounded-full"
+      [ngClass]="{ 'md:hidden': router.url === '/login' }"
+      >Connexion</a
+    >
+    <a
+      routerLink="register"
+      hlmBtn
+      class="cursor-pointer hidden rounded-full"
+      [ngClass]="{ 'md:block': router.url === '/login' }"
+      >Inscription</a
+    >
+  </div>
   }
 </div>
 

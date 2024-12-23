@@ -13,6 +13,7 @@ import {
   lucideChevronRight,
   lucideCornerDownLeft,
   lucideEdit,
+  lucideUsers,
 } from '@ng-icons/lucide';
 import { HlmAspectRatioDirective } from '@spartan-ng/ui-aspectratio-helm';
 import { HlmButtonDirective } from '@spartan-ng/ui-button-helm';
@@ -26,7 +27,7 @@ import { UserEntity } from '../../../shared/entities/user.entity';
 import { EMPTY, switchMap, take, tap } from 'rxjs';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../shared/services/auth.service';
-import { Location } from '@angular/common';
+import { JsonPipe, Location } from '@angular/common';
 
 import {
   BrnPopoverCloseDirective,
@@ -38,6 +39,19 @@ import {
   HlmPopoverCloseDirective,
   HlmPopoverContentDirective,
 } from '@spartan-ng/ui-popover-helm';
+
+import {
+  BrnDialogContentDirective,
+  BrnDialogTriggerDirective,
+} from '@spartan-ng/ui-dialog-brain';
+import {
+  HlmDialogComponent,
+  HlmDialogContentComponent,
+  HlmDialogDescriptionDirective,
+  HlmDialogFooterComponent,
+  HlmDialogHeaderComponent,
+  HlmDialogTitleDirective,
+} from '@spartan-ng/ui-dialog-helm';
 
 @Component({
   selector: 'app-home-group',
@@ -53,6 +67,15 @@ import {
     BrnPopoverTriggerDirective,
     HlmPopoverCloseDirective,
     HlmPopoverContentDirective,
+    HlmDialogComponent,
+    HlmDialogContentComponent,
+    HlmDialogDescriptionDirective,
+    HlmDialogFooterComponent,
+    HlmDialogHeaderComponent,
+    HlmDialogTitleDirective,
+    BrnDialogContentDirective,
+    BrnDialogTriggerDirective,
+    JsonPipe,
   ],
   templateUrl: './home-group.component.html',
   styleUrl: './home-group.component.css',
@@ -62,6 +85,7 @@ import {
       lucideChevronRight,
       lucideCornerDownLeft,
       lucideChevronDown,
+      lucideUsers,
     }),
   ],
 })
@@ -72,13 +96,13 @@ export class HomeGroupComponent implements AfterViewInit {
     signal(null);
   connectedUser: WritableSignal<UserEntity | null> = signal(null);
   userInfo: WritableSignal<UserEntity | null> = signal(null);
+  members: WritableSignal<any[]> = signal([]);
 
   private compteGroupeService: CompteGroupeService =
     inject(CompteGroupeService);
   private comptePrincipalService: ComptePrincipalService = inject(
     ComptePrincipalService
   );
-  private authService: AuthService = inject(AuthService);
   private usersService: UsersService = inject(UsersService);
 
   constructor(private location: Location) {}
@@ -91,48 +115,66 @@ export class HomeGroupComponent implements AfterViewInit {
     this.usersService
       .getInfo()
       .pipe(
-        tap((data) => this.connectedUser.set(data)),
+        tap((user) => this.connectedUser.set(user)),
         switchMap((user) => {
-          // Récupération des informations utilisateur si admin
           if (user.role === 'ADMIN') {
-            const userInfoObservable =
-              this.typeOfProjet() === 'PRINCIPAL'
-                ? this.usersService.getUserInfoByPrincipalAccount(this.id()!)
-                : this.usersService.getUserInfoBySecondaryAccount(this.id()!);
-
-            return userInfoObservable.pipe(
-              tap((data) => this.userInfo.set(data)),
-              switchMap(() => {
-                // Récupération des informations du projet
-                if (this.typeOfProjet() === 'PRINCIPAL') {
-                  return this.comptePrincipalService.getGroupById(this.id()!);
-                } else if (this.typeOfProjet() === 'GROUP') {
-                  return this.compteGroupeService.getGroupById(this.id()!);
-                }
-                return EMPTY;
-              })
-            );
+            return this.typeOfProjet() === 'PRINCIPAL'
+              ? this.comptePrincipalService.getGroupById(this.id()!).pipe(
+                  tap((data) => this.projet.set(data)),
+                  switchMap(() =>
+                    this.usersService
+                      .getUserInfoByPrincipalAccount(this.id()!)
+                      .pipe(tap((data) => this.userInfo.set(data)))
+                  )
+                )
+              : this.compteGroupeService.getGroupById(this.id()!).pipe(
+                  tap((data) => this.projet.set(data)),
+                  switchMap(() =>
+                    this.compteGroupeService.getAllMembers(this.id()!).pipe(
+                      tap((members) => {
+                        this.members.set(members);
+                        if (members.length > 0) {
+                          this.userInfo.set(members[0]);
+                        }
+                        console.log('members', members);
+                      })
+                    )
+                  )
+                );
           }
 
           // Pour les utilisateurs non-admin
-          if (this.typeOfProjet() === 'PRINCIPAL') {
-            if (user.comptePrincipal.id === this.id()) {
-              return this.comptePrincipalService.getGroupById(this.id()!);
-            }
-          } else if (this.typeOfProjet() === 'GROUP') {
+          if (
+            this.typeOfProjet() === 'PRINCIPAL' &&
+            user.comptePrincipal.id === this.id()
+          ) {
+            return this.comptePrincipalService
+              .getGroupById(this.id()!)
+              .pipe(tap((data) => this.projet.set(data)));
+          }
+
+          if (this.typeOfProjet() === 'GROUP') {
             const hasAccess = user.userSecondaryAccounts?.some(
               (account) => account.id === this.id()
             );
             if (hasAccess) {
-              return this.compteGroupeService.getGroupById(this.id()!);
+              return this.compteGroupeService.getGroupById(this.id()!).pipe(
+                tap((data) => this.projet.set(data)),
+                switchMap(() =>
+                  this.compteGroupeService.getAllMembers(this.id()!).pipe(
+                    tap((members) => {
+                      this.members.set(members);
+                      if (members.length > 0) {
+                        this.userInfo.set(members[0]);
+                      }
+                    })
+                  )
+                )
+              );
             }
           }
+
           return EMPTY;
-        }),
-        tap((data) => {
-          if (data) {
-            this.projet.set(data);
-          }
         }),
         take(1)
       )

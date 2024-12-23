@@ -1,19 +1,27 @@
-<a [routerLink]="LINK + id()" [queryParams]="{ typeOfProjet: typeOfProjet()}" class="relative group bg-white flex flex-col justify-center items-center w-full rounded-2xl h-32 gap-2 shadow-lg">
-
+<a
+  [routerLink]="LINK + id()"
+  [queryParams]="{ typeOfProjet: typeOfProjet() }"
+  class="relative group bg-white flex flex-col justify-center items-center w-full rounded-2xl h-32 gap-2 shadow-lg hover:bg-secondary"
+>
   <div class="flex flex-col justify-center items-center">
     <p class="font-bold">{{ name() }}</p>
     @if (id() && typeOfProjet() === "PRINCIPAL") {
-      <p class="font-bold text-[9px]">PI-{{ id() }}</p>
+    <p class="font-bold text-[9px]">PI-{{ id() }}</p>
     } @else if(id() && typeOfProjet() === "GROUP") {
-      <p class="font-bold text-[9px]">PG-{{ id() }}</p>
+    <p class="font-bold text-[9px]">PG-{{ id() }}</p>
     }
   </div>
 
   <p>{{ solde() | euroFormat }}</p>
 
-  <div class="opacity-0 flex gap-1 items-center -top-5 transition-all group-hover:opacity-100 absolute right-5 group-hover:top-2">
+  <!-- <div
+    class="opacity-0 flex gap-1 items-center -top-5 transition-all group-hover:opacity-100 absolute right-5 group-hover:top-2"
+  >
     <p class="text-xs">Accéder au projet</p>
-    <hlm-icon class=" transition-all duration-500 group-hover:rotate-[360deg] group-hover:delay-100"  size='sm' name="lucideArrowRight" />
-  </div >
-
+    <hlm-icon
+      class="transition-all duration-500 group-hover:rotate-[360deg] group-hover:delay-100"
+      size="sm"
+      name="lucideArrowRight"
+    />
+  </div> -->
 </a>

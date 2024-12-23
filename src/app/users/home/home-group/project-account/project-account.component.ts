@@ -217,6 +217,21 @@ export class ProjectAccountComponent implements AfterViewInit {
     () => +this.state.amountHtva() + +this.state.amountTva()
   );
 
+  // Computed values pour les comptes triés
+  protected readonly sortedPrincipalAccounts = computed(() =>
+    this.state
+      .principalAccounts()
+      ?.slice()
+      .sort((a, b) => (a.username ?? '').localeCompare(b.username ?? ''))
+  );
+
+  protected readonly sortedGroupAccounts = computed(() =>
+    this.state
+      .groupAccounts()
+      ?.slice()
+      .sort((a, b) => (a.username ?? '').localeCompare(b.username ?? ''))
+  );
+
   // Pagination states
   protected readonly pagination = {
     sender: {

@@ -20,78 +20,203 @@
         <h1 class="text-4xl md:text-5xl font-bold mb-3">
           {{ projet()?.username }}
         </h1>
-        <p class="text-xl font-bold md:text-2xl text-white/90">
-          {{ userInfo()?.firstName }} {{ userInfo()?.name }}
-        </p>
       </div>
+      @if(typeOfProjet() === 'GROUP'){
+      <hlm-dialog class="w-full">
+        <button
+          brnDialogTrigger
+          hlmBtn
+          class="rounded-full flex items-center gap-2"
+        >
+          <hlm-icon name="lucideUsers" size="sm" />
+          Voir les membres
+        </button>
+        <hlm-dialog-content
+          *brnDialogContent="let ctx"
+          class="w-full max-w-6xl"
+        >
+          <hlm-dialog-header>
+            <h3 brnDialogTitle hlm class="text-xl font-semibold">
+              Membres du projet
+            </h3>
+            <p brnDialogDescription hlm class="text-gray-500">
+              Voir les membres du projet
+            </p>
+          </hlm-dialog-header>
 
-      <div class="">
-        <div class="flex gap-2 text-white/80 font-light">
-          <span class="font-semibold">IBAN :</span>
-          <span>{{ userInfo()?.iban }}</span>
-        </div>
-        <div class="flex gap-2 text-white/80 font-light">
-          <span class="font-semibold">Téléphone :</span>
-          <span>{{ userInfo()?.telephone }}</span>
-        </div>
-        <div class="flex gap-2 text-white/80 font-light">
-          <span class="font-semibold">Email :</span>
-          <span>{{ userInfo()?.email }}</span>
-        </div>
-        <div class="flex gap-2 text-white/80 font-light">
-          <span class="font-semibold">Numéro national :</span>
-          <span>{{ userInfo()?.numeroNational }}</span>
-        </div>
-      </div>
+          <!-- Container avec scroll -->
+          <div class="max-h-[60vh] overflow-y-auto mt-4 px-1 w-full">
+            <!-- Grid responsive des membres -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              @for (member of members(); track $index) {
+              <!-- Carte membre -->
+              <div
+                class="p-4 rounded-lg border border-gray-200 bg-white shadow-sm hover:shadow-md transition-shadow"
+              >
+                <div class="flex flex-col gap-4">
+                  <!-- Infos principales -->
+                  <div class="flex items-center gap-3 mb-2">
+                    <div
+                      class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 font-medium"
+                    >
+                      {{ member.user.firstName[0] }}{{ member.user.name[0] }}
+                    </div>
+                    <h4 class="font-medium text-lg truncate">
+                      {{ member.user.firstName }} {{ member.user.name }}
+                    </h4>
+                  </div>
+                  <div class="flex flex-col text-sm text-gray-600 gap-2">
+                    <div class="flex items-center gap-2">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-4 w-4 flex-shrink-0"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                        />
+                      </svg>
+                      <span class="truncate">{{ member.user.email }}</span>
+                    </div>
+                    @if(member.user.telephone){
+                    <div class="flex items-center gap-2">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-4 w-4 flex-shrink-0"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                        />
+                      </svg>
+                      <span class="truncate">{{ member.user.telephone }}</span>
+                    </div>
+                    } @if(member.user.numeroNational) {
+                    <div class="flex items-center gap-2">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-4 w-4 flex-shrink-0"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"
+                        />
+                      </svg>
+                      <span class="truncate">{{
+                        member.user.numeroNational
+                      }}</span>
+                    </div>
+                    } @if(member.user.iban){
+                    <div class="flex items-center gap-2">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-4 w-4 flex-shrink-0"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M12 10v6l4 2-2-4h-4l-2 4-4-2z"
+                        />
+                      </svg>
+                      <span class="truncate">{{ member.user.iban }}</span>
+                    </div>
+                    }
+                  </div>
+                </div>
+              </div>
+              }
+            </div>
+          </div>
+
+          <hlm-dialog-footer class="mt-6">
+            <button
+              hlmBtn
+              type="button"
+              (click)="ctx.close()"
+              class="w-full sm:w-auto"
+            >
+              Fermer
+            </button>
+          </hlm-dialog-footer>
+        </hlm-dialog-content>
+      </hlm-dialog>
+      }
     </div>
   </div>
 
-  <div class="grid justify-between md:justify-center px-10 mt-6">
-    <div class="grid grid-cols-2 gap-2 md:gap-4 w-full">
-      <!-- @if (typeOfProjet() === "GROUP") {
-        <a
-          routerLink="membership"
-          [queryParams]="{ typeOfProjet: typeOfProjet()}"
-          class="rounded-full w-full text-[10px] font-semibold h-auto  bg-gray-sonar text-black md:flex md:justify-center md:items-center md:gap-2 md:min-w-4/5 md:px-10 md:text-lg hover:bg-gray-200"
-          hlmBtn>
-          Gérer les membres
-          <hlm-icon class="hidden md:block md:text-center w-4" name="lucideChevronRight"/>
-        </a>
-      } -->
+  <!-- Navigation buttons -->
+  <div class="grid grid-cols-2 gap-4 mx-10 mt-6">
+    @if (typeOfProjet() === "GROUP") {
+    <a
+      routerLink="membership"
+      [queryParams]="{ typeOfProjet: typeOfProjet() }"
+      class="rounded-full w-full text-[10px] font-semibold h-auto bg-gray-sonar text-black md:flex md:justify-center md:items-center md:gap-2 md:min-w-4/5 md:px-10 md:text-lg hover:bg-gray-200"
+      hlmBtn
+    >
+      Gérer les membres
+      <hlm-icon
+        class="hidden md:block md:text-center w-4"
+        name="lucideChevronRight"
+      />
+    </a>
+    }
+    <!-- @if (typeOfProjet() === "GROUP") {
+    <a
+      routerLink="diary"
+      [queryParams]="{ typeOfProjet: typeOfProjet() }"
+      class="rounded-full w-full text-[10px] font-semibold h-auto bg-gray-sonar text-black md:flex md:justify-center md:items-center md:gap-2 md:min-w-4/5 md:px-10 md:text-lg hover:bg-gray-200"
+      hlmBtn
+      >Agenda du projet
+      <hlm-icon
+        class="hidden md:block md:text-center w-4"
+        name="lucideChevronRight"
+      />
+    </a>
+    } -->
 
-      <!-- @if (typeOfProjet() === "GROUP") {
-        <a
-          routerLink="diary"
-          [queryParams]="{ typeOfProjet: typeOfProjet()}"
-          class="rounded-full w-full text-[10px] font-semibold h-auto  bg-gray-sonar text-black md:flex md:justify-center md:items-center md:gap-2 md:min-w-4/5 md:px-10 md:text-lg hover:bg-gray-200"
-          hlmBtn>Agenda du projet
-          <hlm-icon class="hidden md:block md:text-center w-4" name="lucideChevronRight"/>
-        </a>
-      } -->
-      <a
-        routerLink="project-account"
-        [queryParams]="{ typeOfProjet: typeOfProjet() }"
-        class="rounded-full w-full text-[10px] font-semibold h-auto bg-gray-sonar text-black md:flex md:justify-center md:items-center md:gap-2 md:min-w-4/5 md:px-10 md:text-lg hover:bg-gray-200"
-        hlmBtn
-        >Compte du projet
-        <hlm-icon
-          class="hidden md:block md:text-center w-4"
-          name="lucideChevronRight"
-        />
-      </a>
-      @if(connectedUser()?.role === "ADMIN"){
-      <a
-        routerLink="facturation"
-        [queryParams]="{ typeOfProjet: typeOfProjet() }"
-        class="rounded-full w-full text-[10px] font-semibold h-auto bg-gray-sonar text-black md:flex md:justify-center md:items-center md:gap-2 md:min-w-4/5 md:px-10 md:text-lg hover:bg-gray-200"
-        hlmBtn
-        >Facturation
-        <hlm-icon
-          class="hidden md:block md:text-center w-4"
-          name="lucideChevronRight"
-        />
-      </a>
-      }
-    </div>
+    <a
+      routerLink="project-account"
+      [queryParams]="{ typeOfProjet: typeOfProjet() }"
+      class="rounded-full w-full text-[10px] font-semibold h-auto bg-gray-sonar text-black md:flex md:justify-center md:items-center md:gap-2 md:min-w-4/5 md:px-10 md:text-lg hover:bg-gray-200"
+      hlmBtn
+      >Compte du projet
+      <hlm-icon
+        class="hidden md:block md:text-center w-4"
+        name="lucideChevronRight"
+      />
+    </a>
+
+    @if(connectedUser()?.role === "ADMIN"){
+    <a
+      routerLink="facturation"
+      [queryParams]="{ typeOfProjet: typeOfProjet() }"
+      class="rounded-full w-full text-[10px] font-semibold h-auto bg-gray-sonar text-black md:flex md:justify-center md:items-center md:gap-2 md:min-w-4/5 md:px-10 md:text-lg hover:bg-gray-200"
+      hlmBtn
+      >Facturation
+      <hlm-icon
+        class="hidden md:block md:text-center w-4"
+        name="lucideChevronRight"
+      />
+    </a>
+    }
   </div>
 </div>

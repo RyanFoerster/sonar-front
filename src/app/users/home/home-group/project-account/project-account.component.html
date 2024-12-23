@@ -95,14 +95,14 @@
                   placeholder="Selectionner des projets principals"
                   [multiple]="true"
                 >
-                  <hlm-select-trigger class="w-full rounded-full">
+                  <hlm-select-trigger class="w-full max-w-[375px] rounded-full">
                     <hlm-select-value class="w-full" />
                   </hlm-select-trigger>
                   <hlm-select-content
                     class="w-full"
                     style="max-height: 200px; overflow-y: auto"
                   >
-                    @for (principalAccount of state.principalAccounts(); track
+                    @for (principalAccount of sortedPrincipalAccounts(); track
                     principalAccount.id) {
                     <hlm-option [value]="principalAccount.id" class="text-sm">
                       {{ principalAccount.username }}
@@ -122,14 +122,14 @@
                   placeholder="Selectionner des projets de groupe"
                   [multiple]="true"
                 >
-                  <hlm-select-trigger class="w-full rounded-full">
+                  <hlm-select-trigger class="w-full max-w-[375px] rounded-full">
                     <hlm-select-value />
                   </hlm-select-trigger>
                   <hlm-select-content
-                    class="w-full"
+                    class="w-full max-w-[300px]"
                     style="max-height: 200px; overflow-y: auto"
                   >
-                    @for (groupAccount of state.groupAccounts(); track
+                    @for (groupAccount of sortedGroupAccounts(); track
                     groupAccount.id) {
                     <hlm-option [value]="groupAccount.id" class="text-sm">
                       {{ groupAccount.username }}
@@ -335,20 +335,11 @@
                   <label class="text-sm font-medium mb-1 block">Facture</label>
                   <div class="relative">
                     <input
-                      class="hidden"
+                      hlmInput
                       type="file"
                       (change)="onFileSelected($event)"
                       accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
-                      #fileInput
                     />
-                    <button
-                      type="button"
-                      class="w-full rounded-full px-4 py-2 text-sm font-medium bg-white border border-gray-200 hover:bg-gray-50 focus:outline-none flex items-center gap-2"
-                      (click)="fileInput.click()"
-                    >
-                      <hlm-icon name="lucideUpload" size="sm" />
-                      Choisir un fichier
-                    </button>
                   </div>
                 </div>
               </div>
@@ -911,7 +902,7 @@
             <div class="flex justify-between items-center">
               <span class="text-sm font-semibold">Facture:</span>
               <a
-                class="text-sm text-blue-600 hover:text-blue-800"
+                class="text-sm text-blue-600 border p-2 border-blue-600 transition-all rounded-full hover:bg-blue-600 hover:text-white"
                 [href]="virement.invoice_url"
                 target="_blank"
                 >Voir</a
@@ -997,9 +988,9 @@
             }}</hlm-td>
             <hlm-td class="lg:w-[8%] text-sm">
               <a
-                class="text-blue-600 hover:text-blue-800"
                 [href]="virement.invoice_url"
                 target="_blank"
+                class="text-blue-600 border p-2 border-blue-600 transition-all rounded-full hover:bg-blue-600 hover:text-white"
                 >Voir</a
               >
             </hlm-td>
@@ -1101,7 +1092,7 @@
             <div class="flex justify-between items-center">
               <span class="text-sm font-semibold">Facture:</span>
               <a
-                class="text-sm text-blue-600 hover:text-blue-800"
+                class="text-sm text-blue-600 border p-2 border-blue-600 transition-all rounded-full hover:bg-blue-600 hover:text-white"
                 [href]="virement.invoice_url"
                 target="_blank"
                 >Voir</a
@@ -1183,7 +1174,7 @@
             }}</hlm-td>
             <hlm-td class="lg:w-[8%] text-sm">
               <a
-                class="text-blue-600 hover:text-blue-800"
+                class="text-blue-600 border p-2 border-blue-600 transition-all rounded-full hover:bg-blue-600 hover:text-white"
                 [href]="virement.invoice_url"
                 target="_blank"
                 >Voir</a

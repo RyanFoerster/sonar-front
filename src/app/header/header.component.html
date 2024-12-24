@@ -1,7 +1,7 @@
 <div
   class="py-5 px-10 h-20 flex gap-5 rounded justify-between items-center relative"
 >
-  <a href="/home">
+  <a routerLink="/home">
     <img class="w-36" src="assets/images/Groupe-30.png" alt="Logo de sonar" />
   </a>
 
@@ -63,7 +63,7 @@
       </div>
     </brn-popover>
     <a
-      href="/profile"
+      routerLink="/profile"
       class="rounded-full size-10 flex justify-center items-center bg-gray-sonar text-black border border-black"
     >
       {{
@@ -78,20 +78,18 @@
   <app-header-mobile class="md:hidden" />
   } @else {
   <div class="flex gap-2 justify-center items-center">
+    @if (router.url === '/login') {
     <a
-      routerLink="login"
+      routerLink="/register"
       hlmBtn
-      class="cursor-pointer hidden md:block rounded-full"
-      [ngClass]="{ 'md:hidden': router.url === '/login' }"
-      >Connexion</a
-    >
-    <a
-      routerLink="register"
-      hlmBtn
-      class="cursor-pointer hidden rounded-full"
-      [ngClass]="{ 'md:block': router.url === '/login' }"
+      class="cursor-pointer md:block rounded-full"
       >Inscription</a
     >
+    } @else if (router.url !== '/register') {
+    <a routerLink="/login" hlmBtn class="cursor-pointer md:block rounded-full"
+      >Connexion</a
+    >
+    }
   </div>
   }
 </div>
@@ -101,23 +99,23 @@
     variant="menubar"
     class="w-64 flex flex-col p-0 items-center justify-start"
   >
-    <a routerLink="user-validation" class="" hlmMenuItemRadio>
+    <a routerLink="/user-validation" class="" hlmMenuItemRadio>
       <hlm-menu-item-radio />
       Validation utilisateur
     </a>
-    <a routerLink="sepa-validation" hlmMenuItemRadio>
+    <a routerLink="/sepa-validation" hlmMenuItemRadio>
       <hlm-menu-item-radio />
       Validation virement SEPA
     </a>
-    <a routerLink="creating-new-users" hlmMenuItemRadio>
+    <a routerLink="/creating-new-users" hlmMenuItemRadio>
       <hlm-menu-item-radio />
       Création nouveau membre
     </a>
-    <a routerLink="meet" hlmMenuItemRadio>
+    <a routerLink="/meet" hlmMenuItemRadio>
       <hlm-menu-item-radio />
       Rendez-vous Visio
     </a>
-    <a routerLink="all-invoices" hlmMenuItemRadio>
+    <a routerLink="/all-invoices" hlmMenuItemRadio>
       <hlm-menu-item-radio />
       Liste des factures
     </a>

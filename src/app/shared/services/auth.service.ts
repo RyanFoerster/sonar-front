@@ -1,8 +1,7 @@
-import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { inject, Injectable, PLATFORM_ID, signal } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { interval, Subscription, tap } from 'rxjs';
+import { BehaviorSubject, Observable, Subscription, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { UserEntity } from '../entities/user.entity';
 
@@ -13,31 +12,58 @@ export class AuthService {
   private token = signal<string | null>(null);
   private refreshTokenFromStorage = signal<string | null>(null);
   private userFromStorage = signal<UserEntity | null>(null);
-  private readonly platformId = inject(PLATFORM_ID);
+  private authState = new BehaviorSubject<boolean>(false);
+  private currentUser = new BehaviorSubject<UserEntity | null>(null);
   private httpClient: HttpClient = inject(HttpClient);
   private router: Router = inject(Router);
   private tokenCheckInterval: Subscription | null = null;
-  private readonly TOKEN_CHECK_INTERVAL = 60000; // Vérifie toutes les minutes
+  private readonly TOKEN_CHECK_INTERVAL = 60000;
 
   constructor() {
-    if (isPlatformBrowser(this.platformId)) {
-      const tokenInStorage = localStorage.getItem(environment.TOKEN_KEY);
-      const refreshTokenInStorage = localStorage.getItem(
-        environment.REFRESH_TOKEN_KEY
-      );
-      const userInStorage = localStorage.getItem(environment.USER_KEY);
-      if (tokenInStorage && refreshTokenInStorage) {
+    this.initializeAuthState();
+  }
+
+  private initializeAuthState() {
+    const tokenInStorage = localStorage.getItem(environment.TOKEN_KEY);
+    const refreshTokenInStorage = localStorage.getItem(
+      environment.REFRESH_TOKEN_KEY
+    );
+    const userInStorage = localStorage.getItem(environment.USER_KEY);
+
+    if (tokenInStorage && refreshTokenInStorage && userInStorage) {
+      try {
+        const user = JSON.parse(userInStorage);
         this.token.set(tokenInStorage);
         this.refreshTokenFromStorage.set(refreshTokenInStorage);
-        this.userFromStorage.set(JSON.parse(userInStorage ?? '{}'));
-        sessionStorage.setItem('userLogin', String(true));
+        this.userFromStorage.set(user);
+        this.currentUser.next(user);
+        this.authState.next(true);
         this.startTokenCheck();
-      } else {
-        this.token.set(null);
-        this.refreshTokenFromStorage.set(null);
-        this.userFromStorage.set(null);
-        sessionStorage.setItem('userLogin', String(false));
+      } catch (error) {
+        console.error(
+          "Erreur lors de l'initialisation de l'état d'authentification:",
+          error
+        );
+        this.clearAuthState();
       }
+    } else {
+      this.clearAuthState();
+    }
+  }
+
+  private clearAuthState() {
+    this.token.set(null);
+    this.refreshTokenFromStorage.set(null);
+    this.userFromStorage.set(null);
+    this.currentUser.next(null);
+    this.authState.next(false);
+    localStorage.removeItem(environment.TOKEN_KEY);
+    localStorage.removeItem(environment.REFRESH_TOKEN_KEY);
+    localStorage.removeItem(environment.USER_KEY);
+
+    if (this.tokenCheckInterval) {
+      this.tokenCheckInterval.unsubscribe();
+      this.tokenCheckInterval = null;
     }
   }
 
@@ -46,16 +72,25 @@ export class AuthService {
       this.tokenCheckInterval.unsubscribe();
     }
 
-    this.tokenCheckInterval = interval(this.TOKEN_CHECK_INTERVAL).subscribe(
-      () => {
-        this.checkTokenValidity();
-      }
-    );
+    // Vérifier immédiatement la validité du token de manière silencieuse
+    this.checkTokenValidity(true);
+
+    // Mettre en place la vérification périodique
+    this.tokenCheckInterval = new Subscription();
+    const checkInterval = setInterval(() => {
+      this.checkTokenValidity(true);
+    }, this.TOKEN_CHECK_INTERVAL);
+
+    this.tokenCheckInterval.add(() => {
+      clearInterval(checkInterval);
+    });
   }
 
-  private checkTokenValidity() {
+  private checkTokenValidity(silent: boolean = false) {
     if (!this.getToken()) {
-      this.logout();
+      if (!silent) {
+        this.clearAuthState();
+      }
       return;
     }
 
@@ -63,15 +98,31 @@ export class AuthService {
       .get(`${environment.API_URL}/auth/check-token`)
       .pipe(
         tap(
-          () => {}, // Si la requête réussit, le token est valide
+          () => {
+            this.authState.next(true);
+          },
           (error) => {
             if (error.status === 401) {
-              // Tentative de rafraîchissement du token
-              this.refreshToken().subscribe({
-                error: () => {
-                  this.logout();
-                },
-              });
+              const refreshToken = this.getRefreshToken();
+              if (refreshToken) {
+                this.refreshToken().subscribe({
+                  next: () => {
+                    this.authState.next(true);
+                  },
+                  error: () => {
+                    if (!silent) {
+                      this.clearAuthState();
+                      this.router.navigate(['/login']);
+                    }
+                  },
+                });
+              } else if (!silent) {
+                this.clearAuthState();
+                this.router.navigate(['/login']);
+              }
+            } else if (!silent) {
+              this.clearAuthState();
+              this.router.navigate(['/login']);
             }
           }
         )
@@ -79,47 +130,55 @@ export class AuthService {
       .subscribe();
   }
 
-  private logout() {
-    this.removeToken();
-    this.removeUser();
-    this.router.navigate(['/login']);
-    if (this.tokenCheckInterval) {
-      this.tokenCheckInterval.unsubscribe();
-      this.tokenCheckInterval = null;
-    }
-  }
-
   async saveToken(token: string, refreshToken: string) {
     localStorage.setItem(environment.TOKEN_KEY, token);
     localStorage.setItem(environment.REFRESH_TOKEN_KEY, refreshToken);
-    sessionStorage.setItem('userLogin', String(true));
     this.token.set(token);
     this.refreshTokenFromStorage.set(refreshToken);
+    this.authState.next(true);
     this.startTokenCheck();
   }
 
   getToken() {
+    if (!this.token()) {
+      const tokenInStorage = localStorage.getItem(environment.TOKEN_KEY);
+      if (tokenInStorage) {
+        this.token.set(tokenInStorage);
+        return tokenInStorage;
+      }
+    }
     return this.token();
   }
 
   getRefreshToken() {
+    if (!this.refreshTokenFromStorage()) {
+      const refreshToken = localStorage.getItem(environment.REFRESH_TOKEN_KEY);
+      if (refreshToken) {
+        this.refreshTokenFromStorage.set(refreshToken);
+        return refreshToken;
+      }
+    }
     return this.refreshTokenFromStorage();
   }
 
-  removeToken() {
-    localStorage.removeItem(environment.TOKEN_KEY);
-    localStorage.removeItem(environment.REFRESH_TOKEN_KEY);
-    sessionStorage.setItem('userLogin', String(false));
-    this.token.set(null);
-    this.refreshTokenFromStorage.set(null);
-    if (this.tokenCheckInterval) {
-      this.tokenCheckInterval.unsubscribe();
-      this.tokenCheckInterval = null;
-    }
+  isAuthenticated(): boolean {
+    return this.authState.getValue();
+  }
+
+  logout() {
+    this.clearAuthState();
+    this.router.navigate(['/login']);
   }
 
   refreshToken() {
-    const refreshToken = localStorage.getItem(environment.REFRESH_TOKEN_KEY);
+    const refreshToken = this.getRefreshToken();
+    if (!refreshToken) {
+      this.clearAuthState();
+      return new Observable((subscriber) =>
+        subscriber.error('No refresh token')
+      );
+    }
+
     return this.httpClient
       .post<{ access_token: string; refresh_token: string }>(
         `${environment.API_URL}/auth/refresh`,
@@ -133,19 +192,34 @@ export class AuthService {
   }
 
   saveUser(user: UserEntity) {
-    if (localStorage.getItem(environment.USER_KEY)) {
-      localStorage.removeItem(environment.USER_KEY);
-    }
     localStorage.setItem(environment.USER_KEY, JSON.stringify(user));
     this.userFromStorage.set(user);
-  }
-
-  removeUser() {
-    localStorage.removeItem(environment.USER_KEY);
-    this.userFromStorage.set(null);
+    this.currentUser.next(user);
+    this.authState.next(true);
   }
 
   getUser() {
+    if (!this.userFromStorage()) {
+      const userInStorage = localStorage.getItem(environment.USER_KEY);
+      if (userInStorage) {
+        try {
+          const user = JSON.parse(userInStorage);
+          this.userFromStorage.set(user);
+          this.currentUser.next(user);
+          return user;
+        } catch (error) {
+          this.clearAuthState();
+        }
+      }
+    }
     return this.userFromStorage();
+  }
+
+  getAuthState(): Observable<boolean> {
+    return this.authState.asObservable();
+  }
+
+  getCurrentUser(): Observable<UserEntity | null> {
+    return this.currentUser.asObservable();
   }
 }

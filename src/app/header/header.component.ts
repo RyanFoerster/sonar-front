@@ -1,4 +1,11 @@
-import { Component, effect, inject, PLATFORM_ID, signal } from '@angular/core';
+import {
+  Component,
+  inject,
+  OnDestroy,
+  OnInit,
+  PLATFORM_ID,
+  signal,
+} from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { HlmButtonDirective } from '@spartan-ng/ui-button-helm';
 import { BrnMenuTriggerDirective } from '@spartan-ng/ui-menu-brain';
@@ -37,6 +44,7 @@ import {
 } from '@spartan-ng/ui-popover-helm';
 import { BrnSeparatorComponent } from '@spartan-ng/ui-separator-brain';
 import { HlmSeparatorDirective } from '@spartan-ng/ui-separator-helm';
+import { Subscription } from 'rxjs';
 import { HeaderMobileComponent } from '../header-mobile/header-mobile.component';
 import { InvitationEntity } from '../shared/entities/invitation.entity';
 import { UserEntity } from '../shared/entities/user.entity';
@@ -86,11 +94,12 @@ import { UsersService } from '../shared/services/users.service';
   templateUrl: './header.component.html',
   styleUrl: './header.component.css',
 })
-export class HeaderComponent {
-  authService: AuthService = inject(AuthService);
-  usersService: UsersService = inject(UsersService);
-  invitationService: InvitationService = inject(InvitationService);
+export class HeaderComponent implements OnInit, OnDestroy {
+  private authService: AuthService = inject(AuthService);
+  private usersService: UsersService = inject(UsersService);
+  private invitationService: InvitationService = inject(InvitationService);
   private readonly platformId = inject(PLATFORM_ID);
+  protected router: Router = inject(Router);
 
   isUserConnected = signal(false);
   connectedUser = signal<UserEntity | null>(null);
@@ -98,46 +107,87 @@ export class HeaderComponent {
   invitations = signal<InvitationEntity[]>([]);
   invitationCount = signal(0);
 
-  userConnectedCondition = effect(
-    () => {
-      this.isUserConnected.set(this.authService.getToken() !== null);
-    },
-    {
-      allowSignalWrites: true,
-    },
-  );
+  private subscriptions: Subscription[] = [];
 
-  router: Router = inject(Router);
+  ngOnInit() {
+    // Initialiser l'état au démarrage
+    this.isUserConnected.set(this.authService.isAuthenticated());
+    const initialUser = this.authService.getUser();
+    if (initialUser) {
+      this.connectedUser.set(initialUser);
+      this.loadInvitations();
+    }
 
-  constructor() {
-    this.connectedUser.set(this.authService.getUser());
-    if (this.connectedUser()) {
-      this.invitationService.getByUserId().subscribe((data) => {
-        this.invitations.set(data);
-        this.invitationCount.set(data.length);
+    // S'abonner aux changements d'état d'authentification
+    this.subscriptions.push(
+      this.authService.getAuthState().subscribe((isAuthenticated) => {
+        this.isUserConnected.set(isAuthenticated);
+        if (!isAuthenticated) {
+          this.resetUserData();
+        }
+      })
+    );
+
+    // S'abonner aux changements de l'utilisateur courant
+    this.subscriptions.push(
+      this.authService.getCurrentUser().subscribe((user) => {
+        this.connectedUser.set(user);
+        if (user) {
+          this.loadInvitations();
+        }
+      })
+    );
+  }
+
+  ngOnDestroy() {
+    this.subscriptions.forEach((sub) => sub.unsubscribe());
+  }
+
+  private loadInvitations() {
+    if (this.isUserConnected()) {
+      this.invitationService.getByUserId().subscribe({
+        next: (data) => {
+          this.invitations.set(data);
+          this.invitationCount.set(data.length);
+        },
+        error: () => {
+          this.invitations.set([]);
+          this.invitationCount.set(0);
+        },
       });
     }
   }
 
+  private resetUserData() {
+    this.connectedUser.set(null);
+    this.invitations.set([]);
+    this.invitationCount.set(0);
+    this.isUserConnected.set(false);
+  }
+
   logout() {
-    this.authService.removeToken();
-    this.authService.removeUser();
-    this.router.navigate(['/login']);
+    this.authService.logout();
   }
 
   updateInvitation(
     invitation: InvitationEntity,
     status: 'accepted' | 'refused',
-    ctx: any,
+    ctx: any
   ) {
     invitation.status = status;
-    this.invitationService.update(invitation.id, invitation).subscribe(() => {
-      const newInvitations = this.invitations().filter(
-        (invit) => invit.id !== invitation.id,
-      );
-      this.invitations.set(newInvitations);
-      this.invitationCount.set(newInvitations.length);
-      ctx.close();
+    this.invitationService.update(invitation.id, invitation).subscribe({
+      next: () => {
+        const newInvitations = this.invitations().filter(
+          (invit) => invit.id !== invitation.id
+        );
+        this.invitations.set(newInvitations);
+        this.invitationCount.set(newInvitations.length);
+        ctx.close();
+      },
+      error: () => {
+        // Gérer l'erreur si nécessaire
+        ctx.close();
+      },
     });
   }
 }

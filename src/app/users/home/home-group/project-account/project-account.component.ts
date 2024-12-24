@@ -6,7 +6,6 @@ import {
   inject,
   input,
   signal,
-  type Signal,
   type WritableSignal,
 } from '@angular/core';
 import { Router } from '@angular/router';
@@ -206,28 +205,32 @@ export class ProjectAccountComponent implements AfterViewInit {
     transactionRecipient: signal<TransactionEntity[] | undefined>(undefined),
     transactionSender: signal<TransactionEntity[] | undefined>(undefined),
     principalAccounts: signal<PrincipalAccountEntity[] | undefined>(undefined),
+    filteredPrincipalAccounts: signal<PrincipalAccountEntity[] | undefined>(
+      undefined
+    ),
     groupAccounts: signal<CompteGroupeEntity[] | undefined>(undefined),
+    filteredGroupAccounts: signal<CompteGroupeEntity[] | undefined>(undefined),
     amountHtva: signal(0),
     amountTva: signal(0),
     errorMessage: signal(''),
   };
 
   // Computed values
-  protected readonly amount_total = computed(
-    () => +this.state.amountHtva() + +this.state.amountTva()
+  protected readonly amount_debited = computed(
+    () => +this.state.amountHtva() - +this.state.amountTva()
   );
 
   // Computed values pour les comptes triés
   protected readonly sortedPrincipalAccounts = computed(() =>
     this.state
-      .principalAccounts()
+      .filteredPrincipalAccounts()
       ?.slice()
       .sort((a, b) => (a.username ?? '').localeCompare(b.username ?? ''))
   );
 
   protected readonly sortedGroupAccounts = computed(() =>
     this.state
-      .groupAccounts()
+      .filteredGroupAccounts()
       ?.slice()
       .sort((a, b) => (a.username ?? '').localeCompare(b.username ?? ''))
   );
@@ -312,12 +315,13 @@ export class ProjectAccountComponent implements AfterViewInit {
     this.state.amountTva.set(Number(target.value));
   }
 
-  protected createVirementSepa(ctx: { close: () => void }): void {
+  protected createVirement(ctx: { close: () => void }): void {
     if (this.virementSepaForm.valid) {
       this.state.isLoadingVirement.set(true);
       const virementSepa: VirementSepaDto = {
         ...this.virementSepaForm.value,
-        amount_total: this.amount_total(),
+        amount_total: this.virementSepaForm.value.amount_htva,
+        amount_htva: this.amount_debited(),
       };
 
       this.services.virementSepa
@@ -455,15 +459,30 @@ export class ProjectAccountComponent implements AfterViewInit {
   }
 
   getAllPrincipalAccount() {
-    this.services.principalAccount
-      .getAllGroupPrincipal()
-      .subscribe((data) => this.state.principalAccounts.set(data));
+    this.services.principalAccount.getAllGroupPrincipal().subscribe((data) => {
+      this.state.principalAccounts.set(data);
+      this.state.filteredPrincipalAccounts.set(data);
+    });
   }
 
   getAllGroupAccount() {
-    this.services.groupAccount
-      .getAllGroupAccount()
-      .subscribe((data) => this.state.groupAccounts.set(data));
+    this.services.groupAccount.getAllGroupAccount().subscribe((data) => {
+      this.state.groupAccounts.set(data);
+      this.state.filteredGroupAccounts.set(data);
+    });
+  }
+
+  filterGroupAccounts(event: Event) {
+    const target = event.target as HTMLInputElement;
+    const searchValue = target.value.toLowerCase();
+
+    const filteredAccounts = this.state
+      .groupAccounts()
+      ?.filter((account) =>
+        account.username?.toLowerCase().includes(searchValue)
+      );
+
+    this.state.filteredGroupAccounts.set(filteredAccounts);
   }
 
   fetchAllAccount() {
@@ -633,5 +652,18 @@ export class ProjectAccountComponent implements AfterViewInit {
         })
       )
       .subscribe();
+  }
+
+  filterPrincipalAccounts(event: Event) {
+    const target = event.target as HTMLInputElement;
+    const searchValue = target.value.toLowerCase();
+
+    const filteredAccounts = this.state
+      .principalAccounts()
+      ?.filter((account) =>
+        account.username?.toLowerCase().includes(searchValue)
+      );
+
+    this.state.filteredPrincipalAccounts.set(filteredAccounts);
   }
 }

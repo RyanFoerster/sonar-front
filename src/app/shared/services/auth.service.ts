@@ -1,10 +1,10 @@
 import { isPlatformBrowser } from '@angular/common';
-import { inject, Injectable, PLATFORM_ID, signal } from '@angular/core';
-import { environment } from '../../../environments/environment';
 import { HttpClient } from '@angular/common/http';
-import { interval, Subscription, tap } from 'rxjs';
-import { UserEntity } from '../entities/user.entity';
+import { inject, Injectable, PLATFORM_ID, signal } from '@angular/core';
 import { Router } from '@angular/router';
+import { interval, Subscription, tap } from 'rxjs';
+import { environment } from '../../../environments/environment';
+import { UserEntity } from '../entities/user.entity';
 
 @Injectable({
   providedIn: 'root',

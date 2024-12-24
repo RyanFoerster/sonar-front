@@ -102,6 +102,13 @@
                     class="w-full"
                     style="max-height: 200px; overflow-y: auto"
                   >
+                    <input
+                      hlmInput
+                      type="text"
+                      placeholder="Rechercher"
+                      (input)="filterPrincipalAccounts($event)"
+                      class="rounded-full w-full focus:outline-none focus-visible:ring-0 mb-2"
+                    />
                     @for (principalAccount of sortedPrincipalAccounts(); track
                     principalAccount.id) {
                     <hlm-option [value]="principalAccount.id" class="text-sm">
@@ -126,9 +133,16 @@
                     <hlm-select-value />
                   </hlm-select-trigger>
                   <hlm-select-content
-                    class="w-full max-w-[300px]"
+                    class="w-full"
                     style="max-height: 200px; overflow-y: auto"
                   >
+                    <input
+                      hlmInput
+                      type="text"
+                      placeholder="Rechercher"
+                      (input)="filterGroupAccounts($event)"
+                      class="rounded-full w-full focus:outline-none focus-visible:ring-0 mb-2"
+                    />
                     @for (groupAccount of sortedGroupAccounts(); track
                     groupAccount.id) {
                     <hlm-option [value]="groupAccount.id" class="text-sm">
@@ -208,96 +222,107 @@
           Paiement SEPA
         </button>
         <hlm-dialog-content
-          class="sm:max-w-[425px] rounded-xl m-2 max-h-[90vh] flex flex-col"
+          class="sm:max-w-[525px] rounded-xl m-2 max-h-[90vh] flex flex-col"
           *brnDialogContent="let ctx"
         >
           <hlm-dialog-header class="flex-none">
-            <h3 hlmDialogTitle class="text-lg font-semibold text-red-600">
-              Paiement SEPA
+            <h3 hlmDialogTitle class="text-xl font-semibold text-red-600 mb-4">
+              Paiement
             </h3>
-            <div class="text-[11px] space-y-1 text-gray-600">
-              <p>
+            <div
+              class="text-sm space-y-2 text-gray-600 bg-gray-50 p-4 rounded-lg"
+            >
+              <p class="font-medium mb-2">
                 Si le virement effectué concerne une facture adressée à Sonar
-                Artists ASBL
+                Artists ASBL :
               </p>
-              <p>6 rue Francisco Ferrer, 4460 Grâce-Hollogne</p>
-              <p>E-mail : sonar&#64;sonar.management</p>
-              <p>N° de téléphone : +32 (0)498 62 45 65</p>
-              <p>N° entreprise : 0700.273.583</p>
-              <p>N° TVA : BE0700.273.583</p>
-              <p class="text-red-500 font-medium">
-                Alors dans ce cas vous pouvez indiquer le montant de la TVA.
-                Celui-ci ne sera pas débiter de votre compte de projet.
+              <div class="space-y-1 pl-2">
+                <p>6 rue Francisco Ferrer, 4460 Grâce-Hollogne</p>
+                <p>E-mail : sonar&#64;sonar.management</p>
+                <p>N° de téléphone : +32 (0)498 62 45 65</p>
+                <p>N° entreprise : 0700.273.583</p>
+                <p>N° TVA : BE0700.273.583</p>
+              </div>
+              <p class="text-red-500 font-medium mt-4">
+                Dans ce cas, vous pouvez indiquer le montant de la TVA. Celui-ci
+                ne sera pas débité de votre compte de projet.
               </p>
             </div>
           </hlm-dialog-header>
 
-          <div class="overflow-y-auto flex-1 mt-6">
+          <div
+            class="overflow-y-auto flex-1 mt-8"
+            style="scrollbar-width: none"
+          >
             <form
               [formGroup]="virementSepaForm"
-              class="flex flex-col gap-4"
-              (ngSubmit)="createVirementSepa(ctx)"
+              class="flex flex-col gap-6"
+              (ngSubmit)="createVirement(ctx)"
             >
-              <div class="space-y-4">
-                <div class="w-full">
-                  <label class="text-sm font-medium mb-1 block"
-                    >Titulaire du compte</label
-                  >
-                  <input
-                    formControlName="account_owner"
-                    class="rounded-full w-full focus:outline-none"
-                    hlmInput
-                    placeholder="Titulaire du compte"
-                    type="text"
-                  />
+              <div class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div class="w-full">
+                    <label class="text-sm font-medium mb-2 block"
+                      >Titulaire du compte</label
+                    >
+                    <input
+                      formControlName="account_owner"
+                      class="rounded-full w-full focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                      hlmInput
+                      placeholder="Titulaire du compte"
+                      type="text"
+                    />
+                  </div>
+
+                  <div class="w-full">
+                    <label class="text-sm font-medium mb-2 block">IBAN</label>
+                    <input
+                      formControlName="iban"
+                      class="rounded-full w-full focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                      hlmInput
+                      placeholder="IBAN"
+                      type="text"
+                    />
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div class="w-full">
+                    <label class="text-sm font-medium mb-2 block"
+                      >Montant Total</label
+                    >
+                    <input
+                      formControlName="amount_htva"
+                      class="rounded-full w-full focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                      (input)="setAmountHtva($event)"
+                      hlmInput
+                      placeholder="Montant total"
+                      type="number"
+                    />
+                  </div>
+
+                  <div class="w-full">
+                    <label class="text-sm font-medium mb-2 block"
+                      >Montant TVA</label
+                    >
+                    <input
+                      formControlName="amount_tva"
+                      class="rounded-full w-full focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                      (input)="setAmountTva($event)"
+                      hlmInput
+                      placeholder="Montant TVA"
+                      type="number"
+                    />
+                  </div>
                 </div>
 
                 <div class="w-full">
-                  <label class="text-sm font-medium mb-1 block">IBAN</label>
-                  <input
-                    formControlName="iban"
-                    class="rounded-full w-full focus:outline-none"
-                    hlmInput
-                    placeholder="IBAN"
-                    type="text"
-                  />
-                </div>
-
-                <div class="w-full">
-                  <label class="text-sm font-medium mb-1 block"
-                    >Montant HTVA</label
+                  <label class="text-sm font-medium mb-2 block"
+                    >Montant débité du projet</label
                   >
                   <input
-                    formControlName="amount_htva"
-                    class="rounded-full w-full focus:outline-none"
-                    (input)="setAmountHtva($event)"
-                    hlmInput
-                    placeholder="Montant HTVA"
-                    type="number"
-                  />
-                </div>
-
-                <div class="w-full">
-                  <label class="text-sm font-medium mb-1 block"
-                    >Montant TVA</label
-                  >
-                  <input
-                    formControlName="amount_tva"
-                    class="rounded-full w-full focus:outline-none"
-                    (input)="setAmountTva($event)"
-                    hlmInput
-                    placeholder="Montant TVA"
-                    type="number"
-                  />
-                </div>
-
-                <div class="w-full">
-                  <label class="text-sm font-medium mb-1 block"
-                    >Montant total</label
-                  >
-                  <input
-                    class="rounded-full w-full font-bold focus:outline-none"
-                    [value]="amount_total()"
+                    class="rounded-full w-full font-bold focus:outline-none bg-gray-50 focus-visible:ring-0 focus-visible:ring-offset-0"
+                    [value]="amount_debited()"
                     hlmInput
                     disabled
                     placeholder="0€"
@@ -305,51 +330,59 @@
                   />
                 </div>
 
-                <div class="w-full">
-                  <label class="text-sm font-medium mb-1 block"
-                    >Communication</label
-                  >
-                  <input
-                    formControlName="communication"
-                    class="rounded-full w-full focus:outline-none"
-                    hlmInput
-                    placeholder="Communication"
-                    type="text"
-                  />
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div class="w-full">
+                    <label class="text-sm font-medium mb-2 block"
+                      >Communication</label
+                    >
+                    <input
+                      formControlName="communication"
+                      class="rounded-full w-full focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                      hlmInput
+                      placeholder="Communication"
+                      type="text"
+                    />
+                  </div>
+
+                  <div class="w-full">
+                    <label class="text-sm font-medium mb-2 block"
+                      >Communication structurée</label
+                    >
+                    <input
+                      formControlName="structured_communication"
+                      class="rounded-full w-full focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                      hlmInput
+                      placeholder="Communication structurée"
+                      type="text"
+                    />
+                  </div>
                 </div>
 
                 <div class="w-full">
-                  <label class="text-sm font-medium mb-1 block"
-                    >Communication structurée</label
-                  >
-                  <input
-                    formControlName="structured_communication"
-                    class="rounded-full w-full focus:outline-none"
-                    hlmInput
-                    placeholder="Communication structurée"
-                    type="text"
-                  />
-                </div>
-
-                <div class="w-full">
-                  <label class="text-sm font-medium mb-1 block">Facture</label>
+                  <label class="text-sm font-medium mb-2 block">Facture</label>
                   <div class="relative">
                     <input
                       hlmInput
                       type="file"
                       (change)="onFileSelected($event)"
                       accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+                      class="rounded-full w-full focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
                     />
                   </div>
                 </div>
               </div>
 
               <div
-                class="flex justify-end gap-3 mt-4 sticky bottom-0 bg-white py-4"
+                class="flex justify-end gap-3 mt-6 sticky bottom-0 bg-white py-4"
               >
+                @if(state.errorMessage() !== '') {
+                <p class="mt-4 text-sm text-red-600 text-center">
+                  {{ state.errorMessage() }}
+                </p>
+                }
                 <button
                   type="button"
-                  class="rounded-full px-4"
+                  class="rounded-full px-6 self-center"
                   hlmBtn
                   variant="outline"
                   (click)="ctx.close()"
@@ -358,7 +391,7 @@
                   Annuler
                 </button>
                 <button
-                  class="rounded-full px-4 min-w-[100px] relative"
+                  class="rounded-full px-6 min-w-[120px] relative"
                   hlmBtn
                   type="submit"
                   [disabled]="state.isLoadingVirement()"
@@ -376,10 +409,6 @@
                 </button>
               </div>
             </form>
-
-            @if(state.errorMessage() !== '') {
-            <p class="mt-4 text-sm text-red-600">{{ state.errorMessage() }}</p>
-            }
           </div>
         </hlm-dialog-content>
       </hlm-dialog>
@@ -712,15 +741,11 @@
               <hlm-td class="lg:w-[20%] text-sm">{{
                 transaction.date | date : "dd/MM/yyyy"
               }}</hlm-td>
-              <hlm-td class="lg:w-[20%] text-sm">
-                @if(transaction.senderGroup !== null) {
-                {{ transaction.senderGroup.username || "" }}
-                } @else if(transaction.senderPrincipal !== null) {
-                {{ transaction.senderPrincipal.username || "" }}
-                } @else {
-                {{ "" }}
-                }
-              </hlm-td>
+              <hlm-td class="lg:w-[20%] text-sm">{{
+                transaction.senderPrincipal !== null
+                  ? transaction.senderPrincipal.username || ""
+                  : transaction.senderGroup.username || ""
+              }}</hlm-td>
               <hlm-td class="lg:w-[20%] text-sm">{{
                 state.accountPrincipal()?.username ||
                   state.accountGroup()?.username
@@ -1174,9 +1199,9 @@
             }}</hlm-td>
             <hlm-td class="lg:w-[8%] text-sm">
               <a
-                class="text-blue-600 border p-2 border-blue-600 transition-all rounded-full hover:bg-blue-600 hover:text-white"
                 [href]="virement.invoice_url"
                 target="_blank"
+                class="text-blue-600 border p-2 border-blue-600 transition-all rounded-full hover:bg-blue-600 hover:text-white"
                 >Voir</a
               >
             </hlm-td>
@@ -1200,7 +1225,7 @@
                   </button>
                   <div
                     hlmPopoverContent
-                    class="p-2 text-[10px] bg-white rounded shadow-lg"
+                    class="p-2 text-sm bg-white rounded shadow-lg"
                     *brnPopoverContent="let ctx"
                   >
                     {{ virement.rejected_reason }}

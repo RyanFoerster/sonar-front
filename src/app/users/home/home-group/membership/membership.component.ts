@@ -11,7 +11,9 @@ import { Meta, Title } from '@angular/platform-browser';
 import { provideIcons } from '@ng-icons/core';
 import {
   lucideCheck,
+  lucideChevronDown,
   lucideChevronsUpDown,
+  lucideChevronUp,
   lucideCornerDownLeft,
   lucideSearch,
   lucideUserPlus,
@@ -129,6 +131,8 @@ interface MemberWithUser {
       lucideCheck,
       lucideCornerDownLeft,
       lucideUserPlus,
+      lucideChevronDown,
+      lucideChevronUp,
     }),
   ],
   templateUrl: './membership.component.html',

@@ -92,7 +92,7 @@
                 <brn-select
                   formControlName="recipientPrincipal"
                   class="rounded-full w-full"
-                  placeholder="Selectionner des projets principals"
+                  placeholder="Selectionner des projets principaux"
                   [multiple]="true"
                 >
                   <hlm-select-trigger class="w-full max-w-[375px] rounded-full">
@@ -238,8 +238,6 @@
               </p>
               <div class="space-y-1 pl-2">
                 <p>6 rue Francisco Ferrer, 4460 Grâce-Hollogne</p>
-                <p>E-mail : sonar&#64;sonar.management</p>
-                <p>N° de téléphone : +32 (0)498 62 45 65</p>
                 <p>N° entreprise : 0700.273.583</p>
                 <p>N° TVA : BE0700.273.583</p>
               </div>
@@ -365,7 +363,7 @@
                       hlmInput
                       type="file"
                       (change)="onFileSelected($event)"
-                      accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+                      accept=".pdf"
                       class="rounded-full w-full focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
                     />
                   </div>

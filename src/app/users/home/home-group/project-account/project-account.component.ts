@@ -110,7 +110,7 @@ interface PaginationState {
 }
 
 interface FormState {
-  amount_htva: FormControl<number>;
+  amount_htva: FormControl<number | null>;
   amount_tva: FormControl<number | null>;
   communication: FormControl<string>;
   structured_communication: FormControl<string>;
@@ -204,10 +204,8 @@ export class ProjectAccountComponent implements AfterViewInit {
     accountGroup: signal<CompteGroupeEntity | undefined>(undefined),
     transactionRecipient: signal<TransactionEntity[] | undefined>(undefined),
     transactionSender: signal<TransactionEntity[] | undefined>(undefined),
-    principalAccounts: signal<PrincipalAccountEntity[] | undefined>(undefined),
-    filteredPrincipalAccounts: signal<PrincipalAccountEntity[] | undefined>(
-      undefined
-    ),
+    principalAccounts: signal<PrincipalAccountEntity[]>([]),
+    filteredPrincipalAccounts: signal<PrincipalAccountEntity[]>([]),
     groupAccounts: signal<CompteGroupeEntity[] | undefined>(undefined),
     filteredGroupAccounts: signal<CompteGroupeEntity[] | undefined>(undefined),
     amountHtva: signal(0),
@@ -283,7 +281,7 @@ export class ProjectAccountComponent implements AfterViewInit {
           nonNullable: true,
           validators: [Validators.required],
         }),
-        amount_htva: new FormControl(0, {
+        amount_htva: new FormControl(null, {
           nonNullable: true,
           validators: [Validators.required],
         }),
@@ -459,9 +457,22 @@ export class ProjectAccountComponent implements AfterViewInit {
   }
 
   getAllPrincipalAccount() {
-    this.services.principalAccount.getAllGroupPrincipal().subscribe((data) => {
-      this.state.principalAccounts.set(data);
-      this.state.filteredPrincipalAccounts.set(data);
+    console.log('Chargement des comptes principaux...');
+    this.services.principalAccount.getAllGroupPrincipal().subscribe({
+      next: (data) => {
+        console.log('Comptes principaux chargés:', data);
+        if (!data || data.length === 0) {
+          console.warn('Aucun compte principal retourné par le serveur');
+        }
+        this.state.principalAccounts.set(data);
+        this.state.filteredPrincipalAccounts.set(data);
+      },
+      error: (error) => {
+        console.error(
+          'Erreur lors du chargement des comptes principaux:',
+          error
+        );
+      },
     });
   }
 
@@ -546,62 +557,57 @@ export class ProjectAccountComponent implements AfterViewInit {
     const service = isPrincipal
       ? this.services.principalAccount
       : this.services.groupAccount;
+
     const accountSetter = isPrincipal
       ? this.state.accountPrincipal
       : this.state.accountGroup;
 
-    return service
-      .getGroupById(+this.id()!)
-      .pipe(
-        tap((data) => accountSetter.set(data)),
-        switchMap((data) => {
-          const accountId = data.id;
-          return forkJoin({
-            recipientTransactions: this.services.transaction[
-              isPrincipal
-                ? 'getRecipientPrincipalTransactionById'
-                : 'getRecipientGroupTransactionById'
-            ](
-              accountId,
-              this.pagination.recipient.currentPage(),
-              this.itemsPerPage()
-            ),
-            senderTransactions: this.services.transaction[
-              isPrincipal
-                ? 'getSenderPrincipalTransactionById'
-                : 'getSenderGroupTransactionById'
-            ](
-              accountId,
-              this.pagination.sender.currentPage(),
-              this.itemsPerPage()
-            ),
-          }).pipe(
-            tap(({ recipientTransactions, senderTransactions }) => {
-              this.state.transactionRecipient.set(recipientTransactions.data);
-              this.state.transactionSender.set(senderTransactions.data);
+    try {
+      const data = await service.getGroupById(+this.id()!).toPromise();
+      if (!data) return false;
 
-              this.pagination.recipient.totalItems.set(
-                recipientTransactions.meta.total
-              );
-              this.pagination.recipient.totalPages.set(
-                recipientTransactions.meta.totalPages
-              );
+      accountSetter.set(data);
+      const accountId = data.id;
 
-              this.pagination.sender.totalItems.set(
-                senderTransactions.meta.total
-              );
-              this.pagination.sender.totalPages.set(
-                senderTransactions.meta.totalPages
-              );
-            })
-          );
-        }),
-        catchError((error) => {
-          console.error('Erreur lors de la récupération des données :', error);
-          return EMPTY;
-        })
-      )
-      .toPromise();
+      const result = await forkJoin({
+        recipientTransactions: this.services.transaction[
+          isPrincipal
+            ? 'getRecipientPrincipalTransactionById'
+            : 'getRecipientGroupTransactionById'
+        ](
+          accountId,
+          this.pagination.recipient.currentPage(),
+          this.itemsPerPage()
+        ),
+        senderTransactions: this.services.transaction[
+          isPrincipal
+            ? 'getSenderPrincipalTransactionById'
+            : 'getSenderGroupTransactionById'
+        ](accountId, this.pagination.sender.currentPage(), this.itemsPerPage()),
+      }).toPromise();
+
+      if (!result) return false;
+
+      const { recipientTransactions, senderTransactions } = result;
+
+      this.state.transactionRecipient.set(recipientTransactions.data);
+      this.state.transactionSender.set(senderTransactions.data);
+
+      this.pagination.recipient.totalItems.set(
+        recipientTransactions.meta.total
+      );
+      this.pagination.recipient.totalPages.set(
+        recipientTransactions.meta.totalPages
+      );
+
+      this.pagination.sender.totalItems.set(senderTransactions.meta.total);
+      this.pagination.sender.totalPages.set(senderTransactions.meta.totalPages);
+
+      return true;
+    } catch (error) {
+      console.error('Erreur lors de la récupération des données :', error);
+      return false;
+    }
   }
 
   async fetchVirements(): Promise<void> {
@@ -615,55 +621,85 @@ export class ProjectAccountComponent implements AfterViewInit {
         ? this.services.principalAccount
         : this.services.groupAccount;
 
-    service
-      .getGroupById(+id)
-      .pipe(
-        tap((data) => {
-          // Trier les virements par date la plus récente
-          const virements = [...(data.virementSepa || [])].sort((a, b) => {
-            return (
-              new Date(b.created_at).getTime() -
-              new Date(a.created_at).getTime()
-            );
-          });
+    try {
+      const data = await service.getGroupById(+id).toPromise();
+      if (!data) return;
 
-          const start =
-            (this.pagination.virement.currentPage() - 1) * this.itemsPerPage();
-          const end = start + this.itemsPerPage();
+      // Trier les virements par date la plus récente
+      const virements = [...(data.virementSepa || [])].sort((a, b) => {
+        return (
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+      });
 
-          // Calculer le nombre total de pages
-          this.pagination.virement.totalItems.set(virements.length);
-          this.pagination.virement.totalPages.set(
-            Math.ceil(virements.length / this.itemsPerPage())
-          );
+      const start =
+        (this.pagination.virement.currentPage() - 1) * this.itemsPerPage();
+      const end = start + this.itemsPerPage();
 
-          // Mettre à jour les virements pour la page actuelle
-          if (projectType === 'PRINCIPAL') {
-            this.state.accountPrincipal.set({
-              ...data,
-              virementSepa: virements.slice(start, end),
-            });
-          } else {
-            this.state.accountGroup.set({
-              ...data,
-              virementSepa: virements.slice(start, end),
-            });
-          }
-        })
-      )
-      .subscribe();
+      // Calculer le nombre total de pages
+      this.pagination.virement.totalItems.set(virements.length);
+      this.pagination.virement.totalPages.set(
+        Math.ceil(virements.length / this.itemsPerPage())
+      );
+
+      // Mettre à jour les virements pour la page actuelle
+      const updatedData = {
+        ...data,
+        virementSepa: virements.slice(start, end),
+      };
+
+      if (projectType === 'PRINCIPAL') {
+        this.state.accountPrincipal.set(updatedData as PrincipalAccountEntity);
+      } else {
+        this.state.accountGroup.set(updatedData as CompteGroupeEntity);
+      }
+    } catch (error) {
+      console.error('Erreur lors de la récupération des virements :', error);
+    }
   }
 
   filterPrincipalAccounts(event: Event) {
     const target = event.target as HTMLInputElement;
-    const searchValue = target.value.toLowerCase();
+    const searchValue = target.value.toLowerCase().trim();
+
+    console.log('Recherche avec:', searchValue);
+    console.log('Comptes disponibles:', this.state.principalAccounts());
+
+    if (!this.state.principalAccounts().length) {
+      console.warn('Aucun compte principal chargé. Chargement des comptes...');
+      this.getAllPrincipalAccount();
+      return;
+    }
 
     const filteredAccounts = this.state
       .principalAccounts()
-      ?.filter((account) =>
-        account.username?.toLowerCase().includes(searchValue)
-      );
+      .filter((account) => {
+        if (!account) {
+          console.warn('Compte invalide trouvé:', account);
+          return false;
+        }
 
+        const username = account.username?.toLowerCase() || '';
+        const name = account.user?.name?.toLowerCase() || '';
+        const firstName = account.user?.firstName?.toLowerCase() || '';
+
+        console.log('Vérification du compte:', {
+          id: account.id,
+          username,
+          name,
+          firstName,
+          user: account.user,
+        });
+
+        const isMatch =
+          username.includes(searchValue) ||
+          name.includes(searchValue) ||
+          firstName.includes(searchValue);
+
+        return isMatch;
+      });
+
+    console.log('Comptes filtrés:', filteredAccounts);
     this.state.filteredPrincipalAccounts.set(filteredAccounts);
   }
 }

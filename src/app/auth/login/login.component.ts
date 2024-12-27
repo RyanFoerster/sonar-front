@@ -47,18 +47,24 @@ export class LoginComponent {
         password: this.password,
       };
 
-      this.usersService
-        .signIn(credentials)
+      this.authService
+        .login(this.email, this.password)
         .pipe(
-          tap((data) => {
-            this.authService.saveToken(data.access_token, data.refresh_token);
-            this.authService.saveUser(data.user);
-            if (data.user.isActive) {
-              this.router.navigate(['/home']);
-            } else {
-              this.router.navigate(['/rendez-vous']);
-            }
-          }),
+          tap(() => {
+            this.usersService
+              .signIn(credentials)
+              .pipe(
+                tap((data) => {
+                  this.authService.setUser(data.user);
+                  if (data.user.isActive) {
+                    this.router.navigate(['/home']);
+                  } else {
+                    this.router.navigate(['/rendez-vous']);
+                  }
+                })
+              )
+              .subscribe();
+          })
         )
         .subscribe();
     }

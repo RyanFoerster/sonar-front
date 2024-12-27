@@ -1,0 +1,57 @@
+<!-- Liste des notifications -->
+<div class="max-h-[400px] overflow-y-auto">
+  @if (notifications.length === 0) {
+  <div class="p-4 text-center text-gray-500">Aucune notification</div>
+  } @else { @for (notification of notifications; track notification.id) {
+  <div
+    class="p-4 hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
+    [ngClass]="{ 'bg-primary/5': notification.status === 'PENDING' }"
+  >
+    <div class="flex items-start gap-3">
+      <div
+        class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0"
+      >
+        <hlm-icon name="lucideUsers" class="h-4 w-4 text-primary" />
+      </div>
+      <div class="flex-1">
+        <p class="text-sm text-gray-900">
+          @if (notification.type === 'GROUP_INVITATION') { Invitation au groupe
+          <span class="font-medium">{{
+            notification.group?.username || "Groupe inconnu"
+          }}</span>
+          } @else {
+          {{ notification.message }}
+          }
+        </p>
+        <p class="text-xs text-gray-500 mt-1">
+          {{ notification.createdAt | date : "dd/MM/yyyy HH:mm" }}
+        </p>
+        @if (notification.status === 'PENDING') {
+        <div class="flex gap-2 mt-3">
+          <button
+            class="px-3 py-1 text-xs rounded-full bg-primary text-white hover:bg-primary/90 transition-colors"
+            (click)="onAccept(notification)"
+          >
+            Accepter
+          </button>
+          <button
+            class="px-3 py-1 text-xs rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
+            (click)="onReject(notification)"
+          >
+            Refuser
+          </button>
+        </div>
+        } @else {
+        <p class="text-xs text-gray-500 mt-2 italic">
+          {{
+            notification.status === "ACCEPTED"
+              ? "Invitation acceptée"
+              : "Invitation refusée"
+          }}
+        </p>
+        }
+      </div>
+    </div>
+  </div>
+  } }
+</div>

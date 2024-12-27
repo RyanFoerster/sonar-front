@@ -1,533 +1,315 @@
-@defer () { @if (isSpinner()) {
-<hlm-spinner class="flex mx-auto mt-2" aria-label="Chargement en cours" />
-} @else if (userGroup()?.role_gestion !== "NONE" || connectedUser()?.role ===
-"ADMIN") {
-<button
-  (click)="goBack()"
-  class="w-fit mx-10 mb-5 rounded-full flex items-center gap-3"
-  hlmBtn
->
-  <hlm-icon size="sm" name="lucideCornerDownLeft" />
-  Retour
-</button>
-<div
-  class="m-10 hidden flex-col items-center md:items-end gap-2 lg:flex"
-  role="main"
->
-  <hlm-dialog
-    aria-labelledby="dialog-title"
-    aria-describedby="dialog-description"
-  >
-    <button
-      id="edit-profile"
-      brnDialogTrigger
-      class="rounded-full w-80"
-      hlmBtn
-      aria-haspopup="dialog"
-      aria-controls="dialog-content"
-      (click)="fetchAllUsers(); errorMessage.set(undefined)"
-    >
-      Ajouter un membre
-    </button>
-
-    <hlm-dialog-content
-      id="dialog-content"
-      class="w-72 rounded-xl m-2"
-      *brnDialogContent="let ctx"
-    >
-      <hlm-dialog-header>
-        <h3 id="dialog-title" hlmDialogTitle>Ajouter un membre</h3>
-        <p id="dialog-description" class="md:mr-28" hlmDialogDescription>
-          Ajoutez un nouveau membre au projet de groupe ici. Cliquez sur
-          enregistrer lorsque vous avez terminé.
-        </p>
-      </hlm-dialog-header>
-
-      <brn-popover
-        [state]="state()"
-        (stateChanged)="stateChanged($event)"
-        sideOffset="5"
-        closeDelay="100"
-      >
-        <button
-          class="w-full justify-between"
-          id="edit-profile"
-          variant="outline"
-          brnPopoverTrigger
-          hlmBtn
-        >
-          {{
-            currentUser()
-              ? currentUser()?.firstName + " " + currentUser()?.name
-              : "Séléctionner un membre"
-          }}
-          <hlm-icon size="sm" name="lucideChevronsUpDown" />
-        </button>
-        <brn-cmd
-          *brnPopoverContent="let ctx"
-          hlmPopoverContent
-          hlm
-          class="p-0 w-full"
-        >
-          <hlm-cmd-input-wrapper>
-            <hlm-icon name="lucideSearch" />
-            <input placeholder="Rechercher un membre" brnCmdInput hlm />
-          </hlm-cmd-input-wrapper>
-          <div *brnCmdEmpty hlmCmdEmpty>No results found.</div>
-          <brn-cmd-list hlm>
-            <brn-cmd-group hlm>
-              @for (user of usersFromDB(); track user.id) {
-              <button
-                brnCmdItem
-                [value]="user.name"
-                (selected)="commandSelected(user)"
-                class="flex justify-between w-full"
-                hlm
-              >
-                <hlm-icon
-                  [class.opacity-0]="currentUser()?.email !== user.email"
-                  name="lucideCheck"
-                  hlmCmdIcon
-                />
-                <p>{{ user.firstName }} {{ user.name }}</p>
-                <p>{{ user.username }}</p>
-                <p>{{ user.id }}</p>
-              </button>
-              }
-            </brn-cmd-group>
-          </brn-cmd-list>
-        </brn-cmd>
-      </brn-popover>
-
-      <hlm-dialog-footer>
-        @if (errorMessage() !== undefined) {
-        <p class="text-xs text-red-500">{{ errorMessage() }}</p>
-        }
-        <button
-          (click)="addMemberToGroup(ctx)"
-          class="rounded-full"
-          hlmBtn
-          type="submit"
-          aria-label="Enregistrer les modifications"
-        >
-          Ajouter
-        </button>
-      </hlm-dialog-footer>
-    </hlm-dialog-content>
-  </hlm-dialog>
-
-  <hlm-table
-    class="overflow-x-auto w-full p-4 bg-gray-sonar rounded-xl"
-    aria-label="Tableau des membres"
-  >
-    <hlm-trow class="flex flex-col sm:flex-row">
-      <hlm-th class="w-full sm:w-52" scope="col">Date</hlm-th>
-      <hlm-th class="w-full sm:w-60" scope="col">Personne invitée</hlm-th>
-      <hlm-th class="w-full sm:flex-1" scope="col">Viewer</hlm-th>
-      <hlm-th class="w-full sm:flex-1" scope="col">Admin</hlm-th>
-    </hlm-trow>
-
-    @for (user of users(); track user.id) {
-    <hlm-trow class="flex flex-col sm:flex-row">
-      <hlm-td class="font-medium w-full sm:w-52 truncate">{{
-        currentDate | date
-      }}</hlm-td>
-      <hlm-td class="w-full sm:w-60"
-        >{{ user.firstName }} {{ user.name }}</hlm-td
-      >
-
-      <hlm-td class="grid grid-cols-2 w-full sm:flex-1">
-        <label class="flex items-center w-full" hlmLabel>
-          <hlm-checkbox
-            [checked]="checkViewerRole(user, 'treasury')"
-            [disabled]="
-              checkAdminRole(user, 'treasury') ||
-              (connectedUser()?.role !== 'ADMIN' &&
-                userGroup()?.role_gestion !== 'ADMIN')
-            "
-            (checkedChange)="changeViewerRole($event, 'treasury', user)"
-            class="mr-2 rounded-full"
-            aria-label="Compte du groupe"
-          />
-          Compte du groupe
-        </label>
-        <label class="flex items-center w-full" hlmLabel>
-          <hlm-checkbox
-            [checked]="checkViewerRole(user, 'billing')"
-            [disabled]="
-              checkAdminRole(user, 'billing') ||
-              (connectedUser()?.role !== 'ADMIN' &&
-                userGroup()?.role_gestion !== 'ADMIN')
-            "
-            (checkedChange)="changeViewerRole($event, 'billing', user)"
-            class="mr-2 rounded-full"
-            aria-label="Facturation"
-          />
-          Facturation
-        </label>
-
-        <label class="flex items-center w-full" hlmLabel>
-          <hlm-checkbox
-            [checked]="checkViewerRole(user, 'gestion')"
-            [disabled]="
-              checkAdminRole(user, 'gestion') ||
-              (connectedUser()?.role !== 'ADMIN' &&
-                userGroup()?.role_gestion !== 'ADMIN')
-            "
-            (checkedChange)="changeViewerRole($event, 'gestion', user)"
-            class="mr-2 rounded-full"
-            aria-label="Gestion d'équipe"
-          />
-          Gestion d'équipe
-        </label>
-
-        <label class="flex items-center w-full" hlmLabel>
-          <hlm-checkbox
-            [checked]="checkViewerRole(user, 'agenda')"
-            [disabled]="
-              checkAdminRole(user, 'agenda') ||
-              (connectedUser()?.role !== 'ADMIN' &&
-                userGroup()?.role_gestion !== 'ADMIN')
-            "
-            (checkedChange)="changeViewerRole($event, 'agenda', user)"
-            class="mr-2 rounded-full"
-            aria-label="Agenda"
-          />
-          Agenda
-        </label>
-        <!-- Répétez pour les autres checkboxes -->
-      </hlm-td>
-
-      <hlm-td class="grid grid-cols-2 w-full gap-2 sm:flex-1">
-        <label class="flex items-center w-full" hlmLabel>
-          <hlm-checkbox
-            [checked]="checkAdminRole(user, 'treasury')"
-            [disabled]="
-              checkViewerRole(user, 'treasury') ||
-              (connectedUser()?.role !== 'ADMIN' &&
-                userGroup()?.role_gestion !== 'ADMIN')
-            "
-            (checkedChange)="changeAdminRole($event, 'treasury', user)"
-            class="mr-2 rounded-full"
-            aria-label="Compte du groupe"
-          />
-          Compte du groupe
-        </label>
-        <label class="flex items-center w-full" hlmLabel>
-          <hlm-checkbox
-            [checked]="checkAdminRole(user, 'billing')"
-            [disabled]="
-              checkViewerRole(user, 'billing') ||
-              (connectedUser()?.role !== 'ADMIN' &&
-                userGroup()?.role_gestion !== 'ADMIN')
-            "
-            (checkedChange)="changeAdminRole($event, 'billing', user)"
-            class="mr-2 rounded-full"
-            aria-label="Facturation"
-          />
-          Facturation
-        </label>
-
-        <label class="flex items-center w-full" hlmLabel>
-          <hlm-checkbox
-            [checked]="checkAdminRole(user, 'gestion')"
-            [disabled]="
-              checkViewerRole(user, 'gestion') ||
-              (connectedUser()?.role !== 'ADMIN' &&
-                userGroup()?.role_gestion !== 'ADMIN')
-            "
-            (checkedChange)="changeAdminRole($event, 'gestion', user)"
-            class="mr-2 rounded-full"
-            aria-label="Gestion d'équipe"
-          />
-          Gestion d'équipe
-        </label>
-
-        <label class="flex items-center w-full" hlmLabel>
-          <hlm-checkbox
-            [checked]="checkAdminRole(user, 'agenda')"
-            [disabled]="
-              checkViewerRole(user, 'agenda') ||
-              (connectedUser()?.role !== 'ADMIN' &&
-                userGroup()?.role_gestion !== 'ADMIN')
-            "
-            (checkedChange)="changeAdminRole($event, 'agenda', user)"
-            class="mr-2 rounded-full"
-            aria-label="Agenda"
-          />
-          Agenda
-        </label>
-        <!-- Répétez pour les autres checkboxes -->
-      </hlm-td>
-    </hlm-trow>
-    }
-  </hlm-table>
+@defer { @if (isSpinner()) {
+<div class="flex justify-center items-center min-h-[200px]">
+  <hlm-spinner class="w-8 h-8" aria-label="Chargement en cours" />
 </div>
-
-<div
-  class="p-4 mx-2 rounded-xl flex flex-col bg-gray-sonar gap-4 lg:hidden"
-  role="main"
->
-  <h2 class="text-lg font-bold">Gestion des membres</h2>
-
-  <hlm-dialog
-    aria-labelledby="dialog-title"
-    aria-describedby="dialog-description"
+} @else if (errorMessage()) {
+<div class="flex justify-center items-center min-h-[200px]">
+  <p class="text-red-500">{{ errorMessage() }}</p>
+</div>
+} @else {
+<div class="flex flex-col gap-6 p-4 md:p-6 lg:p-8">
+  <!-- En-tête avec bouton retour et ajout de membre -->
+  <div
+    class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
   >
     <button
-      id="edit-profile"
-      brnDialogTrigger
-      class="rounded-full w-full h-10"
+      (click)="goBack()"
+      class="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
       hlmBtn
-      aria-haspopup="dialog"
-      aria-controls="dialog-content"
-      (click)="fetchAllUsers(); errorMessage.set(undefined)"
+      variant="ghost"
     >
-      Ajouter un membre
+      <hlm-icon size="sm" name="lucideCornerDownLeft" />
+      <span>Retour</span>
     </button>
 
-    <hlm-dialog-content
-      id="dialog-content"
-      class="w-72 rounded-xl m-2"
-      *brnDialogContent="let ctx"
-    >
-      <hlm-dialog-header>
-        <h3 id="dialog-title" hlmDialogTitle>Ajouter un membre</h3>
-        <p id="dialog-description" class="md:mr-28" hlmDialogDescription>
-          Ajoutez un nouveau membre au projet de groupe ici. Cliquez sur
-          enregistrer lorsque vous avez terminé.
-        </p>
-      </hlm-dialog-header>
-
-      <brn-popover
-        [state]="state()"
-        (stateChanged)="stateChanged($event)"
-        sideOffset="5"
-        closeDelay="100"
-      >
-        <button
-          class="w-full justify-between"
-          id="edit-profile"
-          variant="outline"
-          brnPopoverTrigger
-          hlmBtn
-        >
-          {{ currentUser() ? currentUser()?.email : "Séléctionner un membre" }}
-          <hlm-icon size="sm" name="lucideChevronsUpDown" />
-        </button>
-        <brn-cmd
-          *brnPopoverContent="let ctx"
-          hlmPopoverContent
-          hlm
-          class="p-0 w-full"
-        >
-          <hlm-cmd-input-wrapper>
-            <hlm-icon name="lucideSearch" />
-            <input placeholder="Rechercher un membre" brnCmdInput hlm />
-          </hlm-cmd-input-wrapper>
-          <div *brnCmdEmpty hlmCmdEmpty>No results found.</div>
-          <brn-cmd-list hlm>
-            <brn-cmd-group hlm>
-              @for (user of usersFromDB(); track user.email) {
-              <button
-                brnCmdItem
-                [value]="user.email"
-                (selected)="commandSelected(user)"
-                hlm
-              >
-                <hlm-icon
-                  [class.opacity-0]="currentUser()?.email !== user.email"
-                  name="lucideCheck"
-                  hlmCmdIcon
-                />
-                {{ user.email }}
-              </button>
-              }
-            </brn-cmd-group>
-          </brn-cmd-list>
-        </brn-cmd>
-      </brn-popover>
-
-      <hlm-dialog-footer>
-        @if (errorMessage() !== undefined) {
-        <p class="text-xs text-red-500">{{ errorMessage() }}</p>
-        }
-        <button
-          (click)="addMemberToGroup(ctx)"
-          class="rounded-full"
-          hlmBtn
-          type="submit"
-          aria-label="Enregistrer les modifications"
-        >
-          Ajouter
-        </button>
-      </hlm-dialog-footer>
-    </hlm-dialog-content>
-  </hlm-dialog>
-
-  @for (user of users(); track user.id) {
-  <div class="bg-white shadow-lg p-5 rounded-2xl" hlmAccordion>
-    <div class="flex flex-col gap-2" hlmAccordionItem>
+    @if (userGroup()?.role_gestion !== "NONE" || connectedUser()?.role ===
+    "ADMIN") {
+    <hlm-dialog>
       <button
-        class="flex flex-col gap-3 hover:no-underline py-0"
-        hlmAccordionTrigger
+        id="add-member"
+        brnDialogTrigger
+        class="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors"
+        hlmBtn
+        aria-haspopup="dialog"
+        aria-controls="dialog-content"
+        (click)="fetchAllUsers(); errorMessage.set(undefined)"
       >
-        <span class="flex justify-between items-center w-full">
-          <p class="w-6/12 text-left text-sm font-bold md:text-lg">
-            Personne invitée
-          </p>
-          <p class="w-4/12 text-left text-sm font-bold md:text-lg">Date</p>
-          <hlm-icon class="w-4" hlmAccIcon />
-        </span>
-        <brn-separator class="bg-black" hlmSeparator />
-        <span class="flex justify-between w-full">
-          <p class="w-6/12 text-left text-sm md:text-lg">{{ user.email }}</p>
-          <p class="w-4/12 text-left text-sm md:text-lg">
-            {{ currentDate | date }}
-          </p>
-          <hlm-icon class="w-4 text-transparent" size="sm" hlmAccIcon />
-        </span>
+        <hlm-icon name="lucideUserPlus" class="h-4 w-4" />
+        Ajouter un membre
       </button>
-      <hlm-accordion-content hlm>
-        <span class="flex justify-between">
-          <p class="w-6/12 text-left text-sm font-bold md:text-lg">Viewer</p>
-          <p class="w-4/12 text-left text-sm font-bold md:text-lg">Admin</p>
-          <hlm-icon class="w-4 text-transparent" size="sm" hlmAccIcon />
-        </span>
-        <brn-separator class="bg-black" hlmSeparator />
-        <span class="flex justify-between mt-2">
-          <span
-            class="grid grid-cols-1 gap-2 w-full sm:flex-1 *:text-[10px] md:*:text-sm"
+
+      <hlm-dialog-content
+        id="dialog-content"
+        class="sm:max-w-[500px] p-6 rounded-xl"
+        *brnDialogContent="let ctx"
+      >
+        <hlm-dialog-header>
+          <h3 id="dialog-title" hlmDialogTitle class="text-2xl font-semibold">
+            Ajouter un membre
+          </h3>
+          <p
+            id="dialog-description"
+            class="text-gray-500 mt-2"
+            hlmDialogDescription
           >
-            <label class="flex items-center w-full" hlmLabel>
-              <hlm-checkbox
-                [checked]="checkViewerRole(user, 'treasury')"
-                [disabled]="
-                  checkAdminRole(user, 'treasury') ||
-                  (connectedUser()?.role !== 'ADMIN' &&
-                    userGroup()?.role_gestion !== 'ADMIN')
-                "
-                (checkedChange)="changeViewerRole($event, 'treasury', user)"
-                class="mr-2 rounded-full"
-                aria-label="Compte du groupe"
-              />
-              Compte du groupe
-            </label>
-            <label class="flex items-center w-full" hlmLabel>
-              <hlm-checkbox
-                [checked]="checkViewerRole(user, 'billing')"
-                [disabled]="
-                  checkAdminRole(user, 'billing') ||
-                  (connectedUser()?.role !== 'ADMIN' &&
-                    userGroup()?.role_gestion !== 'ADMIN')
-                "
-                (checkedChange)="changeViewerRole($event, 'billing', user)"
-                class="mr-2 rounded-full"
-                aria-label="Facturation"
-              />
-              Facturation
-            </label>
+            Sélectionnez un ou plusieurs utilisateurs à inviter dans votre
+            groupe. Une notification leur sera envoyée pour accepter ou refuser
+            l'invitation.
+          </p>
+        </hlm-dialog-header>
 
-            <label class="flex items-center w-full" hlmLabel>
-              <hlm-checkbox
-                [checked]="checkViewerRole(user, 'gestion')"
-                [disabled]="
-                  checkAdminRole(user, 'gestion') ||
-                  (connectedUser()?.role !== 'ADMIN' &&
-                    userGroup()?.role_gestion !== 'ADMIN')
-                "
-                (checkedChange)="changeViewerRole($event, 'gestion', user)"
-                class="mr-2 rounded-full"
-                aria-label="Gestion d'équipe"
-              />
-              Gestion d'équipe
-            </label>
-
-            <label class="flex items-center w-full" hlmLabel>
-              <hlm-checkbox
-                [checked]="checkViewerRole(user, 'agenda')"
-                [disabled]="
-                  checkAdminRole(user, 'agenda') ||
-                  (connectedUser()?.role !== 'ADMIN' &&
-                    userGroup()?.role_gestion !== 'ADMIN')
-                "
-                (checkedChange)="changeViewerRole($event, 'agenda', user)"
-                class="mr-2 rounded-full"
-                aria-label="Agenda"
-              />
-              Agenda
-            </label>
-          </span>
-          <span
-            class="grid grid-cols-1 gap-2 w-full sm:flex-1 *:text-[10px] md:*:text-sm"
+        <!-- Select personnalisé avec recherche -->
+        <div class="my-6 relative">
+          <div
+            class="w-full p-2 border rounded-lg flex items-center justify-between cursor-pointer hover:border-gray-400"
+            (click)="toggleDropdown()"
           >
-            <label class="flex items-center w-full" hlmLabel>
-              <hlm-checkbox
-                [checked]="checkAdminRole(user, 'treasury')"
-                [disabled]="
-                  checkViewerRole(user, 'treasury') ||
-                  (connectedUser()?.role !== 'ADMIN' &&
-                    userGroup()?.role_gestion !== 'ADMIN')
-                "
-                (checkedChange)="changeAdminRole($event, 'treasury', user)"
-                class="mr-2 rounded-full"
-                aria-label="Compte du groupe"
-              />
-              Compte du groupe
-            </label>
-            <label class="flex items-center w-full" hlmLabel>
-              <hlm-checkbox
-                [checked]="checkAdminRole(user, 'billing')"
-                [disabled]="
-                  checkViewerRole(user, 'billing') ||
-                  (connectedUser()?.role !== 'ADMIN' &&
-                    userGroup()?.role_gestion !== 'ADMIN')
-                "
-                (checkedChange)="changeAdminRole($event, 'billing', user)"
-                class="mr-2 rounded-full"
-                aria-label="Facturation"
-              />
-              Facturation
-            </label>
+            <div class="flex-1">
+              @if (selectedUsers().length === 0) {
+              <span class="text-gray-500"
+                >Sélectionnez un ou plusieurs membres à inviter...</span
+              >
+              } @else if (selectedUsers().length === 1) {
+              <div class="flex items-center gap-2">
+                <div
+                  class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-sm font-medium"
+                >
+                  {{ getUserInitials(selectedUsers()[0]) }}
+                </div>
+                {{ selectedUsers()[0].firstName }} {{ selectedUsers()[0].name }}
+              </div>
+              } @else {
+              <span>{{ selectedUsers().length }} membres sélectionnés</span>
+              }
+            </div>
+            <hlm-icon
+              [name]="
+                isDropdownOpen() ? 'lucideChevronUp' : 'lucideChevronDown'
+              "
+              class="h-4 w-4 text-gray-500"
+            />
+          </div>
 
-            <label class="flex items-center w-full" hlmLabel>
-              <hlm-checkbox
-                [checked]="checkAdminRole(user, 'gestion')"
-                [disabled]="
-                  checkViewerRole(user, 'gestion') ||
-                  (connectedUser()?.role !== 'ADMIN' &&
-                    userGroup()?.role_gestion !== 'ADMIN')
-                "
-                (checkedChange)="changeAdminRole($event, 'gestion', user)"
-                class="mr-2 rounded-full"
-                aria-label="Gestion d'équipe"
-              />
-              Gestion d'équipe
-            </label>
+          @if (isDropdownOpen()) {
+          <div
+            class="absolute z-50 w-[500px] mt-1 bg-white border rounded-lg shadow-lg max-h-[400px] flex flex-col"
+          >
+            <!-- Barre de recherche -->
+            <div class="p-2 sticky top-0 bg-white border-b">
+              <div class="relative">
+                <hlm-icon
+                  name="lucideSearch"
+                  class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                />
+                <input
+                  id="searchInput"
+                  type="text"
+                  class="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  placeholder="Rechercher un membre par nom, prénom ou email..."
+                  (input)="filterUsers($event)"
+                />
+              </div>
+            </div>
 
-            <label class="flex items-center w-full" hlmLabel>
-              <hlm-checkbox
-                [checked]="checkAdminRole(user, 'agenda')"
-                [disabled]="
-                  checkViewerRole(user, 'agenda') ||
-                  (connectedUser()?.role !== 'ADMIN' &&
-                    userGroup()?.role_gestion !== 'ADMIN')
-                "
-                (checkedChange)="changeAdminRole($event, 'agenda', user)"
-                class="mr-2 rounded-full"
-                aria-label="Agenda"
-              />
-              Agenda
-            </label>
-          </span>
-          <hlm-icon class="w-4 text-transparent" size="sm" hlmAccIcon />
-        </span>
-      </hlm-accordion-content>
+            <!-- Liste des utilisateurs -->
+            <div class="overflow-y-auto flex-1">
+              @if (filteredUsers().length === 0) {
+              <div class="p-4 text-center text-gray-500">
+                Aucun résultat trouvé
+              </div>
+              } @else { @for (user of getSortedUsers(); track user.id) {
+              <div
+                class="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer"
+                [class.bg-gray-50]="isUserSelected(user)"
+                (click)="toggleUserSelection(user)"
+              >
+                <div
+                  class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-sm font-medium"
+                >
+                  {{ getUserInitials(user) }}
+                </div>
+                <div class="flex-1">
+                  <p class="font-medium">
+                    {{ user.firstName }} {{ user.name }}
+                  </p>
+                  <p class="text-sm text-gray-500">{{ user.username }}</p>
+                </div>
+                <hlm-icon
+                  [class.opacity-0]="!isUserSelected(user)"
+                  name="lucideCheck"
+                  class="h-4 w-4 text-primary"
+                />
+              </div>
+              } }
+            </div>
+          </div>
+          }
+        </div>
+
+        <hlm-dialog-footer class="flex flex-col gap-4">
+          @if (errorMessage()) {
+          <p class="text-sm text-red-500">{{ errorMessage() }}</p>
+          }
+          <div class="flex justify-end gap-3">
+            <button hlmBtn variant="outline" (click)="ctx.close()">
+              Annuler
+            </button>
+            <button
+              (click)="addMembersToGroup(ctx)"
+              class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+              [disabled]="selectedUsers().length === 0"
+              aria-label="Envoyer les invitations"
+            >
+              @if (isSpinner()) {
+              <hlm-spinner class="mr-2 h-4 w-4" />
+              } Envoyer
+              {{
+                selectedUsers().length > 1 ? "les invitations" : "l'invitation"
+              }}
+            </button>
+          </div>
+        </hlm-dialog-footer>
+      </hlm-dialog-content>
+    </hlm-dialog>
+    }
+  </div>
+
+  <!-- Tableau des membres -->
+  <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead class="bg-gray-50">
+          <tr class="text-left text-sm font-medium text-gray-500">
+            <th class="px-6 py-4">Membre</th>
+            <th class="px-6 py-4">Rôles Viewer</th>
+            <th class="px-6 py-4">Rôles Admin</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          @for (member of members(); track member.user.id) {
+          <tr class="hover:bg-gray-50 transition-colors">
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-3">
+                <div
+                  class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-sm font-medium"
+                >
+                  {{ getUserInitials(member.user) }}
+                </div>
+                <div>
+                  <p class="font-medium">
+                    {{ member.user.firstName }} {{ member.user.name }}
+                  </p>
+                  <p class="text-sm text-gray-500">
+                    {{ member.user.username }}
+                  </p>
+                </div>
+              </div>
+            </td>
+            <td class="px-6 py-4">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <label class="flex items-center gap-2 text-sm" hlmLabel>
+                  <hlm-checkbox
+                    [checked]="checkViewerRole(member.user, 'treasury')"
+                    [disabled]="isDisabledViewer(member.user, 'treasury')"
+                    (checkedChange)="
+                      onViewerChange($event, 'treasury', member.user)
+                    "
+                    class="rounded-full"
+                  />
+                  Compte du groupe
+                </label>
+                <label class="flex items-center gap-2 text-sm" hlmLabel>
+                  <hlm-checkbox
+                    [checked]="checkViewerRole(member.user, 'billing')"
+                    [disabled]="isDisabledViewer(member.user, 'billing')"
+                    (checkedChange)="
+                      onViewerChange($event, 'billing', member.user)
+                    "
+                    class="rounded-full"
+                  />
+                  Facturation
+                </label>
+                <label class="flex items-center gap-2 text-sm" hlmLabel>
+                  <hlm-checkbox
+                    [checked]="checkViewerRole(member.user, 'gestion')"
+                    [disabled]="isDisabledViewer(member.user, 'gestion')"
+                    (checkedChange)="
+                      onViewerChange($event, 'gestion', member.user)
+                    "
+                    class="rounded-full"
+                  />
+                  Gestion d'équipe
+                </label>
+                <label class="flex items-center gap-2 text-sm" hlmLabel>
+                  <hlm-checkbox
+                    [checked]="checkViewerRole(member.user, 'agenda')"
+                    [disabled]="isDisabledViewer(member.user, 'agenda')"
+                    (checkedChange)="
+                      onViewerChange($event, 'agenda', member.user)
+                    "
+                    class="rounded-full"
+                  />
+                  Agenda
+                </label>
+              </div>
+            </td>
+            <td class="px-6 py-4">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <label class="flex items-center gap-2 text-sm" hlmLabel>
+                  <hlm-checkbox
+                    [checked]="checkAdminRole(member.user, 'treasury')"
+                    [disabled]="isDisabledAdmin(member.user, 'treasury')"
+                    (checkedChange)="
+                      onAdminChange($event, 'treasury', member.user)
+                    "
+                    class="rounded-full"
+                  />
+                  Compte du groupe
+                </label>
+                <label class="flex items-center gap-2 text-sm" hlmLabel>
+                  <hlm-checkbox
+                    [checked]="checkAdminRole(member.user, 'billing')"
+                    [disabled]="isDisabledAdmin(member.user, 'billing')"
+                    (checkedChange)="
+                      onAdminChange($event, 'billing', member.user)
+                    "
+                    class="rounded-full"
+                  />
+                  Facturation
+                </label>
+                <label class="flex items-center gap-2 text-sm" hlmLabel>
+                  <hlm-checkbox
+                    [checked]="checkAdminRole(member.user, 'gestion')"
+                    [disabled]="isDisabledAdmin(member.user, 'gestion')"
+                    (checkedChange)="
+                      onAdminChange($event, 'gestion', member.user)
+                    "
+                    class="rounded-full"
+                  />
+                  Gestion d'équipe
+                </label>
+                <label class="flex items-center gap-2 text-sm" hlmLabel>
+                  <hlm-checkbox
+                    [checked]="checkAdminRole(member.user, 'agenda')"
+                    [disabled]="isDisabledAdmin(member.user, 'agenda')"
+                    (checkedChange)="
+                      onAdminChange($event, 'agenda', member.user)
+                    "
+                    class="rounded-full"
+                  />
+                  Agenda
+                </label>
+              </div>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
     </div>
   </div>
-  }
 </div>
-
 } } @loading (minimum 1s) {
-<hlm-spinner class="flex mx-auto mt-2" aria-label="Chargement en cours" />
+<div class="flex justify-center items-center min-h-[200px]">
+  <hlm-spinner class="w-8 h-8" aria-label="Chargement en cours" />
+</div>
 }

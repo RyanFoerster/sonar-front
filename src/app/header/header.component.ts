@@ -51,6 +51,7 @@ import { UserEntity } from '../shared/entities/user.entity';
 import { AuthService } from '../shared/services/auth.service';
 import { InvitationService } from '../shared/services/invitation.service';
 import { UsersService } from '../shared/services/users.service';
+import { NotificationsComponent } from '../shared/components/notifications/notifications.component';
 
 @Component({
   selector: 'app-header',
@@ -89,6 +90,7 @@ import { UsersService } from '../shared/services/users.service';
     DatePipe,
     BrnSeparatorComponent,
     HlmSeparatorDirective,
+    NotificationsComponent,
   ],
   providers: [provideIcons({ lucideBell })],
   templateUrl: './header.component.html',

@@ -28,6 +28,15 @@ import { EMPTY, switchMap, take, tap } from 'rxjs';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../shared/services/auth.service';
 import { JsonPipe, Location } from '@angular/common';
+import {
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
+import { HlmInputDirective } from '@spartan-ng/ui-input-helm';
+import { HlmLabelDirective } from '@spartan-ng/ui-label-helm';
+import { HlmSpinnerComponent } from '@spartan-ng/ui-spinner-helm';
 
 import {
   BrnPopoverCloseDirective,
@@ -76,6 +85,10 @@ import {
     BrnDialogContentDirective,
     BrnDialogTriggerDirective,
     JsonPipe,
+    ReactiveFormsModule,
+    HlmInputDirective,
+    HlmLabelDirective,
+    HlmSpinnerComponent,
   ],
   templateUrl: './home-group.component.html',
   styleUrl: './home-group.component.css',
@@ -105,7 +118,18 @@ export class HomeGroupComponent implements AfterViewInit {
   );
   private usersService: UsersService = inject(UsersService);
 
-  constructor(private location: Location) {}
+  protected readonly state = {
+    isLoadingUpdateName: signal(false),
+    errorMessage: signal(''),
+  };
+
+  protected updateNameForm: FormGroup;
+
+  constructor(private location: Location, private formBuilder: FormBuilder) {
+    this.updateNameForm = this.formBuilder.group({
+      username: ['', [Validators.required, Validators.minLength(3)]],
+    });
+  }
 
   async ngAfterViewInit() {
     await this.fetchUserProjectInfo();
@@ -122,9 +146,13 @@ export class HomeGroupComponent implements AfterViewInit {
               ? this.comptePrincipalService.getGroupById(this.id()!).pipe(
                   tap((data) => this.projet.set(data)),
                   switchMap(() =>
-                    this.usersService
-                      .getUserInfoByPrincipalAccount(this.id()!)
-                      .pipe(tap((data) => this.userInfo.set(data)))
+                    this.comptePrincipalService.getAllMembers(this.id()!).pipe(
+                      tap((data) => {
+                        if (data.length > 0) {
+                          this.members.set([{ user: data[0].user }]);
+                        }
+                      })
+                    )
                   )
                 )
               : this.compteGroupeService.getGroupById(this.id()!).pipe(
@@ -132,11 +160,10 @@ export class HomeGroupComponent implements AfterViewInit {
                   switchMap(() =>
                     this.compteGroupeService.getAllMembers(this.id()!).pipe(
                       tap((members) => {
-                        this.members.set(members);
                         if (members.length > 0) {
+                          this.members.set(members);
                           this.userInfo.set(members[0]);
                         }
-                        console.log('members', members);
                       })
                     )
                   )
@@ -157,26 +184,17 @@ export class HomeGroupComponent implements AfterViewInit {
             const hasAccess = user.userSecondaryAccounts?.some(
               (account) => account.secondary_account_id === +this.id()!
             );
-            console.log('hasAccess:', hasAccess);
-            console.log(
-              'user.userSecondaryAccounts:',
-              user.userSecondaryAccounts
-            );
-            console.log('this.id():', this.id());
             if (hasAccess) {
               return this.compteGroupeService.getGroupById(this.id()!).pipe(
                 tap((data) => {
-                  console.log('Groupe data:', data);
                   this.projet.set(data);
                 }),
                 switchMap(() =>
                   this.compteGroupeService.getAllMembers(this.id()!).pipe(
                     tap((members) => {
-                      console.log('Members data structure:', members);
                       if (members.length > 0) {
                         this.members.set(members);
                         this.userInfo.set(members[0]);
-                        console.log('Members after set:', this.members());
                       }
                     })
                   )
@@ -194,5 +212,59 @@ export class HomeGroupComponent implements AfterViewInit {
 
   goBack() {
     this.location.back();
+  }
+
+  protected canEditName(): boolean {
+    if (!this.typeOfProjet() || !this.connectedUser()) return false;
+
+    // Vérifier si c'est un projet de groupe
+    if (this.typeOfProjet() !== 'GROUP') return false;
+
+    const user = this.connectedUser();
+    if (!user) return false;
+
+    // Les admins peuvent toujours modifier
+    if (user.role === 'ADMIN') return true;
+
+    // Vérifier si l'utilisateur est membre du groupe
+    const isMember = this.members().some(
+      (member) => member.user.id === user.id
+    );
+    return isMember;
+  }
+
+  protected updateGroupName(ctx: { close: () => void }): void {
+    if (this.updateNameForm.valid && this.projet()) {
+      this.state.isLoadingUpdateName.set(true);
+      const newUsername = this.updateNameForm.get('username')?.value;
+
+      if (this.typeOfProjet() === 'GROUP') {
+        const currentGroup = this.projet() as CompteGroupeEntity;
+
+        this.compteGroupeService
+          .updateGroupName(currentGroup.id, newUsername)
+          .pipe(
+            switchMap(() =>
+              this.compteGroupeService.getGroupById(currentGroup.id)
+            )
+          )
+          .subscribe({
+            next: (updatedGroup) => {
+              this.projet.set(updatedGroup);
+              this.updateNameForm.reset();
+              this.state.errorMessage.set('');
+              this.state.isLoadingUpdateName.set(false);
+              ctx.close();
+            },
+            error: (error) => {
+              console.error('Erreur lors de la mise à jour du nom:', error);
+              this.state.errorMessage.set(
+                error.error.message || 'Une erreur est survenue'
+              );
+              this.state.isLoadingUpdateName.set(false);
+            },
+          });
+      }
+    }
   }
 }

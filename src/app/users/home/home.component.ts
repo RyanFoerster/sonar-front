@@ -43,6 +43,7 @@ import { UserEntity } from '../../shared/entities/user.entity';
 import { CompteGroupeEntity } from '../../shared/entities/compte-groupe.entity';
 import { PrincipalAccountEntity } from '../../shared/entities/principal-account.entity';
 import { GroupProjectDto } from '../../shared/dtos/group-project.dto';
+import { UserSecondaryAccountEntity } from '../../shared/entities/user-secondary-account.entity';
 
 @Component({
   selector: 'app-home',
@@ -98,7 +99,13 @@ export class HomeComponent {
     return accounts.filter(
       (account) =>
         account.username.toLowerCase().includes(term) ||
-        account.id.toString().includes(term)
+        account.id.toString().includes(term) ||
+        account.userSecondaryAccount?.some(
+          (member: UserSecondaryAccountEntity) =>
+            member.user.firstName.toLowerCase().includes(term) ||
+            member.user.name.toLowerCase().includes(term) ||
+            member.user.email.toLowerCase().includes(term)
+        )
     );
   });
 
@@ -111,7 +118,10 @@ export class HomeComponent {
     return accounts.filter(
       (account) =>
         account.username.toLowerCase().includes(term) ||
-        account.id.toString().includes(term)
+        account.id.toString().includes(term) ||
+        account.user?.firstName.toLowerCase().includes(term) ||
+        account.user?.name.toLowerCase().includes(term) ||
+        account.user?.email.toLowerCase().includes(term)
     );
   });
 

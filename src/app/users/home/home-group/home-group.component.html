@@ -16,12 +16,88 @@
     <div
       class="relative z-10 p-16 text-white h-full flex flex-col justify-center"
     >
-      <div class="">
+      <div class="flex items-center gap-4">
         <h1 class="text-4xl md:text-5xl font-bold mb-3">
           {{ projet()?.username }}
         </h1>
+        @if(canEditName()) {
+        <hlm-dialog>
+          <button
+            brnDialogTrigger
+            hlmBtn
+            variant="ghost"
+            class="rounded-full p-2 hover:bg-white/10"
+          >
+            <hlm-icon name="lucideEdit" size="sm" />
+          </button>
+          <hlm-dialog-content
+            *brnDialogContent="let ctx"
+            class="sm:max-w-[425px]"
+          >
+            <hlm-dialog-header>
+              <h3 hlmDialogTitle class="text-lg font-semibold">
+                Modifier le nom du groupe
+              </h3>
+              <p hlmDialogDescription class="text-sm text-gray-500">
+                Entrez le nouveau nom pour ce groupe de projet.
+              </p>
+            </hlm-dialog-header>
+
+            <form
+              [formGroup]="updateNameForm"
+              (ngSubmit)="updateGroupName(ctx)"
+              class="flex flex-col gap-4 py-4"
+            >
+              <div class="space-y-2">
+                <label hlmLabel>Nouveau nom</label>
+                <input
+                  hlmInput
+                  type="text"
+                  formControlName="username"
+                  placeholder="Entrez le nouveau nom"
+                  class="w-full"
+                />
+              </div>
+
+              @if(state.errorMessage()) {
+              <p class="text-red-500 text-sm">{{ state.errorMessage() }}</p>
+              }
+
+              <div class="flex justify-end gap-3">
+                <button
+                  type="button"
+                  hlmBtn
+                  variant="outline"
+                  (click)="ctx.close()"
+                  [disabled]="state.isLoadingUpdateName()"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  hlmBtn
+                  [disabled]="
+                    !updateNameForm.valid || state.isLoadingUpdateName()
+                  "
+                  class="relative min-w-[100px]"
+                >
+                  <span [class.opacity-0]="state.isLoadingUpdateName()"
+                    >Enregistrer</span
+                  >
+                  @if(state.isLoadingUpdateName()) {
+                  <div
+                    class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+                  >
+                    <hlm-spinner class="h-4 w-4" />
+                  </div>
+                  }
+                </button>
+              </div>
+            </form>
+          </hlm-dialog-content>
+        </hlm-dialog>
+        }
       </div>
-      @if(typeOfProjet() === 'GROUP'){
       <hlm-dialog class="w-full">
         <button
           brnDialogTrigger
@@ -159,13 +235,12 @@
           </hlm-dialog-footer>
         </hlm-dialog-content>
       </hlm-dialog>
-      }
     </div>
   </div>
 
   <!-- Navigation buttons -->
   <div class="grid grid-cols-2 gap-4 mx-10 mt-6">
-    <!-- @if (typeOfProjet() === "GROUP") {
+    @if (typeOfProjet() === "GROUP") {
     <a
       routerLink="membership"
       [queryParams]="{ typeOfProjet: typeOfProjet() }"
@@ -178,7 +253,7 @@
         name="lucideChevronRight"
       />
     </a>
-    } -->
+    }
     <!-- @if (typeOfProjet() === "GROUP") {
     <a
       routerLink="diary"

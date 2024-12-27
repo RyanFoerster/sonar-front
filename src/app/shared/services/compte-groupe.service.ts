@@ -6,6 +6,7 @@ import { PrincipalAccountEntity } from '../entities/principal-account.entity';
 import { GroupProjectDto } from '../dtos/group-project.dto';
 import { UpdateUserSecondaryAccountDto } from '../dtos/update-user-secondary-account.dto';
 import { UserEntity } from '../entities/user.entity';
+import { Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -37,6 +38,19 @@ export class CompteGroupeService {
     return this.httpClient.post(
       `${environment.API_URL}/compte-groupe`,
       groupProjectDto
+    );
+  }
+
+  updateGroupName(id: number, username: string) {
+    return this.httpClient.patch<CompteGroupeEntity>(
+      `${environment.API_URL}/compte-groupe/${id}`,
+      { username }
+    );
+  }
+
+  getById(id: number): Observable<CompteGroupeEntity> {
+    return this.httpClient.get<CompteGroupeEntity>(
+      `${environment.API_URL}/compte-groupe/${id}`
     );
   }
 }

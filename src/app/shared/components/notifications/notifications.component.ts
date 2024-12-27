@@ -57,12 +57,17 @@ export class NotificationsComponent {
     this.notificationService.loadNotifications();
     const currentNotifications = this.notificationService.notifications();
 
-    // Pour chaque notification de type GROUP_INVITATION, récupérer les infos du groupe
+    // Pour chaque notification de type GROUP_INVITATION avec un groupId défini, récupérer les infos du groupe
     const groupRequests = currentNotifications
-      .filter((n: Notification) => n.type === 'GROUP_INVITATION')
+      .filter(
+        (n: Notification) =>
+          n.type === 'GROUP_INVITATION' &&
+          n.groupId !== undefined &&
+          n.groupId !== null
+      )
       .map((notification: Notification) =>
         this.groupService
-          .getGroupById(notification.groupId)
+          .getGroupById(notification.groupId!)
           .pipe(
             map(
               (group) => ({ ...notification, group } as NotificationWithGroup)

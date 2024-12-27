@@ -278,7 +278,7 @@ export class CreditNoteComponent implements AfterViewInit {
             this.totalWithRemise.set(data.total);
             this.client.set(data.client);
             this.products.set(data.products);
-          }),
+          })
         )
         .subscribe();
     } else {
@@ -291,7 +291,7 @@ export class CreditNoteComponent implements AfterViewInit {
             take(1),
             tap((data) => {
               this.clients.set(data);
-            }),
+            })
           )
           .subscribe();
       }
@@ -331,7 +331,7 @@ export class CreditNoteComponent implements AfterViewInit {
             this.tva21.set(0);
             this.totalHtva.set(0);
             this.total.set(0);
-          }),
+          })
         )
         .subscribe();
     } else {
@@ -367,7 +367,7 @@ export class CreditNoteComponent implements AfterViewInit {
   createCreditNote() {
     if (this.remise() > 0) {
       this.creditNoteAmount.set(
-        this.invoice()?.total! - this.totalWithRemise(),
+        this.invoice()?.total! - this.totalWithRemise()
       );
     } else {
       this.creditNoteAmount.set(this.invoice()?.total! - this.total());
@@ -384,7 +384,7 @@ export class CreditNoteComponent implements AfterViewInit {
   createCreditNoteWithoutInvoice() {
     console.log(
       'createCreditNoteWithoutInvoice',
-      this.createCreditNoteForm.value,
+      this.createCreditNoteForm.value
     );
 
     const creditNoteDto: any = {
@@ -403,7 +403,7 @@ export class CreditNoteComponent implements AfterViewInit {
         .createCreditNoteWithoutInvoice(creditNoteDto)
         .pipe(
           take(1),
-          tap(() => this.goBack()),
+          tap(() => this.goBack())
         )
         .subscribe();
     }
@@ -413,7 +413,7 @@ export class CreditNoteComponent implements AfterViewInit {
     const idFinded = this.disabledList().find((id) => id === product_id);
     if (idFinded) {
       const filteredList = this.disabledList().filter(
-        (id) => id !== product_id,
+        (id) => id !== product_id
       );
       this.addPrice(product_id);
       this.disabledList.set(filteredList);
@@ -431,7 +431,7 @@ export class CreditNoteComponent implements AfterViewInit {
 
   removePrice(product_id: number) {
     const product = this.invoice()?.products.find(
-      (value) => value.id === product_id,
+      (value) => value.id === product_id
     );
     this.totalHtva.set(this.totalHtva() - product?.price_htva!);
 
@@ -454,7 +454,7 @@ export class CreditNoteComponent implements AfterViewInit {
 
   addPrice(product_id: number) {
     const product = this.invoice()?.products.find(
-      (value) => value.id === product_id,
+      (value) => value.id === product_id
     );
     this.totalHtva.set(this.totalHtva() + product?.price_htva!);
 
@@ -483,7 +483,7 @@ export class CreditNoteComponent implements AfterViewInit {
 
       if (this.isPercentage()) {
         this.totalWithRemise.set(
-          this.total() - this.total() * (this.remise() / 100),
+          this.total() - this.total() * (this.remise() / 100)
         );
       }
     } else {
@@ -524,7 +524,7 @@ export class CreditNoteComponent implements AfterViewInit {
             postalCode,
             city,
           });
-        }),
+        })
       )
       .subscribe();
   }
@@ -553,7 +553,7 @@ export class CreditNoteComponent implements AfterViewInit {
                 ? this.clients()
                 : this.connectedUser()!.clients;
             const existingIndex = clientList.findIndex(
-              (client) => client.id === newClient.id,
+              (client) => client.id === newClient.id
             );
 
             if (existingIndex !== -1) {
@@ -571,8 +571,8 @@ export class CreditNoteComponent implements AfterViewInit {
             this.isPhysicalPerson.set(false);
 
             // Sauvegarde de l'utilisateur connecté
-            this.authService.saveUser(this.connectedUser()!);
-          }),
+            this.authService.setUser(this.connectedUser()!);
+          })
         )
         .subscribe();
     }
@@ -603,7 +603,7 @@ export class CreditNoteComponent implements AfterViewInit {
           this.products.update((products) => [...products, newProduct]);
           this.calculateQuoteAmount(newProduct);
           this.resetProductForm();
-        }),
+        })
       )
       .subscribe();
   }
@@ -613,7 +613,7 @@ export class CreditNoteComponent implements AfterViewInit {
 
     const { country, company_number, company_vat_number } = this.client()!;
     const isEligibleCountry = ['Belgique', 'Suisse', 'Royaume-Uni'].includes(
-      country,
+      country
     );
 
     if (isEligibleCountry && company_number) {
@@ -687,7 +687,7 @@ export class CreditNoteComponent implements AfterViewInit {
             });
             this.calculateQuoteAmount(data);
             this.toggleEditProductForm();
-          }),
+          })
         )
         .subscribe();
     }
@@ -698,7 +698,7 @@ export class CreditNoteComponent implements AfterViewInit {
       const updatedProducts = products.filter((product) => product.id !== id);
 
       this.totalHtva.set(
-        updatedProducts.reduce((a, b) => a + b.price_htva!, 0),
+        updatedProducts.reduce((a, b) => a + b.price_htva!, 0)
       );
 
       if (updatedProducts.length > 0) {

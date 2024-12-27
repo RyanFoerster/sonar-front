@@ -215,11 +215,11 @@ export class NewQuoteComponent implements AfterViewInit {
   protected currentDate = new Date();
 
   protected notPastDate = computed(
-    () => this.currentDate.toISOString().split('T')[0],
+    () => this.currentDate.toISOString().split('T')[0]
   );
 
   protected startDate = computed(() =>
-    this.currentDate.toISOString().slice(0, 10),
+    this.currentDate.toISOString().slice(0, 10)
   );
 
   protected clients = signal<ClientEntity[]>([]);
@@ -320,7 +320,7 @@ export class NewQuoteComponent implements AfterViewInit {
           take(1),
           tap((data) => {
             this.clients.set(data);
-          }),
+          })
         )
         .subscribe();
     }
@@ -344,7 +344,7 @@ export class NewQuoteComponent implements AfterViewInit {
                 return {
                   ...product,
                 };
-              }),
+              })
             );
 
             this.client.set(data.client);
@@ -352,10 +352,10 @@ export class NewQuoteComponent implements AfterViewInit {
             this.tva21.set(this.setTva21(this.products()));
             this.tva6.set(this.setTva6(this.products()));
             this.totalHtva.set(
-              this.products().reduce((a, b) => a + b.price_htva!, 0),
+              this.products().reduce((a, b) => a + b.price_htva!, 0)
             );
             this.total.set(this.totalHtva() + this.tva21() + this.tva6());
-          }),
+          })
         )
         .subscribe();
     }
@@ -418,7 +418,7 @@ export class NewQuoteComponent implements AfterViewInit {
     if (this.isTvaIncluded()) {
       this.isTvaIncluded.set(false);
       this.advertiseMessage.set(
-        'Pour des questions de simplicité, lors de la modification d\'un service, la case à cocher "Montant TVA comprise" est décochée. Pensez à la remettre à chaque modification de service.',
+        'Pour des questions de simplicité, lors de la modification d\'un service, la case à cocher "Montant TVA comprise" est décochée. Pensez à la remettre à chaque modification de service.'
       );
       this.setQuoteVatIncluded();
       this.checkTvaIncluded();
@@ -454,7 +454,7 @@ export class NewQuoteComponent implements AfterViewInit {
       this.totalHtva.set(
         this.products().reduce((a, b) => a + b.price_htva!, 0) -
           this.tva21() -
-          this.tva6(),
+          this.tva6()
       );
       this.total.set(this.totalHtva() + this.tva21() + this.tva6());
       this.products().forEach((product) => {
@@ -470,7 +470,7 @@ export class NewQuoteComponent implements AfterViewInit {
       }
     } else {
       this.totalHtva.set(
-        this.products().reduce((a, b) => a + b.price_htva! + b.tva_amount!, 0),
+        this.products().reduce((a, b) => a + b.price_htva! + b.tva_amount!, 0)
       );
       this.total.set(this.totalHtva() + this.tva21() + this.tva6());
       this.products().forEach((product) => {
@@ -515,7 +515,7 @@ export class NewQuoteComponent implements AfterViewInit {
             postalCode,
             city,
           });
-        }),
+        })
       )
       .subscribe();
   }
@@ -544,7 +544,7 @@ export class NewQuoteComponent implements AfterViewInit {
                 ? this.clients()
                 : this.connectedUser()!.clients;
             const existingIndex = clientList.findIndex(
-              (client) => client.id === newClient.id,
+              (client) => client.id === newClient.id
             );
 
             if (existingIndex !== -1) {
@@ -562,8 +562,8 @@ export class NewQuoteComponent implements AfterViewInit {
             this.isPhysicalPerson.set(false);
 
             // Sauvegarde de l'utilisateur connecté
-            this.authService.saveUser(this.connectedUser()!);
-          }),
+            this.authService.setUser(this.connectedUser()!);
+          })
         )
         .subscribe();
     }
@@ -581,7 +581,7 @@ export class NewQuoteComponent implements AfterViewInit {
             this.tva21.set(0);
             this.totalHtva.set(0);
             this.total.set(0);
-          }),
+          })
         )
         .subscribe();
     } else {
@@ -648,7 +648,7 @@ export class NewQuoteComponent implements AfterViewInit {
           this.products.update((products) => [...products, newProduct]);
           this.calculateQuoteAmount(newProduct);
           this.resetProductForm();
-        }),
+        })
       )
       .subscribe();
   }
@@ -658,7 +658,7 @@ export class NewQuoteComponent implements AfterViewInit {
 
     const { country, company_number, company_vat_number } = this.client()!;
     const isEligibleCountry = ['Belgique', 'Suisse', 'Royaume-Uni'].includes(
-      country,
+      country
     );
 
     if (isEligibleCountry && company_number) {
@@ -732,7 +732,7 @@ export class NewQuoteComponent implements AfterViewInit {
             });
             this.calculateQuoteAmount(data);
             this.toggleEditProductForm();
-          }),
+          })
         )
         .subscribe();
     }
@@ -743,7 +743,7 @@ export class NewQuoteComponent implements AfterViewInit {
       const updatedProducts = products.filter((product) => product.id !== id);
 
       this.totalHtva.set(
-        updatedProducts.reduce((a, b) => a + b.price_htva!, 0),
+        updatedProducts.reduce((a, b) => a + b.price_htva!, 0)
       );
 
       if (updatedProducts.length > 0) {
@@ -800,7 +800,7 @@ export class NewQuoteComponent implements AfterViewInit {
       .createQuote(quote)
       .pipe(
         take(1),
-        tap(() => this.goBack()),
+        tap(() => this.goBack())
       )
       .subscribe();
   }
@@ -825,7 +825,7 @@ export class NewQuoteComponent implements AfterViewInit {
       .updateQuote(this.updatedQuoteId()!, quote)
       .pipe(
         take(1),
-        tap(() => this.goBack()),
+        tap(() => this.goBack())
       )
       .subscribe();
   }

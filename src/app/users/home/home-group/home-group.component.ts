@@ -155,17 +155,28 @@ export class HomeGroupComponent implements AfterViewInit {
 
           if (this.typeOfProjet() === 'GROUP') {
             const hasAccess = user.userSecondaryAccounts?.some(
-              (account) => account.id === this.id()
+              (account) => account.secondary_account_id === +this.id()!
             );
+            console.log('hasAccess:', hasAccess);
+            console.log(
+              'user.userSecondaryAccounts:',
+              user.userSecondaryAccounts
+            );
+            console.log('this.id():', this.id());
             if (hasAccess) {
               return this.compteGroupeService.getGroupById(this.id()!).pipe(
-                tap((data) => this.projet.set(data)),
+                tap((data) => {
+                  console.log('Groupe data:', data);
+                  this.projet.set(data);
+                }),
                 switchMap(() =>
                   this.compteGroupeService.getAllMembers(this.id()!).pipe(
                     tap((members) => {
-                      this.members.set(members);
+                      console.log('Members data structure:', members);
                       if (members.length > 0) {
+                        this.members.set(members);
                         this.userInfo.set(members[0]);
+                        console.log('Members after set:', this.members());
                       }
                     })
                   )

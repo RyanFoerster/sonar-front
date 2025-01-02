@@ -87,12 +87,12 @@
             <div class="space-y-4">
               <div class="w-full">
                 <label class="text-sm font-medium mb-1 block"
-                  >Projets principaux</label
+                  >Projets individuels</label
                 >
                 <brn-select
                   formControlName="recipientPrincipal"
                   class="rounded-full w-full"
-                  placeholder="Selectionner des projets principaux"
+                  placeholder="Selectionner des projets individuels"
                   [multiple]="true"
                 >
                   <hlm-select-trigger class="w-full max-w-[375px] rounded-full">
@@ -365,7 +365,15 @@
                       (change)="onFileSelected($event)"
                       accept=".pdf"
                       class="rounded-full w-full focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                      [ngClass]="{
+                        'border border-red-500': !selectedFile
+                      }"
                     />
+                    @if(!selectedFile) {
+                    <p class="text-red-500 text-sm">
+                      Veuillez sélectionner un fichier
+                    </p>
+                    }
                   </div>
                 </div>
               </div>
@@ -392,7 +400,7 @@
                   class="rounded-full px-6 min-w-[120px] relative"
                   hlmBtn
                   type="submit"
-                  [disabled]="state.isLoadingVirement()"
+                  [disabled]="state.isLoadingVirement() || !selectedFile"
                 >
                   <span [class.opacity-0]="state.isLoadingVirement()"
                     >Envoyer</span
@@ -452,21 +460,38 @@
               <div class="flex justify-between items-center">
                 <span class="text-sm font-semibold">Destinataire:</span>
                 @if (transaction.recipientGroup.length > 1 ||
-                transaction.recipientPrincipal.length > 1) {
+                transaction.recipientPrincipal.length > 1 ||
+                (transaction.recipientGroup.length +
+                transaction.recipientPrincipal.length > 1)) {
                 <div class="text-right">
-                  <span class="text-sm font-semibold"
+                  <span
+                    class="text-sm font-semibold text-gray-600 bg-gray-100 px-2 py-1 rounded-full"
                     >Destinataires multiples</span
                   >
-                  <div class="mt-1">
+                  <div class="mt-2 space-y-1 bg-white p-2 rounded-lg shadow-sm">
+                    @if (transaction.recipientGroup.length > 0) {
+                    <div class="text-xs text-gray-500 font-medium mb-1">
+                      Projets de groupe:
+                    </div>
                     @for (recipient of transaction.recipientGroup; track
                     recipient.id) { @if (recipient.username !==
                     state.accountGroup()?.username) {
-                    <div class="text-sm">{{ recipient.username }}</div>
-                    } } @for (recipient of transaction.recipientPrincipal; track
+                    <div class="text-sm pl-2 py-0.5 border-l-2 border-blue-400">
+                      {{ recipient.username }}
+                    </div>
+                    } } } @if (transaction.recipientPrincipal.length > 0) {
+                    <div class="text-xs text-gray-500 font-medium mb-1 mt-2">
+                      Projets individuels:
+                    </div>
+                    @for (recipient of transaction.recipientPrincipal; track
                     recipient.id) { @if (recipient.username !==
                     state.accountPrincipal()?.username) {
-                    <div class="text-sm">{{ recipient.username }}</div>
-                    } }
+                    <div
+                      class="text-sm pl-2 py-0.5 border-l-2 border-green-400"
+                    >
+                      {{ recipient.username }}
+                    </div>
+                    } } }
                   </div>
                 </div>
                 } @else {
@@ -524,33 +549,55 @@
               }}</hlm-td>
 
               @if (transaction.recipientGroup.length > 1 ||
-              transaction.recipientPrincipal.length > 1) {
-              <div class="lg:w-[20%] px-4" hlmAccordion>
-                <div class="border-b-0" hlmAccordionItem>
-                  <button
-                    class="hover:no-underline font-bold text-sm"
-                    hlmAccordionTrigger
-                  >
-                    Destinataires multiples
-                    <hlm-icon hlmAccIcon />
-                  </button>
-                  <hlm-accordion-content hlm>
-                    @for (recipient of transaction.recipientGroup; track
-                    recipient.id) { @if (recipient.username !==
-                    state.accountGroup()?.username) {
-                    <hlm-th class="lg:w-[20%] font-bold text-[10px]">{{
-                      recipient.username
-                    }}</hlm-th>
-                    } } @for (recipient of transaction.recipientPrincipal; track
-                    recipient.id) { @if (recipient.username !==
-                    state.accountPrincipal()?.username) {
-                    <hlm-th class="lg:w-[20%] font-bold text-[10px]">{{
-                      recipient.username
-                    }}</hlm-th>
-                    } }
-                  </hlm-accordion-content>
+              transaction.recipientPrincipal.length > 1 ||
+              (transaction.recipientGroup.length +
+              transaction.recipientPrincipal.length > 1)) {
+              <hlm-td class="lg:w-[20%]">
+                <div hlmAccordion>
+                  <div class="border-b-0" hlmAccordionItem>
+                    <button
+                      class="hover:no-underline font-medium text-sm bg-gray-100 px-3 py-1 rounded-full flex items-center gap-2 text-gray-600 w-full justify-center"
+                      hlmAccordionTrigger
+                    >
+                      Destinataires multiples
+                      <hlm-icon name="lucideChevronDown" size="sm" />
+                    </button>
+                    <hlm-accordion-content class="" hlmAccordionContent>
+                      @if (transaction.recipientGroup.length > 0) {
+                      <div class="text-xs text-gray-500 font-medium">
+                        Projets de groupe:
+                      </div>
+                      <div class="space-y-1">
+                        @for (recipient of transaction.recipientGroup; track
+                        recipient.id) { @if (recipient.username !==
+                        state.accountGroup()?.username) {
+                        <div
+                          class="text-sm pl-2 py-0.5 border-l-2 border-blue-400"
+                        >
+                          {{ recipient.username }}
+                        </div>
+                        } }
+                      </div>
+                      } @if (transaction.recipientPrincipal.length > 0) {
+                      <div class="text-xs text-gray-500 font-medium mt-2">
+                        Projets individuels:
+                      </div>
+                      <div class="space-y-1">
+                        @for (recipient of transaction.recipientPrincipal; track
+                        recipient.id) { @if (recipient.username !==
+                        state.accountPrincipal()?.username) {
+                        <div
+                          class="text-sm pl-2 py-0.5 border-l-2 border-green-400"
+                        >
+                          {{ recipient.username }}
+                        </div>
+                        } }
+                      </div>
+                      }
+                    </hlm-accordion-content>
+                  </div>
                 </div>
-              </div>
+              </hlm-td>
               } @else {
               <hlm-th class="lg:w-[20%] font-bold text-[10px]">
                 @if(transaction.recipientGroup!.length > 0 &&
@@ -913,13 +960,13 @@
             <div class="flex justify-between items-center">
               <span class="text-sm font-semibold">Montant total:</span>
               <span class="text-sm">{{
-                virement.amount_htva | euroFormat
+                virement.amount_total | euroFormat
               }}</span>
             </div>
             <div class="flex justify-between items-center">
               <span class="text-sm font-semibold">Montant débité:</span>
               <span class="text-sm">{{
-                virement.amount_total | euroFormat
+                virement.amount_htva | euroFormat
               }}</span>
             </div>
             <div class="flex justify-between items-center">

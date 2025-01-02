@@ -79,6 +79,7 @@ import {
   lucideArrowLeftRight,
   lucideBanknote,
   lucideBell,
+  lucideChevronDown,
   lucideCornerDownLeft,
   lucideUpload,
 } from '@ng-icons/lucide';
@@ -174,6 +175,7 @@ interface FormState {
       lucideUpload,
       lucideBanknote,
       lucideArrowLeftRight,
+      lucideChevronDown,
     }),
   ],
   templateUrl: './project-account.component.html',
@@ -314,7 +316,7 @@ export class ProjectAccountComponent implements AfterViewInit {
   }
 
   protected createVirement(ctx: { close: () => void }): void {
-    if (this.virementSepaForm.valid) {
+    if (this.virementSepaForm.valid && this.selectedFile) {
       this.state.isLoadingVirement.set(true);
       const virementSepa: VirementSepaDto = {
         ...this.virementSepaForm.value,
@@ -593,6 +595,11 @@ export class ProjectAccountComponent implements AfterViewInit {
       this.state.transactionRecipient.set(recipientTransactions.data);
       this.state.transactionSender.set(senderTransactions.data);
 
+      console.log('Données récupérées:', {
+        recipientTransactions,
+        senderTransactions,
+      });
+
       this.pagination.recipient.totalItems.set(
         recipientTransactions.meta.total
       );
@@ -661,9 +668,6 @@ export class ProjectAccountComponent implements AfterViewInit {
   filterPrincipalAccounts(event: Event) {
     const target = event.target as HTMLInputElement;
     const searchValue = target.value.toLowerCase().trim();
-
-    console.log('Recherche avec:', searchValue);
-    console.log('Comptes disponibles:', this.state.principalAccounts());
 
     if (!this.state.principalAccounts().length) {
       console.warn('Aucun compte principal chargé. Chargement des comptes...');

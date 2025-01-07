@@ -12,7 +12,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { JsonPipe } from '@angular/common';
-import { tap } from 'rxjs';
+import { tap, catchError, throwError } from 'rxjs';
 import {
   HlmAccordionContentComponent,
   HlmAccordionDirective,
@@ -87,7 +87,8 @@ export class HomeComponent {
   private readonly comptePrincipal = signal<PrincipalAccountEntity[] | null>(
     null
   );
-  private readonly searchTerm = signal<string>('');
+  protected readonly searchTerm = signal<string>('');
+  protected readonly errorMessage = signal<string>('');
 
   // Computed signals pour les données filtrées
   readonly filteredGroupAccounts = computed(() => {
@@ -184,7 +185,21 @@ export class HomeComponent {
 
       this.groupAccountService
         .createGroupeProject(groupProjectDto)
-        .pipe(tap(() => this.initializeData()))
+        .pipe(
+          tap(() => {
+            this.errorMessage.set('');
+            this.createGroupProjectForm.reset();
+            this.initializeData();
+          }),
+          catchError((error) => {
+            console.error('Erreur lors de la création du groupe:', error);
+            this.errorMessage.set(
+              error.error?.message ||
+                'Une erreur est survenue lors de la création du groupe'
+            );
+            return throwError(() => error);
+          })
+        )
         .subscribe();
     }
   }

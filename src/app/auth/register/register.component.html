@@ -1,139 +1,332 @@
-<div class="flex flex-col justify-center mx-auto w-3/5 gap-3 md:gap-4">
-    <h1 class="text-lg text-green-sonar md:text-3xl">Rejoignez-nous</h1>
+<div class="flex justify-center px-4 py-8">
+  <div class="w-full max-w-2xl">
+    <div class="bg-white p-8 rounded-lg space-y-6">
+      <div class="space-y-2 text-center">
+        <h1 class="text-2xl font-semibold text-green-sonar">Rejoignez-nous</h1>
+        <p class="text-gray-600 text-sm">
+          Remplissez le formulaire ci-dessous pour créer votre compte.
+        </p>
+      </div>
 
-    <p class="text-sm md:text-xl">
-      Entrez votre e-mail et votre mot de passe pour vous connecter.
-    </p>
+      <form
+        [formGroup]="registerForm"
+        (ngSubmit)="register()"
+        class="space-y-4"
+      >
+        @if (errorMessage) {
+        <div
+          class="p-3 text-sm text-red-600 bg-red-50 rounded-md border border-red-100"
+        >
+          {{ errorMessage }}
+        </div>
+        }
 
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Email -->
+          <div class="space-y-1.5">
+            <label class="block text-sm font-medium text-gray-700" hlmLabel>
+              Email
+              <input
+                formControlName="email"
+                class="w-full mt-1 transition-colors"
+                [class.border-red-300]="
+                  registerForm.get('email')?.invalid &&
+                  registerForm.get('email')?.touched
+                "
+                hlmInput
+                type="email"
+                placeholder="exemple@exemple.be"
+              />
+            </label>
+            @if (registerForm.get('email')?.invalid &&
+            registerForm.get('email')?.touched) {
+            <p class="text-sm text-red-500">{{ getErrorMessage("email") }}</p>
+            }
+          </div>
 
-  <form [formGroup]="registerForm" class="flex flex-col justify-center mx-auto w-full gap-3 md:gap-4" (ngSubmit)="register()">
-    <label class="w-full text-xs md:text-lg" hlmLabel
-      >Email
-      <input
-        formControlName="email"
-        class="rounded-full w-full h-auto text-xs md:text-lg"
-        hlmInput
-        type="email"
-        placeholder="exemple@exemple.be"
-      />
-    </label>
+          <!-- Username (Projet) -->
+          <div class="space-y-1.5">
+            <label class="block text-sm font-medium text-gray-700" hlmLabel>
+              Projet
+              <input
+                formControlName="username"
+                class="w-full mt-1 transition-colors"
+                [class.border-red-300]="
+                  registerForm.get('username')?.invalid &&
+                  registerForm.get('username')?.touched
+                "
+                hlmInput
+                type="text"
+                placeholder="Votre nom de projet"
+              />
+            </label>
+            <p class="text-xs text-gray-500">
+              Le nom de votre projet artistique individuel
+            </p>
+            @if (registerForm.get('username')?.invalid &&
+            registerForm.get('username')?.touched) {
+            <p class="text-sm text-red-500">
+              {{ getErrorMessage("username") }}
+            </p>
+            }
+          </div>
 
-    <label class="w-full text-xs md:text-lg" hlmLabel
-      >Nom
-      <input
-        formControlName="name"
-        class="rounded-full w-full h-auto text-xs md:text-lg"
-        hlmInput
-        type="text"
-        placeholder="Dupont"
-      />
-    </label>
+          <!-- Nom -->
+          <div class="space-y-1.5">
+            <label class="block text-sm font-medium text-gray-700" hlmLabel>
+              Nom
+              <input
+                formControlName="name"
+                class="w-full mt-1 transition-colors"
+                [class.border-red-300]="
+                  registerForm.get('name')?.invalid &&
+                  registerForm.get('name')?.touched
+                "
+                hlmInput
+                type="text"
+                placeholder="Dupont"
+              />
+            </label>
+            @if (registerForm.get('name')?.invalid &&
+            registerForm.get('name')?.touched) {
+            <p class="text-sm text-red-500">{{ getErrorMessage("name") }}</p>
+            }
+          </div>
 
-    <label class="w-full text-xs md:text-lg" hlmLabel
-      >Prénom
-      <input
-        formControlName="firstName"
-        class="rounded-full w-full h-auto text-xs md:text-lg"
-        hlmInput
-        type="text"
-        placeholder="Jacques"
-      />
-    </label>
+          <!-- Prénom -->
+          <div class="space-y-1.5">
+            <label class="block text-sm font-medium text-gray-700" hlmLabel>
+              Prénom
+              <input
+                formControlName="firstName"
+                class="w-full mt-1 transition-colors"
+                [class.border-red-300]="
+                  registerForm.get('firstName')?.invalid &&
+                  registerForm.get('firstName')?.touched
+                "
+                hlmInput
+                type="text"
+                placeholder="Jacques"
+              />
+            </label>
+            @if (registerForm.get('firstName')?.invalid &&
+            registerForm.get('firstName')?.touched) {
+            <p class="text-sm text-red-500">
+              {{ getErrorMessage("firstName") }}
+            </p>
+            }
+          </div>
 
-    <label class="w-full text-xs md:text-lg" hlmLabel
-      >Projet
-      <p class="text-[8px] md:text-xs">
-        Bonjour ! Le projet est individuel ! Ce n’est pas le nom d’un projet que
-        vous rejoignez ou qui est déjà hébergé sur la plateforme Sonar, mais
-        bien votre propre projet auquel vous donnez un nom (surnom, projet
-        artistique individuel, etc…)
-      </p>
-      <input
-        formControlName="username"
-        class="rounded-full w-full h-auto text-xs md:text-lg"
-        hlmInput
-        type="text"
-        placeholder="Jacques Dupont"
-      />
-    </label>
+          <!-- Numéro National -->
+          <div class="space-y-1.5">
+            <label class="block text-sm font-medium text-gray-700" hlmLabel>
+              Numéro National
+              <input
+                formControlName="numeroNational"
+                class="w-full mt-1 transition-colors"
+                [class.border-red-300]="
+                  registerForm.get('numeroNational')?.invalid &&
+                  registerForm.get('numeroNational')?.touched
+                "
+                hlmInput
+                type="text"
+                placeholder="42012205181"
+              />
+            </label>
+            @if (registerForm.get('numeroNational')?.invalid &&
+            registerForm.get('numeroNational')?.touched) {
+            <p class="text-sm text-red-500">
+              {{ getErrorMessage("numeroNational") }}
+            </p>
+            }
+          </div>
 
-    <label class="w-full text-xs md:text-lg" hlmLabel
-      >Numéro National
-      <input
-        formControlName="numeroNational"
-        class="rounded-full w-full h-auto text-xs md:text-lg"
-        hlmInput
-        type="text"
-        placeholder="42012205181"
-      />
-    </label>
+          <!-- Téléphone -->
+          <div class="space-y-1.5">
+            <label class="block text-sm font-medium text-gray-700" hlmLabel>
+              Téléphone
+              <input
+                formControlName="telephone"
+                class="w-full mt-1 transition-colors"
+                [class.border-red-300]="
+                  registerForm.get('telephone')?.invalid &&
+                  registerForm.get('telephone')?.touched
+                "
+                hlmInput
+                type="text"
+                placeholder="+32 2 374 XX XX"
+              />
+            </label>
+            @if (registerForm.get('telephone')?.invalid &&
+            registerForm.get('telephone')?.touched) {
+            <p class="text-sm text-red-500">
+              {{ getErrorMessage("telephone") }}
+            </p>
+            }
+          </div>
 
-    <label class="w-full text-xs md:text-lg" hlmLabel
-      >Téléphone
-      <input
-        formControlName="telephone"
-        class="rounded-full w-full h-auto text-xs md:text-lg"
-        hlmInput
-        type="text"
-        placeholder="+32 2 374 XX XX"
-      />
-    </label>
+          <!-- Adresse -->
+          <div class="space-y-1.5 md:col-span-2">
+            <label class="block text-sm font-medium text-gray-700" hlmLabel>
+              Adresse
+              <input
+                formControlName="address"
+                class="w-full mt-1 transition-colors"
+                [class.border-red-300]="
+                  registerForm.get('address')?.invalid &&
+                  registerForm.get('address')?.touched
+                "
+                hlmInput
+                type="text"
+                placeholder="Place des Arts 1, 4020 Liège"
+              />
+            </label>
+            @if (registerForm.get('address')?.invalid &&
+            registerForm.get('address')?.touched) {
+            <p class="text-sm text-red-500">{{ getErrorMessage("address") }}</p>
+            }
+          </div>
 
-    <label class="w-full text-xs md:text-lg" hlmLabel
-    >Adresse
-      <input
-        formControlName="address"
-        class="rounded-full w-full h-auto text-xs md:text-lg"
-        hlmInput
-        type="text"
-        placeholder="Place des Arts 1, 4020 Liège"
-      />
-    </label>
+          <!-- IBAN -->
+          <div class="space-y-1.5 md:col-span-2">
+            <label class="block text-sm font-medium text-gray-700" hlmLabel>
+              Numéro de compte bancaire (IBAN)
+              <input
+                formControlName="iban"
+                class="w-full mt-1 transition-colors"
+                [class.border-red-300]="
+                  registerForm.get('iban')?.invalid &&
+                  registerForm.get('iban')?.touched
+                "
+                hlmInput
+                type="text"
+                placeholder="BE68 5390 0754 7034"
+              />
+            </label>
+            @if (registerForm.get('iban')?.invalid &&
+            registerForm.get('iban')?.touched) {
+            <p class="text-sm text-red-500">{{ getErrorMessage("iban") }}</p>
+            }
+          </div>
 
-    <label class="w-full text-xs md:text-lg" hlmLabel
-      >Numéro de compte bancaire
-      <input
-        formControlName="iban"
-        class="rounded-full w-full h-auto text-xs md:text-lg"
-        hlmInput
-        type="text"
-        placeholder="BE68 5390 0754 7034"
-      />
-    </label>
+          <!-- Mot de passe -->
+          <div class="space-y-1.5">
+            <label class="block text-sm font-medium text-gray-700" hlmLabel>
+              Mot de passe
+              <div class="relative">
+                <input
+                  formControlName="password"
+                  class="w-full mt-1 transition-colors pr-10"
+                  [class.border-red-300]="
+                    registerForm.get('password')?.invalid &&
+                    registerForm.get('password')?.touched
+                  "
+                  hlmInput
+                  [type]="showPassword ? 'text' : 'password'"
+                  placeholder="**********"
+                />
+                <button
+                  type="button"
+                  (click)="togglePasswordVisibility('password')"
+                  class="absolute right-3 top-[60%] transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                >
+                  @if (showPassword) {
+                  <hlm-icon name="lucideEyeOff" size="sm" />
+                  } @else {
+                  <hlm-icon name="lucideEye" size="sm" />
+                  }
+                </button>
+              </div>
+            </label>
+            @if (registerForm.get('password')?.invalid &&
+            registerForm.get('password')?.touched) {
+            <p class="text-sm text-red-500">
+              {{ getErrorMessage("password") }}
+            </p>
+            }
+          </div>
 
-    <label class="w-full text-xs md:text-lg" hlmLabel
-      >Mot de passe
-      <input
-        formControlName="password"
-        class="rounded-full w-full h-auto text-xs md:text-lg"
-        hlmInput
-        type="password"
-        placeholder="**********"
-      />
-    </label>
+          <!-- Confirmer le mot de passe -->
+          <div class="space-y-1.5">
+            <label class="block text-sm font-medium text-gray-700" hlmLabel>
+              Confirmer le mot de passe
+              <div class="relative">
+                <input
+                  formControlName="confirmPassword"
+                  class="w-full mt-1 transition-colors pr-10"
+                  [class.border-red-300]="
+                    registerForm.get('confirmPassword')?.invalid &&
+                    registerForm.get('confirmPassword')?.touched
+                  "
+                  hlmInput
+                  [type]="showConfirmPassword ? 'text' : 'password'"
+                  placeholder="**********"
+                />
+                <button
+                  type="button"
+                  (click)="togglePasswordVisibility('confirmPassword')"
+                  class="absolute right-3 top-[60%] transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                >
+                  @if (showConfirmPassword) {
+                  <hlm-icon name="lucideEyeOff" size="sm" />
+                  } @else {
+                  <hlm-icon name="lucideEye" size="sm" />
+                  }
+                </button>
+              </div>
+            </label>
+            @if (registerForm.get('confirmPassword')?.invalid &&
+            registerForm.get('confirmPassword')?.touched) {
+            <p class="text-sm text-red-500">
+              {{ getErrorMessage("confirmPassword") }}
+            </p>
+            }
+          </div>
+        </div>
 
-    <label class="w-full text-xs md:text-lg" hlmLabel
-      >Confirmer le mot de passe
-      <input
-        formControlName="confirmPassword"
-        class="rounded-full w-full h-auto text-xs md:text-lg"
-        hlmInput
-        type="password"
-        placeholder="**********"
-      />
-    </label>
+        <button
+          type="submit"
+          class="w-full bg-green-sonar text-white py-2 rounded-md font-medium hover:bg-green-sonar/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-6"
+          [disabled]="isLoading"
+          hlmBtn
+        >
+          @if (!isLoading) {
+          <span>S'inscrire</span>
+          } @else {
+          <span class="flex items-center justify-center gap-2">
+            <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24">
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"
+                fill="none"
+              />
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              />
+            </svg>
+            Inscription en cours...
+          </span>
+          }
+        </button>
 
-    <button
-      type="submit"
-      class="rounded-full cursor-pointer px-6 w-full hover:bg-white hover:text-black hover:border hover:border-black transition-all md:text-lg "
-      hlmBtn>
-      Inscription</button>
-
-  </form>
-
-  <div class="flex gap-2 text-[8px] justify-center md:text-xs">
-    <p>Vous avez dèjà un compte?</p>
-    <a routerLink="/login" class="text-green-sonar cursor-pointer">
-      Se connecter</a>
+        <div class="text-center space-y-2">
+          <div class="text-sm text-gray-600">
+            Vous avez déjà un compte?
+            <a
+              routerLink="/login"
+              class="text-green-sonar hover:underline ml-1"
+            >
+              Se connecter
+            </a>
+          </div>
+        </div>
+      </form>
+    </div>
   </div>
 </div>

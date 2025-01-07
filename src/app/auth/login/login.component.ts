@@ -11,7 +11,13 @@ import {
 import { SignInDto } from '../../shared/dtos/sign-in.dto';
 import { UsersService } from '../../shared/services/users.service';
 import { AuthService } from '../../shared/services/auth.service';
-import { tap } from 'rxjs';
+import { catchError, tap } from 'rxjs';
+import { CommonModule } from '@angular/common';
+import { NO_ERRORS_SCHEMA } from '@angular/core';
+import { provideIcons } from '@ng-icons/core';
+import { lucideEye, lucideEyeOff } from '@ng-icons/lucide';
+
+import { HlmIconComponent } from '@spartan-ng/ui-icon-helm';
 
 @Component({
   selector: 'app-login',
@@ -21,9 +27,18 @@ import { tap } from 'rxjs';
     HlmButtonDirective,
     RouterLink,
     ReactiveFormsModule,
+    CommonModule,
+    HlmIconComponent,
+  ],
+  providers: [
+    provideIcons({
+      lucideEye,
+      lucideEyeOff,
+    }),
   ],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css',
+  schemas: [NO_ERRORS_SCHEMA],
 })
 export class LoginComponent {
   formBuilder: FormBuilder = inject(FormBuilder);
@@ -32,6 +47,9 @@ export class LoginComponent {
   authService: AuthService = inject(AuthService);
 
   loginForm!: FormGroup;
+  errorMessage: string = '';
+  isLoading: boolean = false;
+  showPassword: boolean = false;
 
   constructor() {
     this.loginForm = this.formBuilder.group({
@@ -40,8 +58,14 @@ export class LoginComponent {
     });
   }
 
+  togglePasswordVisibility() {
+    this.showPassword = !this.showPassword;
+  }
+
   login() {
+    this.errorMessage = '';
     if (this.loginForm.valid) {
+      this.isLoading = true;
       const credentials: SignInDto = {
         email: this.email,
         password: this.password,
@@ -55,18 +79,32 @@ export class LoginComponent {
               .signIn(credentials)
               .pipe(
                 tap((data) => {
+                  this.isLoading = false;
                   this.authService.setUser(data.user);
                   if (data.user.isActive) {
                     this.router.navigate(['/home']);
                   } else {
                     this.router.navigate(['/rendez-vous']);
                   }
+                }),
+                catchError((error) => {
+                  this.isLoading = false;
+                  this.errorMessage =
+                    'Une erreur est survenue lors de la connexion. Veuillez réessayer.';
+                  throw error;
                 })
               )
               .subscribe();
+          }),
+          catchError((error) => {
+            this.isLoading = false;
+            this.errorMessage = 'Email ou mot de passe incorrect';
+            throw error;
           })
         )
         .subscribe();
+    } else {
+      this.loginForm.markAllAsTouched();
     }
   }
 
@@ -76,5 +114,27 @@ export class LoginComponent {
 
   get password() {
     return this.loginForm.controls['password'].value;
+  }
+
+  getEmailErrorMessage(): string {
+    const control = this.loginForm.get('email');
+    if (control?.hasError('required')) {
+      return "L'email est requis";
+    }
+    if (control?.hasError('email')) {
+      return 'Veuillez entrer un email valide';
+    }
+    return '';
+  }
+
+  getPasswordErrorMessage(): string {
+    const control = this.loginForm.get('password');
+    if (control?.hasError('required')) {
+      return 'Le mot de passe est requis';
+    }
+    if (control?.hasError('minlength')) {
+      return 'Le mot de passe doit contenir au moins 8 caractères';
+    }
+    return '';
   }
 }

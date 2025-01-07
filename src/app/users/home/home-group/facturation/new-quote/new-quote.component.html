@@ -13,686 +13,669 @@
     [ngClass]="{ 'bg-white justify-center items-center': isToggleClientForm() }"
   >
     @if (!isToggleClientForm()) {
-      <div class="flex justify-between items-center">
-        <h2 class="text-lg md:text-3xl font-bold">Nouveau devis</h2>
-      </div>
+    <div class="flex justify-between items-center">
+      <h2 class="text-lg md:text-3xl font-bold">Nouveau devis</h2>
+    </div>
 
-      <form
-        [formGroup]="createQuoteForm"
-        class="flex flex-col gap-5"
-        (ngSubmit)="updatedQuoteId() ? updateQuote() : createQuote()"
-      >
-        <div class="flex flex-col justify-center items-center md:flex-row">
-          <label
-            class="w-full font-semibold text-base rounded-full md:text-lg md:w-1/2"
-            hlmLabel
-            >Date
-            <input
-              formControlName="quote_date"
-              class="w-full bg-white shadow-lg text-xs rounded-full md:text-base"
-              hlmInput
-              type="date"
-              [min]="notPastDate()"
-              [value]="currentDate | date: 'yyyy-MM-dd'"
-            />
-          </label>
-
-          <label
-            class="w-full font-semibold text-base rounded-full md:text-lg md:w-1/2 md:ml-5"
-            hlmLabel
-            >Date de prestation
-            <input
-              formControlName="service_date"
-              class="w-full bg-white shadow-lg text-xs rounded-full md:text-base"
-              hlmInput
-              type="date"
-              placeholder="28-04-2024"
-            />
-          </label>
-        </div>
-
-        <div class="flex flex-col justify-center items-center md:flex-row">
-          <label
-            class="w-full font-semibold text-base rounded-full md:text-lg md:w-1/2"
-            hlmLabel
-            >Délais de paiement
-            <input
-              formControlName="payment_deadline"
-              class="w-full bg-white shadow-lg text-xs rounded-full md:text-base"
-              hlmInput
-              type="number"
-              [min]="connectedUser()?.role === 'USER' ? 10 : null"
-              [max]="connectedUser()?.role === 'USER' ? 30 : null"
-              placeholder="Min: 10, Max: 30"
-            />
-          </label>
-
-          <label
-            class="w-full font-semibold text-base rounded-full md:text-lg md:w-1/2 md:ml-5"
-            hlmLabel
-            >Devis valable jusqu'au :
-            <input
-              formControlName="validation_deadline"
-              class="w-full bg-white shadow-lg text-xs rounded-full md:text-base"
-              hlmInput
-              type="date"
-              [min]="notPastDate()"
-            />
-          </label>
-        </div>
-        <div class="flex flex-col justify-center w-full">
-          <h3 class="font-semibold text-base md:text-lg">
-            Rechercher un client
-          </h3>
-
-          <div class="w-full flex flex-col md:flex-row">
-            <brn-popover
-              class="w-full md:w-3/6"
-              [state]="state()"
-              (stateChanged)="stateChanged($event)"
-              sideOffset="5"
-              closeDelay="100"
-            >
-              <button
-                type="button"
-                class="w-full justify-between rounded-full border-none bg-white shadow-lg"
-                id="edit-profile"
-                variant="outline"
-                brnPopoverTrigger
-                hlmBtn
-              >
-                {{
-                  currentClient()
-                    ? currentClient()?.name
-                    : "Séléctionner un client"
-                }}
-                <hlm-icon size="sm" name="lucideChevronsUpDown" />
-              </button>
-              <brn-cmd
-                *brnPopoverContent="let ctx"
-                hlmPopoverContent
-                hlm
-                class="p-0 w-full"
-              >
-                <hlm-cmd-input-wrapper>
-                  <hlm-icon name="lucideSearch" />
-                  <input placeholder="Rechercher un client" brnCmdInput hlm />
-                </hlm-cmd-input-wrapper>
-                <div *brnCmdEmpty hlmCmdEmpty>Pas de client trouvé</div>
-                <brn-cmd-list hlm>
-                  <brn-cmd-group hlm>
-                    @if (connectedUser()?.role === "ADMIN") {
-                      @for (client of clients(); track client.id) {
-                        <button
-                          brnCmdItem
-                          [value]="client.email"
-                          (selected)="commandSelected(client)"
-                          (click)="setClient(client.id)"
-                          class="flex justify-between w-full"
-                          hlm
-                        >
-                          <hlm-icon
-                            [class.opacity-0]="
-                              currentClient()?.email !== client.email
-                            "
-                            name="lucideCheck"
-                            hlmCmdIcon
-                          />
-                          <p>{{ client.email }} {{ client.name }}</p>
-                        </button>
-                      }
-                    } @else {
-                      @for (
-                        client of connectedUser()?.clients;
-                        track client.id
-                      ) {
-                        <button
-                          brnCmdItem
-                          [value]="client.email"
-                          (selected)="commandSelected(client)"
-                          (click)="setClient(client.id)"
-                          class="flex justify-between w-full"
-                          hlm
-                        >
-                          <hlm-icon
-                            [class.opacity-0]="
-                              currentClient()?.email !== client.email
-                            "
-                            name="lucideCheck"
-                            hlmCmdIcon
-                          />
-                          <p>{{ client.email }} {{ client.name }}</p>
-                        </button>
-                      }
-                    }
-                  </brn-cmd-group>
-                </brn-cmd-list>
-              </brn-cmd>
-            </brn-popover>
-
-            <button
-              (click)="toggleClientForm()"
-              class="w-full flex justify-center items-center gap-2 rounded-full text-xs md:text-base md:ml-5 md:mb-1 md:w-1/2 lg:w-1/4"
-              id="edit-profile"
-              hlmBtn
-              type="button"
-            >
-              Ajouter un nouveau client
-              <hlm-icon size="xs" name="lucidePlusCircle" />
-            </button>
-          </div>
-        </div>
-
-        @if (client()) {
-          <div class="flex flex-col gap-2 w-full lg:w-1/2">
-            <h2
-              class="w-full font-semibold text-text-base rounded-full md:text-lg md:w-1/2"
-            >
-              Coordonnées du client
-            </h2>
-            <div
-              class="bg-white flex p-10 rounded-3xl shadow-lg text-xs md:text-lg relative"
-            >
-              <div>
-                <p class="font-bold">{{ client()?.name }}</p>
-                <p>{{ client()?.street }} {{ client()?.number }}</p>
-                <p>
-                  {{ client()?.city }} {{ client()?.postalCode }}
-                  {{ client()?.country }}
-                </p>
-                @if (client()?.company_number) {
-                  <p>TVA: {{ client()?.company_vat_number }}</p>
-                } @else if (client()?.national_number) {
-                  <p>N° national: {{ client()?.national_number }}</p>
-                }
-              </div>
-              <button
-                class="absolute top-2 right-5"
-                (click)="toggleClientForm(false)"
-              >
-                <hlm-icon size="sm" name="lucideEdit" />
-              </button>
-            </div>
-          </div>
-        }
-
-        <brn-separator hlmSeparator />
-
-        <div class="flex flex-col gap-2">
-          <h3 class="font-bold text-base md:text-lg">
-            Récapitulatif des services
-          </h3>
-          <hlm-table class="hidden md:block w-full">
-            @if (!isToggleProductForm() && !isToggleEditProductForm()) {
-              <hlm-trow class="*:text-black border-b-black *:p-0">
-                <hlm-th class="w-7/12">Description du service</hlm-th>
-                <hlm-th class="w-1/12 md:mr-5 lg:mr-0">Quantité</hlm-th>
-                <hlm-th class="w-1/12">HTVA</hlm-th>
-                <hlm-th class="w-1/12">TVA %</hlm-th>
-                <hlm-th class="w-1/12">TVAC</hlm-th>
-                <hlm-th class="w-1/12 flex justify-end gap-3">
-                  <hlm-icon size="xs" name="lucideTrash" />
-                  <hlm-icon size="xs" name="lucideEdit" />
-                </hlm-th>
-              </hlm-trow>
-              @for (product of products(); track product.id) {
-                <hlm-trow class="*:p-0">
-                  <hlm-th class="w-7/12">{{ product.description }}</hlm-th>
-                  <hlm-th class="w-1/12">{{ product.quantity }}</hlm-th>
-                  <hlm-th class="w-1/12">{{ product.price_htva }}</hlm-th>
-                  <hlm-th class="w-1/12">{{ product.vat | percent }}</hlm-th>
-                  <hlm-th class="w-1/12">{{ product.total }}</hlm-th>
-                  <hlm-th class="w-1/12 flex justify-end gap-3">
-                    <button (click)="deleteProduct(product.id!)" type="button">
-                      <hlm-icon size="xs" name="lucideTrash" />
-                    </button>
-                    <button (click)="editProduct(product.id!)" type="button">
-                      <hlm-icon size="xs" name="lucideEdit" />
-                    </button>
-                  </hlm-th>
-                </hlm-trow>
-                <brn-separator hlmSeparator />
-              }
-            } @else if (isToggleEditProductForm()) {
-              <hlm-trow class="flex gap-2 *:text-black border-b-black *:p-0">
-                <hlm-th class="w-7/12">Description du service</hlm-th>
-                <hlm-th class="w-1/12">Quantité</hlm-th>
-                <hlm-th class="w-1/12">Prix</hlm-th>
-                <hlm-th class="w-2/12"></hlm-th>
-                <hlm-th class="w-1/12"></hlm-th>
-              </hlm-trow>
-
-              <form
-                class="mt-2 max-w-full"
-                [formGroup]="editProductForm"
-                (ngSubmit)="editProductToDB()"
-              >
-                <hlm-trow class="flex gap-2 *:text-black border-b-black *:p-0">
-                  <hlm-th class="w-7/12">
-                    <input
-                      formControlName="description"
-                      class="w-full bg-white rounded-full shadow-lg"
-                      hlmInput
-                      type="text"
-                    />
-                  </hlm-th>
-
-                  <hlm-th class="w-1/12">
-                    <input
-                      [value]="1"
-                      formControlName="quantity"
-                      class="w-full bg-white rounded-full shadow-lg"
-                      hlmInput
-                      type="text"
-                    />
-                  </hlm-th>
-
-                  <hlm-th class="w-1/12">
-                    <input
-                      formControlName="price"
-                      class="w-full bg-white rounded-full shadow-lg"
-                      hlmInput
-                      type="text"
-                    />
-                  </hlm-th>
-
-                  <hlm-th class="w-2/12 flex justify-center items-center">
-                    <hlm-checkbox
-                      (checkedChange)="toggleArtisticPerformance()"
-                      formControlName="vat"
-                      class="mr-2"
-                    />
-                    Prestation Artistique
-                  </hlm-th>
-                  <hlm-th class="w-1/12">
-                    <button
-                      class="bg-white size-6 rounded-full shadow-lg"
-                      type="submit"
-                    >
-                      <hlm-icon
-                        size="xs"
-                        name="lucideCheck"
-                        class="text-green-600 font-bold"
-                      />
-                    </button>
-                  </hlm-th>
-                </hlm-trow>
-              </form>
-            } @else {
-              <hlm-trow class="flex gap-2 *:text-black border-b-black *:p-0">
-                <hlm-th class="w-7/12">Description du service</hlm-th>
-                <hlm-th class="w-1/12">Quantité</hlm-th>
-                <hlm-th class="w-1/12">Prix</hlm-th>
-                <hlm-th class="w-2/12"></hlm-th>
-                <hlm-th class="w-1/12"></hlm-th>
-              </hlm-trow>
-
-              <form
-                class="mt-2 max-w-full"
-                [formGroup]="createProductForm"
-                (ngSubmit)="createProduct()"
-              >
-                <hlm-trow class="flex gap-2 *:text-black border-b-black *:p-0">
-                  <hlm-th class="w-7/12">
-                    <input
-                      formControlName="description"
-                      class="w-full bg-white rounded-full shadow-lg"
-                      hlmInput
-                      type="text"
-                    />
-                  </hlm-th>
-
-                  <hlm-th class="w-1/12">
-                    <input
-                      [value]="1"
-                      formControlName="quantity"
-                      class="w-full bg-white rounded-full shadow-lg"
-                      hlmInput
-                      type="text"
-                    />
-                  </hlm-th>
-
-                  <hlm-th class="w-1/12">
-                    <input
-                      formControlName="price"
-                      class="w-full bg-white rounded-full shadow-lg"
-                      hlmInput
-                      type="text"
-                    />
-                  </hlm-th>
-
-                  <hlm-th class="w-2/12 flex justify-center items-center">
-                    <hlm-checkbox
-                      (checkedChange)="toggleArtisticPerformance()"
-                      formControlName="vat"
-                      class="mr-2"
-                    />
-                    Prestation Artistique
-                  </hlm-th>
-                  <hlm-th class="w-1/12">
-                    <button
-                      class="bg-white size-6 rounded-full shadow-lg"
-                      type="submit"
-                    >
-                      <hlm-icon
-                        size="xs"
-                        name="lucideCheck"
-                        class="text-green-600 font-bold"
-                      />
-                    </button>
-                  </hlm-th>
-                </hlm-trow>
-              </form>
-            }
-          </hlm-table>
-
-          @for (product of products(); track product.id) {
-            <div class="*:p-0 flex flex-col gap-2 md:hidden">
-              <h3 class="text-xs md:text-lg font-bold">
-                Description du service
-              </h3>
-              <brn-separator class="bg-black" hlmSeparator />
-
-              <div class="flex flex-col">
-                <div class="flex justify-between">
-                  <p class="w-1/2 text-xs md:text-lg">
-                    {{ product.description }}
-                  </p>
-                  <div class="flex flex-col w-5/12">
-                    <div class="flex justify-between text-xs">
-                      <p>HTVA</p>
-                      <p>{{ product?.price_htva! | euroFormat }}</p>
-                    </div>
-                    <div class="flex justify-between text-xs">
-                      <p>TVA %</p>
-                      <p>{{ product?.vat | percent }}</p>
-                    </div>
-                    <div class="flex justify-between text-xs">
-                      <p>TVAC</p>
-                      <p>{{ product?.total! | euroFormat }}</p>
-                    </div>
-                    <p class="flex justify-end gap-3">
-                      <button>
-                        <hlm-icon size="xs" name="lucideTrash" />
-                      </button>
-                      <button>
-                        <hlm-icon size="xs" name="lucideEdit" />
-                      </button>
-                    </p>
-                  </div>
-                </div>
-
-                <brn-separator class="bg-gray-600" hlmSeparator />
-              </div>
-            </div>
-          }
-
-          @if (isToggleEditProductForm() && advertiseMessage()) {
-            <p
-              class="text-red-600 font-bold text-xs bg-red-100 p-2 rounded-full"
-            >
-              {{ advertiseMessage() }}
-            </p>
-          }
-
-          <button
-            type="button"
-            (click)="toggleProductForm()"
-            class="bg-gray-sonar p-0 text-left text-black font-bold text-xs md:text-base rounded-full flex justify-start items-center gap-2 md:mb-5 md:w-fit hover:bg-transparent hover:underline"
-            hlmBtn
-          >
-            Ajouter un service
-            <hlm-icon size="sm" name="lucidePlusCircle" />
-          </button>
-
-          @if (
-            client() &&
-            client()?.country !== "Belgique" &&
-            client()?.company_vat_number
-          ) {
-            <p class="text-red-600">
-              « Autoliquidation Art 39 bis – livraison intracommunautaire »
-            </p>
-          }
-        </div>
-
-        <div
-          class="w-3/5 md:w-1/5 flex flex-col self-end gap-3 text-xs md:text-lg"
-        >
-          <div class="flex flex-col gap-1">
-            <label class="flex gap-2 items-center text-xs">
-              Montant TVA comprise ?
-              <hlm-checkbox
-                [checked]="isTvaIncluded()"
-                (checkedChange)="toggleTvaIncluded()"
-                [disabled]="products().length === 0"
-              />
-            </label>
-
-            <div class="flex justify-between text-xs">
-              <p>Total HTVA</p>
-              <p>{{ totalHtva() | euroFormat }}</p>
-            </div>
-
-            <div class="flex justify-between text-xs">
-              <p>TVA 21%</p>
-              <p>{{ tva21() | euroFormat }}</p>
-            </div>
-
-            <div class="flex justify-between text-xs">
-              <p>TVA 6%</p>
-              <p>{{ tva6() | euroFormat }}</p>
-            </div>
-          </div>
-
-          <div class="flex justify-between text-lg font-bold">
-            <p>Total</p>
-            <p>{{ total() | euroFormat }}</p>
-          </div>
-        </div>
-
-        <div class="flex flex-col gap-2">
-          <h3 class="font-bold text-xs md:text-base">Commentaire</h3>
-          <textarea
-            formControlName="comment"
-            class="w-full h-40 bg-white rounded-xl shadow-lg"
+    <form
+      [formGroup]="createQuoteForm"
+      class="flex flex-col gap-5"
+      (ngSubmit)="updatedQuoteId() ? updateQuote() : createQuote()"
+    >
+      <div class="flex flex-col justify-center items-center md:flex-row">
+        <label
+          class="w-full font-semibold text-base rounded-full md:text-lg md:w-1/2"
+          hlmLabel
+          >Date
+          <input
+            formControlName="quote_date"
+            class="w-full bg-white shadow-lg text-xs rounded-full md:text-base"
             hlmInput
-            placeholder="Laisser votre commentaire ici..."
-          ></textarea>
-        </div>
-
-        @if (!updatedQuoteId()) {
-          <button
-            class="rounded-full flex justify-center items-center gap-2 md:w-1/3 md:self-end mt-3"
-            hlmBtn
-            type="submit"
-          >
-            Générer le devis
-            <hlm-icon size="xs" name="lucideFileDown" />
-          </button>
-        } @else {
-          <button
-            class="rounded-full flex justify-center items-center gap-2 md:w-1/3 md:self-end mt-3"
-            hlmBtn
-            type="submit"
-          >
-            Modifier le devis
-            <hlm-icon size="xs" name="lucideFileDown" />
-          </button>
-        }
-      </form>
-    } @else {
-      <form
-        [formGroup]="createClientForm"
-        class="flex flex-col justify-center gap-4 bg-white rounded-xl lg:w-1/2"
-        (ngSubmit)="createClient()"
-      >
-        <label class="w-full flex flex-col" hlmLabel for="country"
-          >Pays
-          <brn-select
-            formControlName="country"
-            class="inline-block w-full"
-            placeholder="Séléctionner un pays"
-          >
-            <hlm-select-trigger class="w-full rounded-full">
-              <hlm-select-value />
-            </hlm-select-trigger>
-            <hlm-select-content class="w-full h-80">
-              @for (pays of paysEuropeens; track pays) {
-                <hlm-option value="{{ pays }}">{{ pays }}</hlm-option>
-              }
-            </hlm-select-content>
-          </brn-select>
+            type="date"
+            [min]="notPastDate()"
+            [value]="currentDate | date : 'yyyy-MM-dd'"
+          />
         </label>
 
-        @if (!isPhysicalPerson()) {
-          <label class="w-full flex flex-col" hlmLabel for="company_vat_number"
-            >Numéro d'entreprise
-            <div class="flex gap-2">
-              <input
-                [ngClass]="{
+        <label
+          class="w-full font-semibold text-base rounded-full md:text-lg md:w-1/2 md:ml-5"
+          hlmLabel
+          >Date de prestation
+          <input
+            formControlName="service_date"
+            class="w-full bg-white shadow-lg text-xs rounded-full md:text-base"
+            hlmInput
+            type="date"
+            placeholder="28-04-2024"
+          />
+        </label>
+      </div>
+
+      <div class="flex flex-col justify-center items-center md:flex-row">
+        <label
+          class="w-full font-semibold text-base rounded-full md:text-lg md:w-1/2"
+          hlmLabel
+          >Délais de paiement
+          <input
+            formControlName="payment_deadline"
+            class="w-full bg-white shadow-lg text-xs rounded-full md:text-base"
+            hlmInput
+            type="number"
+            [min]="connectedUser()?.role === 'USER' ? 10 : null"
+            [max]="connectedUser()?.role === 'USER' ? 30 : null"
+            placeholder="Min: 10, Max: 30"
+          />
+        </label>
+
+        <label
+          class="w-full font-semibold text-base rounded-full md:text-lg md:w-1/2 md:ml-5"
+          hlmLabel
+          >Devis valable jusqu'au :
+          <input
+            formControlName="validation_deadline"
+            class="w-full bg-white shadow-lg text-xs rounded-full md:text-base"
+            hlmInput
+            type="date"
+            [min]="notPastDate()"
+          />
+        </label>
+      </div>
+      <div class="flex flex-col justify-center w-full">
+        <h3 class="font-semibold text-base md:text-lg">Rechercher un client</h3>
+
+        <div class="w-full flex flex-col md:flex-row">
+          <brn-popover
+            class="w-full md:w-3/6"
+            [state]="state()"
+            (stateChanged)="stateChanged($event)"
+            sideOffset="5"
+            closeDelay="100"
+          >
+            <button
+              type="button"
+              class="w-full justify-between rounded-full border-none bg-white shadow-lg"
+              id="edit-profile"
+              variant="outline"
+              brnPopoverTrigger
+              hlmBtn
+            >
+              {{
+                currentClient()
+                  ? currentClient()?.name
+                  : "Séléctionner un client"
+              }}
+              <hlm-icon size="sm" name="lucideChevronsUpDown" />
+            </button>
+            <brn-cmd
+              *brnPopoverContent="let ctx"
+              hlmPopoverContent
+              hlm
+              class="p-0 w-full"
+            >
+              <hlm-cmd-input-wrapper>
+                <hlm-icon name="lucideSearch" />
+                <input placeholder="Rechercher un client" brnCmdInput hlm />
+              </hlm-cmd-input-wrapper>
+              <div *brnCmdEmpty hlmCmdEmpty>Pas de client trouvé</div>
+              <brn-cmd-list hlm>
+                <brn-cmd-group hlm>
+                  @if (connectedUser()?.role === "ADMIN") { @for (client of
+                  clients(); track client.id) {
+                  <button
+                    brnCmdItem
+                    [value]="client.email"
+                    (selected)="commandSelected(client)"
+                    (click)="setClient(client.id)"
+                    class="flex justify-between w-full"
+                    hlm
+                  >
+                    <hlm-icon
+                      [class.opacity-0]="
+                        currentClient()?.email !== client.email
+                      "
+                      name="lucideCheck"
+                      hlmCmdIcon
+                    />
+                    <p>{{ client.email }} {{ client.name }}</p>
+                  </button>
+                  } } @else { @for ( client of connectedUser()?.clients; track
+                  client.id ) {
+                  <button
+                    brnCmdItem
+                    [value]="client.email"
+                    (selected)="commandSelected(client)"
+                    (click)="setClient(client.id)"
+                    class="flex justify-between w-full"
+                    hlm
+                  >
+                    <hlm-icon
+                      [class.opacity-0]="
+                        currentClient()?.email !== client.email
+                      "
+                      name="lucideCheck"
+                      hlmCmdIcon
+                    />
+                    <p>{{ client.email }} {{ client.name }}</p>
+                  </button>
+                  } }
+                </brn-cmd-group>
+              </brn-cmd-list>
+            </brn-cmd>
+          </brn-popover>
+
+          <button
+            (click)="toggleClientForm()"
+            class="w-full flex justify-center items-center gap-2 rounded-full text-xs md:text-base md:ml-5 md:mb-1 md:w-1/2 lg:w-1/4"
+            id="edit-profile"
+            hlmBtn
+            type="button"
+          >
+            Ajouter un nouveau client
+            <hlm-icon size="xs" name="lucidePlusCircle" />
+          </button>
+        </div>
+      </div>
+
+      @if (client()) {
+      <div class="flex flex-col gap-2 w-full lg:w-1/2">
+        <h2
+          class="w-full font-semibold text-text-base rounded-full md:text-lg md:w-1/2"
+        >
+          Coordonnées du client
+        </h2>
+        <div
+          class="bg-white flex p-10 rounded-3xl shadow-lg text-xs md:text-lg relative"
+        >
+          <div>
+            <p class="font-bold">{{ client()?.name }}</p>
+            <p>{{ client()?.street }} {{ client()?.number }}</p>
+            <p>
+              {{ client()?.city }} {{ client()?.postalCode }}
+              {{ client()?.country }}
+            </p>
+            @if (client()?.company_number) {
+            <p>TVA: {{ client()?.company_vat_number }}</p>
+            } @else if (client()?.national_number) {
+            <p>N° national: {{ client()?.national_number }}</p>
+            }
+          </div>
+          <button
+            class="absolute top-2 right-5"
+            (click)="toggleClientForm(false)"
+          >
+            <hlm-icon size="sm" name="lucideEdit" />
+          </button>
+        </div>
+      </div>
+      }
+
+      <brn-separator hlmSeparator />
+
+      <div class="flex flex-col gap-2">
+        <h3 class="font-bold text-base md:text-lg">
+          Récapitulatif des services
+        </h3>
+        <hlm-table class="hidden md:block w-full">
+          @if (!isToggleProductForm() && !isToggleEditProductForm()) {
+          <hlm-trow class="*:text-black border-b-black *:p-0">
+            <hlm-th class="w-7/12">Description du service</hlm-th>
+            <hlm-th class="w-1/12 md:mr-5 lg:mr-0">Quantité</hlm-th>
+            <hlm-th class="w-1/12">HTVA</hlm-th>
+            <hlm-th class="w-1/12">TVA %</hlm-th>
+            <hlm-th class="w-1/12">TVAC</hlm-th>
+            <hlm-th class="w-1/12 flex justify-end gap-3">
+              <hlm-icon size="xs" name="lucideTrash" />
+              <hlm-icon size="xs" name="lucideEdit" />
+            </hlm-th>
+          </hlm-trow>
+          @for (product of products(); track product.id) {
+          <hlm-trow class="*:p-0">
+            <hlm-th class="w-7/12">{{ product.description }}</hlm-th>
+            <hlm-th class="w-1/12">{{ product.quantity }}</hlm-th>
+            <hlm-th class="w-1/12">{{ product.price_htva }}</hlm-th>
+            <hlm-th class="w-1/12">{{ product.vat | percent }}</hlm-th>
+            <hlm-th class="w-1/12">{{ product.total }}</hlm-th>
+            <hlm-th class="w-1/12 flex justify-end gap-3">
+              <button (click)="deleteProduct(product.id!)" type="button">
+                <hlm-icon size="xs" name="lucideTrash" />
+              </button>
+              <button (click)="editProduct(product.id!)" type="button">
+                <hlm-icon size="xs" name="lucideEdit" />
+              </button>
+            </hlm-th>
+          </hlm-trow>
+          <brn-separator hlmSeparator />
+          } } @else if (isToggleEditProductForm()) {
+          <hlm-trow class="flex gap-2 *:text-black border-b-black *:p-0">
+            <hlm-th class="w-7/12">Description du service</hlm-th>
+            <hlm-th class="w-1/12">Quantité</hlm-th>
+            <hlm-th class="w-1/12">Prix</hlm-th>
+            <hlm-th class="w-2/12"></hlm-th>
+            <hlm-th class="w-1/12"></hlm-th>
+          </hlm-trow>
+
+          <form
+            class="mt-2 max-w-full"
+            [formGroup]="editProductForm"
+            (ngSubmit)="editProductToDB()"
+          >
+            <hlm-trow class="flex gap-2 *:text-black border-b-black *:p-0">
+              <hlm-th class="w-7/12">
+                <input
+                  formControlName="description"
+                  class="w-full bg-white rounded-full shadow-lg"
+                  hlmInput
+                  type="text"
+                />
+              </hlm-th>
+
+              <hlm-th class="w-1/12">
+                <input
+                  [value]="1"
+                  formControlName="quantity"
+                  class="w-full bg-white rounded-full shadow-lg"
+                  hlmInput
+                  type="text"
+                />
+              </hlm-th>
+
+              <hlm-th class="w-1/12">
+                <input
+                  formControlName="price"
+                  class="w-full bg-white rounded-full shadow-lg"
+                  hlmInput
+                  type="text"
+                />
+              </hlm-th>
+
+              <hlm-th class="w-2/12 flex justify-center items-center">
+                <hlm-checkbox
+                  (checkedChange)="toggleArtisticPerformance()"
+                  formControlName="vat"
+                  class="mr-2"
+                />
+                Prestation Artistique
+              </hlm-th>
+              <hlm-th class="w-1/12">
+                <button
+                  class="bg-white size-6 rounded-full shadow-lg"
+                  type="submit"
+                >
+                  <hlm-icon
+                    size="xs"
+                    name="lucideCheck"
+                    class="text-green-600 font-bold"
+                  />
+                </button>
+              </hlm-th>
+            </hlm-trow>
+          </form>
+          } @else {
+          <hlm-trow class="flex gap-2 *:text-black border-b-black *:p-0">
+            <hlm-th class="w-7/12">Description du service</hlm-th>
+            <hlm-th class="w-1/12">Quantité</hlm-th>
+            <hlm-th class="w-1/12">Prix</hlm-th>
+            <hlm-th class="w-2/12"></hlm-th>
+            <hlm-th class="w-1/12"></hlm-th>
+          </hlm-trow>
+
+          <form
+            class="mt-2 max-w-full"
+            [formGroup]="createProductForm"
+            (ngSubmit)="createProduct()"
+          >
+            <hlm-trow class="flex gap-2 *:text-black border-b-black *:p-0">
+              <hlm-th class="w-7/12">
+                <input
+                  formControlName="description"
+                  class="w-full bg-white rounded-full shadow-lg"
+                  hlmInput
+                  type="text"
+                />
+              </hlm-th>
+
+              <hlm-th class="w-1/12">
+                <input
+                  [value]="1"
+                  formControlName="quantity"
+                  class="w-full bg-white rounded-full shadow-lg"
+                  hlmInput
+                  type="text"
+                />
+              </hlm-th>
+
+              <hlm-th class="w-1/12">
+                <input
+                  formControlName="price"
+                  class="w-full bg-white rounded-full shadow-lg"
+                  hlmInput
+                  type="text"
+                />
+              </hlm-th>
+
+              <hlm-th class="w-2/12 flex justify-center items-center">
+                <hlm-checkbox
+                  (checkedChange)="toggleArtisticPerformance()"
+                  formControlName="vat"
+                  class="mr-2"
+                />
+                Prestation Artistique
+              </hlm-th>
+              <hlm-th class="w-1/12">
+                <button
+                  class="bg-white size-6 rounded-full shadow-lg"
+                  type="submit"
+                >
+                  <hlm-icon
+                    size="xs"
+                    name="lucideCheck"
+                    class="text-green-600 font-bold"
+                  />
+                </button>
+              </hlm-th>
+            </hlm-trow>
+          </form>
+          }
+        </hlm-table>
+
+        @for (product of products(); track product.id) {
+        <div class="*:p-0 flex flex-col gap-2 md:hidden">
+          <h3 class="text-xs md:text-lg font-bold">Description du service</h3>
+          <brn-separator class="bg-black" hlmSeparator />
+
+          <div class="flex flex-col">
+            <div class="flex justify-between">
+              <p class="w-1/2 text-xs md:text-lg">
+                {{ product.description }}
+              </p>
+              <div class="flex flex-col w-5/12">
+                <div class="flex justify-between text-xs">
+                  <p>HTVA</p>
+                  <p>{{ product?.price_htva! | euroFormat }}</p>
+                </div>
+                <div class="flex justify-between text-xs">
+                  <p>TVA %</p>
+                  <p>{{ product?.vat | percent }}</p>
+                </div>
+                <div class="flex justify-between text-xs">
+                  <p>TVAC</p>
+                  <p>{{ product?.total! | euroFormat }}</p>
+                </div>
+                <p class="flex justify-end gap-3">
+                  <button>
+                    <hlm-icon size="xs" name="lucideTrash" />
+                  </button>
+                  <button>
+                    <hlm-icon size="xs" name="lucideEdit" />
+                  </button>
+                </p>
+              </div>
+            </div>
+
+            <brn-separator class="bg-gray-600" hlmSeparator />
+          </div>
+        </div>
+        } @if (isToggleEditProductForm() && advertiseMessage()) {
+        <p class="text-red-600 font-bold text-xs bg-red-100 p-2 rounded-full">
+          {{ advertiseMessage() }}
+        </p>
+        }
+
+        <button
+          type="button"
+          (click)="toggleProductForm()"
+          class="bg-gray-sonar p-0 text-left text-black font-bold text-xs md:text-base rounded-full flex justify-start items-center gap-2 md:mb-5 md:w-fit hover:bg-transparent hover:underline"
+          hlmBtn
+        >
+          Ajouter un service
+          <hlm-icon size="sm" name="lucidePlusCircle" />
+        </button>
+
+        @if ( client() && client()?.country !== "Belgique" &&
+        client()?.company_vat_number ) {
+        <p class="text-red-600">
+          « Autoliquidation Art 39 bis – livraison intracommunautaire »
+        </p>
+        }
+      </div>
+
+      <div
+        class="w-3/5 md:w-1/5 flex flex-col self-end gap-3 text-xs md:text-lg"
+      >
+        <div class="flex flex-col gap-1">
+          <label class="flex gap-2 items-center text-xs">
+            Montant TVA comprise ?
+            <hlm-checkbox
+              [checked]="isTvaIncluded()"
+              (checkedChange)="toggleTvaIncluded()"
+              [disabled]="products().length === 0"
+            />
+          </label>
+
+          <div class="flex justify-between text-xs">
+            <p>Total HTVA</p>
+            <p>{{ totalHtva() | euroFormat }}</p>
+          </div>
+
+          <div class="flex justify-between text-xs">
+            <p>TVA 21%</p>
+            <p>{{ tva21() | euroFormat }}</p>
+          </div>
+
+          <div class="flex justify-between text-xs">
+            <p>TVA 6%</p>
+            <p>{{ tva6() | euroFormat }}</p>
+          </div>
+        </div>
+
+        <div class="flex justify-between text-lg font-bold">
+          <p>Total</p>
+          <p>{{ total() | euroFormat }}</p>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-2">
+        <h3 class="font-bold text-xs md:text-base">Commentaire</h3>
+        <textarea
+          formControlName="comment"
+          class="w-full h-40 bg-white rounded-xl shadow-lg"
+          hlmInput
+          placeholder="Laisser votre commentaire ici..."
+        ></textarea>
+      </div>
+
+      @if (!updatedQuoteId()) {
+      <button
+        class="rounded-full flex justify-center items-center gap-2 md:w-1/3 md:self-end mt-3"
+        hlmBtn
+        type="submit"
+      >
+        Générer le devis
+        <hlm-icon size="xs" name="lucideFileDown" />
+      </button>
+      } @else {
+      <button
+        class="rounded-full flex justify-center items-center gap-2 md:w-1/3 md:self-end mt-3"
+        hlmBtn
+        type="submit"
+      >
+        Modifier le devis
+        <hlm-icon size="xs" name="lucideFileDown" />
+      </button>
+      }
+    </form>
+    } @else {
+    <form
+      [formGroup]="createClientForm"
+      class="flex flex-col justify-center gap-4 bg-white rounded-xl lg:w-1/2"
+      (ngSubmit)="createClient()"
+    >
+      <label class="w-full flex flex-col" hlmLabel for="country"
+        >Pays
+        <brn-select
+          formControlName="country"
+          class="inline-block w-full"
+          placeholder="Séléctionner un pays"
+        >
+          <hlm-select-trigger class="w-full rounded-full">
+            <hlm-select-value />
+          </hlm-select-trigger>
+          <hlm-select-content class="w-full h-80">
+            @for (pays of paysEuropeens; track pays) {
+            <hlm-option value="{{ pays }}">{{ pays }}</hlm-option>
+            }
+          </hlm-select-content>
+        </brn-select>
+      </label>
+
+      @if (!isPhysicalPerson()) {
+      <label class="w-full flex flex-col" hlmLabel for="company_vat_number"
+        >Numéro d'entreprise
+        <div class="flex gap-2">
+          <input
+            [ngClass]="{
                   'border-green-600': getIsValidBCENumber(),
                   'border-red-600': !getIsValidBCENumber(),
                 }"
-                formControlName="company_number"
-                hlmInput
-                id="company_vat_number"
-                placeholder="987 XXX XXX"
-                class="col-span-3 w-full rounded-full border border-green-600"
-              />
-              <button
-                (click)="checkBCE()"
-                type="button"
-                class="rounded-full w-1/4 flex justify-center items-center"
-                hlmBtn
-              >
-                Vérifier
-                <hlm-icon size="xs" name="lucideCheck" />
-              </button>
-            </div>
-          </label>
-
-          <label class="w-full" hlmLabel for="bce_number"
-            >Numéro de tva
-            <input
-              formControlName="company_vat_number"
-              hlmInput
-              id="bce_number"
-              placeholder="987 XXX XXX"
-              class="col-span-3 w-full rounded-full"
-            />
-          </label>
-        } @else {
-          <label class="w-full" hlmLabel for="national_number"
-            >Numéro national
-            <input
-              formControlName="national_number"
-              hlmInput
-              id="national_number"
-              placeholder="12345678910"
-              class="col-span-3 w-full rounded-full"
-            />
-          </label>
-        }
-        <label
-          class="w-full flex gap-2 items-center"
-          hlmLabel
-          for="is_physical_person"
-        >
-          <hlm-checkbox (checkedChange)="togglePhysicalPerson()" />
-          <p>Personne physique ou association de fait ?</p>
-        </label>
-
-        <label class="w-full" hlmLabel for="name"
-          >Nom*
-          <input
-            formControlName="name"
+            formControlName="company_number"
             hlmInput
-            id="name"
-            placeholder="Nom"
-            class="col-span-3 w-full rounded-full"
+            id="company_vat_number"
+            placeholder="987 XXX XXX"
+            class="col-span-3 w-full rounded-full border border-green-600"
           />
-        </label>
-
-        <label class="w-full" hlmLabel for="adress"
-          >Adresse*
-          <input
-            formControlName="street"
-            hlmInput
-            id="adress"
-            placeholder="Adresse"
-            class="col-span-3 w-full rounded-full"
-          />
-        </label>
-
-        <input
-          formControlName="city"
-          hlmInput
-          id="city"
-          placeholder="Commune"
-          class="rounded-full"
-        />
-        <div class="flex justify-between items-center gap-5">
-          <input
-            formControlName="postalCode"
-            hlmInput
-            id="postal_code"
-            placeholder="CP"
-            class="w-1/2 rounded-full"
-          />
-          <input
-            formControlName="number"
-            hlmInput
-            id="number"
-            placeholder="N°"
-            class="w-1/2 rounded-full"
-          />
-        </div>
-
-        <label class="w-full" hlmLabel for="email"
-          >Email*
-          <input
-            formControlName="email"
-            type="email"
-            hlmInput
-            id="email"
-            placeholder="adresse@email.com"
-            class="col-span-3 w-full rounded-full"
-          />
-        </label>
-
-        <label class="w-full" hlmLabel for="phone"
-          >Numéro de téléphone*
-          <input
-            formControlName="phone"
-            type="tel"
-            hlmInput
-            id="phone"
-            placeholder="phone"
-            class="col-span-3 w-full rounded-full"
-          />
-        </label>
-
-        <div class="flex gap-3 justify-center items-center">
           <button
+            (click)="checkBCE()"
             type="button"
-            (click)="toggleClientForm()"
-            class="flex justify-center items-center gap-3 w-full bg-[#FF5353] rounded-full"
+            class="rounded-full w-1/4 flex justify-center items-center"
             hlmBtn
           >
-            Annuler
-            <hlm-icon size="xs" name="lucideXCircle" />
-          </button>
-          <button
-            class="flex justify-center items-center gap-3 w-full rounded-full"
-            hlmBtn
-            type="submit"
-          >
-            Créer
+            Vérifier
             <hlm-icon size="xs" name="lucideCheck" />
           </button>
         </div>
-      </form>
+      </label>
+
+      <label class="w-full" hlmLabel for="bce_number"
+        >Numéro de tva
+        <input
+          formControlName="company_vat_number"
+          hlmInput
+          id="bce_number"
+          placeholder="987 XXX XXX"
+          class="col-span-3 w-full rounded-full"
+        />
+      </label>
+      } @else {
+      <label class="w-full" hlmLabel for="national_number"
+        >Numéro national
+        <input
+          formControlName="national_number"
+          hlmInput
+          id="national_number"
+          placeholder="12345678910"
+          class="col-span-3 w-full rounded-full"
+        />
+      </label>
+      }
+      <label
+        class="w-full flex gap-2 items-center"
+        hlmLabel
+        for="is_physical_person"
+      >
+        <hlm-checkbox (checkedChange)="togglePhysicalPerson()" />
+        <p>Personne physique ou association de fait ?</p>
+      </label>
+
+      <label class="w-full" hlmLabel for="name"
+        >Nom*
+        <input
+          formControlName="name"
+          hlmInput
+          id="name"
+          placeholder="Nom"
+          class="col-span-3 w-full rounded-full"
+        />
+      </label>
+
+      <label class="w-full" hlmLabel for="adress"
+        >Adresse*
+        <input
+          formControlName="street"
+          hlmInput
+          id="adress"
+          placeholder="Adresse"
+          class="col-span-3 w-full rounded-full"
+        />
+      </label>
+
+      <input
+        formControlName="city"
+        hlmInput
+        id="city"
+        placeholder="Commune"
+        class="rounded-full"
+      />
+      <div class="flex justify-between items-center gap-5">
+        <input
+          formControlName="postalCode"
+          hlmInput
+          id="postal_code"
+          placeholder="CP"
+          class="w-1/2 rounded-full"
+        />
+        <input
+          formControlName="number"
+          hlmInput
+          id="number"
+          placeholder="N°"
+          class="w-1/2 rounded-full"
+        />
+      </div>
+
+      <label class="w-full" hlmLabel for="email"
+        >Email*
+        <input
+          formControlName="email"
+          type="email"
+          hlmInput
+          id="email"
+          placeholder="adresse@email.com"
+          class="col-span-3 w-full rounded-full"
+        />
+      </label>
+
+      <label class="w-full" hlmLabel for="phone"
+        >Numéro de téléphone*
+        <input
+          formControlName="phone"
+          type="tel"
+          hlmInput
+          id="phone"
+          placeholder="phone"
+          class="col-span-3 w-full rounded-full"
+        />
+      </label>
+
+      <div class="flex gap-3 justify-center items-center">
+        <button
+          type="button"
+          (click)="toggleClientForm()"
+          class="flex justify-center items-center gap-3 w-full bg-[#FF5353] rounded-full"
+          hlmBtn
+        >
+          Annuler
+          <hlm-icon size="xs" name="lucideXCircle" />
+        </button>
+        <button
+          class="flex justify-center items-center gap-3 w-full rounded-full"
+          hlmBtn
+          type="submit"
+        >
+          Créer
+          <hlm-icon size="xs" name="lucideCheck" />
+        </button>
+      </div>
+    </form>
     }
   </div>
 </div>

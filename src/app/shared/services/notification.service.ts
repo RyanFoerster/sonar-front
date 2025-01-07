@@ -1,7 +1,15 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
 import { environment } from '../../../environments/environment';
-import { Observable, interval, switchMap, tap, delay } from 'rxjs';
+import {
+  Observable,
+  interval,
+  switchMap,
+  tap,
+  delay,
+  Subscription,
+} from 'rxjs';
+import { AuthService } from './auth.service';
 
 export interface Notification {
   id: number;
@@ -19,29 +27,57 @@ export interface Notification {
 })
 export class NotificationService {
   private readonly httpClient = inject(HttpClient);
+  private readonly authService = inject(AuthService);
   private readonly POLLING_INTERVAL = 5000; // 5 secondes
+  private pollingSubscription?: Subscription;
 
   notifications = signal<Notification[]>([]);
 
   constructor() {
-    // Démarrer le polling des notifications
-    this.startPolling();
+    // Démarrer le polling des notifications si l'utilisateur est connecté
+    if (this.authService.getToken()) {
+      this.startPolling();
+    }
+
+    // S'abonner aux changements d'état d'authentification
+    this.authService.getAuthState().subscribe((isAuthenticated) => {
+      if (isAuthenticated) {
+        this.startPolling();
+      } else {
+        this.stopPolling();
+        this.notifications.set([]);
+      }
+    });
   }
 
   private startPolling() {
-    interval(this.POLLING_INTERVAL)
-      .pipe(switchMap(() => this.fetchNotifications()))
-      .subscribe();
+    if (!this.pollingSubscription) {
+      this.pollingSubscription = interval(this.POLLING_INTERVAL)
+        .pipe(switchMap(() => this.fetchNotifications()))
+        .subscribe();
+    }
+  }
+
+  private stopPolling() {
+    if (this.pollingSubscription) {
+      this.pollingSubscription.unsubscribe();
+      this.pollingSubscription = undefined;
+    }
   }
 
   private fetchNotifications(): Observable<Notification[]> {
+    if (!this.authService.getToken()) {
+      return new Observable(); // Retourne un Observable vide si non authentifié
+    }
     return this.httpClient
       .get<Notification[]>(`${environment.API_URL}/notifications`)
       .pipe(tap((notifications) => this.notifications.set(notifications)));
   }
 
   loadNotifications(): void {
-    this.fetchNotifications().subscribe();
+    if (this.authService.getToken()) {
+      this.fetchNotifications().subscribe();
+    }
   }
 
   createGroupInvitation(toUserId: number, groupId: number): Observable<any> {

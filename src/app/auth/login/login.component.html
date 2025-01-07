@@ -1,57 +1,128 @@
-<div
-  class="flex flex-col justify-center mx-auto w-2/5 h-without-header gap-2 md:gap-4"
->
-  <h1 class="text-lg md:text-3xl text-green-sonar">Content de vous revoir</h1>
+<div class="flex justify-center">
+  <div class="w-full max-w-md">
+    <div class="bg-white p-8 rounded-lg space-y-6">
+      <div class="space-y-2 text-center">
+        <h1 class="text-2xl font-semibold text-green-sonar">
+          Content de vous revoir
+        </h1>
+        <p class="text-gray-600 text-sm">
+          Entrez votre e-mail et votre mot de passe pour vous connecter.
+        </p>
+      </div>
 
-  <p class="text-xs md:text-xl">
-    Entrez votre e-mail et un mot de passe pour vous inscrire.
-  </p>
+      <form [formGroup]="loginForm" (ngSubmit)="login()" class="space-y-4">
+        @if (errorMessage) {
+        <div
+          class="p-3 text-sm text-red-600 bg-red-50 rounded-md border border-red-100"
+        >
+          {{ errorMessage }}
+        </div>
+        }
 
-  <form
-    [formGroup]="loginForm"
-    class="flex flex-col justify-center w-full mx-auto gap-2 md:gap-4"
-    (ngSubmit)="login()"
-  >
-    <label class="w-full text-xs rounded-full md:text-lg" hlmLabel
-      >Email
-      <input
-        formControlName="email"
-        class="w-full text-xs rounded-full md:text-lg"
-        hlmInput
-        type="email"
-        placeholder="exemple@exemple.be"
-      />
-    </label>
+        <div class="space-y-1.5">
+          <label class="block text-sm font-medium text-gray-700" hlmLabel>
+            Email
+            <input
+              formControlName="email"
+              class="w-full mt-1 transition-colors"
+              [class.border-red-300]="
+                loginForm.get('email')?.invalid &&
+                loginForm.get('email')?.touched
+              "
+              hlmInput
+              type="email"
+              placeholder="exemple@exemple.be"
+            />
+          </label>
+          @if (loginForm.get('email')?.invalid &&
+          loginForm.get('email')?.touched) {
+          <p class="text-sm text-red-500">{{ getEmailErrorMessage() }}</p>
+          }
+        </div>
 
-    <label class="w-full text-xs rounded-full md:text-lg" hlmLabel
-      >Password
-      <input
-        formControlName="password"
-        class="w-full text-xs rounded-full md:text-lg"
-        hlmInput
-        type="password"
-        placeholder="**********"
-      />
-    </label>
+        <div class="space-y-1.5">
+          <label class="block text-sm font-medium text-gray-700" hlmLabel>
+            Mot de passe
+            <div class="relative">
+              <input
+                formControlName="password"
+                class="w-full mt-1 transition-colors pr-10"
+                [class.border-red-300]="
+                  loginForm.get('password')?.invalid &&
+                  loginForm.get('password')?.touched
+                "
+                hlmInput
+                [type]="showPassword ? 'text' : 'password'"
+                placeholder="**********"
+              />
+              <button
+                type="button"
+                (click)="togglePasswordVisibility()"
+                class="absolute right-3 top-[60%] transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+              >
+                @if (showPassword) {
+                <hlm-icon name="lucideEyeOff" size="sm" />
+                } @else {
+                <hlm-icon name="lucideEye" size="sm" />
+                }
+              </button>
+            </div>
+          </label>
+          @if (loginForm.get('password')?.invalid &&
+          loginForm.get('password')?.touched) {
+          <p class="text-sm text-red-500">{{ getPasswordErrorMessage() }}</p>
+          }
+        </div>
 
-    <button
-      type="submit"
-      class="rounded-full cursor-pointer px-6 w-full hover:bg-white hover:text-black hover:border hover:border-black transition-all md:text-lg"
-      hlmBtn
-    >
-      Connexion
-    </button>
-  </form>
+        <button
+          type="submit"
+          class="w-full bg-green-sonar text-white py-2 rounded-md font-medium hover:bg-green-sonar/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          [disabled]="isLoading"
+          hlmBtn
+        >
+          @if (!isLoading) {
+          <span>Connexion</span>
+          } @else {
+          <span class="flex items-center justify-center gap-2">
+            <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24">
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"
+                fill="none"
+              />
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              />
+            </svg>
+            Connexion en cours...
+          </span>
+          }
+        </button>
 
-  <div class="flex gap-2 text-[8px] justify-center md:text-xs">
-    <p>Vous n'avez pas encore de compte?</p>
-    <a routerLink="/register" class="text-green-sonar cursor-pointer"
-      >S'inscrire</a
-    >
+        <div class="pt-4 text-center space-y-2">
+          <div class="text-sm text-gray-600">
+            Vous n'avez pas encore de compte?
+            <a
+              routerLink="/register"
+              class="text-green-sonar hover:underline ml-1"
+            >
+              S'inscrire
+            </a>
+          </div>
+          <a
+            routerLink="/forgotten-password"
+            class="text-sm text-gray-500 hover:text-green-sonar"
+          >
+            Mot de passe oublié ?
+          </a>
+        </div>
+      </form>
+    </div>
   </div>
-  <a
-    routerLink="/forgotten-password"
-    class="flex text-[8px] justify-center md:text-xs"
-    >Mot de passe oublié ?</a
-  >
 </div>

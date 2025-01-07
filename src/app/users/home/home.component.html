@@ -163,6 +163,11 @@
                 placeholder="Nom du compte"
                 class="col-span-3"
               />
+              @if(errorMessage()) {
+              <div class="col-span-4 text-red-500 text-sm">
+                {{ errorMessage() }}
+              </div>
+              }
               <button
                 class="rounded-full w-full text-xs h-auto"
                 hlmBtn
@@ -304,6 +309,11 @@
                   placeholder="Nom du compte"
                   class="col-span-3"
                 />
+                @if(errorMessage()) {
+                <div class="col-span-4 text-red-500 text-sm">
+                  {{ errorMessage() }}
+                </div>
+                }
                 <button
                   class="rounded-full w-full text-xs h-auto"
                   hlmBtn

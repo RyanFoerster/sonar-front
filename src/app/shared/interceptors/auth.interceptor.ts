@@ -6,13 +6,15 @@ import {
 } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { catchError, Observable, switchMap, throwError } from 'rxjs';
+import { catchError, Observable, switchMap, throwError, of, from } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 
 interface TokenResponse {
   access_token: string;
   refresh_token: string;
 }
+
+let isRefreshing = false;
 
 export function authInterceptor(
   req: HttpRequest<unknown>,
@@ -21,14 +23,24 @@ export function authInterceptor(
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  // Ne pas intercepter les requêtes de rafraîchissement de token et de vérification
+  // Ne pas intercepter les requêtes d'authentification
   if (
+    req.url.includes('/auth/login') ||
     req.url.includes('/auth/refresh') ||
-    req.url.includes('/auth/check-token')
+    req.url.includes('/auth/register') ||
+    req.url.includes('/auth/check-token') ||
+    req.url.includes('/auth/forgot-password') ||
+    req.url.includes('/auth/reset-password')
   ) {
-    return next(req);
+    // Pour ces routes, on ajoute uniquement l'apikey
+    const headers = new HttpHeaders().set(
+      'apikey',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImluZnBscXNjaWZubmpmYmF0c2ZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjMwNTA3MjcsImV4cCI6MjAzODYyNjcyN30.jINf2PmZklBFMcSjHeO0c2GY3nGRdwQ4YSA4T5bJxok'
+    );
+    return next(req.clone({ headers }));
   }
 
+  // Pour toutes les autres requêtes, on ajoute l'apikey et le token d'authentification si disponible
   let headers = new HttpHeaders().set(
     'apikey',
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImluZnBscXNjaWZubmpmYmF0c2ZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjMwNTA3MjcsImV4cCI6MjAzODYyNjcyN30.jINf2PmZklBFMcSjHeO0c2GY3nGRdwQ4YSA4T5bJxok'
@@ -44,37 +56,54 @@ export function authInterceptor(
   return next(clonedRequest).pipe(
     catchError((error) => {
       if (error.status === 401) {
-        // Vérifier si nous avons les tokens nécessaires pour le rafraîchissement
+        if (isRefreshing) {
+          return throwError(() => new Error('Session expirée'));
+        }
+
         const refreshToken = authService.getRefreshToken();
-        if (refreshToken) {
-          return (authService.refreshToken() as Observable<TokenResponse>).pipe(
-            switchMap((tokens) => {
-              // Mettre à jour les headers avec le nouveau token
-              const newHeaders = headers.set(
-                'Authorization',
-                `Bearer ${tokens.access_token}`
-              );
-              // Cloner la requête avec les nouveaux headers
-              const newRequest = req.clone({ headers: newHeaders });
-              // Réessayer la requête originale avec le nouveau token
-              return next(newRequest);
-            }),
-            catchError((refreshError) => {
-              console.error(
-                'Erreur lors du rafraîchissement du token:',
-                refreshError
-              );
-              authService.logout();
-              return throwError(() => refreshError);
-            })
-          );
-        } else {
-          // Pas de refresh token disponible, déconnexion
+        if (!refreshToken) {
           authService.logout();
           return throwError(() => new Error('Session expirée'));
         }
+
+        isRefreshing = true;
+
+        // Tentative de rafraîchissement du token
+        return from(
+          new Promise<HttpEvent<unknown>>((resolve, reject) => {
+            authService.refreshToken().subscribe({
+              next: (tokens) => {
+                isRefreshing = false;
+                // Mettre à jour les headers avec le nouveau token
+                const newHeaders = new HttpHeaders()
+                  .set(
+                    'apikey',
+                    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImluZnBscXNjaWZubmpmYmF0c2ZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjMwNTA3MjcsImV4cCI6MjAzODYyNjcyN30.jINf2PmZklBFMcSjHeO0c2GY3nGRdwQ4YSA4T5bJxok'
+                  )
+                  .set('Authorization', `Bearer ${tokens.access_token}`);
+
+                // Cloner la requête originale avec les nouveaux headers
+                const newRequest = req.clone({ headers: newHeaders });
+                // Réessayer la requête originale
+                next(newRequest).subscribe({
+                  next: (event) => resolve(event),
+                  error: (err) => reject(err),
+                });
+              },
+              error: (refreshError) => {
+                isRefreshing = false;
+                console.error(
+                  'Erreur lors du rafraîchissement du token:',
+                  refreshError
+                );
+                authService.logout();
+                router.navigate(['/login']);
+                reject(new Error('Session expirée'));
+              },
+            });
+          })
+        );
       }
-      // Pour les autres erreurs, les renvoyer simplement
       return throwError(() => error);
     })
   );

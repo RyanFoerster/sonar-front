@@ -1,8 +1,13 @@
+@if (!isIndexRoute) {
 <div class="flex flex-col justify-between h-screen">
   <div class="flex flex-col gap-2">
-    <app-header/>
+    <app-header />
     <router-outlet class="hidden" />
   </div>
-    <app-footer />
+  <app-footer />
 </div>
-
+} @if (isIndexRoute) {
+<div>
+  <router-outlet />
+</div>
+}

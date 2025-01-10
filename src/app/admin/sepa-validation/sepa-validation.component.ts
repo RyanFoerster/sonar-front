@@ -164,6 +164,14 @@ export class SepaValidationComponent implements AfterViewInit {
     });
   }
 
+  paidVirement(id: number) {
+    this.virementSepaService.paidVirement(id).subscribe(() => {
+      this.virementsSepaAccepted.update((virements) => {
+        return [...virements.filter((virement) => virement.id !== id)];
+      });
+    });
+  }
+
   protected openDetailedView(virement: VirementSepaEntity) {
     const index = this.virementsSepaInPending().findIndex(
       (v) => v.id === virement.id

@@ -1,0 +1,59 @@
+{
+  "name": "Sonar-front",
+  "short_name": "Sonar-front",
+  "theme_color": "#1976d2",
+  "background_color": "#fafafa",
+  "display": "standalone",
+  "scope": "./",
+  "start_url": "./login",
+  "icons": [
+    {
+      "src": "icons/icon.webp",
+      "sizes": "72x72",
+      "type": "image/webp",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "icons/icon.webp",
+      "sizes": "96x96",
+      "type": "image/webp",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "icons/icon.webp",
+      "sizes": "128x128",
+      "type": "image/webp",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "icons/icon.webp",
+      "sizes": "144x144",
+      "type": "image/webp",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "icons/icon.webp",
+      "sizes": "152x152",
+      "type": "image/webp",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "icons/icon.webp",
+      "sizes": "192x192",
+      "type": "image/webp",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "icons/icon.webp",
+      "sizes": "384x384",
+      "type": "image/webp",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "icons/icon.webp",
+      "sizes": "512x512",
+      "type": "image/webp",
+      "purpose": "maskable any"
+    }
+  ]
+}

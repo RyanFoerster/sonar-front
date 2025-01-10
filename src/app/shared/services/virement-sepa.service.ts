@@ -62,4 +62,11 @@ export class VirementSepaService {
       }
     );
   }
+
+  paidVirement(id: number) {
+    return this.httpClient.patch(
+      `${environment.API_URL}/virement-sepa/${id}/paid`,
+      {}
+    );
+  }
 }

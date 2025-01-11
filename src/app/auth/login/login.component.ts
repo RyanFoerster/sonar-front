@@ -71,30 +71,18 @@ export class LoginComponent {
         password: this.password,
       };
 
-      this.authService
-        .login(this.email, this.password)
+      this.usersService
+        .signIn(credentials)
         .pipe(
-          tap(() => {
-            this.usersService
-              .signIn(credentials)
-              .pipe(
-                tap((data) => {
-                  this.isLoading = false;
-                  this.authService.setUser(data.user);
-                  if (data.user.isActive) {
-                    this.router.navigate(['/home']);
-                  } else {
-                    this.router.navigate(['/rendez-vous']);
-                  }
-                }),
-                catchError((error) => {
-                  this.isLoading = false;
-                  this.errorMessage =
-                    'Une erreur est survenue lors de la connexion. Veuillez réessayer.';
-                  throw error;
-                })
-              )
-              .subscribe();
+          tap((data) => {
+            this.isLoading = false;
+            this.authService.setUser(data.user);
+            this.authService.setTokens(data.access_token, data.refresh_token);
+            if (data.user.isActive) {
+              this.router.navigate(['/home']);
+            } else {
+              this.router.navigate(['/rendez-vous']);
+            }
           }),
           catchError((error) => {
             this.isLoading = false;

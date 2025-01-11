@@ -33,18 +33,12 @@ export function authInterceptor(
     req.url.includes('/auth/reset-password')
   ) {
     // Pour ces routes, on ajoute uniquement l'apikey
-    const headers = new HttpHeaders().set(
-      'apikey',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImluZnBscXNjaWZubmpmYmF0c2ZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjMwNTA3MjcsImV4cCI6MjAzODYyNjcyN30.jINf2PmZklBFMcSjHeO0c2GY3nGRdwQ4YSA4T5bJxok'
-    );
+    const headers = new HttpHeaders();
     return next(req.clone({ headers }));
   }
 
   // Pour toutes les autres requêtes, on ajoute l'apikey et le token d'authentification si disponible
-  let headers = new HttpHeaders().set(
-    'apikey',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImluZnBscXNjaWZubmpmYmF0c2ZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjMwNTA3MjcsImV4cCI6MjAzODYyNjcyN30.jINf2PmZklBFMcSjHeO0c2GY3nGRdwQ4YSA4T5bJxok'
-  );
+  let headers = new HttpHeaders();
 
   const authToken = authService.getToken();
   if (authToken) {
@@ -75,12 +69,10 @@ export function authInterceptor(
               next: (tokens) => {
                 isRefreshing = false;
                 // Mettre à jour les headers avec le nouveau token
-                const newHeaders = new HttpHeaders()
-                  .set(
-                    'apikey',
-                    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImluZnBscXNjaWZubmpmYmF0c2ZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjMwNTA3MjcsImV4cCI6MjAzODYyNjcyN30.jINf2PmZklBFMcSjHeO0c2GY3nGRdwQ4YSA4T5bJxok'
-                  )
-                  .set('Authorization', `Bearer ${tokens.access_token}`);
+                const newHeaders = new HttpHeaders().set(
+                  'Authorization',
+                  `Bearer ${tokens.access_token}`
+                );
 
                 // Cloner la requête originale avec les nouveaux headers
                 const newRequest = req.clone({ headers: newHeaders });

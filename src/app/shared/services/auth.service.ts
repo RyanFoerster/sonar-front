@@ -24,16 +24,10 @@ export class AuthService {
     email: string,
     password: string
   ): Observable<{ access_token: string; refresh_token: string }> {
-    const headers = new HttpHeaders().set(
-      'apikey',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImluZnBscXNjaWZubmpmYmF0c2ZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjMwNTA3MjcsImV4cCI6MjAzODYyNjcyN30.jINf2PmZklBFMcSjHeO0c2GY3nGRdwQ4YSA4T5bJxok'
-    );
-
     return this.httpClient
       .post<{ access_token: string; refresh_token: string }>(
         `${environment.API_URL}/auth/login`,
-        { email, password },
-        { headers }
+        { email, password }
       )
       .pipe(
         tap((tokens) => {
@@ -54,16 +48,10 @@ export class AuthService {
       return throwError(() => new Error('No refresh token available'));
     }
 
-    const headers = new HttpHeaders().set(
-      'apikey',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImluZnBscXNjaWZubmpmYmF0c2ZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjMwNTA3MjcsImV4cCI6MjAzODYyNjcyN30.jINf2PmZklBFMcSjHeO0c2GY3nGRdwQ4YSA4T5bJxok'
-    );
-
     return this.httpClient
       .post<{ access_token: string; refresh_token: string }>(
         `${environment.API_URL}/auth/refresh`,
-        { refresh_token: refreshToken },
-        { headers }
+        { refresh_token: refreshToken }
       )
       .pipe(
         tap((tokens) => {
@@ -83,12 +71,7 @@ export class AuthService {
       return throwError(() => new Error('No token available'));
     }
 
-    const headers = new HttpHeaders()
-      .set(
-        'apikey',
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImluZnBscXNjaWZubmpmYmF0c2ZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjMwNTA3MjcsImV4cCI6MjAzODYyNjcyN30.jINf2PmZklBFMcSjHeO0c2GY3nGRdwQ4YSA4T5bJxok'
-      )
-      .set('Authorization', `Bearer ${token}`);
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
 
     return this.httpClient
       .post<boolean>(`${environment.API_URL}/auth/check-token`, {}, { headers })
@@ -157,7 +140,7 @@ export class AuthService {
     }
   }
 
-  private setTokens(accessToken: string, refreshToken: string): void {
+  setTokens(accessToken: string, refreshToken: string): void {
     localStorage.setItem(environment.TOKEN_KEY, accessToken);
     localStorage.setItem(environment.REFRESH_TOKEN_KEY, refreshToken);
   }

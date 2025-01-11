@@ -117,6 +117,7 @@ export class HomeGroupComponent implements AfterViewInit {
     ComptePrincipalService
   );
   private usersService: UsersService = inject(UsersService);
+  private authService = inject(AuthService);
 
   protected readonly state = {
     isLoadingUpdateName: signal(false),

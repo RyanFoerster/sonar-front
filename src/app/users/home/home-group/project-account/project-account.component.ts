@@ -459,10 +459,8 @@ export class ProjectAccountComponent implements AfterViewInit {
   }
 
   getAllPrincipalAccount() {
-    console.log('Chargement des comptes principaux...');
     this.services.principalAccount.getAllGroupPrincipal().subscribe({
       next: (data) => {
-        console.log('Comptes principaux chargés:', data);
         if (!data || data.length === 0) {
           console.warn('Aucun compte principal retourné par le serveur');
         }
@@ -595,11 +593,6 @@ export class ProjectAccountComponent implements AfterViewInit {
       this.state.transactionRecipient.set(recipientTransactions.data);
       this.state.transactionSender.set(senderTransactions.data);
 
-      console.log('Données récupérées:', {
-        recipientTransactions,
-        senderTransactions,
-      });
-
       this.pagination.recipient.totalItems.set(
         recipientTransactions.meta.total
       );
@@ -687,14 +680,6 @@ export class ProjectAccountComponent implements AfterViewInit {
         const name = account.user?.name?.toLowerCase() || '';
         const firstName = account.user?.firstName?.toLowerCase() || '';
 
-        console.log('Vérification du compte:', {
-          id: account.id,
-          username,
-          name,
-          firstName,
-          user: account.user,
-        });
-
         const isMatch =
           username.includes(searchValue) ||
           name.includes(searchValue) ||
@@ -703,7 +688,6 @@ export class ProjectAccountComponent implements AfterViewInit {
         return isMatch;
       });
 
-    console.log('Comptes filtrés:', filteredAccounts);
     this.state.filteredPrincipalAccounts.set(filteredAccounts);
   }
 }

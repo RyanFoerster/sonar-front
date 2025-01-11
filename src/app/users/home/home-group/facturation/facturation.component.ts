@@ -151,7 +151,7 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
   private authService: AuthService = inject(AuthService);
   private quoteService: QuoteService = inject(QuoteService);
   private principalService: ComptePrincipalService = inject(
-    ComptePrincipalService,
+    ComptePrincipalService
   );
   private datePipe: DatePipe = inject(DatePipe);
   private groupService: CompteGroupeService = inject(CompteGroupeService);
@@ -170,10 +170,10 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
   protected filterSelected = signal<'invoice' | 'credit-note' | 'all'>('all');
 
   protected reportDateFormatted = computed(() =>
-    this.formatDate(this.reportDate()),
+    this.formatDate(this.reportDate())
   );
   protected notPastDate = computed(
-    () => this.currentDate.toISOString().split('T')[0],
+    () => this.currentDate.toISOString().split('T')[0]
   );
 
   constructor(private location: Location) {}
@@ -211,7 +211,6 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
                   take(1),
                   tap((data) => {
                     this.accountPrincipal = data;
-                    console.log('data', data);
                     for (const creditNote of data.invoice!) {
                       if (creditNote.type === 'credit_note') {
                         this.creditNoteList.set([
@@ -219,10 +218,8 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
                           creditNote,
                         ]);
                       }
-
-                      console.log('creditNote', this.creditNoteList());
                     }
-                  }),
+                  })
                 )
                 .subscribe();
             } else {
@@ -232,18 +229,18 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
                   take(1),
                   tap((data) => {
                     this.groupAccount.set(data);
-                  }),
+                  })
                 )
                 .subscribe();
             }
           } else {
             const groupAccountFinded =
               this.connectedUser()?.userSecondaryAccounts.find(
-                (account) => account.id === +this.id()!,
+                (account) => account.id === +this.id()!
               );
             this.groupAccount.set(groupAccountFinded?.group_account);
           }
-        }),
+        })
       )
       .subscribe();
   }
@@ -259,7 +256,7 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
             if (
               quote.invoice &&
               !this.creditNoteList().find(
-                (creditNote) => creditNote.linkedInvoiceId === quote.invoice.id,
+                (creditNote) => creditNote.linkedInvoiceId === quote.invoice.id
               )
             ) {
               this.checkCreditNote(quote.invoice.id);
@@ -270,7 +267,7 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
             if (
               quote.invoice &&
               !this.creditNoteList().find(
-                (creditNote) => creditNote.linkedInvoiceId === quote.invoice.id,
+                (creditNote) => creditNote.linkedInvoiceId === quote.invoice.id
               )
             ) {
               this.checkCreditNote(quote.invoice.id);
@@ -321,7 +318,7 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
         'Email: contact@votreentreprise.com',
         pageWidth - margin,
         margin + 20,
-        { align: 'right' },
+        { align: 'right' }
       );
 
       // Ligne de séparation
@@ -343,12 +340,12 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
     doc.text(
       `Date: ${new Date(quote.quote_date).toLocaleDateString()}`,
       margin,
-      75,
+      75
     );
     doc.text(
       `Date de service: ${new Date(quote.service_date).toLocaleDateString()}`,
       margin,
-      80,
+      80
     );
 
     // Informations du client
@@ -366,13 +363,13 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
     doc.text(
       `${quote.client.street} ${quote.client.number}`,
       pageWidth - margin - 60,
-      yPosition,
+      yPosition
     );
     yPosition += 5;
     doc.text(
       `${quote.client.postalCode} ${quote.client.city}`,
       pageWidth - margin - 60,
-      yPosition,
+      yPosition
     );
     yPosition += 5;
     doc.text(`${quote.client.country}`, pageWidth - margin - 60, yPosition);
@@ -382,7 +379,7 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
     doc.text(
       `Email: ${quote.client.email}`,
       pageWidth - margin - 60,
-      yPosition,
+      yPosition
     );
 
     // Tableau des produits
@@ -418,7 +415,7 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
       `${quote.price_htva.toFixed(2)} €`,
       pageWidth - margin,
       finalY + 10,
-      { align: 'right' },
+      { align: 'right' }
     );
     doc.text(`TVA 6%:`, pageWidth - margin - 50, finalY + 15, {
       align: 'right',
@@ -427,7 +424,7 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
       `${quote.total_vat_6.toFixed(2)} €`,
       pageWidth - margin,
       finalY + 15,
-      { align: 'right' },
+      { align: 'right' }
     );
     doc.text(`TVA 21%:`, pageWidth - margin - 50, finalY + 20, {
       align: 'right',
@@ -436,7 +433,7 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
       `${quote.total_vat_21.toFixed(2)} €`,
       pageWidth - margin,
       finalY + 20,
-      { align: 'right' },
+      { align: 'right' }
     );
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
@@ -466,7 +463,7 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
       'Votre Entreprise SAS - SIRET 123 456 789 00010 - TVA FR12 123 456 789',
       pageWidth / 2,
       pageHeight - 10,
-      { align: 'center' },
+      { align: 'center' }
     );
 
     // Sauvegarder le PDF
@@ -592,13 +589,13 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
         margin + 10,
         {
           align: 'right',
-        },
+        }
       );
       doc.text(
         'Email: contact@sonarartists.be',
         pageWidth - margin,
         margin + 20,
-        { align: 'right' },
+        { align: 'right' }
       );
 
       // Ligne de séparation
@@ -623,15 +620,17 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
     doc.text(
       `Date: ${new Date(invoice?.invoice_date!).toLocaleDateString()}`,
       margin,
-      yPosition2,
+      yPosition2
     );
     yPosition2 += lineHeight;
 
     if (invoice?.service_date) {
       doc.text(
-        `Date de service: ${new Date(invoice?.service_date!).toLocaleDateString()}`,
+        `Date de service: ${new Date(
+          invoice?.service_date!
+        ).toLocaleDateString()}`,
         margin,
-        yPosition2,
+        yPosition2
       );
       yPosition2 += lineHeight;
     }
@@ -651,13 +650,13 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
     doc.text(
       `${quote.client.street} ${quote.client.number}`,
       pageWidth - margin - 60,
-      yPosition,
+      yPosition
     );
     yPosition += 5;
     doc.text(
       `${quote.client.postalCode} ${quote.client.city}`,
       pageWidth - margin - 60,
-      yPosition,
+      yPosition
     );
     yPosition += 5;
     doc.text(`${quote.client.country}`, pageWidth - margin - 60, yPosition);
@@ -667,7 +666,7 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
     doc.text(
       `Email: ${quote.client.email}`,
       pageWidth - margin - 60,
-      yPosition,
+      yPosition
     );
 
     // Tableau des produits
@@ -703,7 +702,7 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
       `${invoice?.price_htva.toFixed(2)} €`,
       pageWidth - margin,
       finalY + 10,
-      { align: 'right' },
+      { align: 'right' }
     );
     doc.text(`TVA 6%:`, pageWidth - margin - 50, finalY + 15, {
       align: 'right',
@@ -712,7 +711,7 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
       `${invoice?.total_vat_6.toFixed(2)} €`,
       pageWidth - margin,
       finalY + 15,
-      { align: 'right' },
+      { align: 'right' }
     );
     doc.text(`TVA 21%:`, pageWidth - margin - 50, finalY + 20, {
       align: 'right',
@@ -721,7 +720,7 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
       `${invoice?.total_vat_21.toFixed(2)} €`,
       pageWidth - margin,
       finalY + 20,
-      { align: 'right' },
+      { align: 'right' }
     );
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
@@ -734,7 +733,7 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
       finalY + 30,
       {
         align: 'right',
-      },
+      }
     );
 
     // Conditions et notes
@@ -756,7 +755,7 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
       'Sonar Artists ASBL - TVA BE0123456789',
       pageWidth / 2,
       pageHeight - 10,
-      { align: 'center' },
+      { align: 'center' }
     );
 
     // Sauvegarder le PDF
@@ -800,14 +799,14 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
         margin + 10,
         {
           align: 'right',
-        },
+        }
       );
 
       doc.text(
         'Email: contact@sonarartists.be',
         pageWidth - margin,
         margin + 20,
-        { align: 'right' },
+        { align: 'right' }
       );
 
       // Ligne de séparation
@@ -830,17 +829,21 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
     // Informations de la note de crédit
     doc.setFontSize(10);
     doc.text(
-      `Date: ${new Date(this.creditNote()?.invoice_date!).toLocaleDateString()}`,
+      `Date: ${new Date(
+        this.creditNote()?.invoice_date!
+      ).toLocaleDateString()}`,
       margin,
-      yPosition2,
+      yPosition2
     );
     yPosition2 += lineHeight;
 
     if (this.creditNote()?.service_date) {
       doc.text(
-        `Date de service: ${new Date(this.creditNote()?.service_date!).toLocaleDateString()}`,
+        `Date de service: ${new Date(
+          this.creditNote()?.service_date!
+        ).toLocaleDateString()}`,
         margin,
-        yPosition2,
+        yPosition2
       );
       yPosition2 += lineHeight;
     }
@@ -849,7 +852,7 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
       doc.text(
         `Numéro de facture liée: ${this.creditNote()?.linkedInvoiceId}`,
         margin,
-        yPosition2,
+        yPosition2
       );
       yPosition2 += lineHeight;
     }
@@ -862,7 +865,7 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
     let yPosition = 75;
     const clientName = doc.splitTextToSize(
       this.creditNote()?.client.name!,
-      maxWidth,
+      maxWidth
     );
     clientName.forEach((line: string) => {
       doc.text(line, pageWidth - margin - 60, yPosition);
@@ -872,31 +875,33 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
     doc.text(
       `${this.creditNote()?.client.street} ${this.creditNote()?.client.number}`,
       pageWidth - margin - 60,
-      yPosition,
+      yPosition
     );
     yPosition += 5;
     doc.text(
-      `${this.creditNote()?.client.postalCode} ${this.creditNote()?.client.city}`,
+      `${this.creditNote()?.client.postalCode} ${
+        this.creditNote()?.client.city
+      }`,
       pageWidth - margin - 60,
-      yPosition,
+      yPosition
     );
     yPosition += 5;
     doc.text(
       `${this.creditNote()?.client.country}`,
       pageWidth - margin - 60,
-      yPosition,
+      yPosition
     );
     yPosition += 5;
     doc.text(
       `Tél: ${this.creditNote()?.client.phone}`,
       pageWidth - margin - 60,
-      yPosition,
+      yPosition
     );
     yPosition += 5;
     doc.text(
       `Email: ${this.creditNote()?.client.email}`,
       pageWidth - margin - 60,
-      yPosition,
+      yPosition
     );
 
     // Tableau des produits
@@ -932,12 +937,12 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
       `${Math.abs(
         this.creditNote()?.products.reduce(
           (acc, product) => acc + product.quantity * product.price,
-          0,
-        )!,
+          0
+        )!
       ).toFixed(2)} €`,
       pageWidth - margin,
       finalY + 10,
-      { align: 'right' },
+      { align: 'right' }
     );
     doc.text(`TVA 6%:`, pageWidth - margin - 50, finalY + 15, {
       align: 'right',
@@ -949,12 +954,12 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
             product.vat === 0.06
               ? acc + product.quantity * product.price * 0.06
               : acc,
-          0,
-        )!,
+          0
+        )!
       ).toFixed(2)} €`,
       pageWidth - margin,
       finalY + 15,
-      { align: 'right' },
+      { align: 'right' }
     );
     doc.text(`TVA 21%:`, pageWidth - margin - 50, finalY + 20, {
       align: 'right',
@@ -966,12 +971,12 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
             product.vat === 0.21
               ? acc + product.quantity * product.price * 0.21
               : acc,
-          0,
-        )!,
+          0
+        )!
       ).toFixed(2)} €`,
       pageWidth - margin,
       finalY + 20,
-      { align: 'right' },
+      { align: 'right' }
     );
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
@@ -982,7 +987,7 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
       `${Math.abs(this.creditNote()?.creditNoteAmount!).toFixed(2)} €`,
       pageWidth - margin,
       finalY + 30,
-      { align: 'right' },
+      { align: 'right' }
     );
 
     // Conditions et notes
@@ -990,7 +995,9 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
     doc.setFontSize(9);
     const conditions = [
       'Cette note de crédit annule et remplace la facture mentionnée ci-dessus.',
-      `Date d'émission : ${this.formatDateBelgium(this.creditNote()?.invoice_date!)}`,
+      `Date d'émission : ${this.formatDateBelgium(
+        this.creditNote()?.invoice_date!
+      )}`,
       'Nous vous remercions de votre compréhension.',
     ];
     conditions.forEach((condition, index) => {
@@ -1004,7 +1011,7 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
       'Sonar Artists ASBL - TVA BE0123456789',
       pageWidth / 2,
       pageHeight - 10,
-      { align: 'center' },
+      { align: 'center' }
     );
 
     // Sauvegarder le PDF
@@ -1019,7 +1026,7 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
         tap((data) => {
           quote.invoice = data;
           ctx.close();
-        }),
+        })
       )
       .subscribe();
   }
@@ -1081,7 +1088,7 @@ export class FacturationComponent implements AfterViewInit, OnDestroy {
               onClick: () => console.log('Undo'),
             },
           });
-        }),
+        })
       )
       .subscribe();
   }

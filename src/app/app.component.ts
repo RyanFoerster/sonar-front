@@ -5,7 +5,7 @@ import { filter } from 'rxjs/operators';
 import { HeaderComponent } from './header/header.component';
 import { FooterComponent } from './footer/footer.component';
 import { HeaderMobileComponent } from './header-mobile/header-mobile.component';
-
+import { environment } from '../environments/environment';
 @Component({
   selector: 'app-root',
   standalone: true,
@@ -21,7 +21,7 @@ import { HeaderMobileComponent } from './header-mobile/header-mobile.component';
 export class AppComponent {
   title = 'Sonar-front';
   isIndexRoute = false;
-
+  maintenanceMode = environment.MAINTENANCE_MODE;
   constructor(private router: Router) {
     this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))

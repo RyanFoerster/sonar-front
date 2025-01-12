@@ -1,7 +1,14 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable, tap, catchError, throwError } from 'rxjs';
+import {
+  BehaviorSubject,
+  Observable,
+  tap,
+  catchError,
+  throwError,
+  of,
+} from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { UserEntity } from '../entities/user.entity';
 
@@ -11,12 +18,14 @@ import { UserEntity } from '../entities/user.entity';
 export class AuthService {
   private readonly httpClient = inject(HttpClient);
   private readonly router = inject(Router);
+  private readonly LOCAL_VERSION_KEY = 'app_version';
 
   private readonly authState = new BehaviorSubject<boolean>(false);
   private readonly currentUser = new BehaviorSubject<UserEntity | null>(null);
 
   constructor() {
     this.initializeAuth();
+    this.checkAppVersion();
   }
 
   // Méthodes publiques
@@ -66,6 +75,7 @@ export class AuthService {
   }
 
   checkToken(): Observable<boolean> {
+    this.checkAppVersion();
     const token = this.getToken();
     if (!token) {
       return throwError(() => new Error('No token available'));
@@ -151,5 +161,13 @@ export class AuthService {
     localStorage.removeItem(environment.USER_KEY);
     this.currentUser.next(null);
     this.authState.next(false);
+  }
+
+  private checkAppVersion(): void {
+    const localVersion = localStorage.getItem(this.LOCAL_VERSION_KEY);
+    if (localVersion !== environment.APP_VERSION) {
+      this.clearAuth();
+      localStorage.setItem(this.LOCAL_VERSION_KEY, environment.APP_VERSION);
+    }
   }
 }

@@ -265,6 +265,43 @@ export class ProjectAccountComponent implements AfterViewInit {
     this.initializeForms();
   }
 
+  protected downloadInvoice(virement: any): void {
+    if (!virement || !virement.id) return;
+
+    this.services.virementSepa.downloadInvoice(virement.id).subscribe({
+      next: (response) => {
+        if (!response.body) {
+          console.error('Aucun contenu reçu');
+          return;
+        }
+
+        const contentDisposition = response.headers.get('content-disposition');
+        let filename = 'facture.pdf';
+        if (contentDisposition) {
+          const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(
+            contentDisposition
+          );
+          if (matches != null && matches[1]) {
+            filename = matches[1].replace(/['"]/g, '');
+          }
+        }
+
+        const blob = new Blob([response.body], { type: 'application/pdf' });
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(downloadUrl);
+      },
+      error: (error) => {
+        console.error('Erreur lors du téléchargement de la facture:', error);
+      },
+    });
+  }
+
   private initializeForms(): void {
     this.transactionForm = this.services.formBuilder.group({
       communication: ['', [Validators.required]],

@@ -1,12 +1,16 @@
-<div class="container mx-auto p-4 space-y-6">
-  <!-- En-tête -->
-  <div class="flex justify-between items-center">
-    <h1 class="text-2xl font-bold text-gray-800">Validation virements SEPA</h1>
-    <div class="flex gap-2">
-      <hlm-dialog>
+<div class="container mx-auto p-2 sm:p-4 space-y-4 sm:space-y-6">
+  <!-- En-tête avec boutons adaptés -->
+  <div
+    class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
+  >
+    <h1 class="text-xl sm:text-2xl font-bold text-gray-800">
+      Validation virements SEPA
+    </h1>
+    <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+      <hlm-dialog class="w-full sm:w-auto">
         @if (virementsSepaInPending().length > 0) {
         <button
-          class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           hlmBtn
           brnDialogTrigger
           (click)="currentVirementsIndex.set(0)"
@@ -17,16 +21,26 @@
           }}
           en attente
         </button>
+        } @else {
+        <div
+          class="w-full sm:w-auto text-sm text-gray-600 flex items-center justify-center sm:justify-start p-2 bg-gray-50 rounded-lg"
+        >
+          <hlm-icon
+            name="lucideCheckCircle2"
+            class="w-4 h-4 mr-2 text-green-500"
+          />
+          Aucun virement en attente
+        </div>
         }
 
         <hlm-dialog-content
           *brnDialogContent="let ctx"
-          class="fixed inset-0 w-screen h-screen max-w-none m-0 p-0 rounded-none"
+          class="fixed inset-0 w-screen h-screen max-w-none m-0 p-0 rounded-none bg-white overflow-y-auto"
         >
-          <div class="h-full flex flex-col">
+          <div class="min-h-full flex flex-col">
             <!-- Header avec navigation -->
             <div
-              class="p-4 bg-gray-50 border-b flex items-center justify-between"
+              class="sticky top-0 p-4 bg-gray-50 border-b flex items-center justify-between z-10"
             >
               <div class="flex items-center gap-4">
                 <button
@@ -37,8 +51,9 @@
                   (click)="
                     currentVirementsIndex.set(currentVirementsIndex() - 1)
                   "
+                  class="h-8 w-8 flex items-center justify-center"
                 >
-                  <hlm-icon name="lucideChevronLeft" />
+                  <hlm-icon name="lucideChevronLeft" class="h-4 w-4" />
                 </button>
                 <span class="text-sm text-gray-600">
                   Virement {{ currentVirementsIndex() + 1 }} sur
@@ -55,20 +70,34 @@
                   (click)="
                     currentVirementsIndex.set(currentVirementsIndex() + 1)
                   "
+                  class="h-8 w-8 flex items-center justify-center"
                 >
-                  <hlm-icon name="lucideChevronRight" />
+                  <hlm-icon name="lucideChevronRight" class="h-4 w-4" />
                 </button>
               </div>
+              <button
+                hlmBtn
+                variant="ghost"
+                size="icon"
+                (click)="ctx.close()"
+                class="h-8 w-8 flex items-center justify-center"
+              >
+                <hlm-icon name="lucideX" class="h-4 w-4" />
+              </button>
             </div>
 
-            <!-- Contenu principal -->
-            <div class="flex-1 grid grid-cols-2 gap-4 p-4 overflow-auto">
+            <!-- Contenu principal responsive -->
+            <div class="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 p-4">
               <!-- Informations du virement -->
-              <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+              <div
+                class="bg-white rounded-xl shadow-lg overflow-hidden order-2 lg:order-1"
+              >
                 @if (currentVirement()) {
                 <!-- En-tête de la carte -->
                 <div class="p-4 bg-gray-50 border-b border-gray-100">
-                  <div class="flex justify-between items-start">
+                  <div
+                    class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2"
+                  >
                     <div>
                       <p class="text-sm text-gray-600">
                         {{ currentVirement().created_at | date : "dd/MM/yy" }}
@@ -82,41 +111,46 @@
                         [href]="currentVirement().invoice_url"
                         target="_blank"
                         download
-                        class="inline-flex items-center justify-center text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        class="relative h-8 w-8 flex items-center justify-center text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                         hlmBtn
                         [title]="'Télécharger la facture'"
                       >
-                        <hlm-icon name="lucideDownload" size="sm" />
+                        <hlm-icon
+                          name="lucideDownload"
+                          class="h-4 w-4 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+                        />
                       </a>
                     </div>
                   </div>
                 </div>
 
                 <!-- Corps de la carte -->
-                <div class="p-4 space-y-3">
+                <div class="p-4 space-y-4">
                   <!-- Informations bancaires -->
-                  <div>
+                  <div class="bg-gray-50 p-3 rounded-lg">
                     <p class="text-sm font-medium text-gray-500">IBAN</p>
-                    <p class="text-sm text-gray-900">
+                    <p class="text-sm text-gray-900 break-all">
                       {{ currentVirement().iban }}
                     </p>
                   </div>
 
                   <!-- Montants -->
-                  <div class="grid grid-cols-3 gap-4">
-                    <div>
+                  <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    <div class="bg-gray-50 p-3 rounded-lg">
                       <p class="text-sm font-medium text-gray-500">TVAC</p>
                       <p class="text-sm text-gray-900">
                         {{ currentVirement().amount_total! | euroFormat }}
                       </p>
                     </div>
-                    <div>
+                    <div class="bg-gray-50 p-3 rounded-lg">
                       <p class="text-sm font-medium text-gray-500">HTVA</p>
                       <p class="text-sm text-gray-900">
                         {{ currentVirement().amount_htva! | euroFormat }}
                       </p>
                     </div>
-                    <div>
+                    <div
+                      class="bg-gray-50 p-3 rounded-lg col-span-2 sm:col-span-1"
+                    >
                       <p class="text-sm font-medium text-gray-500">TVA</p>
                       <p class="text-sm text-gray-900">
                         {{ currentVirement().amount_tva! | euroFormat }}
@@ -124,39 +158,39 @@
                     </div>
                   </div>
 
-                  <!-- Communications -->
-                  <div>
-                    <p class="text-sm font-medium text-gray-500">
-                      Communication
-                    </p>
-                    <p class="text-sm text-gray-900">
-                      {{ currentVirement().communication || "-" }}
-                    </p>
-                  </div>
-                  <div>
-                    <p class="text-sm font-medium text-gray-500">
-                      Communication structurée
-                    </p>
-                    <p class="text-sm text-gray-900">
-                      {{ currentVirement().structured_communication || "-" }}
-                    </p>
-                  </div>
-
-                  <!-- Projet -->
-                  <div>
-                    <p class="text-sm font-medium text-gray-500">Projet</p>
-                    <p class="text-sm text-gray-900">
-                      {{ currentVirement().projet_username }}
-                    </p>
+                  <!-- Communications et Projet -->
+                  <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-gray-50 p-3 rounded-lg">
+                      <p class="text-sm font-medium text-gray-500">
+                        Communication
+                      </p>
+                      <p class="text-sm text-gray-900 break-all">
+                        {{ currentVirement().communication || "-" }}
+                      </p>
+                    </div>
+                    <div class="bg-gray-50 p-3 rounded-lg">
+                      <p class="text-sm font-medium text-gray-500">
+                        Communication structurée
+                      </p>
+                      <p class="text-sm text-gray-900">
+                        {{ currentVirement().structured_communication || "-" }}
+                      </p>
+                    </div>
+                    <div class="bg-gray-50 p-3 rounded-lg col-span-2">
+                      <p class="text-sm font-medium text-gray-500">Projet</p>
+                      <p class="text-sm text-gray-900">
+                        {{ currentVirement().projet_username }}
+                      </p>
+                    </div>
                   </div>
                 </div>
 
                 <!-- Actions -->
                 <div class="p-4 bg-gray-50 border-t border-gray-100">
-                  <div class="flex justify-end gap-2">
-                    <hlm-dialog>
+                  <div class="flex flex-col sm:flex-row justify-end gap-2">
+                    <hlm-dialog class="w-full sm:w-auto">
                       <button
-                        class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                        class="w-full sm:w-auto inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                         hlmBtn
                         brnDialogTrigger
                       >
@@ -194,10 +228,12 @@
                           ></textarea>
                         </div>
 
-                        <hlm-dialog-footer class="mt-6 flex justify-end gap-3">
+                        <hlm-dialog-footer
+                          class="mt-6 flex flex-col sm:flex-row justify-end gap-3"
+                        >
                           <button
                             type="button"
-                            class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                            class="w-full sm:w-auto inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                             hlmBtn
                             (click)="rejectedReason.set(''); rejectCtx.close()"
                           >
@@ -205,7 +241,7 @@
                           </button>
                           <button
                             type="button"
-                            class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                            class="w-full sm:w-auto inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                             hlmBtn
                             (click)="
                               handleRejectVirement(
@@ -223,7 +259,7 @@
                     </hlm-dialog>
                     <button
                       (click)="handleAcceptVirement(currentVirement()!.id, ctx)"
-                      class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                      class="w-full sm:w-auto inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                       hlmBtn
                     >
                       <hlm-icon
@@ -239,7 +275,9 @@
               </div>
 
               <!-- PDF Viewer -->
-              <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+              <div
+                class="bg-white rounded-xl shadow-lg overflow-hidden h-[500px] lg:h-auto order-1 lg:order-2"
+              >
                 @if (currentVirement()) {
                 <app-pdf-viewer
                   [pdfUrl]="currentVirement().invoice_url!"
@@ -251,8 +289,9 @@
         </hlm-dialog-content>
       </hlm-dialog>
       <button
-        class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+        class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
         hlmBtn
+        (click)="initiateSepaTransfers()"
       >
         Initier le virement SEPA
       </button>
@@ -263,12 +302,23 @@
   <div class="space-y-4">
     <h2 class="text-xl font-semibold text-gray-700">Virements validés</h2>
 
-    <div class="grid gap-4 grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3">
+    @if (virementsSepaAccepted().length === 0) {
+    <div class="bg-gray-50 rounded-xl p-8 text-center">
+      <hlm-icon
+        name="lucideInbox"
+        class="w-12 h-12 mx-auto text-gray-400 mb-3"
+      />
+      <p class="text-gray-600">Aucun virement validé pour le moment</p>
+    </div>
+    } @else {
+    <div class="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
       @for (virement of virementsSepaAccepted(); track virement.id) {
       <div class="bg-white rounded-xl shadow-lg overflow-hidden">
         <!-- En-tête de la carte -->
         <div class="p-4 bg-gray-50 border-b border-gray-100">
-          <div class="flex justify-between items-start">
+          <div
+            class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2"
+          >
             <div>
               <p class="text-sm text-gray-600">
                 {{ virement.created_at | date : "dd/MM/yy" }}
@@ -277,24 +327,30 @@
                 {{ virement.account_owner }}
               </p>
             </div>
-            <div class="flex gap-1">
+            <div class="flex gap-2">
               <button
                 (click)="paidVirement(virement.id)"
-                class="inline-flex items-center justify-center text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                class="relative h-8 w-8 flex items-center justify-center text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                 hlmBtn
                 [title]="'Marquer comme payé'"
               >
-                <hlm-icon name="lucideCheckCircle2" class="w-4 h-4" size="sm" />
+                <hlm-icon
+                  name="lucideCheckCircle2"
+                  class="h-4 w-4 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+                />
               </button>
               <a
                 [href]="virement.invoice_url"
                 target="_blank"
                 download
-                class="inline-flex items-center justify-center text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                class="relative h-8 w-8 flex items-center justify-center text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 hlmBtn
                 [title]="'Télécharger la facture'"
               >
-                <hlm-icon name="lucideDownload" class="w-4 h-4" size="sm" />
+                <hlm-icon
+                  name="lucideDownload"
+                  class="h-4 w-4 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+                />
               </a>
             </div>
           </div>
@@ -303,18 +359,18 @@
         <!-- Corps de la carte des virements validés -->
         <div class="p-4 space-y-4">
           <!-- Informations bancaires -->
-          <div class="border-b border-gray-100 pb-3">
+          <div class="bg-gray-50 p-3 rounded-lg">
             <dt
               class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1"
             >
               IBAN
             </dt>
-            <dd class="text-sm text-gray-900">{{ virement.iban }}</dd>
+            <dd class="text-sm text-gray-900 break-all">{{ virement.iban }}</dd>
           </div>
 
           <!-- Montants -->
-          <div class="grid grid-cols-3 gap-6">
-            <div class="border-b border-gray-100 pb-3">
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            <div class="bg-gray-50 p-3 rounded-lg">
               <dt
                 class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1"
               >
@@ -324,7 +380,7 @@
                 {{ virement.amount_total | euroFormat }}
               </dd>
             </div>
-            <div class="border-b border-gray-100 pb-3">
+            <div class="bg-gray-50 p-3 rounded-lg">
               <dt
                 class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1"
               >
@@ -334,7 +390,7 @@
                 {{ virement.amount_htva | euroFormat }}
               </dd>
             </div>
-            <div class="border-b border-gray-100 pb-3">
+            <div class="bg-gray-50 p-3 rounded-lg col-span-2 sm:col-span-1">
               <dt
                 class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1"
               >
@@ -346,42 +402,43 @@
             </div>
           </div>
 
-          <!-- Communications -->
-          <div class="border-b border-gray-100 pb-3">
-            <dt
-              class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1"
-            >
-              Communication
-            </dt>
-            <dd class="text-sm text-gray-900">
-              {{ virement.communication || "-" }}
-            </dd>
-          </div>
-          <div class="border-b border-gray-100 pb-3">
-            <dt
-              class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1"
-            >
-              Communication structurée
-            </dt>
-            <dd class="text-sm text-gray-900">
-              {{ virement.structured_communication || "-" }}
-            </dd>
-          </div>
-
-          <!-- Projet -->
-          <div>
-            <dt
-              class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1"
-            >
-              Projet
-            </dt>
-            <dd class="text-sm text-gray-900">
-              {{ virement.projet_username }}
-            </dd>
+          <!-- Communications et Projet -->
+          <div class="grid grid-cols-2 gap-4">
+            <div class="bg-gray-50 p-3 rounded-lg">
+              <dt
+                class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1"
+              >
+                Communication
+              </dt>
+              <dd class="text-sm text-gray-900 break-all">
+                {{ virement.communication || "-" }}
+              </dd>
+            </div>
+            <div class="bg-gray-50 p-3 rounded-lg">
+              <dt
+                class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1"
+              >
+                Communication structurée
+              </dt>
+              <dd class="text-sm text-gray-900">
+                {{ virement.structured_communication || "-" }}
+              </dd>
+            </div>
+            <div class="bg-gray-50 p-3 rounded-lg col-span-2">
+              <dt
+                class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1"
+              >
+                Projet
+              </dt>
+              <dd class="text-sm text-gray-900">
+                {{ virement.projet_username }}
+              </dd>
+            </div>
           </div>
         </div>
       </div>
       }
     </div>
+    }
   </div>
 </div>

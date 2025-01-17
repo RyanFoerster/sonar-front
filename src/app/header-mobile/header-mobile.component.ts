@@ -1,7 +1,7 @@
 import { NgClass } from '@angular/common';
 import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { lucideAlignJustify, lucideX } from '@ng-icons/lucide';
+import { lucideAlignJustify, lucideX, lucideDownload } from '@ng-icons/lucide';
 import { HlmButtonDirective } from '@spartan-ng/ui-button-helm';
 import { HlmIconComponent, provideIcons } from '@spartan-ng/ui-icon-helm';
 import { BrnMenuTriggerDirective } from '@spartan-ng/ui-menu-brain';
@@ -25,6 +25,7 @@ import {
 import { Subscription } from 'rxjs';
 import { UserEntity } from '../shared/entities/user.entity';
 import { AuthService } from '../shared/services/auth.service';
+import { PwaService } from '../shared/services/pwa.service';
 
 @Component({
   selector: 'app-header-mobile',
@@ -52,16 +53,18 @@ import { AuthService } from '../shared/services/auth.service';
   ],
   templateUrl: './header-mobile.component.html',
   styleUrl: './header-mobile.component.css',
-  providers: [provideIcons({ lucideAlignJustify, lucideX })],
+  providers: [provideIcons({ lucideAlignJustify, lucideX, lucideDownload })],
 })
 export class HeaderMobileComponent implements OnInit, OnDestroy {
   private authService: AuthService = inject(AuthService);
+  private pwaService: PwaService = inject(PwaService);
   protected router: Router = inject(Router);
   private subscriptions: Subscription[] = [];
 
   isToggleMenu = signal(false);
   isUserConnected = signal(false);
   connectedUser = signal<UserEntity | null>(null);
+  deferredPrompt = signal<any>(null);
 
   ngOnInit() {
     // Initialiser l'état au démarrage
@@ -84,6 +87,12 @@ export class HeaderMobileComponent implements OnInit, OnDestroy {
         this.connectedUser.set(user);
       })
     );
+
+    // Écouter l'événement beforeinstallprompt pour la PWA
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      this.deferredPrompt.set(e);
+    });
   }
 
   ngOnDestroy() {
@@ -100,5 +109,20 @@ export class HeaderMobileComponent implements OnInit, OnDestroy {
   logout() {
     this.authService.logout();
     this.toggleMenu();
+  }
+
+  async installPwa() {
+    const deferredPrompt = this.deferredPrompt();
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        this.deferredPrompt.set(null);
+      }
+    }
+  }
+
+  isPwaInstallable() {
+    return this.deferredPrompt() !== null && !this.pwaService.isInstalled();
   }
 }

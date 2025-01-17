@@ -52,6 +52,7 @@ import { AuthService } from '../shared/services/auth.service';
 import { InvitationService } from '../shared/services/invitation.service';
 import { UsersService } from '../shared/services/users.service';
 import { NotificationsComponent } from '../shared/components/notifications/notifications.component';
+import { PwaService } from '../shared/services/pwa.service';
 
 @Component({
   selector: 'app-header',
@@ -102,6 +103,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   private invitationService: InvitationService = inject(InvitationService);
   private readonly platformId = inject(PLATFORM_ID);
   protected router: Router = inject(Router);
+  protected pwaService = inject(PwaService);
 
   isUserConnected = signal(false);
   connectedUser = signal<UserEntity | null>(null);
@@ -191,5 +193,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
         ctx.close();
       },
     });
+  }
+
+  installPwa() {
+    this.pwaService.installPwa();
   }
 }

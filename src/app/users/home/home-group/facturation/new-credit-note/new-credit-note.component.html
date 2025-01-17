@@ -1,0 +1,521 @@
+<div class="container max-w-7xl mx-auto px-4 md:px-6">
+  <button
+    type="button"
+    (click)="goBack()"
+    class="mb-4 md:mb-6 text-white hover:text-black border hover:border-black rounded-full flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 hover:bg-white transition-all"
+    hlmBtn
+  >
+    <hlm-icon size="sm" name="lucideCornerDownLeft" />
+    <span class="font-medium">Retour</span>
+  </button>
+
+  <div class="bg-gray-50 rounded-2xl p-4 md:p-8 space-y-6 md:space-y-8">
+    @if (!isToggleClientForm()) {
+    <div
+      class="flex justify-between items-center border-b border-gray-200 pb-4 md:pb-6"
+    >
+      <h1 class="text-xl md:text-3xl font-bold text-gray-900">
+        Nouvelle note de crédit
+      </h1>
+    </div>
+
+    <form
+      [formGroup]="createCreditNoteForm"
+      class="space-y-6 md:space-y-8"
+      (ngSubmit)="createCreditNote()"
+    >
+      <!-- Dates Section -->
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="space-y-2">
+          <label class="font-medium text-gray-900 text-sm" hlmLabel>
+            Date de la note de crédit
+            <input
+              formControlName="credit_note_date"
+              class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+              hlmInput
+              type="date"
+              [min]="notPastDate()"
+              [value]="currentDate | date : 'yyyy-MM-dd'"
+            />
+            @if (createCreditNoteForm.get('credit_note_date')?.invalid &&
+            createCreditNoteForm.get('credit_note_date')?.touched) {
+            <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
+              <hlm-icon size="xs" name="lucideAlertCircle" />
+              La date est requise
+            </span>
+            }
+          </label>
+        </div>
+
+        <div class="space-y-2">
+          <label class="font-medium text-gray-900 text-sm" hlmLabel>
+            Date de prestation
+            <input
+              formControlName="service_date"
+              class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+              hlmInput
+              type="date"
+            />
+            @if (createCreditNoteForm.get('service_date')?.invalid &&
+            createCreditNoteForm.get('service_date')?.touched) {
+            <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
+              <hlm-icon size="xs" name="lucideAlertCircle" />
+              La date de prestation est requise
+            </span>
+            }
+          </label>
+        </div>
+      </div>
+
+      <!-- Client Section -->
+      <div class="space-y-4">
+        <div
+          class="flex flex-col md:flex-row md:justify-between md:items-center gap-4"
+        >
+          <h2 class="text-lg font-semibold text-gray-900">Client</h2>
+          <div
+            class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto"
+          >
+            @if (!client()) {
+            <div class="relative w-full sm:w-[400px] client-select">
+              <button
+                type="button"
+                (click)="toggleClientSelect()"
+                class="w-full bg-white text-gray-700 font-medium text-sm rounded-lg px-4 py-2.5 flex items-center justify-between gap-2 shadow-sm hover:bg-gray-50 border border-gray-200 transition-all"
+              >
+                <div class="flex items-center gap-2">
+                  <hlm-icon
+                    size="sm"
+                    name="lucideUsers"
+                    class="text-gray-400"
+                  />
+                  <span>{{
+                    selectedClient()
+                      ? selectedClient()?.name
+                      : "Sélectionner un client"
+                  }}</span>
+                </div>
+                <hlm-icon
+                  size="sm"
+                  [name]="
+                    isClientSelectOpen()
+                      ? 'lucideChevronUp'
+                      : 'lucideChevronDown'
+                  "
+                  class="text-gray-400"
+                />
+              </button>
+
+              @if (isClientSelectOpen()) {
+              <div
+                class="absolute z-50 w-full mt-1 bg-white rounded-lg shadow-lg border border-gray-200 max-h-[400px] overflow-hidden"
+              >
+                <div class="p-2 border-b border-gray-100">
+                  <div class="relative">
+                    <hlm-icon
+                      name="lucideSearch"
+                      class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none z-10"
+                      size="sm"
+                    />
+                    <input
+                      type="text"
+                      [formControl]="searchControl"
+                      placeholder="Rechercher par nom, email ou n° TVA..."
+                      class="w-full pl-10 pr-4 py-2 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                    />
+                  </div>
+                </div>
+
+                <div class="overflow-y-auto max-h-[300px]">
+                  @if (filteredClients().length === 0) {
+                  <div class="p-4 text-sm text-gray-500 text-center">
+                    Aucun client trouvé
+                  </div>
+                  } @else { @for (client of filteredClients(); track client.id)
+                  {
+                  <button
+                    type="button"
+                    (click)="selectClient(client)"
+                    class="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0"
+                    [ngClass]="{
+                      'bg-primary/5': selectedClient()?.id === client.id
+                    }"
+                  >
+                    <div class="flex items-start gap-3">
+                      <div
+                        class="shrink-0 w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center"
+                      >
+                        {{ client.name.charAt(0).toUpperCase() }}
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between gap-2">
+                          <p class="font-medium text-gray-900 truncate">
+                            {{ client.name }}
+                          </p>
+                          @if (client.company_vat_number) {
+                          <span class="text-xs text-gray-500">
+                            TVA: {{ client.company_vat_number }}
+                          </span>
+                          }
+                        </div>
+                        <div
+                          class="mt-0.5 flex items-center gap-2 text-sm text-gray-500"
+                        >
+                          <span class="truncate">{{ client.email }}</span>
+                          <span class="w-1 h-1 rounded-full bg-gray-300"></span>
+                          <span class="truncate">{{ client.city }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                  } }
+                </div>
+              </div>
+              }
+            </div>
+
+            <button
+              type="button"
+              (click)="toggleClientForm()"
+              class="bg-primary text-white font-medium text-sm rounded-lg px-4 py-2.5 flex items-center justify-center gap-2 hover:bg-primary/90 transition-all w-full sm:w-auto"
+              hlmBtn
+            >
+              <hlm-icon size="sm" name="lucidePlusCircle" />
+              Nouveau client
+            </button>
+            } @else {
+            <button
+              type="button"
+              (click)="setClient(null)"
+              class="bg-gray-100 text-gray-700 font-medium text-sm rounded-lg px-4 py-2.5 flex items-center justify-center gap-2 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all border border-gray-200 w-full sm:w-auto"
+              hlmBtn
+            >
+              <hlm-icon size="sm" name="lucideX" />
+              Désélectionner le client
+            </button>
+            }
+          </div>
+        </div>
+
+        @if (client()) {
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <div class="flex justify-between items-start">
+            <div class="space-y-1">
+              <h3 class="font-semibold text-gray-900">{{ client()?.name }}</h3>
+              <p class="text-sm text-gray-600">
+                {{ client()?.street }} {{ client()?.number }}
+              </p>
+              <p class="text-sm text-gray-600">
+                {{ client()?.city }} {{ client()?.postalCode }}
+                {{ client()?.country }}
+              </p>
+              @if (client()?.company_number) {
+              <p class="text-sm text-gray-600">
+                TVA: {{ client()?.company_vat_number }}
+              </p>
+              } @else if (client()?.national_number) {
+              <p class="text-sm text-gray-600">
+                N° national: {{ client()?.national_number }}
+              </p>
+              }
+            </div>
+          </div>
+        </div>
+        } @else {
+        <div
+          class="bg-amber-50 text-amber-600 p-4 rounded-lg text-sm flex items-center gap-2"
+        >
+          <hlm-icon size="sm" name="lucideAlertTriangle" />
+          Veuillez sélectionner ou créer un client
+        </div>
+        }
+      </div>
+
+      <!-- Services Section -->
+      <div class="space-y-4">
+        <div class="flex justify-between items-center">
+          <h2 class="text-lg font-semibold text-gray-900">Services</h2>
+          @if (!isToggleProductForm()) {
+          <button
+            type="button"
+            (click)="toggleProductForm()"
+            [disabled]="!client()"
+            class="bg-primary text-white font-medium text-sm rounded-lg px-4 py-2 flex items-center gap-2 hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            hlmBtn
+          >
+            <hlm-icon size="sm" name="lucidePlusCircle" />
+            Nouveau service
+          </button>
+          }
+        </div>
+
+        @if (!client() && !isToggleProductForm()) {
+        <div
+          class="bg-amber-50 text-amber-600 p-4 rounded-lg text-sm flex items-center gap-2"
+        >
+          <hlm-icon size="sm" name="lucideAlertTriangle" />
+          Veuillez sélectionner un client avant d'ajouter des services
+        </div>
+        } @if (isToggleProductForm()) {
+        <div
+          class="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-gray-100"
+        >
+          <form
+            [formGroup]="createProductForm"
+            (ngSubmit)="createProduct()"
+            class="space-y-4 md:space-y-6"
+          >
+            <div
+              class="flex justify-between items-center border-b border-gray-200 pb-4 md:pb-6"
+            >
+              <h3 class="font-semibold text-gray-900">Nouveau service</h3>
+              <button
+                type="button"
+                (click)="toggleProductForm()"
+                class="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-all"
+              >
+                <hlm-icon size="sm" name="lucideXCircle" />
+              </button>
+            </div>
+
+            <div class="space-y-4">
+              <label class="block" hlmLabel>
+                <span class="text-sm font-medium text-gray-900"
+                  >Description*</span
+                >
+                <input
+                  formControlName="description"
+                  hlmInput
+                  placeholder="Description du service"
+                  class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+                />
+              </label>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <label class="block" hlmLabel>
+                  <span class="text-sm font-medium text-gray-900">Prix*</span>
+                  <input
+                    formControlName="price"
+                    type="number"
+                    hlmInput
+                    placeholder="0.00"
+                    class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+                  />
+                </label>
+
+                <label class="block" hlmLabel>
+                  <span class="text-sm font-medium text-gray-900"
+                    >Quantité*</span
+                  >
+                  <input
+                    formControlName="quantity"
+                    type="number"
+                    hlmInput
+                    placeholder="1"
+                    class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+                  />
+                </label>
+              </div>
+
+              <label class="flex items-center gap-2 cursor-pointer group">
+                <hlm-checkbox
+                  (checkedChange)="toggleArtisticPerformance()"
+                  formControlName="vat"
+                  class="rounded-md group-hover:border-primary transition-colors"
+                />
+                <span
+                  class="text-sm text-gray-700 group-hover:text-gray-900 transition-colors"
+                >
+                  TVA 6% (Prestation artistique)
+                </span>
+              </label>
+            </div>
+
+            <div
+              class="flex justify-end gap-3 pt-4 md:pt-6 border-t border-gray-200"
+            >
+              <button
+                type="button"
+                (click)="toggleProductForm()"
+                class="bg-gray-100 text-gray-700 font-medium text-sm rounded-lg px-3 py-1.5 md:px-4 md:py-2 hover:bg-gray-200 transition-all"
+                hlmBtn
+              >
+                Annuler
+              </button>
+              <button
+                class="bg-primary text-white font-medium text-sm rounded-lg px-3 py-1.5 md:px-4 md:py-2 flex items-center gap-2 hover:bg-primary/90 transition-all"
+                hlmBtn
+                type="submit"
+              >
+                <hlm-icon size="sm" name="lucideCheck" />
+                Ajouter le service
+              </button>
+            </div>
+          </form>
+        </div>
+        } @if (products().length > 0) {
+        <div class="space-y-4">
+          <div
+            class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto"
+          >
+            <table hlmTable class="w-full min-w-[800px]">
+              <thead>
+                <tr hlmTr class="border-b border-gray-200 bg-gray-50">
+                  <th
+                    hlmTh
+                    class="text-left font-medium text-gray-600 py-4 px-4 md:px-6"
+                  >
+                    Description
+                  </th>
+                  <th
+                    hlmTh
+                    class="text-right font-medium text-gray-600 py-4 px-4 md:px-6"
+                  >
+                    Prix unitaire HTVA
+                  </th>
+                  <th
+                    hlmTh
+                    class="text-right font-medium text-gray-600 py-4 px-4 md:px-6"
+                  >
+                    Quantité
+                  </th>
+                  <th
+                    hlmTh
+                    class="text-right font-medium text-gray-600 py-4 px-4 md:px-6"
+                  >
+                    Prix total HTVA
+                  </th>
+                  <th
+                    hlmTh
+                    class="text-right font-medium text-gray-600 py-4 px-4 md:px-6"
+                  >
+                    TVA
+                  </th>
+                  <th
+                    hlmTh
+                    class="text-right font-medium text-gray-600 py-4 px-4 md:px-6"
+                  >
+                    Total
+                  </th>
+                  <th hlmTh class="w-[100px] py-4 px-4 md:px-6"></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (product of products(); track $index) {
+                <tr
+                  hlmTr
+                  class="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                >
+                  <td hlmTd class="text-sm text-gray-900 py-4 px-4 md:px-6">
+                    {{ product.description }}
+                  </td>
+                  <td
+                    hlmTd
+                    class="text-right text-sm text-gray-900 py-4 px-4 md:px-6"
+                  >
+                    {{
+                      (product.price_htva! / product.quantity!) * -1
+                        | euroFormat
+                    }}
+                  </td>
+                  <td
+                    hlmTd
+                    class="text-right text-sm text-gray-900 py-4 px-4 md:px-6"
+                  >
+                    {{ product.quantity }}
+                  </td>
+                  <td
+                    hlmTd
+                    class="text-right text-sm text-gray-900 py-4 px-4 md:px-6"
+                  >
+                    {{ product.price_htva! * -1 | euroFormat }}
+                  </td>
+                  <td
+                    hlmTd
+                    class="text-right text-sm text-gray-900 py-4 px-4 md:px-6"
+                  >
+                    {{ product.vat * 100 }}%
+                  </td>
+                  <td
+                    hlmTd
+                    class="text-right text-sm text-gray-900 py-4 px-4 md:px-6 font-medium"
+                  >
+                    {{ product.total! * -1 | euroFormat }}
+                  </td>
+                  <td hlmTd class="py-4 px-4 md:px-6">
+                    <div class="flex justify-end gap-2">
+                      <button
+                        type="button"
+                        (click)="deleteProduct($index)"
+                        class="text-gray-400 hover:text-red-600 p-1 rounded-full hover:bg-red-50 transition-all"
+                      >
+                        <hlm-icon size="sm" name="lucideTrash" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+        } @else {
+        <div class="bg-gray-100 rounded-xl p-8 text-center">
+          <p class="text-gray-500 text-sm">
+            Aucun service ajouté pour le moment
+          </p>
+        </div>
+        }
+      </div>
+
+      <!-- Totals Section -->
+      <div class="border-t border-gray-200 pt-4 md:pt-6">
+        <div class="flex justify-end">
+          <div class="w-full md:w-72 space-y-3 md:space-y-4">
+            <div class="space-y-2 text-sm">
+              <div class="flex justify-between py-1.5 md:py-2">
+                <span class="text-gray-600">Total HTVA</span>
+                <span class="font-medium text-gray-900">{{
+                  totalHtva() * -1 | euroFormat
+                }}</span>
+              </div>
+              <div class="flex justify-between py-1.5 md:py-2">
+                <span class="text-gray-600">TVA 21%</span>
+                <span class="font-medium text-gray-900">{{
+                  tva21() * -1 | euroFormat
+                }}</span>
+              </div>
+              <div class="flex justify-between py-1.5 md:py-2">
+                <span class="text-gray-600">TVA 6%</span>
+                <span class="font-medium text-gray-900">{{
+                  tva6() * -1 | euroFormat
+                }}</span>
+              </div>
+              <div
+                class="flex justify-between py-1.5 md:py-2 border-t border-gray-200"
+              >
+                <span class="font-medium text-gray-900">Total TTC</span>
+                <span class="font-semibold text-gray-900">{{
+                  total() * -1 | euroFormat
+                }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Submit Button -->
+      <div class="flex justify-end pt-4 md:pt-6">
+        <button
+          class="bg-primary text-white font-medium text-sm rounded-lg px-4 py-2 md:px-6 md:py-2.5 flex items-center gap-2 hover:bg-primary/90 transition-all w-full md:w-auto"
+          hlmBtn
+          type="submit"
+        >
+          <hlm-icon size="sm" name="lucideFileDown" />
+          Générer la note de crédit
+        </button>
+      </div>
+    </form>
+    }
+  </div>
+</div>

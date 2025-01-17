@@ -68,16 +68,17 @@ export class AllInvoicesComponent implements AfterViewInit {
         take(1),
         tap((user) => {
           this.connectedUser.set(user);
-        }),
+        })
       )
       .subscribe();
     this.invoiceService
       .getAll()
       .pipe(
-        tap((invoices) => {
+        take(1),
+        tap((invoices: InvoiceEntity[]) => {
           this.allInvoices.set(invoices);
           this.filteredInvoices.set(invoices);
-        }),
+        })
       )
       .subscribe();
   }
@@ -90,13 +91,13 @@ export class AllInvoicesComponent implements AfterViewInit {
       | 'draft'
       | 'canceled'
       | 'sended'
-      | 'all',
+      | 'all'
   ) {
     if (status === 'all') {
       this.filteredInvoices.set(this.allInvoices());
     } else {
       this.filteredInvoices.set(
-        this.allInvoices().filter((invoice) => invoice.status === status),
+        this.allInvoices().filter((invoice) => invoice.status === status)
       );
     }
   }
@@ -109,8 +110,8 @@ export class AllInvoicesComponent implements AfterViewInit {
         (invoice) =>
           invoice.client.name.toLowerCase().includes(value.toLowerCase()) ||
           invoice.client.company_number?.toString().includes(value) ||
-          invoice.id.toString().includes(value),
-      ),
+          invoice.id.toString().includes(value)
+      )
     );
   }
 }

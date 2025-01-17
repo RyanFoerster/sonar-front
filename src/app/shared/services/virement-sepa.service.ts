@@ -69,4 +69,22 @@ export class VirementSepaService {
       {}
     );
   }
+
+  downloadInvoice(id: number) {
+    return this.httpClient.get(
+      `${environment.API_URL}/virement-sepa/${id}/invoice`,
+      {
+        responseType: 'blob',
+        observe: 'response',
+      }
+    );
+  }
+
+  initiateTransfers() {
+    return this.httpClient.post<{
+      success: boolean;
+      message: string;
+      processedTransfers: number;
+    }>(`${environment.API_URL}/virement-sepa/initiate-transfers`, {});
+  }
 }

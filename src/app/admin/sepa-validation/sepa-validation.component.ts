@@ -196,4 +196,32 @@ export class SepaValidationComponent implements AfterViewInit {
       ctx.close();
     }
   }
+
+  protected initiateSepaTransfers() {
+    this.virementSepaService.initiateTransfers().subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.virementsSepaAccepted.update((virements) => {
+            return virements.filter(
+              (virement) => virement.status !== 'ACCEPTED'
+            );
+          });
+
+          alert(
+            `${response.processedTransfers} virements SEPA ont été initiés avec succès.`
+          );
+        } else {
+          alert(
+            "Une erreur est survenue lors de l'initiation des virements SEPA."
+          );
+        }
+      },
+      error: (error) => {
+        console.error("Erreur lors de l'initiation des virements SEPA:", error);
+        alert(
+          "Une erreur est survenue lors de l'initiation des virements SEPA."
+        );
+      },
+    });
+  }
 }

@@ -1,12 +1,28 @@
 header {
-    display: flex;
-    align-items: center;
-    padding: 10px;
-    background-color: #f8f9fa;
-    border-bottom: 1px solid #dee2e6;
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+}
+
+header img {
+  height: 50px;
+  margin-right: 20px;
+}
+
+@keyframes border-gradient {
+  0% {
+    background-position: 0% 50%;
   }
-  
-  header img {
-    height: 50px;
-    margin-right: 20px;
+  50% {
+    background-position: 100% 50%;
   }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-border-gradient {
+  animation: border-gradient 3s ease infinite;
+}

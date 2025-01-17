@@ -26,10 +26,10 @@ export default [
     canActivate: [authGuard, adminGuard],
   },
   {
-    path: ':id/facturation/credit-note',
+    path: ':id/facturation/new-credit-note',
     loadComponent: () =>
-      import('./facturation/credit-note/credit-note.component').then(
-        (m) => m.CreditNoteComponent
+      import('./facturation/new-credit-note/new-credit-note.component').then(
+        (m) => m.NewCreditNoteComponent
       ),
     canActivate: [authGuard, adminGuard],
   },

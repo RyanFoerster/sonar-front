@@ -13,9 +13,11 @@ import {
   FormsModule,
   ReactiveFormsModule,
   Validators,
+  FormControl,
 } from '@angular/forms';
 import { provideIcons } from '@ng-icons/core';
 import {
+  lucideAlertCircle,
   lucideAlertTriangle,
   lucideCheck,
   lucideChevronsUpDown,
@@ -27,7 +29,11 @@ import {
   lucideSearch,
   lucideTrash,
   lucideUndo2,
+  lucideUsers,
+  lucideX,
   lucideXCircle,
+  lucideChevronUp,
+  lucideChevronDown,
 } from '@ng-icons/lucide';
 import {
   HlmAlertDescriptionDirective,
@@ -86,7 +92,7 @@ import {
   HlmThComponent,
   HlmTrowComponent,
 } from '@spartan-ng/ui-table-helm';
-import { take, tap } from 'rxjs';
+import { take, tap, catchError, throwError } from 'rxjs';
 import { ClientDto } from '../../../../../shared/dtos/client.dto';
 import { QuoteDto } from '../../../../../shared/dtos/quote.dto';
 import { ClientEntity } from '../../../../../shared/entities/client.entity';
@@ -99,6 +105,7 @@ import { ClientService } from '../../../../../shared/services/client.service';
 import { ProductService } from '../../../../../shared/services/product.service';
 import { QuoteService } from '../../../../../shared/services/quote.service';
 import { UsersService } from '../../../../../shared/services/users.service';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 @Component({
   selector: 'app-new-quote',
   standalone: true,
@@ -181,6 +188,11 @@ import { UsersService } from '../../../../../shared/services/users.service';
       lucideCornerDownLeft,
       lucideSearch,
       lucideChevronsUpDown,
+      lucideAlertCircle,
+      lucideUsers,
+      lucideX,
+      lucideChevronUp,
+      lucideChevronDown,
     }),
     DatePipe,
   ],
@@ -267,22 +279,39 @@ export class NewQuoteComponent implements AfterViewInit {
   protected createClientForm!: FormGroup;
   protected createProductForm!: FormGroup;
   protected editProductForm!: FormGroup;
+  protected searchForm!: FormGroup;
 
-  goBack() {
-    this.location.back();
-  }
+  protected isClientSelectOpen = signal(false);
+  protected selectedClient = signal<ClientEntity | null>(null);
+  protected filteredClients = signal<ClientEntity[]>([]);
+  protected searchControl = new FormControl('');
 
   constructor() {
+    this.searchControl.valueChanges
+      .pipe(debounceTime(300), distinctUntilChanged())
+      .subscribe((value) => {
+        this.filterClients(value || '');
+      });
+
     this.createQuoteForm = this.formBuilder.group({
-      quote_date: [this.formatDate(new Date()), [Validators.required]],
-      service_date: [this.formatDate(new Date()), [Validators.required]],
-      payment_deadline: ['', [Validators.required]],
-      validation_deadline: [this.formatDate(new Date()), [Validators.required]],
-      comment: ['', [Validators.required]],
+      quote_date: ['', Validators.required],
+      service_date: ['', Validators.required],
+      payment_deadline: [
+        10,
+        [Validators.required, Validators.min(10), Validators.max(30)],
+      ],
+      validation_deadline: ['', Validators.required],
+      client_id: ['', Validators.required],
+      products: [[]],
+      vat_included: [false],
+      type_of_project: [''],
+      comment: [''],
     });
 
     this.createClientForm = this.formBuilder.group({
       name: ['', [Validators.required]],
+      firstname: [''],
+      lastname: [''],
       email: ['', [Validators.required, Validators.email]],
       phone: ['', [Validators.required]],
       street: ['', [Validators.required]],
@@ -293,6 +322,7 @@ export class NewQuoteComponent implements AfterViewInit {
       company_number: [null],
       company_vat_number: [null],
       national_number: [null],
+      is_physical_person: [false],
     });
 
     this.createProductForm = this.formBuilder.group({
@@ -320,10 +350,14 @@ export class NewQuoteComponent implements AfterViewInit {
           take(1),
           tap((data) => {
             this.clients.set(data);
+            this.filteredClients.set(data);
           })
         )
         .subscribe();
+    } else if (this.connectedUser()?.clients) {
+      this.filteredClients.set(this.connectedUser()?.clients || []);
     }
+
     if (this.updatedQuoteId()) {
       this.quoteService
         .getQuote(this.updatedQuoteId()!)
@@ -432,6 +466,38 @@ export class NewQuoteComponent implements AfterViewInit {
 
   togglePhysicalPerson() {
     this.isPhysicalPerson.set(!this.isPhysicalPerson());
+
+    if (this.isPhysicalPerson()) {
+      this.createClientForm.get('name')?.clearValidators();
+      this.createClientForm
+        .get('firstname')
+        ?.setValidators([Validators.required]);
+      this.createClientForm
+        .get('lastname')
+        ?.setValidators([Validators.required]);
+      this.createClientForm.get('company_number')?.clearValidators();
+      this.createClientForm.get('company_vat_number')?.clearValidators();
+      this.createClientForm.patchValue({
+        name: '',
+        company_number: null,
+        company_vat_number: null,
+      });
+    } else {
+      this.createClientForm.get('name')?.setValidators([Validators.required]);
+      this.createClientForm.get('firstname')?.clearValidators();
+      this.createClientForm.get('lastname')?.clearValidators();
+      this.createClientForm.patchValue({
+        firstname: '',
+        lastname: '',
+      });
+    }
+
+    // Update form validation
+    this.createClientForm.get('name')?.updateValueAndValidity();
+    this.createClientForm.get('firstname')?.updateValueAndValidity();
+    this.createClientForm.get('lastname')?.updateValueAndValidity();
+    this.createClientForm.get('company_number')?.updateValueAndValidity();
+    this.createClientForm.get('company_vat_number')?.updateValueAndValidity();
   }
 
   async toggleTvaIncluded() {
@@ -496,25 +562,28 @@ export class NewQuoteComponent implements AfterViewInit {
       .checkBce(companyNumber)
       .pipe(
         take(1),
-        tap(({ Vat }) => {
-          this.isValidBCENumber.set(Vat.isValid);
+        tap(({ vat }) => {
+          if (vat.isValid) {
+            this.isValidBCENumber.set(vat.isValid);
 
-          const { vatNumber, details } = Vat;
-          const { name, address } = details;
+            const { vatNumber, details } = vat;
+            const { name, address } = details;
 
-          const [streetAndNumber, postalAndCity] = address.split('\n');
-          const [street, number] = this.extractStreetAndNumber(streetAndNumber);
-          const [postalCode, ...cityParts] = postalAndCity.split(' ');
-          const city = cityParts.join(' ');
+            const [streetAndNumber, postalAndCity] = address.split('\n');
+            const [street, number] =
+              this.extractStreetAndNumber(streetAndNumber);
+            const [postalCode, ...cityParts] = postalAndCity.split(' ');
+            const city = cityParts.join(' ');
 
-          this.createClientForm.patchValue({
-            company_vat_number: vatNumber,
-            name,
-            street,
-            number,
-            postalCode,
-            city,
-          });
+            this.createClientForm.patchValue({
+              company_vat_number: vatNumber,
+              name,
+              street,
+              number,
+              postalCode,
+              city,
+            });
+          }
         })
       )
       .subscribe();
@@ -531,8 +600,18 @@ export class NewQuoteComponent implements AfterViewInit {
 
   createClient() {
     if (this.createClientForm.valid) {
+      const formData = { ...this.createClientForm.value };
+
+      // Si c'est une personne physique, on combine firstname et lastname pour le name
+      if (this.isPhysicalPerson()) {
+        formData.name = `${formData.firstname} ${formData.lastname}`.trim();
+        formData.is_physical_person = true;
+      } else {
+        formData.is_physical_person = false;
+      }
+
       this.clientService
-        .create(this.createClientForm.value as ClientDto)
+        .create(formData)
         .pipe(
           take(1),
           tap((newClient) => {
@@ -569,113 +648,54 @@ export class NewQuoteComponent implements AfterViewInit {
     }
   }
 
-  setClient(id: number) {
-    if (!this.client() || this.client()?.id !== id) {
-      this.clientService
-        .getOneById(id)
-        .pipe(
-          tap((data) => {
-            this.client.set(data);
-            this.products.set([]);
-            this.tva6.set(0);
-            this.tva21.set(0);
-            this.totalHtva.set(0);
-            this.total.set(0);
-          })
-        )
-        .subscribe();
-    } else {
+  setClient(clientId: number | null) {
+    if (clientId === null) {
       this.client.set(null);
+      this.selectedClient.set(null);
+      this.createQuoteForm.patchValue({ client_id: '' });
+      return;
     }
-  }
-
-  // createProduct() {
-  //   if (this.createProductForm.valid && this.client()) {
-  //     const { vat, ...createProductDto } = this.createProductForm.value;
-  //     const productToAdd = { ...this.createProductForm.value };
-
-  //     if (
-  //       (this.client()?.country === 'Belgique' ||
-  //         this.client()?.country === 'Suisse' ||
-  //         this.client()?.country === 'Royaume-Uni') &&
-  //       this.client()?.company_number
-  //     ) {
-  //       if (!this.client()?.company_vat_number) {
-  //         if (!vat) {
-  //           productToAdd.vat = 0.21;
-  //         } else {
-  //           productToAdd.vat = 0.06;
-  //         }
-  //       } else {
-  //         productToAdd.vat = 0;
-  //       }
-  //     } else {
-  //       productToAdd.vat = 0;
-  //     }
-
-  //     if (this.isTvaIncluded()) {
-  //       productToAdd.vat = 0;
-  //     }
-
-  //     this.productService
-  //       .createProduct(productToAdd)
-  //       .pipe(
-  //         take(1),
-  //         tap((data) => {
-  //           this.products().push(data);
-  //           this.calculateQuoteAmount(data);
-
-  //           this.createProductForm.reset();
-  //           this.createProductForm.get('vat')?.patchValue(false);
-  //           this.toggleProductForm();
-  //         }),
-  //       )
-  //       .subscribe();
-  //   }
-  // }
-
-  createProduct() {
-    if (!this.createProductForm.valid || !this.client()) return;
-
-    const { vat, ...productToAdd } = this.createProductForm.value;
-    productToAdd.vat = this.calculateVat(vat);
-    console.log('productToAdd', productToAdd);
-    this.productService
-      .createProduct(productToAdd)
+    this.clientService
+      .getOneById(clientId)
       .pipe(
-        take(1),
-        tap((newProduct) => {
-          this.products.update((products) => [...products, newProduct]);
-          this.calculateQuoteAmount(newProduct);
-          this.resetProductForm();
+        tap((data) => {
+          this.client.set(data);
+          this.createQuoteForm.patchValue({ client_id: data.id });
+          this.products.set([]);
+          this.tva6.set(0);
+          this.tva21.set(0);
+          this.totalHtva.set(0);
+          this.total.set(0);
         })
       )
       .subscribe();
   }
 
-  private calculateVat(formVat: boolean): number {
-    if (this.isTvaIncluded()) return 0;
+  createProduct() {
+    if (!this.createProductForm.valid || !this.client()) return;
 
-    const { country, company_number, company_vat_number } = this.client()!;
-    const isEligibleCountry = ['Belgique', 'Suisse', 'Royaume-Uni'].includes(
-      country
-    );
+    const formValues = this.createProductForm.value;
+    const productToAdd = {
+      description: formValues.description,
+      price: +formValues.price,
+      quantity: +formValues.quantity,
+      vat: formValues.vat ? 0.06 : 0.21,
+    };
 
-    if (isEligibleCountry && company_number) {
-      if (!company_vat_number && !isEligibleCountry) {
-        return 0; // Client avec numéro d'entreprise et numéro de TVA
-      } else {
-        return formVat ? 0.06 : 0.21; // Client avec numéro d'entreprise mais sans numéro de TVA
-      }
-    }
-
-    return 0; // Autres cas (pays non éligible ou pas de numéro d'entreprise)
-  }
-
-  private resetProductForm() {
-    this.createProductForm.reset();
-    this.createProductForm.get('vat')?.patchValue(false);
-    this.toggleProductForm();
+    this.productService
+      .createProduct(productToAdd)
+      .pipe(
+        take(1),
+        tap((newProduct) => {
+          const currentProducts = this.products();
+          this.products.set([...currentProducts, newProduct]);
+          this.calculateTotals();
+          this.createProductForm.reset();
+          this.createProductForm.patchValue({ quantity: 1, vat: false });
+          this.toggleProductForm();
+        })
+      )
+      .subscribe();
   }
 
   calculateQuoteAmount(data: ProductEntity) {
@@ -696,13 +716,12 @@ export class NewQuoteComponent implements AfterViewInit {
     if (!this.isToggleEditProductForm()) {
       this.toggleEditProductForm();
       this.idProductToEdit.set(id);
+      const product = this.products().find((product) => product.id === id);
       this.editProductForm.patchValue({
-        description: this.products().find((product) => product.id === id)
-          ?.description,
-        price: this.products().find((product) => product.id === id)?.price,
-        quantity: this.products().find((product) => product.id === id)
-          ?.quantity,
-        vat: this.products().find((product) => product.id === id)?.vat,
+        description: product?.description,
+        price: product?.price,
+        quantity: product?.quantity,
+        vat: product?.vat === 0.06,
       });
     } else {
       this.toggleEditProductForm();
@@ -712,30 +731,40 @@ export class NewQuoteComponent implements AfterViewInit {
 
   editProductToDB() {
     if (this.editProductForm.valid) {
-      const editProductDto = this.editProductForm.value;
+      const { description, price, quantity, vat } = this.editProductForm.value;
+      const editProductDto = {
+        description,
+        price: +price,
+        quantity: +quantity,
+        vat: vat ? 0.06 : 0.21,
+      };
+
       this.productService
         .update(this.idProductToEdit()!.toString(), editProductDto)
         .pipe(
           take(1),
           tap((data) => {
-            this.products().map((product) => {
+            const updatedProducts = this.products().map((product) => {
               if (product.id === this.idProductToEdit()) {
-                product.price = data.price;
-                product.vat = data.vat;
-                product.description = data.description;
-                product.quantity = data.quantity;
-                product.total = data.total;
-                product.price_htva = data.price_htva;
-                product.tva_amount = data.tva_amount;
+                return data;
               }
               return product;
             });
-            this.calculateQuoteAmount(data);
+
+            this.products.set(updatedProducts);
+            this.calculateTotals();
             this.toggleEditProductForm();
           })
         )
         .subscribe();
     }
+  }
+
+  calculateTotals() {
+    this.totalHtva.set(this.products().reduce((a, b) => a + b.price_htva!, 0));
+    this.tva21.set(this.setTva21(this.products()));
+    this.tva6.set(this.setTva6(this.products()));
+    this.total.set(this.totalHtva() + this.tva21() + this.tva6());
   }
 
   deleteProduct(id: number) {
@@ -778,11 +807,30 @@ export class NewQuoteComponent implements AfterViewInit {
   }
 
   createQuote() {
+    console.log('Tentative de création du devis');
+    console.log('Form valide:', this.createQuoteForm.valid);
+    console.log('Client présent:', !!this.client());
+    console.log('Nombre de produits:', this.products().length);
+
+    // Vérification détaillée de chaque champ du formulaire
+    const formControls = this.createQuoteForm.controls;
+    Object.keys(formControls).forEach((key) => {
+      const control = formControls[key];
+      console.log(`Champ ${key}:`, {
+        valeur: control.value,
+        valide: control.valid,
+        erreurs: control.errors,
+        pristine: control.pristine,
+        touched: control.touched,
+      });
+    });
+
     if (
       !this.createQuoteForm.valid ||
       !this.client() ||
       this.products().length === 0
     ) {
+      console.log('Validation échouée');
       return;
     }
 
@@ -796,11 +844,20 @@ export class NewQuoteComponent implements AfterViewInit {
       isVatIncluded: this.isTvaIncluded(),
     };
 
+    console.log('DTO du devis:', quote);
+
     this.quoteService
       .createQuote(quote)
       .pipe(
         take(1),
-        tap(() => this.goBack())
+        tap((response) => {
+          console.log("Réponse de l'API:", response);
+          this.goBack();
+        }),
+        catchError((error) => {
+          console.error('Erreur lors de la création du devis:', error);
+          return throwError(() => error);
+        })
       )
       .subscribe();
   }
@@ -828,5 +885,68 @@ export class NewQuoteComponent implements AfterViewInit {
         tap(() => this.goBack())
       )
       .subscribe();
+  }
+
+  toggleClientSelect() {
+    this.isClientSelectOpen.set(!this.isClientSelectOpen());
+    if (this.isClientSelectOpen()) {
+      this.filterClients();
+      // Fermer le select quand on clique en dehors
+      setTimeout(() => {
+        document.addEventListener('click', this.handleClickOutside);
+      });
+    } else {
+      document.removeEventListener('click', this.handleClickOutside);
+    }
+  }
+
+  private handleClickOutside = (event: MouseEvent) => {
+    const select = document.querySelector('.client-select');
+    if (select && !select.contains(event.target as Node)) {
+      this.isClientSelectOpen.set(false);
+      document.removeEventListener('click', this.handleClickOutside);
+    }
+  };
+
+  filterClients(search: string = '') {
+    const searchValue = search.toLowerCase().trim();
+    const allClients =
+      this.connectedUser()?.role === 'ADMIN'
+        ? this.clients()
+        : this.connectedUser()?.clients || [];
+
+    if (!searchValue) {
+      this.filteredClients.set(allClients);
+      return;
+    }
+
+    const filtered = allClients.filter(
+      (client) =>
+        client.name.toLowerCase().includes(searchValue) ||
+        client.email.toLowerCase().includes(searchValue) ||
+        (client.company_vat_number &&
+          client.company_vat_number.toLowerCase().includes(searchValue))
+    );
+
+    this.filteredClients.set(filtered);
+  }
+
+  selectClient(client: ClientEntity) {
+    this.selectedClient.set(client);
+    this.setClient(client.id);
+    this.isClientSelectOpen.set(false);
+  }
+
+  goBack() {
+    this.location.back();
+  }
+
+  updateValidationDeadline(event: any) {
+    const quoteDate = new Date(event.target.value);
+    const validationDate = new Date(quoteDate);
+    validationDate.setDate(validationDate.getDate() + 10);
+    this.createQuoteForm.patchValue({
+      validation_deadline: this.formatDate(validationDate),
+    });
   }
 }

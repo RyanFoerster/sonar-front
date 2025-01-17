@@ -1,78 +1,67 @@
-import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { QuoteEntity } from '../entities/quote.entity';
-import { InvoiceEntity } from '../entities/invoice.entity';
+import { Injectable, inject } from '@angular/core';
 import { environment } from '../../../environments/environment';
-import autoTable from 'jspdf-autotable';
+import { InvoiceEntity } from '../entities/invoice.entity';
+import { QuoteEntity } from '../entities/quote.entity';
+import { Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
 })
 export class InvoiceService {
-  private httpClient: HttpClient = inject(HttpClient);
+  private readonly httpClient = inject(HttpClient);
+  private readonly API_URL = environment.API_URL;
 
-  constructor() {}
+  findAll() {
+    return this.httpClient.get<InvoiceEntity[]>(`${this.API_URL}/invoice`);
+  }
 
-  createInvoice(quote: QuoteEntity, type: string, account_id: number) {
+  getAll(): Observable<InvoiceEntity[]> {
+    return this.httpClient.get<InvoiceEntity[]>(`${this.API_URL}/invoice/all`);
+  }
+
+  findOne(id: number) {
+    return this.httpClient.get<InvoiceEntity>(`${this.API_URL}/invoice/${id}`);
+  }
+
+  createInvoice(
+    quote: QuoteEntity,
+    typeOfProject: string,
+    id: number
+  ): Observable<InvoiceEntity> {
     return this.httpClient.post<InvoiceEntity>(
-      `${environment.API_URL}/invoice`,
-      { quote },
+      `${this.API_URL}/invoice/create`,
       {
-        params: {
-          account_id: account_id,
-          type: type,
-        },
-      },
+        quote,
+        typeOfProject,
+        id,
+      }
     );
   }
 
-  getInvoiceById(id: number) {
-    return this.httpClient.get<InvoiceEntity>(
-      `${environment.API_URL}/invoice/${id}`,
-    );
-  }
-
-  createCreditNote({
-    linkedInvoiceId,
-    creditNoteAmount,
-    products_ids,
-  }: {
-    linkedInvoiceId: number;
-    creditNoteAmount: number;
-    products_ids: number[];
-  }) {
+  createCreditNoteWithoutInvoice(
+    creditNoteData: any
+  ): Observable<InvoiceEntity> {
     return this.httpClient.post<InvoiceEntity>(
-      `${environment.API_URL}/invoice/credit-note`,
-      {
-        linkedInvoiceId,
-        creditNoteAmount,
-        products_ids,
-      },
+      `${this.API_URL}/invoice/credit-note-without-invoice`,
+      creditNoteData
     );
   }
 
-  createCreditNoteWithoutInvoice(creditNote: any) {
-    return this.httpClient.post<InvoiceEntity>(
-      `${environment.API_URL}/invoice/credit-note-without-invoice`,
-      creditNote,
-    );
-  }
-
-  getCreditNoteByInvoiceId(invoice_id: number) {
+  getCreditNoteByInvoiceId(invoiceId: number): Observable<InvoiceEntity> {
     return this.httpClient.get<InvoiceEntity>(
-      `${environment.API_URL}/invoice/credit-note/${invoice_id}`,
+      `${this.API_URL}/invoice/credit-note/${invoiceId}`
     );
   }
 
-  getAll() {
-    return this.httpClient.get<InvoiceEntity[]>(
-      `${environment.API_URL}/invoice`,
+  update(id: number, invoice: Partial<InvoiceEntity>) {
+    return this.httpClient.patch<InvoiceEntity>(
+      `${this.API_URL}/invoice/${id}`,
+      invoice
     );
   }
 
-  downloadInvoice(invoice_id: number) {
-    return this.httpClient.get(
-      `${environment.API_URL}/invoice/download/${invoice_id}`,
-    );
+  remove(id: number) {
+    return this.httpClient.delete<void>(`${this.API_URL}/invoice/${id}`);
   }
 }

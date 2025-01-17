@@ -8,6 +8,27 @@
   @if (isUserConnected()) {
   <div class="gap-2 justify-center items-center hidden md:flex">
     <hlm-menu-bar class="w-fit border-none">
+      @if (pwaService.canInstall()) {
+      <div
+        class="relative p-[2px] rounded-lg overflow-hidden bg-gradient-to-r from-primary via-accent to-primary bg-[length:400%] animate-border-gradient"
+      >
+        <button
+          hlmMenuBarItem
+          (click)="installPwa()"
+          class="relative cursor-pointer flex items-center gap-2 text-black font-medium bg-white rounded-lg px-4 py-2 transition-all hover:bg-gray-50"
+        >
+          <span class="relative flex h-2 w-2 mr-1">
+            <span
+              class="animate-ping absolute inline-flex h-full w-full rounded-full bg-black opacity-75"
+            ></span>
+            <span
+              class="relative inline-flex rounded-full h-2 w-2 bg-black"
+            ></span>
+          </span>
+          Installer l'app
+        </button>
+      </div>
+      }
       <a routerLink="/home" hlmMenuBarItem>Accueil</a>
       @if (connectedUser()?.role === "ADMIN") {
       <a hlmMenuBarItem [brnMenuTriggerFor]="admin">Admin</a>

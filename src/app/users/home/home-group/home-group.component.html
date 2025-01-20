@@ -253,8 +253,7 @@
         name="lucideChevronRight"
       />
     </a>
-    }
-    <!-- @if (typeOfProjet() === "GROUP") {
+    } @if ( connectedUser()?.role === "ADMIN" && typeOfProjet() === "GROUP") {
     <a
       routerLink="diary"
       [queryParams]="{ typeOfProjet: typeOfProjet() }"
@@ -266,7 +265,7 @@
         name="lucideChevronRight"
       />
     </a>
-    } -->
+    }
 
     <a
       routerLink="project-account"

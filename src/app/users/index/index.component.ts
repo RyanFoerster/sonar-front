@@ -27,6 +27,8 @@ export class IndexComponent implements OnInit {
           window.location.href = 'https://sonarartists.be';
         } else if (event.data === 'register') {
           window.location.href = 'https://sonarartists.be/register';
+        } else if (event.data === 'email') {
+          window.location.href = 'mailto:info@sonarartists.be';
         }
       }
     });

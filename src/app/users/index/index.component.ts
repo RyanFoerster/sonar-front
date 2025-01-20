@@ -24,7 +24,7 @@ export class IndexComponent implements OnInit {
     window.addEventListener('message', (event) => {
       if (event.origin === 'https://sonarartists.com') {
         if (event.data === 'login') {
-          window.location.href = 'https://sonarartists.be';
+          window.location.href = 'https://sonarartists.be/login';
         } else if (event.data === 'register') {
           window.location.href = 'https://sonarartists.be/register';
         } else if (event.data === 'email') {

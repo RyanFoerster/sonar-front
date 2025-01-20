@@ -3,7 +3,6 @@ import { authGuard } from './shared/guards/auth.guard';
 import { activatedUserGuard } from './shared/guards/activated-user.guard';
 import { adminGuard } from './shared/guards/admin.guard';
 import { maintenanceGuard } from './shared/guards/maintenance.guard';
-import { NewCreditNoteComponent } from './users/home/home-group/facturation/new-credit-note/new-credit-note.component';
 
 export const routes: Routes = [
   {

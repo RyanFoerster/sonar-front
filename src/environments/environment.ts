@@ -5,5 +5,5 @@ export const environment = {
   REFRESH_TOKEN_KEY: 'refresh_token',
   USER_KEY: 'user',
   MAINTENANCE_MODE: false,
-  APP_VERSION: '1.0.2',
+  APP_VERSION: '1.0.3',
 };

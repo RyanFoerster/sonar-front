@@ -317,7 +317,7 @@ export class NewQuoteComponent implements AfterViewInit {
       street: ['', [Validators.required]],
       number: ['', [Validators.required]],
       city: ['', [Validators.required]],
-      country: ['', [Validators.required]],
+      country: ['Belgique', [Validators.required]],
       postalCode: ['', [Validators.required]],
       company_number: [null],
       company_vat_number: [null],
@@ -342,6 +342,10 @@ export class NewQuoteComponent implements AfterViewInit {
 
   async ngAfterViewInit() {
     await this.getConnectedUser();
+
+    this.createClientForm.patchValue({
+      country: 'Belgique',
+    });
 
     if (this.connectedUser()?.role === 'ADMIN') {
       this.clientService

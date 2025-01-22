@@ -10,7 +10,7 @@ export interface InvoiceEntity {
   total_vat_6: number;
   total_vat_21: number;
   total: number;
-  payment_deadline: number;
+  payment_deadline: Date;
   status: string;
   type: string;
   linkedInvoiceId: number;

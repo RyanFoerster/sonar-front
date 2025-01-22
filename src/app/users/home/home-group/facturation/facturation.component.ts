@@ -1,6 +1,5 @@
 import { DatePipe, JsonPipe, Location, NgClass } from '@angular/common';
 import {
-  AfterViewInit,
   Component,
   computed,
   inject,
@@ -56,8 +55,6 @@ import {
   HlmThComponent,
   HlmTrowComponent,
 } from '@spartan-ng/ui-table-helm';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import { take, tap } from 'rxjs';
 import { CompteGroupeEntity } from '../../../../shared/entities/compte-groupe.entity';
 import { InvoiceEntity } from '../../../../shared/entities/invoice.entity';
@@ -70,22 +67,26 @@ import { ComptePrincipalService } from '../../../../shared/services/compte-princ
 import { InvoiceService } from '../../../../shared/services/invoice.service';
 import { QuoteService } from '../../../../shared/services/quote.service';
 import { UsersService } from '../../../../shared/services/users.service';
-import {
-  BrnPopoverCloseDirective,
-  BrnPopoverComponent,
-  BrnPopoverContentDirective,
-  BrnPopoverTriggerDirective,
-} from '@spartan-ng/ui-popover-brain';
-import {
-  HlmPopoverCloseDirective,
-  HlmPopoverContentDirective,
-} from '@spartan-ng/ui-popover-helm';
+import { PdfGeneratorService } from '../../../../shared/services/pdf-generator.service';
 import { toast } from 'ngx-sonner';
 import { HlmToasterComponent } from '@spartan-ng/ui-sonner-helm';
 import { FormsModule } from '@angular/forms';
 import { CompteGroupeService } from '../../../../shared/services/compte-groupe.service';
 import { BrnSelectImports } from '@spartan-ng/ui-select-brain';
 import { HlmSelectImports } from '@spartan-ng/ui-select-helm';
+
+import { HlmSpinnerComponent } from '@spartan-ng/ui-spinner-helm';
+
+import {
+  HlmPaginationDirective,
+  HlmPaginationContentDirective,
+  HlmPaginationItemDirective,
+  HlmPaginationLinkDirective,
+  HlmPaginationEllipsisComponent,
+  HlmPaginationNextComponent,
+  HlmPaginationPreviousComponent,
+} from '@spartan-ng/ui-pagination-helm';
+
 @Component({
   selector: 'app-facturation',
   standalone: true,
@@ -123,18 +124,20 @@ import { HlmSelectImports } from '@spartan-ng/ui-select-helm';
     HlmDialogTitleDirective,
     BrnDialogContentDirective,
     BrnDialogTriggerDirective,
-    BrnPopoverCloseDirective,
-    BrnPopoverComponent,
-    BrnPopoverContentDirective,
-    BrnPopoverTriggerDirective,
-    HlmPopoverCloseDirective,
-    HlmPopoverContentDirective,
     FormsModule,
     DatePipe,
     HlmToasterComponent,
     NgClass,
     BrnSelectImports,
     HlmSelectImports,
+    HlmPaginationDirective,
+    HlmPaginationContentDirective,
+    HlmPaginationItemDirective,
+    HlmPaginationLinkDirective,
+    HlmPaginationEllipsisComponent,
+    HlmPaginationNextComponent,
+    HlmPaginationPreviousComponent,
+    HlmSpinnerComponent,
   ],
   providers: [
     provideIcons({
@@ -149,20 +152,23 @@ import { HlmSelectImports } from '@spartan-ng/ui-select-helm';
   styleUrl: './facturation.component.css',
 })
 export class FacturationComponent implements OnInit, OnDestroy {
-  private usersService: UsersService = inject(UsersService);
-  private invoiceService: InvoiceService = inject(InvoiceService);
-  private authService: AuthService = inject(AuthService);
-  private quoteService: QuoteService = inject(QuoteService);
-  private principalService: ComptePrincipalService = inject(
-    ComptePrincipalService
-  );
-  private datePipe: DatePipe = inject(DatePipe);
-  private groupService: CompteGroupeService = inject(CompteGroupeService);
+  private readonly services = {
+    users: inject(UsersService),
+    invoice: inject(InvoiceService),
+    auth: inject(AuthService),
+    quote: inject(QuoteService),
+    principal: inject(ComptePrincipalService),
+    group: inject(CompteGroupeService),
+    pdf: inject(PdfGeneratorService),
+    datePipe: inject(DatePipe),
+  };
 
-  protected accountPrincipal: PrincipalAccountEntity | undefined;
-
+  // Inputs
   id = input<number>();
   typeOfProjet = input<string>();
+
+  // State signals
+  protected accountPrincipal: PrincipalAccountEntity | undefined;
   protected connectedUser = signal<UserEntity | null>(null);
   protected groupAccount = signal<CompteGroupeEntity | undefined>(undefined);
   protected creditNote = signal<InvoiceEntity | null>(null);
@@ -171,7 +177,9 @@ export class FacturationComponent implements OnInit, OnDestroy {
   protected currentDate = new Date();
   protected reportDate = signal<Date>(this.currentDate);
   protected filterSelected = signal<'invoice' | 'credit-note' | 'all'>('all');
+  protected isLoading = signal<boolean | null>(null);
 
+  // Computed values
   protected reportDateFormatted = computed(() =>
     this.formatDate(this.reportDate())
   );
@@ -179,815 +187,208 @@ export class FacturationComponent implements OnInit, OnDestroy {
     () => this.currentDate.toISOString().split('T')[0]
   );
 
-  currentFilter: 'all' | 'quotes' | 'invoiced_quotes' | 'credit-note' = 'all';
-  invoices: any[] = [];
+  // Pagination constants
+  private readonly ITEMS_PER_PAGE = 10;
+  private readonly INITIAL_PAGE = 1;
 
-  constructor(private location: Location) {}
+  // Pagination state
+  protected pagination = {
+    currentPage: signal(this.INITIAL_PAGE),
+    totalPages: signal(0),
+    totalItems: signal(0),
+  };
+
+  protected itemsPerPage = signal(this.ITEMS_PER_PAGE);
+
+  // Documents state
+  currentFilter: 'all' | 'quotes' | 'invoiced_quotes' | 'credit-note' = 'all';
+  invoices: InvoiceEntity[] = [];
+  protected allDocuments = signal<any[]>([]);
+  protected paginatedDocuments = computed(() => {
+    const startIndex =
+      (this.pagination.currentPage() - 1) * this.itemsPerPage();
+    return this.allDocuments().slice(
+      startIndex,
+      startIndex + this.itemsPerPage()
+    );
+  });
+
+  constructor(private location: Location) {
+    this.isLoading.set(true);
+  }
 
   private formatDate(date: Date): string {
-    return this.datePipe.transform(date, 'yyyy-MM-dd') || '';
+    return this.services.datePipe.transform(date, 'yyyy-MM-dd') || '';
   }
 
-  private formatDateBelgium(date: Date): string {
-    return this.datePipe.transform(date, 'dd/MM/yyyy') || '';
-  }
-
-  goBack() {
+  goBack(): void {
     this.location.back();
   }
 
-  async ngAfterViewInit() {
+  async ngOnInit(): Promise<void> {
+    this.isLoading.set(true);
     await this.getConnectedUser();
   }
 
-  async getConnectedUser() {
-    this.usersService
+  private async getConnectedUser(): Promise<void> {
+    this.services.users
       .getInfo()
       .pipe(
         take(1),
-        tap((data) => {
-          this.connectedUser.set(data);
-        }),
-        tap(() => {
-          if (this.connectedUser()?.role === 'ADMIN') {
-            if (this.typeOfProjet() === 'PRINCIPAL') {
-              this.principalService
-                .getGroupById(+this.id()!)
-                .pipe(
-                  take(1),
-                  tap((data) => {
-                    this.accountPrincipal = data;
-                    this.loadInvoices();
-                    for (const creditNote of data.invoice!) {
-                      if (creditNote.type === 'credit_note') {
-                        this.creditNoteList.set([
-                          ...this.creditNoteList(),
-                          creditNote,
-                        ]);
-                      }
-                    }
-                  })
-                )
-                .subscribe();
-            } else {
-              this.groupService
-                .getGroupById(+this.id()!)
-                .pipe(
-                  take(1),
-                  tap((data) => {
-                    this.groupAccount.set(data);
-                    this.loadInvoices();
-                  })
-                )
-                .subscribe();
-            }
-          } else {
-            const groupAccountFinded =
-              this.connectedUser()?.userSecondaryAccounts.find(
-                (account) => account.id === +this.id()!
-              );
-            this.groupAccount.set(groupAccountFinded?.group_account);
-            this.loadInvoices();
-          }
+        tap((user) => {
+          this.connectedUser.set(user);
+          this.initializeAccount(user);
+          this.isLoading.set(false);
         })
       )
       .subscribe();
   }
 
-  filterList(type: 'all' | 'quotes' | 'invoiced_quotes' | 'credit-note'): void {
-    this.currentFilter = type;
+  private initializeAccount(user: UserEntity): void {
+    if (user.role === 'ADMIN') {
+      this.initializeAdminAccount();
+    } else {
+      this.initializeUserAccount(user);
+    }
   }
 
-  getAllDocuments() {
-    if (!this.accountPrincipal?.quote) return [];
+  private initializeAdminAccount(): void {
+    if (this.typeOfProjet() === 'PRINCIPAL') {
+      this.services.principal
+        .getGroupById(+this.id()!)
+        .pipe(
+          take(1),
+          tap((data) => {
+            this.accountPrincipal = data;
+            this.loadInvoices();
+            this.initializeCreditNotes(data.invoice || []);
+          })
+        )
+        .subscribe();
+    } else {
+      this.services.group
+        .getGroupById(+this.id()!)
+        .pipe(
+          take(1),
+          tap((data) => {
+            this.groupAccount.set(data);
+            this.loadInvoices();
+          })
+        )
+        .subscribe();
+    }
+  }
 
-    // Combiner les devis et les notes de crédit
-    let allDocs = [];
+  private initializeUserAccount(user: UserEntity): void {
+    const groupAccount = user.userSecondaryAccounts.find(
+      (account) => account.id === +this.id()!
+    );
+    this.groupAccount.set(groupAccount?.group_account);
+    this.loadInvoices();
+  }
 
-    // Ajouter les devis avec leur date
-    const quotes = this.accountPrincipal.quote.map((quote) => ({
+  private initializeCreditNotes(invoices: InvoiceEntity[]): void {
+    const creditNotes = invoices.filter((inv) => inv.type === 'credit_note');
+    this.creditNoteList.set(creditNotes);
+  }
+
+  filterList(type: 'all' | 'quotes' | 'invoiced_quotes' | 'credit-note'): void {
+    this.currentFilter = type;
+    this.pagination.currentPage.set(1);
+    this.updateDocuments();
+  }
+
+  private updateDocuments(): void {
+    if (!this.accountPrincipal?.quote) {
+      this.allDocuments.set([]);
+      return;
+    }
+
+    const quotes = this.getFormattedQuotes();
+    const creditNotes = this.getFormattedCreditNotes();
+    let allDocs = [...quotes, ...creditNotes];
+
+    allDocs = this.filterDocuments(allDocs);
+    allDocs.sort(this.sortByDate);
+
+    this.updatePagination(allDocs);
+    this.allDocuments.set(allDocs);
+  }
+
+  private getFormattedQuotes() {
+    return this.accountPrincipal!.quote.map((quote) => ({
       ...quote,
-      documentDate: new Date(quote.quote_date),
+      documentDate: quote.quote_date,
       documentType: 'quote',
     }));
+  }
 
-    // Ajouter les notes de crédit avec leur date
-    const creditNotes = this.invoices
+  private getFormattedCreditNotes() {
+    return this.invoices
       .filter((inv) => inv.type === 'credit_note')
       .map((invoice) => ({
         ...invoice,
-        documentDate: new Date(invoice.invoice_date),
+        documentDate: invoice.invoice_date,
         documentType: 'credit_note',
       }));
+  }
 
-    // Combiner tous les documents
-    allDocs = [...quotes, ...creditNotes];
-
-    // Appliquer les filtres
-    if (this.currentFilter === 'quotes') {
-      allDocs = allDocs.filter(
-        (doc) => doc.documentType === 'quote' && !doc.invoice
-      );
-    } else if (this.currentFilter === 'invoiced_quotes') {
-      allDocs = allDocs.filter(
-        (doc) => doc.documentType === 'quote' && doc.invoice
-      );
-    } else if (this.currentFilter === 'credit-note') {
-      allDocs = allDocs.filter((doc) => doc.documentType === 'credit_note');
+  private filterDocuments(docs: any[]) {
+    switch (this.currentFilter) {
+      case 'quotes':
+        return docs.filter(
+          (doc) => doc.documentType === 'quote' && !doc.invoice
+        );
+      case 'invoiced_quotes':
+        return docs.filter(
+          (doc) => doc.documentType === 'quote' && doc.invoice
+        );
+      case 'credit-note':
+        return docs.filter((doc) => doc.documentType === 'credit_note');
+      default:
+        return docs;
     }
+  }
 
-    // Trier par date décroissante
-    return allDocs.sort(
-      (a, b) => b.documentDate.getTime() - a.documentDate.getTime()
+  private sortByDate(a: any, b: any) {
+    return (
+      new Date(b.documentDate).getTime() - new Date(a.documentDate).getTime()
     );
   }
 
-  sortedInvoices(): any[] {
-    return [];
+  private updatePagination(docs: any[]) {
+    this.pagination.totalItems.set(docs.length);
+    this.pagination.totalPages.set(
+      Math.ceil(docs.length / this.itemsPerPage())
+    );
   }
 
-  getQuotes() {
-    return [];
+  generateQuotePDF(quote: QuoteEntity): void {
+    this.services.pdf.generateQuotePDF(quote);
   }
 
-  generateQuotePDF(quote: QuoteEntity) {
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
-    const margin = 20;
-    const maxWidth = 60;
-
-    // Fonction pour ajouter un en-tête à chaque page
-    const addHeader = () => {
-      // Logo de l'entreprise
-      const logoUrl = '/assets/images/SONAR.png';
-      const logoWidth = 40;
-      const logoHeight = 40;
-      const aspectRatio = logoWidth / logoHeight;
-
-      // Calculer la nouvelle hauteur en conservant le ratio d'aspect
-      const newLogoWidth = 40;
-      const newLogoHeight = newLogoWidth / aspectRatio;
-
-      doc.addImage(logoUrl, 'PNG', margin, 5, newLogoWidth, newLogoHeight);
-
-      // Informations de l'entreprise
-      doc.setFontSize(10);
-      doc.setTextColor(100);
-      doc.text('Sonar Artists ASBL', pageWidth - margin, margin, {
-        align: 'right',
-      });
-      doc.text('6 rue Francisco Ferrer', pageWidth - margin, margin + 5, {
-        align: 'right',
-      });
-      doc.text(
-        '4460 Grâce-Hollogne, Belgique',
-        pageWidth - margin,
-        margin + 10,
-        {
-          align: 'right',
-        }
-      );
-      doc.text(
-        'Email: contact@sonarartists.be',
-        pageWidth - margin,
-        margin + 20,
-        { align: 'right' }
-      );
-
-      // Ligne de séparation
-      doc.setDrawColor(200);
-      doc.line(margin, margin + 30, pageWidth - margin, margin + 30);
-    };
-
-    // Ajouter l'en-tête
-    addHeader();
-
-    let yPosition2 = 60;
-    const lineHeight = 7; // Espacement entre les lignes
-    const titleLineHeight = 10; // Espacement spécifique après le titre
-
-    doc.setFontSize(18);
-    doc.setTextColor(0);
-    doc.text(`DEVIS N°: ${quote.id}`, margin, yPosition2);
-    yPosition2 += titleLineHeight;
-
-    // Informations du devis
-    doc.setFontSize(10);
-    doc.text(
-      `Date: ${new Date(quote.quote_date).toLocaleDateString()}`,
-      margin,
-      yPosition2
-    );
-    yPosition2 += lineHeight;
-
-    doc.text(
-      `Date de service: ${new Date(quote.service_date).toLocaleDateString()}`,
-      margin,
-      yPosition2
-    );
-    yPosition2 += lineHeight;
-
-    // Informations du client
-    doc.setFontSize(11);
-    doc.text('Adressé à:', pageWidth - margin - 60, 70);
-    doc.setFontSize(10);
-
-    let yPosition = 75;
-    const clientName = doc.splitTextToSize(quote.client.name, maxWidth);
-    clientName.forEach((line: string) => {
-      doc.text(line, pageWidth - margin - 60, yPosition);
-      yPosition += 5;
-    });
-
-    doc.text(
-      `${quote.client.street} ${quote.client.number}`,
-      pageWidth - margin - 60,
-      yPosition
-    );
-    yPosition += 5;
-    doc.text(
-      `${quote.client.postalCode} ${quote.client.city}`,
-      pageWidth - margin - 60,
-      yPosition
-    );
-    yPosition += 5;
-    doc.text(`${quote.client.country}`, pageWidth - margin - 60, yPosition);
-    yPosition += 5;
-    doc.text(`Tél: ${quote.client.phone}`, pageWidth - margin - 60, yPosition);
-    yPosition += 5;
-    doc.text(
-      `Email: ${quote.client.email}`,
-      pageWidth - margin - 60,
-      yPosition
-    );
-
-    // Tableau des produits
-    const tableStart = 120;
-    autoTable(doc, {
-      startY: tableStart,
-      head: [['Description', 'Quantité', 'Prix unitaire', 'Total HT']],
-      body: quote.products.map((product) => [
-        product.description,
-        product.quantity,
-        `${product.price.toFixed(2)} €`,
-        `${(product.quantity * product.price).toFixed(2)} €`,
-      ]),
-      styles: { fontSize: 9 },
-      headStyles: { fillColor: [70, 70, 70], textColor: 255 },
-      columnStyles: {
-        0: { cellWidth: 'auto' },
-        1: { cellWidth: 30, halign: 'center' },
-        2: { cellWidth: 40, halign: 'right' },
-        3: { cellWidth: 40, halign: 'right' },
-      },
-    });
-
-    // Récupérer la position Y après le tableau
-    const finalY = (doc as any).lastAutoTable.finalY || tableStart;
-
-    // Résumé des totaux
-    doc.setFontSize(10);
-    doc.text(`Total HT:`, pageWidth - margin - 50, finalY + 10, {
-      align: 'right',
-    });
-    doc.text(
-      `${quote.price_htva.toFixed(2)} €`,
-      pageWidth - margin,
-      finalY + 10,
-      { align: 'right' }
-    );
-    doc.text(`TVA 6%:`, pageWidth - margin - 50, finalY + 15, {
-      align: 'right',
-    });
-    doc.text(
-      `${quote.total_vat_6.toFixed(2)} €`,
-      pageWidth - margin,
-      finalY + 15,
-      { align: 'right' }
-    );
-    doc.text(`TVA 21%:`, pageWidth - margin - 50, finalY + 20, {
-      align: 'right',
-    });
-    doc.text(
-      `${quote.total_vat_21.toFixed(2)} €`,
-      pageWidth - margin,
-      finalY + 20,
-      { align: 'right' }
-    );
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`Total TTC:`, pageWidth - margin - 50, finalY + 30, {
-      align: 'right',
-    });
-    doc.text(`${quote.total.toFixed(2)} €`, pageWidth - margin, finalY + 30, {
-      align: 'right',
-    });
-
-    // Conditions et notes
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
-    const conditions = [
-      'Conditions de paiement : 30 jours à compter de la date de facturation',
-      `Validité du devis : ${this.formatDateBelgium(quote.quote_date)}`,
-      'Nous vous remercions de votre confiance',
-    ];
-    conditions.forEach((condition, index) => {
-      doc.text(condition, margin, pageHeight - 40 + index * 5);
-    });
-
-    // Pied de page
-    doc.setFontSize(8);
-    doc.setTextColor(100);
-    doc.text(
-      'Sonar Artists ASBL - TVA BE0123456789',
-      pageWidth / 2,
-      pageHeight - 10,
-      { align: 'center' }
-    );
-
-    // Sauvegarder le PDF
-    doc.save(`devis_${quote.id}.pdf`);
+  generateInvoicePDF(invoice: InvoiceEntity): void {
+    this.services.pdf.generateInvoicePDF(invoice);
   }
 
-  generateInvoicePDF(invoice: InvoiceEntity | QuoteEntity['invoice']) {
-    if (!invoice) return;
-
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
-    const margin = 20;
-    const maxWidth = 60;
-
-    // Fonction pour ajouter un en-tête à chaque page
-    const addHeader = () => {
-      // Logo de l'entreprise
-      const logoUrl = '/assets/images/SONAR.png';
-      const logoWidth = 40;
-      const logoHeight = 40;
-      const aspectRatio = logoWidth / logoHeight;
-
-      // Calculer la nouvelle hauteur en conservant le ratio d'aspect
-      const newLogoWidth = 40;
-      const newLogoHeight = newLogoWidth / aspectRatio;
-
-      doc.addImage(logoUrl, 'PNG', margin, 5, newLogoWidth, newLogoHeight);
-
-      // Informations de l'entreprise
-      doc.setFontSize(10);
-      doc.setTextColor(100);
-      doc.text('Sonar Artists ASBL', pageWidth - margin, margin, {
-        align: 'right',
-      });
-      doc.text('6 rue Francisco Ferrer', pageWidth - margin, margin + 5, {
-        align: 'right',
-      });
-      doc.text(
-        '4460 Grâce-Hollogne, Belgique',
-        pageWidth - margin,
-        margin + 10,
-        {
-          align: 'right',
-        }
-      );
-      doc.text(
-        'Email: contact@sonarartists.be',
-        pageWidth - margin,
-        margin + 20,
-        { align: 'right' }
-      );
-
-      // Ligne de séparation
-      doc.setDrawColor(200);
-      doc.line(margin, margin + 30, pageWidth - margin, margin + 30);
-    };
-
-    // Ajouter l'en-tête
-    addHeader();
-
-    let yPosition2 = 60;
-    const lineHeight = 7;
-    const titleLineHeight = 10;
-
-    doc.setFontSize(18);
-    doc.setTextColor(0);
-
-    // Adapter le titre selon le type de document
-    const title =
-      invoice.type === 'credit_note'
-        ? 'NOTE DE CRÉDIT N°: NC-'
-        : 'FACTURE N°: F-';
-    doc.text(`${title}${invoice.invoice_number}`, margin, yPosition2);
-    yPosition2 += titleLineHeight;
-
-    // Informations du document
-    doc.setFontSize(10);
-    doc.text(
-      `Date: ${new Date(invoice.invoice_date).toLocaleDateString()}`,
-      margin,
-      yPosition2
-    );
-    yPosition2 += lineHeight;
-
-    if (invoice.service_date) {
-      doc.text(
-        `Date de service: ${new Date(
-          invoice.service_date
-        ).toLocaleDateString()}`,
-        margin,
-        yPosition2
-      );
-      yPosition2 += lineHeight;
+  generateCreditNotePdf(creditNote?: InvoiceEntity): void {
+    if (creditNote) {
+      this.creditNote.set(creditNote);
     }
-
-    // Informations du client
-    doc.setFontSize(11);
-    doc.text('Adressé à:', pageWidth - margin - 60, 70);
-    doc.setFontSize(10);
-
-    let yPosition = 75;
-    const clientName = doc.splitTextToSize(invoice.client.name, maxWidth);
-    clientName.forEach((line: string) => {
-      doc.text(line, pageWidth - margin - 60, yPosition);
-      yPosition += 5;
-    });
-
-    doc.text(
-      `${invoice.client.street} ${invoice.client.number}`,
-      pageWidth - margin - 60,
-      yPosition
-    );
-    yPosition += 5;
-    doc.text(
-      `${invoice.client.postalCode} ${invoice.client.city}`,
-      pageWidth - margin - 60,
-      yPosition
-    );
-    yPosition += 5;
-    doc.text(`${invoice.client.country}`, pageWidth - margin - 60, yPosition);
-    yPosition += 5;
-    doc.text(
-      `Tél: ${invoice.client.phone}`,
-      pageWidth - margin - 60,
-      yPosition
-    );
-    yPosition += 5;
-    doc.text(
-      `Email: ${invoice.client.email}`,
-      pageWidth - margin - 60,
-      yPosition
-    );
-
-    // Tableau des produits
-    const tableStart = 120;
-    autoTable(doc, {
-      startY: tableStart,
-      head: [['Description', 'Quantité', 'Prix unitaire', 'Total HT']],
-      body: invoice.products.map((product) => [
-        product.description,
-        product.quantity,
-        `${product.price.toFixed(2)} €`,
-        `${(product.quantity * product.price).toFixed(2)} €`,
-      ]),
-      styles: { fontSize: 9 },
-      headStyles: { fillColor: [70, 70, 70], textColor: 255 },
-      columnStyles: {
-        0: { cellWidth: 'auto' },
-        1: { cellWidth: 30, halign: 'center' },
-        2: { cellWidth: 40, halign: 'right' },
-        3: { cellWidth: 40, halign: 'right' },
-      },
-    });
-
-    // Récupérer la position Y après le tableau
-    const finalY = (doc as any).lastAutoTable.finalY || tableStart;
-
-    // Résumé des totaux
-    doc.setFontSize(10);
-    doc.text(`Total HT:`, pageWidth - margin - 50, finalY + 10, {
-      align: 'right',
-    });
-    doc.text(
-      `${invoice.price_htva.toFixed(2)} €`,
-      pageWidth - margin,
-      finalY + 10,
-      { align: 'right' }
-    );
-    doc.text(`TVA 6%:`, pageWidth - margin - 50, finalY + 15, {
-      align: 'right',
-    });
-    doc.text(
-      `${invoice.total_vat_6.toFixed(2)} €`,
-      pageWidth - margin,
-      finalY + 15,
-      { align: 'right' }
-    );
-    doc.text(`TVA 21%:`, pageWidth - margin - 50, finalY + 20, {
-      align: 'right',
-    });
-    doc.text(
-      `${invoice.total_vat_21.toFixed(2)} €`,
-      pageWidth - margin,
-      finalY + 20,
-      { align: 'right' }
-    );
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`Total TTC:`, pageWidth - margin - 50, finalY + 30, {
-      align: 'right',
-    });
-    doc.text(`${invoice.total.toFixed(2)} €`, pageWidth - margin, finalY + 30, {
-      align: 'right',
-    });
-
-    // Conditions et notes
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
-    const conditions = [
-      'Conditions de paiement : 30 jours à compter de la date de facturation',
-      `Date d'émission : ${this.formatDateBelgium(invoice.invoice_date)}`,
-      'Nous vous remercions de votre confiance',
-    ];
-    conditions.forEach((condition, index) => {
-      doc.text(condition, margin, pageHeight - 40 + index * 5);
-    });
-
-    // Pied de page
-    doc.setFontSize(8);
-    doc.setTextColor(100);
-    doc.text(
-      'Sonar Artists ASBL - TVA BE0123456789',
-      pageWidth / 2,
-      pageHeight - 10,
-      { align: 'center' }
-    );
-
-    // Sauvegarder le PDF avec le bon préfixe
-    const prefix = invoice.type === 'credit_note' ? 'note-credit' : 'facture';
-    doc.save(`${prefix}_${invoice.invoice_number}.pdf`);
+    if (this.creditNote()) {
+      this.services.pdf.generateInvoicePDF(this.creditNote()!);
+      this.creditNote.set(null);
+    }
   }
 
-  generateCreditNotePdf(creditNote?: InvoiceEntity) {
-    if (creditNote) this.creditNote.set(creditNote);
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
-    const margin = 20;
-    const maxWidth = 60;
-
-    // Fonction pour ajouter un en-tête à chaque page
-    const addHeader = () => {
-      // Logo de l'entreprise
-      const logoUrl = '/assets/images/SONAR.png';
-      const logoWidth = 40;
-      const logoHeight = 40;
-      const aspectRatio = logoWidth / logoHeight;
-
-      // Calculer la nouvelle hauteur en conservant le ratio d'aspect
-      const newLogoWidth = 40;
-      const newLogoHeight = newLogoWidth / aspectRatio;
-
-      doc.addImage(logoUrl, 'PNG', margin, 5, newLogoWidth, newLogoHeight);
-
-      // Informations de l'entreprise
-      doc.setFontSize(10);
-      doc.setTextColor(100);
-      doc.text('Sonar Artists ASBL', pageWidth - margin, margin, {
-        align: 'right',
-      });
-      doc.text('6 rue Francisco Ferrer', pageWidth - margin, margin + 5, {
-        align: 'right',
-      });
-      doc.text(
-        '4460 Grâce-Hollogne, Belgique',
-        pageWidth - margin,
-        margin + 10,
-        {
-          align: 'right',
-        }
-      );
-
-      doc.text(
-        'Email: contact@sonarartists.be',
-        pageWidth - margin,
-        margin + 20,
-        { align: 'right' }
-      );
-
-      // Ligne de séparation
-      doc.setDrawColor(200);
-      doc.line(margin, margin + 30, pageWidth - margin, margin + 30);
-    };
-
-    // Ajouter l'en-tête
-    addHeader();
-
-    let yPosition2 = 60;
-    const lineHeight = 7; // Espacement entre les lignes
-    const titleLineHeight = 10; // Espacement spécifique après le titre
-
-    doc.setFontSize(18);
-    doc.setTextColor(0);
-    doc.text(`Note de crédit N°: ${this.creditNote()?.id}`, margin, yPosition2);
-    yPosition2 += titleLineHeight; // Espace réduit après le titre
-
-    // Informations de la note de crédit
-    doc.setFontSize(10);
-    doc.text(
-      `Date: ${new Date(
-        this.creditNote()?.invoice_date!
-      ).toLocaleDateString()}`,
-      margin,
-      yPosition2
-    );
-    yPosition2 += lineHeight;
-
-    if (this.creditNote()?.service_date) {
-      doc.text(
-        `Date de service: ${new Date(
-          this.creditNote()?.service_date!
-        ).toLocaleDateString()}`,
-        margin,
-        yPosition2
-      );
-      yPosition2 += lineHeight;
-    }
-
-    if (this.creditNote()?.linkedInvoiceId) {
-      doc.text(
-        `Numéro de facture liée: ${this.creditNote()?.linkedInvoiceId}`,
-        margin,
-        yPosition2
-      );
-      yPosition2 += lineHeight;
-    }
-
-    // Informations du client
-    doc.setFontSize(11);
-    doc.text('Adressé à:', pageWidth - margin - 60, 70);
-    doc.setFontSize(10);
-
-    let yPosition = 75;
-    const clientName = doc.splitTextToSize(
-      this.creditNote()?.client.name!,
-      maxWidth
-    );
-    clientName.forEach((line: string) => {
-      doc.text(line, pageWidth - margin - 60, yPosition);
-      yPosition += 5;
-    });
-
-    doc.text(
-      `${this.creditNote()?.client.street} ${this.creditNote()?.client.number}`,
-      pageWidth - margin - 60,
-      yPosition
-    );
-    yPosition += 5;
-    doc.text(
-      `${this.creditNote()?.client.postalCode} ${
-        this.creditNote()?.client.city
-      }`,
-      pageWidth - margin - 60,
-      yPosition
-    );
-    yPosition += 5;
-    doc.text(
-      `${this.creditNote()?.client.country}`,
-      pageWidth - margin - 60,
-      yPosition
-    );
-    yPosition += 5;
-    doc.text(
-      `Tél: ${this.creditNote()?.client.phone}`,
-      pageWidth - margin - 60,
-      yPosition
-    );
-    yPosition += 5;
-    doc.text(
-      `Email: ${this.creditNote()?.client.email}`,
-      pageWidth - margin - 60,
-      yPosition
-    );
-
-    // Tableau des produits
-    const tableStart = 120;
-    autoTable(doc, {
-      startY: tableStart,
-      head: [['Description', 'Quantité', 'Prix unitaire', 'Total HT']],
-      body: this.creditNote()?.products.map((product) => [
-        product.description,
-        product.quantity,
-        `${Math.abs(product.price).toFixed(2)} €`,
-        `${Math.abs(product.quantity * product.price).toFixed(2)} €`,
-      ]),
-      styles: { fontSize: 9 },
-      headStyles: { fillColor: [70, 70, 70], textColor: 255 },
-      columnStyles: {
-        0: { cellWidth: 'auto' },
-        1: { cellWidth: 30, halign: 'center' },
-        2: { cellWidth: 40, halign: 'right' },
-        3: { cellWidth: 40, halign: 'right' },
-      },
-    });
-
-    // Récupérer la position Y après le tableau
-    const finalY = (doc as any).lastAutoTable.finalY || tableStart;
-
-    // Résumé des totaux
-    doc.setFontSize(10);
-    doc.text(`Total HT:`, pageWidth - margin - 50, finalY + 10, {
-      align: 'right',
-    });
-    doc.text(
-      `${Math.abs(
-        this.creditNote()?.products.reduce(
-          (acc, product) => acc + product.quantity * product.price,
-          0
-        )!
-      ).toFixed(2)} €`,
-      pageWidth - margin,
-      finalY + 10,
-      { align: 'right' }
-    );
-    doc.text(`TVA 6%:`, pageWidth - margin - 50, finalY + 15, {
-      align: 'right',
-    });
-    doc.text(
-      `${Math.abs(
-        this.creditNote()?.products.reduce(
-          (acc, product) =>
-            product.vat === 0.06
-              ? acc + product.quantity * product.price * 0.06
-              : acc,
-          0
-        )!
-      ).toFixed(2)} €`,
-      pageWidth - margin,
-      finalY + 15,
-      { align: 'right' }
-    );
-    doc.text(`TVA 21%:`, pageWidth - margin - 50, finalY + 20, {
-      align: 'right',
-    });
-    doc.text(
-      `${Math.abs(
-        this.creditNote()?.products.reduce(
-          (acc, product) =>
-            product.vat === 0.21
-              ? acc + product.quantity * product.price * 0.21
-              : acc,
-          0
-        )!
-      ).toFixed(2)} €`,
-      pageWidth - margin,
-      finalY + 20,
-      { align: 'right' }
-    );
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`Total note de crédit:`, pageWidth - margin - 50, finalY + 30, {
-      align: 'right',
-    });
-    doc.text(
-      `${Math.abs(this.creditNote()?.creditNoteAmount!).toFixed(2)} €`,
-      pageWidth - margin,
-      finalY + 30,
-      { align: 'right' }
-    );
-
-    // Conditions et notes
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
-    const conditions = [
-      'Cette note de crédit annule et remplace la facture mentionnée ci-dessus.',
-      `Date d'émission : ${this.formatDateBelgium(
-        this.creditNote()?.invoice_date!
-      )}`,
-      'Nous vous remercions de votre compréhension.',
-    ];
-    conditions.forEach((condition, index) => {
-      doc.text(condition, margin, pageHeight - 40 + index * 5);
-    });
-
-    // Pied de page
-    doc.setFontSize(8);
-    doc.setTextColor(100);
-    doc.text(
-      'Sonar Artists ASBL - TVA BE0123456789',
-      pageWidth / 2,
-      pageHeight - 10,
-      { align: 'center' }
-    );
-
-    // Sauvegarder le PDF
-    doc.save(`note_de_credit_${this.creditNote()?.id}.pdf`);
-    this.creditNote.set(null);
-  }
-
-  createInvoice(quote: QuoteEntity, ctx: any) {
-    this.invoiceService
-      .createInvoice(quote, this.typeOfProjet()!, this.id()!)
+  createInvoice(quote: QuoteEntity, ctx: any): void {
+    this.services.invoice
+      .createInvoice(quote, {
+        account_id: +this.id()!,
+        type: this.typeOfProjet() as 'PRINCIPAL' | 'GROUP',
+      })
       .pipe(
+        take(1),
         tap((data) => {
           quote.invoice = data;
           ctx.close();
@@ -996,77 +397,105 @@ export class FacturationComponent implements OnInit, OnDestroy {
       .subscribe();
   }
 
-  ngOnDestroy(): void {
-    this.groupAccount.set(undefined);
-  }
-
-  checkCreditNote(invoice_id: number) {
-    this.invoiceService
+  checkCreditNote(invoice_id: number): void {
+    this.services.invoice
       .getCreditNoteByInvoiceId(invoice_id)
-      .subscribe((data: InvoiceEntity) => {
-        this.creditNote.set(data);
-        this.creditNoteList.update((prev) => [...prev, data]);
-        if (this.creditNote()) {
-          this.isCreditNote.set(true);
-        } else {
-          this.isCreditNote.set(false);
-        }
-      });
-  }
-
-  setReportDate(date: Date) {
-    this.reportDate.set(date);
-  }
-
-  reportQuoteDate(quote_id: number, ctx: any) {
-    if (!this.reportDate()) {
-      // Gérer le cas où aucune date n'est sélectionnée
-      return;
-    }
-
-    this.quoteService
-      .reportQuoteDate(quote_id, new Date(this.reportDate()!))
       .pipe(
         take(1),
-        tap((data) => {
-          if (!data) return;
-
-          if (data && this.accountPrincipal) {
-            this.accountPrincipal.quote.forEach((quote) => {
-              if (quote.id === quote_id) {
-                quote.quote_date = new Date(this.reportDate()!);
-              }
-            });
-          } else if (data && this.groupAccount()) {
-            this.groupAccount()?.quote.forEach((quote) => {
-              if (quote.id === quote_id) {
-                quote.quote_date = new Date(this.reportDate()!);
-              }
-            });
-          }
-          ctx.close();
-          this.reportDate.set(this.currentDate); // Réinitialiser la date après l'enregistrement
-          toast('Date du devis reportée', {
-            action: {
-              label: 'Undo',
-              onClick: () => console.log('Undo'),
-            },
-          });
+        tap((data: InvoiceEntity) => {
+          this.creditNote.set(data);
+          this.creditNoteList.update((prev) => [...prev, data]);
+          this.isCreditNote.set(!!data);
         })
       )
       .subscribe();
   }
 
-  ngOnInit() {
-    // Les factures seront chargées après l'initialisation du compte
+  setReportDate(date: Date): void {
+    this.reportDate.set(date);
   }
 
-  private loadInvoices() {
-    // Charger les factures selon le type de compte
-    if (this.typeOfProjet() === 'PRINCIPAL' && this.accountPrincipal) {
-      this.invoices = [...(this.accountPrincipal.invoice || [])];
+  reportQuoteDate(quote_id: number, ctx: any): void {
+    if (!this.reportDate()) return;
+
+    this.services.quote
+      .reportQuoteDate(quote_id, new Date(this.reportDate()!))
+      .pipe(
+        take(1),
+        tap((success) => {
+          if (!success) return;
+
+          this.updateQuoteDate(quote_id);
+          ctx.close();
+          this.reportDate.set(this.currentDate);
+          toast('Date du devis reportée');
+        })
+      )
+      .subscribe();
+  }
+
+  private updateQuoteDate(quote_id: number): void {
+    if (this.accountPrincipal) {
+      this.accountPrincipal.quote = this.accountPrincipal.quote.map((quote) =>
+        quote.id === quote_id
+          ? { ...quote, quote_date: new Date(this.reportDate()!) }
+          : quote
+      );
     } else if (this.groupAccount()) {
-      this.invoices = [...(this.groupAccount()?.invoice || [])];
+      const updatedQuotes = this.groupAccount()!.quote.map((quote) =>
+        quote.id === quote_id
+          ? { ...quote, quote_date: new Date(this.reportDate()!) }
+          : quote
+      );
+      this.groupAccount.update((account) => ({
+        ...account!,
+        quote: updatedQuotes,
+      }));
     }
+  }
+
+  private loadInvoices(): void {
+    this.invoices =
+      this.typeOfProjet() === 'PRINCIPAL'
+        ? [...(this.accountPrincipal?.invoice || [])]
+        : [...(this.groupAccount()?.invoice || [])];
+    this.updateDocuments();
+  }
+
+  protected getVisiblePages(
+    currentPage: number,
+    totalPages: number
+  ): (number | 'ellipsis')[] {
+    if (totalPages <= 5) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+
+    if (currentPage <= 3) {
+      return [1, 2, 3, 'ellipsis', totalPages - 1, totalPages];
+    }
+
+    if (currentPage >= totalPages - 2) {
+      return [1, 2, 'ellipsis', totalPages - 2, totalPages - 1, totalPages];
+    }
+
+    return [
+      1,
+      'ellipsis',
+      currentPage - 1,
+      currentPage,
+      currentPage + 1,
+      'ellipsis',
+      totalPages,
+    ];
+  }
+
+  protected onPageChange(page: number): void {
+    if (page >= 1 && page <= this.pagination.totalPages()) {
+      this.pagination.currentPage.set(page);
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.groupAccount.set(undefined);
   }
 }

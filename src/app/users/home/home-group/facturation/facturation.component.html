@@ -83,8 +83,8 @@
     </thead>
     <tbody class="divide-y divide-gray-200">
       @if (typeOfProjet() === "PRINCIPAL" && connectedUser()?.role === "ADMIN")
-      { @for (doc of getAllDocuments(); track doc.id) { @if (doc.documentType
-      === 'quote') {
+      { @for (doc of paginatedDocuments(); track doc.id + '-' +
+      doc.documentType) { @if (doc.documentType === 'quote') {
       <tr class="bg-white hover:bg-gray-50 transition-colors">
         <td class="px-6 py-4">D-{{ doc.quote_number }}</td>
         <td class="px-6 py-4">
@@ -141,6 +141,20 @@
             >
               <hlm-icon size="sm" name="lucideFileDown" />
               <span class="hidden sm:inline">Télécharger facture</span>
+            </button>
+            <button
+              hlmBtn
+              variant="ghost"
+              size="sm"
+              class="flex items-center gap-2"
+              routerLink="new-credit-note"
+              [queryParams]="{
+                typeOfProjet: typeOfProjet(),
+                invoiceId: doc.invoice.id
+              }"
+            >
+              <hlm-icon size="sm" name="lucideFileText" />
+              <span class="hidden sm:inline">Créer note de crédit</span>
             </button>
             } @if (!doc.invoice) {
             <button
@@ -243,3 +257,61 @@
     </tbody>
   </table>
 </div>
+
+@if (allDocuments()?.length) {
+<nav hlmPagination class="mt-4 flex justify-center">
+  <ul
+    hlmPaginationContent
+    class="flex flex-wrap gap-1 justify-center items-center"
+  >
+    <li hlmPaginationItem class="md:mx-1">
+      <button
+        class="px-3 py-1.5 text-sm font-medium transition-colors hover:bg-gray-100 rounded-md"
+        [class.opacity-50]="pagination.currentPage() === 1"
+        [disabled]="pagination.currentPage() === 1"
+        (click)="
+          pagination.currentPage() > 1 &&
+            onPageChange(pagination.currentPage() - 1)
+        "
+      >
+        Précédent
+      </button>
+    </li>
+
+    @for (page of getVisiblePages(pagination.currentPage(),
+    pagination.totalPages()); track $index) { @if (page === 'ellipsis') {
+    <li hlmPaginationItem class="md:mx-1">
+      <span class="px-3 py-1.5">...</span>
+    </li>
+    } @else {
+    <li hlmPaginationItem class="md:mx-1">
+      <button
+        class="min-w-[40px] h-9 px-3 py-1.5 text-sm font-medium transition-colors rounded-md"
+        [class.bg-zinc-800]="pagination.currentPage() === page"
+        [class.text-white]="pagination.currentPage() === page"
+        [class.hover:bg-gray-100]="pagination.currentPage() !== page"
+        (click)="onPageChange(page)"
+      >
+        {{ page }}
+      </button>
+    </li>
+    } }
+
+    <li hlmPaginationItem class="md:mx-1">
+      <button
+        class="px-3 py-1.5 text-sm font-medium transition-colors hover:bg-gray-100 rounded-md"
+        [class.opacity-50]="
+          pagination.currentPage() === pagination.totalPages()
+        "
+        [disabled]="pagination.currentPage() === pagination.totalPages()"
+        (click)="
+          pagination.currentPage() < pagination.totalPages() &&
+            onPageChange(pagination.currentPage() + 1)
+        "
+      >
+        Suivant
+      </button>
+    </li>
+  </ul>
+</nav>
+}

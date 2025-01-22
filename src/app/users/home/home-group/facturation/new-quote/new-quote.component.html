@@ -313,103 +313,6 @@
           <hlm-icon size="sm" name="lucideAlertTriangle" />
           Veuillez sélectionner un client avant d'ajouter des services
         </div>
-        } @if (isToggleProductForm()) {
-        <div
-          class="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-gray-100"
-        >
-          <form
-            [formGroup]="createProductForm"
-            (ngSubmit)="createProduct()"
-            class="space-y-4 md:space-y-6"
-          >
-            <div
-              class="flex justify-between items-center border-b border-gray-200 pb-4 md:pb-6"
-            >
-              <h3 class="font-semibold text-gray-900">Nouveau service</h3>
-              <button
-                type="button"
-                (click)="toggleProductForm()"
-                class="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-all"
-              >
-                <hlm-icon size="sm" name="lucideXCircle" />
-              </button>
-            </div>
-
-            <div class="space-y-4">
-              <label class="block" hlmLabel>
-                <span class="text-sm font-medium text-gray-900"
-                  >Description*</span
-                >
-                <input
-                  formControlName="description"
-                  hlmInput
-                  placeholder="Description du service"
-                  class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
-                />
-              </label>
-
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <label class="block" hlmLabel>
-                  <span class="text-sm font-medium text-gray-900">Prix*</span>
-                  <input
-                    formControlName="price"
-                    type="number"
-                    hlmInput
-                    placeholder="0.00"
-                    class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
-                  />
-                </label>
-
-                <label class="block" hlmLabel>
-                  <span class="text-sm font-medium text-gray-900"
-                    >Quantité*</span
-                  >
-                  <input
-                    formControlName="quantity"
-                    type="number"
-                    hlmInput
-                    placeholder="1"
-                    class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
-                  />
-                </label>
-              </div>
-
-              <label class="flex items-center gap-2 cursor-pointer group">
-                <hlm-checkbox
-                  (checkedChange)="toggleArtisticPerformance()"
-                  formControlName="vat"
-                  class="rounded-md group-hover:border-primary transition-colors"
-                />
-                <span
-                  class="text-sm text-gray-700 group-hover:text-gray-900 transition-colors"
-                >
-                  TVA 6% (Prestation artistique)
-                </span>
-              </label>
-            </div>
-
-            <div
-              class="flex justify-end gap-3 pt-4 md:pt-6 border-t border-gray-200"
-            >
-              <button
-                type="button"
-                (click)="toggleProductForm()"
-                class="bg-gray-100 text-gray-700 font-medium text-sm rounded-lg px-3 py-1.5 md:px-4 md:py-2 hover:bg-gray-200 transition-all"
-                hlmBtn
-              >
-                Annuler
-              </button>
-              <button
-                class="bg-primary text-white font-medium text-sm rounded-lg px-3 py-1.5 md:px-4 md:py-2 flex items-center gap-2 hover:bg-primary/90 transition-all"
-                hlmBtn
-                type="submit"
-              >
-                <hlm-icon size="sm" name="lucideCheck" />
-                Ajouter le service
-              </button>
-            </div>
-          </form>
-        </div>
         } @if (products().length > 0) {
         <div class="space-y-4">
           @if (isToggleEditProductForm()) {
@@ -621,6 +524,103 @@
             Aucun service ajouté pour le moment
           </p>
         </div>
+        } @if (isToggleProductForm()) {
+        <div
+          class="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-gray-100"
+        >
+          <form
+            [formGroup]="createProductForm"
+            (ngSubmit)="createProduct()"
+            class="space-y-4 md:space-y-6"
+          >
+            <div
+              class="flex justify-between items-center border-b border-gray-200 pb-4 md:pb-6"
+            >
+              <h3 class="font-semibold text-gray-900">Nouveau service</h3>
+              <button
+                type="button"
+                (click)="toggleProductForm()"
+                class="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-all"
+              >
+                <hlm-icon size="sm" name="lucideXCircle" />
+              </button>
+            </div>
+
+            <div class="space-y-4">
+              <label class="block" hlmLabel>
+                <span class="text-sm font-medium text-gray-900"
+                  >Description*</span
+                >
+                <input
+                  formControlName="description"
+                  hlmInput
+                  placeholder="Description du service"
+                  class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+                />
+              </label>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <label class="block" hlmLabel>
+                  <span class="text-sm font-medium text-gray-900">Prix*</span>
+                  <input
+                    formControlName="price"
+                    type="number"
+                    hlmInput
+                    placeholder="0.00"
+                    class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+                  />
+                </label>
+
+                <label class="block" hlmLabel>
+                  <span class="text-sm font-medium text-gray-900"
+                    >Quantité*</span
+                  >
+                  <input
+                    formControlName="quantity"
+                    type="number"
+                    hlmInput
+                    placeholder="1"
+                    class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+                  />
+                </label>
+              </div>
+
+              <label class="flex items-center gap-2 cursor-pointer group">
+                <hlm-checkbox
+                  (checkedChange)="toggleArtisticPerformance()"
+                  formControlName="vat"
+                  class="rounded-md group-hover:border-primary transition-colors"
+                />
+                <span
+                  class="text-sm text-gray-700 group-hover:text-gray-900 transition-colors"
+                >
+                  TVA 6% (Prestation artistique)
+                </span>
+              </label>
+            </div>
+
+            <div
+              class="flex justify-end gap-3 pt-4 md:pt-6 border-t border-gray-200"
+            >
+              <button
+                type="button"
+                (click)="toggleProductForm()"
+                class="bg-gray-100 text-gray-700 font-medium text-sm rounded-lg px-3 py-1.5 md:px-4 md:py-2 hover:bg-gray-200 transition-all"
+                hlmBtn
+              >
+                Annuler
+              </button>
+              <button
+                class="bg-primary text-white font-medium text-sm rounded-lg px-3 py-1.5 md:px-4 md:py-2 flex items-center gap-2 hover:bg-primary/90 transition-all"
+                hlmBtn
+                type="submit"
+              >
+                <hlm-icon size="sm" name="lucideCheck" />
+                Ajouter le service
+              </button>
+            </div>
+          </form>
+        </div>
         }
       </div>
 
@@ -707,7 +707,7 @@
           <brn-select
             formControlName="country"
             class="mt-1.5"
-            placeholder="Sélectionner un pays"
+            placeholder="Belgique"
           >
             <hlm-select-trigger
               class="w-full bg-white border-gray-200 text-sm rounded-lg"

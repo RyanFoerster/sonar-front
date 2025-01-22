@@ -26,24 +26,32 @@ export class InvoiceService {
 
   createInvoice(
     quote: QuoteEntity,
-    typeOfProject: string,
-    id: number
+    params: { account_id: number; type: 'PRINCIPAL' | 'GROUP' }
   ): Observable<InvoiceEntity> {
     return this.httpClient.post<InvoiceEntity>(
-      `${this.API_URL}/invoice/create`,
+      `${this.API_URL}/invoice`,
+      quote,
       {
-        quote,
-        typeOfProject,
-        id,
+        params,
       }
     );
   }
 
   createCreditNoteWithoutInvoice(
-    creditNoteData: any
+    creditNoteData: any,
+    account_id: number,
+    type: 'PRINCIPAL' | 'GROUP'
   ): Observable<InvoiceEntity> {
     return this.httpClient.post<InvoiceEntity>(
       `${this.API_URL}/invoice/credit-note-without-invoice`,
+      creditNoteData,
+      { params: { account_id, type } }
+    );
+  }
+
+  createCreditNote(creditNoteData: any): Observable<InvoiceEntity> {
+    return this.httpClient.post<InvoiceEntity>(
+      `${this.API_URL}/invoice/credit-note`,
       creditNoteData
     );
   }

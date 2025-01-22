@@ -219,6 +219,13 @@
               </p>
               }
             </div>
+            <button
+              type="button"
+              (click)="toggleClientForm(false)"
+              class="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-all"
+            >
+              <hlm-icon size="sm" name="lucideEdit" />
+            </button>
           </div>
         </div>
         } @else {
@@ -239,7 +246,7 @@
           <button
             type="button"
             (click)="toggleProductForm()"
-            [disabled]="!client()"
+            [disabled]="!client() || !canAddNewProduct()"
             class="bg-primary text-white font-medium text-sm rounded-lg px-4 py-2 flex items-center gap-2 hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             hlmBtn
           >
@@ -255,6 +262,226 @@
         >
           <hlm-icon size="sm" name="lucideAlertTriangle" />
           Veuillez sélectionner un client avant d'ajouter des services
+        </div>
+        } @if (products().length > 0) {
+        <div class="space-y-4">
+          @if (isToggleEditProductForm()) {
+          <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+            <form
+              [formGroup]="editProductForm"
+              (ngSubmit)="editProductToDB()"
+              class="space-y-6"
+            >
+              <div
+                class="flex justify-between items-center border-b border-gray-200 pb-6"
+              >
+                <h3 class="font-semibold text-gray-900">Modifier le service</h3>
+                <button
+                  type="button"
+                  (click)="toggleEditProductForm()"
+                  class="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-all"
+                >
+                  <hlm-icon size="sm" name="lucideXCircle" />
+                </button>
+              </div>
+
+              <div class="space-y-4">
+                <label class="block" hlmLabel>
+                  <span class="text-sm font-medium text-gray-900"
+                    >Description*</span
+                  >
+                  <input
+                    formControlName="description"
+                    hlmInput
+                    placeholder="Description du service"
+                    class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+                  />
+                </label>
+
+                @if (advertiseMessage()) {
+                <div
+                  class="bg-red-50 text-red-600 p-4 rounded-lg text-sm flex items-center gap-2"
+                >
+                  <hlm-icon size="sm" name="lucideAlertTriangle" />
+                  {{ advertiseMessage() }}
+                </div>
+                }
+
+                <div class="grid md:grid-cols-2 gap-4">
+                  <label class="block" hlmLabel>
+                    <span class="text-sm font-medium text-gray-900">Prix*</span>
+                    <input
+                      formControlName="price"
+                      type="number"
+                      hlmInput
+                      placeholder="0.00"
+                      class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+                    />
+                  </label>
+
+                  <label class="block" hlmLabel>
+                    <span class="text-sm font-medium text-gray-900"
+                      >Quantité*</span
+                    >
+                    <input
+                      formControlName="quantity"
+                      type="number"
+                      hlmInput
+                      placeholder="1"
+                      class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+                    />
+                  </label>
+                </div>
+
+                <label class="flex items-center gap-2 cursor-pointer group">
+                  <hlm-checkbox
+                    (checkedChange)="toggleArtisticPerformance()"
+                    formControlName="vat"
+                    class="rounded-md group-hover:border-primary transition-colors"
+                  />
+                  <span
+                    class="text-sm text-gray-700 group-hover:text-gray-900 transition-colors"
+                  >
+                    TVA 6% (Prestation artistique)
+                  </span>
+                </label>
+              </div>
+
+              <div class="flex justify-end gap-3 pt-6 border-t border-gray-200">
+                <button
+                  type="button"
+                  (click)="toggleEditProductForm()"
+                  class="bg-gray-100 text-gray-700 font-medium text-sm rounded-lg px-4 py-2 hover:bg-gray-200 transition-all"
+                  hlmBtn
+                >
+                  Annuler
+                </button>
+                <button
+                  class="bg-primary text-white font-medium text-sm rounded-lg px-4 py-2 flex items-center gap-2 hover:bg-primary/90 transition-all"
+                  hlmBtn
+                  type="submit"
+                >
+                  <hlm-icon size="sm" name="lucideCheck" />
+                  Modifier le service
+                </button>
+              </div>
+            </form>
+          </div>
+          }
+
+          <div
+            class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto"
+          >
+            <table hlmTable class="w-full min-w-[800px]">
+              <thead>
+                <tr hlmTr class="border-b border-gray-200 bg-gray-50">
+                  <th
+                    hlmTh
+                    class="text-left font-medium text-gray-600 py-4 px-4 md:px-6"
+                  >
+                    Description
+                  </th>
+                  <th
+                    hlmTh
+                    class="text-right font-medium text-gray-600 py-4 px-4 md:px-6"
+                  >
+                    Prix unitaire HTVA
+                  </th>
+                  <th
+                    hlmTh
+                    class="text-right font-medium text-gray-600 py-4 px-4 md:px-6"
+                  >
+                    Quantité
+                  </th>
+                  <th
+                    hlmTh
+                    class="text-right font-medium text-gray-600 py-4 px-4 md:px-6"
+                  >
+                    Prix total HTVA
+                  </th>
+                  <th
+                    hlmTh
+                    class="text-right font-medium text-gray-600 py-4 px-4 md:px-6"
+                  >
+                    TVA
+                  </th>
+                  <th
+                    hlmTh
+                    class="text-right font-medium text-gray-600 py-4 px-4 md:px-6"
+                  >
+                    Total
+                  </th>
+                  <th hlmTh class="w-[100px] py-4 px-4 md:px-6"></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (product of products(); track product.id) {
+                <tr
+                  hlmTr
+                  class="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                >
+                  <td hlmTd class="text-sm text-gray-900 py-4 px-4 md:px-6">
+                    {{ product.description }}
+                  </td>
+                  <td
+                    hlmTd
+                    class="text-right text-sm text-gray-900 py-4 px-4 md:px-6"
+                  >
+                    {{ product.price_htva! / product.quantity! | euroFormat }}
+                  </td>
+                  <td
+                    hlmTd
+                    class="text-right text-sm text-gray-900 py-4 px-4 md:px-6"
+                  >
+                    {{ product.quantity }}
+                  </td>
+                  <td
+                    hlmTd
+                    class="text-right text-sm text-gray-900 py-4 px-4 md:px-6"
+                  >
+                    {{ product.price_htva! | euroFormat }}
+                  </td>
+                  <td
+                    hlmTd
+                    class="text-right text-sm text-gray-900 py-4 px-4 md:px-6"
+                  >
+                    {{ product.vat * 100 }}%
+                  </td>
+                  <td
+                    hlmTd
+                    class="text-right text-sm text-gray-900 py-4 px-4 md:px-6 font-medium"
+                  >
+                    {{ product.total! | euroFormat }}
+                  </td>
+                  <td hlmTd class="py-4 px-4 md:px-6">
+                    <div class="flex justify-end gap-2">
+                      <button
+                        type="button"
+                        (click)="editProduct(product.id!)"
+                        class="text-gray-400 hover:text-primary p-1 rounded-full hover:bg-gray-100 transition-all"
+                      >
+                        <hlm-icon size="sm" name="lucideEdit" />
+                      </button>
+                      <button
+                        type="button"
+                        (click)="deleteProduct(product.id!)"
+                        class="text-gray-400 hover:text-red-600 p-1 rounded-full hover:bg-red-50 transition-all"
+                      >
+                        <hlm-icon size="sm" name="lucideTrash" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+        } @else {
+        <div class="bg-gray-100 rounded-xl p-8 text-center">
+          <p class="text-gray-500 text-sm">
+            Aucun service ajouté pour le moment
+          </p>
         </div>
         } @if (isToggleProductForm()) {
         <div
@@ -277,6 +504,15 @@
                 <hlm-icon size="sm" name="lucideXCircle" />
               </button>
             </div>
+
+            @if (advertiseMessage()) {
+            <div
+              class="bg-red-50 text-red-600 p-4 rounded-lg text-sm flex items-center gap-2"
+            >
+              <hlm-icon size="sm" name="lucideAlertTriangle" />
+              {{ advertiseMessage() }}
+            </div>
+            }
 
             <div class="space-y-4">
               <label class="block" hlmLabel>
@@ -353,118 +589,6 @@
             </div>
           </form>
         </div>
-        } @if (products().length > 0) {
-        <div class="space-y-4">
-          <div
-            class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto"
-          >
-            <table hlmTable class="w-full min-w-[800px]">
-              <thead>
-                <tr hlmTr class="border-b border-gray-200 bg-gray-50">
-                  <th
-                    hlmTh
-                    class="text-left font-medium text-gray-600 py-4 px-4 md:px-6"
-                  >
-                    Description
-                  </th>
-                  <th
-                    hlmTh
-                    class="text-right font-medium text-gray-600 py-4 px-4 md:px-6"
-                  >
-                    Prix unitaire HTVA
-                  </th>
-                  <th
-                    hlmTh
-                    class="text-right font-medium text-gray-600 py-4 px-4 md:px-6"
-                  >
-                    Quantité
-                  </th>
-                  <th
-                    hlmTh
-                    class="text-right font-medium text-gray-600 py-4 px-4 md:px-6"
-                  >
-                    Prix total HTVA
-                  </th>
-                  <th
-                    hlmTh
-                    class="text-right font-medium text-gray-600 py-4 px-4 md:px-6"
-                  >
-                    TVA
-                  </th>
-                  <th
-                    hlmTh
-                    class="text-right font-medium text-gray-600 py-4 px-4 md:px-6"
-                  >
-                    Total
-                  </th>
-                  <th hlmTh class="w-[100px] py-4 px-4 md:px-6"></th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (product of products(); track $index) {
-                <tr
-                  hlmTr
-                  class="border-b border-gray-100 hover:bg-gray-50 transition-colors"
-                >
-                  <td hlmTd class="text-sm text-gray-900 py-4 px-4 md:px-6">
-                    {{ product.description }}
-                  </td>
-                  <td
-                    hlmTd
-                    class="text-right text-sm text-gray-900 py-4 px-4 md:px-6"
-                  >
-                    {{
-                      (product.price_htva! / product.quantity!) * -1
-                        | euroFormat
-                    }}
-                  </td>
-                  <td
-                    hlmTd
-                    class="text-right text-sm text-gray-900 py-4 px-4 md:px-6"
-                  >
-                    {{ product.quantity }}
-                  </td>
-                  <td
-                    hlmTd
-                    class="text-right text-sm text-gray-900 py-4 px-4 md:px-6"
-                  >
-                    {{ product.price_htva! * -1 | euroFormat }}
-                  </td>
-                  <td
-                    hlmTd
-                    class="text-right text-sm text-gray-900 py-4 px-4 md:px-6"
-                  >
-                    {{ product.vat * 100 }}%
-                  </td>
-                  <td
-                    hlmTd
-                    class="text-right text-sm text-gray-900 py-4 px-4 md:px-6 font-medium"
-                  >
-                    {{ product.total! * -1 | euroFormat }}
-                  </td>
-                  <td hlmTd class="py-4 px-4 md:px-6">
-                    <div class="flex justify-end gap-2">
-                      <button
-                        type="button"
-                        (click)="deleteProduct($index)"
-                        class="text-gray-400 hover:text-red-600 p-1 rounded-full hover:bg-red-50 transition-all"
-                      >
-                        <hlm-icon size="sm" name="lucideTrash" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-        </div>
-        } @else {
-        <div class="bg-gray-100 rounded-xl p-8 text-center">
-          <p class="text-gray-500 text-sm">
-            Aucun service ajouté pour le moment
-          </p>
-        </div>
         }
       </div>
 
@@ -472,23 +596,33 @@
       <div class="border-t border-gray-200 pt-4 md:pt-6">
         <div class="flex justify-end">
           <div class="w-full md:w-72 space-y-3 md:space-y-4">
+            <label class="flex items-center gap-2 text-sm text-gray-700">
+              <hlm-checkbox
+                [checked]="isTvaIncluded()"
+                (checkedChange)="toggleTvaIncluded()"
+                [disabled]="products().length === 0"
+                class="rounded-md"
+              />
+              Montant TVA comprise
+            </label>
+
             <div class="space-y-2 text-sm">
               <div class="flex justify-between py-1.5 md:py-2">
                 <span class="text-gray-600">Total HTVA</span>
                 <span class="font-medium text-gray-900">{{
-                  totalHtva() * -1 | euroFormat
+                  totalHtva() | euroFormat
                 }}</span>
               </div>
               <div class="flex justify-between py-1.5 md:py-2">
                 <span class="text-gray-600">TVA 21%</span>
                 <span class="font-medium text-gray-900">{{
-                  tva21() * -1 | euroFormat
+                  tva21() | euroFormat
                 }}</span>
               </div>
               <div class="flex justify-between py-1.5 md:py-2">
                 <span class="text-gray-600">TVA 6%</span>
                 <span class="font-medium text-gray-900">{{
-                  tva6() * -1 | euroFormat
+                  tva6() | euroFormat
                 }}</span>
               </div>
               <div
@@ -496,7 +630,7 @@
               >
                 <span class="font-medium text-gray-900">Total TTC</span>
                 <span class="font-semibold text-gray-900">{{
-                  total() * -1 | euroFormat
+                  total() | euroFormat
                 }}</span>
               </div>
             </div>
@@ -513,6 +647,307 @@
         >
           <hlm-icon size="sm" name="lucideFileDown" />
           Générer la note de crédit
+        </button>
+      </div>
+    </form>
+    } @else {
+    <form
+      [formGroup]="createClientForm"
+      class="bg-white rounded-xl p-8 space-y-6 max-w-2xl mx-auto"
+      (ngSubmit)="submitCreateClientForm()"
+    >
+      <div
+        class="flex justify-between items-center border-b border-gray-200 pb-6"
+      >
+        <h2 class="text-xl font-bold text-gray-900">Nouveau client</h2>
+        <button
+          type="button"
+          (click)="toggleClientForm()"
+          class="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-all"
+        >
+          <hlm-icon size="sm" name="lucideXCircle" />
+        </button>
+      </div>
+
+      <div class="space-y-6">
+        <label class="block" hlmLabel>
+          <span class="text-sm font-medium text-gray-900">Pays</span>
+          <brn-select
+            formControlName="country"
+            class="mt-1.5"
+            placeholder="Belgique"
+          >
+            <hlm-select-trigger
+              class="w-full bg-white border-gray-200 text-sm rounded-lg"
+            >
+              <hlm-select-value />
+            </hlm-select-trigger>
+            <hlm-select-content class="w-full max-h-80">
+              @for (pays of paysEuropeens; track pays) {
+              <hlm-option [value]="pays" class="text-sm">{{ pays }}</hlm-option>
+              }
+            </hlm-select-content>
+          </brn-select>
+        </label>
+
+        <label class="flex items-center gap-2 cursor-pointer group">
+          <hlm-checkbox
+            (checkedChange)="togglePhysicalPerson()"
+            class="rounded-md group-hover:border-primary transition-colors"
+          />
+          <span
+            class="text-sm text-gray-700 group-hover:text-gray-900 transition-colors"
+          >
+            Personne physique ou association de fait ?
+          </span>
+        </label>
+
+        @if (!isPhysicalPerson()) {
+        <div class="space-y-4">
+          <label class="block" hlmLabel>
+            <span class="text-sm font-medium text-gray-900"
+              >Numéro d'entreprise</span
+            >
+            <div class="flex flex-col sm:flex-row gap-2 mt-1.5">
+              <input
+                [ngClass]="{
+                  'border-green-600 focus:ring-green-600': isValidBCENumber(),
+                  'border-red-600 focus:ring-red-600':
+                    isValidBCENumber() === false
+                }"
+                formControlName="company_number"
+                hlmInput
+                placeholder="987 XXX XXX"
+                class="flex-1 bg-white border-gray-200 text-sm rounded-lg"
+              />
+              <button
+                (click)="checkBCE()"
+                type="button"
+                class="bg-primary text-white font-medium text-sm rounded-lg px-4 py-2 flex items-center justify-center gap-2 hover:bg-primary/90 transition-all"
+                hlmBtn
+              >
+                Vérifier
+                <hlm-icon size="sm" name="lucideCheck" />
+              </button>
+            </div>
+          </label>
+
+          <label class="block" hlmLabel>
+            <span class="text-sm font-medium text-gray-900">Numéro de TVA</span>
+            <input
+              formControlName="company_vat_number"
+              hlmInput
+              placeholder="BE0XXX XXX XXX"
+              class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+            />
+          </label>
+
+          <label class="block" hlmLabel>
+            <span class="text-sm font-medium text-gray-900"
+              >Nom de l'entreprise*</span
+            >
+            <input
+              formControlName="name"
+              hlmInput
+              placeholder="Nom de l'entreprise"
+              class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+            />
+            @if (createClientForm.get('name')?.invalid &&
+            createClientForm.get('name')?.touched) {
+            <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
+              <hlm-icon size="xs" name="lucideAlertCircle" />
+              Le nom de l'entreprise est requis
+            </span>
+            }
+          </label>
+        </div>
+        } @else {
+        <div class="space-y-4">
+          <label class="block" hlmLabel>
+            <span class="text-sm font-medium text-gray-900"
+              >Numéro national</span
+            >
+            <input
+              formControlName="national_number"
+              hlmInput
+              placeholder="12345678910"
+              class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+            />
+          </label>
+
+          <div class="grid md:grid-cols-2 gap-4">
+            <label class="block" hlmLabel>
+              <span class="text-sm font-medium text-gray-900">Prénom*</span>
+              <input
+                formControlName="firstname"
+                hlmInput
+                placeholder="Prénom"
+                class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+              />
+              @if (createClientForm.get('firstname')?.invalid &&
+              createClientForm.get('firstname')?.touched) {
+              <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
+                <hlm-icon size="xs" name="lucideAlertCircle" />
+                Le prénom est requis
+              </span>
+              }
+            </label>
+
+            <label class="block" hlmLabel>
+              <span class="text-sm font-medium text-gray-900">Nom*</span>
+              <input
+                formControlName="lastname"
+                hlmInput
+                placeholder="Nom"
+                class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+              />
+              @if (createClientForm.get('lastname')?.invalid &&
+              createClientForm.get('lastname')?.touched) {
+              <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
+                <hlm-icon size="xs" name="lucideAlertCircle" />
+                Le nom est requis
+              </span>
+              }
+            </label>
+          </div>
+        </div>
+        }
+
+        <div class="grid md:grid-cols-2 gap-4">
+          <label class="block" hlmLabel>
+            <span class="text-sm font-medium text-gray-900">Email*</span>
+            <input
+              formControlName="email"
+              type="email"
+              hlmInput
+              placeholder="adresse@email.com"
+              class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+            />
+            @if (createClientForm.get('email')?.invalid &&
+            createClientForm.get('email')?.touched) {
+            <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
+              <hlm-icon size="xs" name="lucideAlertCircle" />
+              @if (createClientForm.get('email')?.errors?.['required']) {
+              L'email est requis } @else if
+              (createClientForm.get('email')?.errors?.['email']) { L'email n'est
+              pas valide }
+            </span>
+            }
+          </label>
+
+          <label class="block" hlmLabel>
+            <span class="text-sm font-medium text-gray-900">Téléphone*</span>
+            <input
+              formControlName="phone"
+              type="tel"
+              hlmInput
+              placeholder="+32 XXX XX XX XX"
+              class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+            />
+            @if (createClientForm.get('phone')?.invalid &&
+            createClientForm.get('phone')?.touched) {
+            <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
+              <hlm-icon size="xs" name="lucideAlertCircle" />
+              Le numéro de téléphone est requis
+            </span>
+            }
+          </label>
+        </div>
+
+        <div class="space-y-4">
+          <div class="grid md:grid-cols-2 gap-4">
+            <label class="block" hlmLabel>
+              <span class="text-sm font-medium text-gray-900">Rue*</span>
+              <input
+                formControlName="street"
+                hlmInput
+                placeholder="Rue"
+                class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+              />
+              @if (createClientForm.get('street')?.invalid &&
+              createClientForm.get('street')?.touched) {
+              <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
+                <hlm-icon size="xs" name="lucideAlertCircle" />
+                La rue est requise
+              </span>
+              }
+            </label>
+
+            <label class="block" hlmLabel>
+              <span class="text-sm font-medium text-gray-900">Numéro*</span>
+              <input
+                formControlName="number"
+                hlmInput
+                placeholder="Numéro"
+                class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+              />
+              @if (createClientForm.get('number')?.invalid &&
+              createClientForm.get('number')?.touched) {
+              <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
+                <hlm-icon size="xs" name="lucideAlertCircle" />
+                Le numéro est requis
+              </span>
+              }
+            </label>
+          </div>
+
+          <div class="grid md:grid-cols-3 gap-4">
+            <label class="block" hlmLabel>
+              <span class="text-sm font-medium text-gray-900"
+                >Code postal*</span
+              >
+              <input
+                formControlName="postalCode"
+                hlmInput
+                placeholder="Code postal"
+                class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+              />
+              @if (createClientForm.get('postalCode')?.invalid &&
+              createClientForm.get('postalCode')?.touched) {
+              <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
+                <hlm-icon size="xs" name="lucideAlertCircle" />
+                Le code postal est requis
+              </span>
+              }
+            </label>
+
+            <label class="block md:col-span-2" hlmLabel>
+              <span class="text-sm font-medium text-gray-900">Ville*</span>
+              <input
+                formControlName="city"
+                hlmInput
+                placeholder="Ville"
+                class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+              />
+              @if (createClientForm.get('city')?.invalid &&
+              createClientForm.get('city')?.touched) {
+              <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
+                <hlm-icon size="xs" name="lucideAlertCircle" />
+                La ville est requise
+              </span>
+              }
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-3 pt-6 border-t border-gray-200">
+        <button
+          type="button"
+          (click)="toggleClientForm()"
+          class="bg-gray-100 text-gray-700 font-medium text-sm rounded-lg px-4 py-2 hover:bg-gray-200 transition-all"
+          hlmBtn
+        >
+          Annuler
+        </button>
+        <button
+          class="bg-primary text-white font-medium text-sm rounded-lg px-4 py-2 flex items-center gap-2 hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          hlmBtn
+          type="submit"
+          [disabled]="!createClientForm.valid"
+        >
+          <hlm-icon size="sm" name="lucideCheck" />
+          Créer le client
         </button>
       </div>
     </form>

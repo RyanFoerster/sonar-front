@@ -118,8 +118,8 @@ export class PdfGeneratorService {
       body: products.map((product) => [
         product.description,
         product.quantity,
-        `${Math.abs(product.price).toFixed(2)} €`,
-        `${Math.abs(product.quantity * product.price).toFixed(2)} €`,
+        `${product.price.toFixed(2)} €`,
+        `${(product.quantity * product.price).toFixed(2)} €`,
       ]),
       styles: { fontSize: 9 },
       headStyles: { fillColor: [70, 70, 70], textColor: 255 },
@@ -237,10 +237,26 @@ export class PdfGeneratorService {
     doc.setFontSize(10);
     let yPos = finalY + 10;
 
+    // Calculer les totaux en fonction des produits
+    const totalHT = document.products.reduce(
+      (sum: number, product: any) => sum + product.price_htva,
+      0
+    );
+    const totalVAT6 = document.products
+      .filter((product: any) => product.vat === 0.06)
+      .reduce((sum: number, product: any) => sum + product.tva_amount, 0);
+    const totalVAT21 = document.products
+      .filter((product: any) => product.vat === 0.21)
+      .reduce((sum: number, product: any) => sum + product.tva_amount, 0);
+    const totalTTC = document.products.reduce(
+      (sum: number, product: any) => sum + product.total,
+      0
+    );
+
     const totals = [
-      { label: 'Total HT:', value: document.price_htva },
-      { label: 'TVA 6%:', value: document.total_vat_6 },
-      { label: 'TVA 21%:', value: document.total_vat_21 },
+      { label: 'Total HT:', value: totalHT },
+      { label: 'TVA 6%:', value: totalVAT6 },
+      { label: 'TVA 21%:', value: totalVAT21 },
     ];
 
     totals.forEach((total) => {
@@ -248,7 +264,7 @@ export class PdfGeneratorService {
         align: 'right',
       });
       doc.text(
-        `${Math.abs(total.value).toFixed(2)} €`,
+        `${total.value.toFixed(2)} €`,
         pageWidth - this.PAGE_MARGIN,
         yPos,
         { align: 'right' }
@@ -262,7 +278,7 @@ export class PdfGeneratorService {
       align: 'right',
     });
     doc.text(
-      `${Math.abs(document.total).toFixed(2)} €`,
+      `${totalTTC.toFixed(2)} €`,
       pageWidth - this.PAGE_MARGIN,
       yPos + 5,
       { align: 'right' }

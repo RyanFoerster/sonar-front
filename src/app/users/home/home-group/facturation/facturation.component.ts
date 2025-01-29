@@ -11,9 +11,11 @@ import {
 import { RouterLink } from '@angular/router';
 import { provideIcons } from '@ng-icons/core';
 import {
+  lucideArrowLeft,
   lucideCornerDownLeft,
   lucideEdit,
   lucideFileDown,
+  lucideFilePlus,
   lucideFileText,
 } from '@ng-icons/lucide';
 import {
@@ -145,6 +147,8 @@ import {
       lucideCornerDownLeft,
       lucideEdit,
       lucideFileText,
+      lucideArrowLeft,
+      lucideFilePlus,
     }),
     DatePipe,
   ],
@@ -406,6 +410,19 @@ export class FacturationComponent implements OnInit, OnDestroy {
           this.creditNote.set(data);
           this.creditNoteList.update((prev) => [...prev, data]);
           this.isCreditNote.set(!!data);
+        })
+      )
+      .subscribe();
+  }
+
+  loadCreditNote(creditNoteId: number): void {
+    this.services.invoice
+      .getCreditNoteByInvoiceId(creditNoteId)
+      .pipe(
+        take(1),
+        tap((data) => {
+          this.creditNote.set(data);
+          this.generateCreditNotePdf(this.creditNote()!);
         })
       )
       .subscribe();

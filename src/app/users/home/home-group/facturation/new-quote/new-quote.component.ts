@@ -286,6 +286,8 @@ export class NewQuoteComponent implements AfterViewInit {
   protected filteredClients = signal<ClientEntity[]>([]);
   protected searchControl = new FormControl('');
 
+  protected modifiedProducts = signal<ProductEntity[]>([]);
+
   constructor() {
     this.searchControl.valueChanges
       .pipe(debounceTime(300), distinctUntilChanged())
@@ -375,6 +377,7 @@ export class NewQuoteComponent implements AfterViewInit {
               payment_deadline: data.payment_deadline,
               validation_deadline: this.formatDate(data.validation_deadline),
               comment: data.comment,
+              client_id: data.client.id,
             });
 
             this.products.set(
@@ -521,38 +524,55 @@ export class NewQuoteComponent implements AfterViewInit {
 
   checkTvaIncluded() {
     if (this.isTvaIncluded()) {
-      this.totalHtva.set(
-        this.products().reduce((a, b) => a + b.price_htva!, 0) -
-          this.tva21() -
-          this.tva6()
-      );
-      this.total.set(this.totalHtva() + this.tva21() + this.tva6());
-      this.products().forEach((product) => {
-        const priceHTVA = product.price_htva!;
-        product.total = priceHTVA;
-        product.price_htva = priceHTVA - product.tva_amount!;
+      // Si TVA incluse, on recalcule les montants HTVA
+      this.products.update((products) => {
+        return products.map((product) => {
+          const priceWithVAT = product.price * product.quantity;
+          const vatRate = product.vat;
+          const priceHTVA = priceWithVAT / (1 + vatRate);
+          const tvaAmount = priceWithVAT - priceHTVA;
+
+          return {
+            ...product,
+            price_htva: priceHTVA,
+            tva_amount: tvaAmount,
+            total: priceWithVAT,
+          };
+        });
       });
-      for (const product of this.products()) {
-        this.productService
-          .update(product.id?.toString()!, product)
-          .pipe(take(1))
-          .subscribe();
-      }
     } else {
-      this.totalHtva.set(
-        this.products().reduce((a, b) => a + b.price_htva! + b.tva_amount!, 0)
-      );
-      this.total.set(this.totalHtva() + this.tva21() + this.tva6());
-      this.products().forEach((product) => {
-        const priceTOTAL = product.total!;
-        product.total = priceTOTAL + product.tva_amount!;
-        product.price_htva = priceTOTAL;
+      // Si TVA non incluse, on recalcule les montants avec TVA
+      this.products.update((products) => {
+        return products.map((product) => {
+          const priceHTVA = product.price * product.quantity;
+          const tvaAmount = priceHTVA * product.vat;
+          const total = priceHTVA + tvaAmount;
+
+          return {
+            ...product,
+            price_htva: priceHTVA,
+            tva_amount: tvaAmount,
+            total: total,
+          };
+        });
       });
-      for (const product of this.products()) {
-        this.productService
-          .update(product.id?.toString()!, product)
-          .pipe(take(1))
-          .subscribe();
+    }
+
+    // Recalculer les totaux
+    this.calculateTotals();
+
+    // Mettre à jour les produits modifiés
+    for (const product of this.products()) {
+      const existingIndex = this.modifiedProducts().findIndex(
+        (p) => p.id === product.id
+      );
+      if (existingIndex !== -1) {
+        this.modifiedProducts.update((products) => {
+          products[existingIndex] = product;
+          return [...products];
+        });
+      } else {
+        this.modifiedProducts.update((products) => [...products, product]);
       }
     }
   }
@@ -736,31 +756,63 @@ export class NewQuoteComponent implements AfterViewInit {
   editProductToDB() {
     if (this.editProductForm.valid) {
       const { description, price, quantity, vat } = this.editProductForm.value;
-      const editProductDto = {
+      const productData = {
         description,
         price: +price,
         quantity: +quantity,
         vat: vat ? 0.06 : 0.21,
       };
 
-      this.productService
-        .update(this.idProductToEdit()!.toString(), editProductDto)
-        .pipe(
-          take(1),
-          tap((data) => {
-            const updatedProducts = this.products().map((product) => {
-              if (product.id === this.idProductToEdit()) {
-                return data;
-              }
-              return product;
-            });
+      // Calcul des montants
+      const price_htva = productData.price * productData.quantity;
+      const tva_amount = price_htva * productData.vat;
+      const total = price_htva + tva_amount;
 
-            this.products.set(updatedProducts);
+      const updatedProduct = {
+        ...productData,
+        price_htva,
+        tva_amount,
+        total,
+      };
+
+      this.productService
+        .update(this.idProductToEdit()?.toString() || '', updatedProduct)
+        .pipe(take(1))
+        .subscribe({
+          next: (product) => {
+            // Stocker le produit modifié dans notre liste temporaire
+            const existingIndex = this.modifiedProducts().findIndex(
+              (p) => p.id === product.id
+            );
+            if (existingIndex !== -1) {
+              this.modifiedProducts.update((products) => {
+                products[existingIndex] = product;
+                return [...products];
+              });
+            } else {
+              this.modifiedProducts.update((products) => [
+                ...products,
+                product,
+              ]);
+            }
+
+            // Mettre à jour l'affichage
+            const index = this.products().findIndex((p) => p.id === product.id);
+            if (index !== -1) {
+              this.products.update((products) => {
+                products[index] = product;
+                return [...products];
+              });
+            }
+
             this.calculateTotals();
             this.toggleEditProductForm();
-          })
-        )
-        .subscribe();
+            this.editProductForm.reset();
+          },
+          error: (error) => {
+            console.error('Error updating product:', error);
+          },
+        });
     }
   }
 
@@ -796,17 +848,13 @@ export class NewQuoteComponent implements AfterViewInit {
 
   setTva21(products: ProductEntity[]) {
     const products_tva_21 = products.filter((product) => product.vat === 0.21);
-    const baseAmount = this.isTvaIncluded()
-      ? products_tva_21.reduce((a, b) => a + b.price * b.quantity!, 0)
-      : products_tva_21.reduce((a, b) => a + b.price_htva!, 0);
+    const baseAmount = products_tva_21.reduce((a, b) => a + b.price_htva!, 0);
     return baseAmount * 0.21;
   }
 
   setTva6(products: ProductEntity[]) {
     const products_tva_6 = products.filter((product) => product.vat === 0.06);
-    const baseAmount = this.isTvaIncluded()
-      ? products_tva_6.reduce((a, b) => a + b.price * b.quantity!, 0)
-      : products_tva_6.reduce((a, b) => a + b.price_htva!, 0);
+    const baseAmount = products_tva_6.reduce((a, b) => a + b.price_htva!, 0);
     return baseAmount * 0.06;
   }
 
@@ -866,29 +914,48 @@ export class NewQuoteComponent implements AfterViewInit {
       .subscribe();
   }
 
-  updateQuote() {
-    if (
-      !this.createQuoteForm.valid ||
-      !this.client() ||
-      this.products().length === 0
-    ) {
-      return;
+  async updateQuote() {
+    if (this.createQuoteForm.valid) {
+      try {
+        // Sauvegarder d'abord tous les produits modifiés
+        for (const product of this.modifiedProducts()) {
+          if (product.id) {
+            await this.productService
+              .saveProduct(product.id.toString(), product)
+              .pipe(take(1))
+              .toPromise();
+          }
+        }
+
+        // Puis mettre à jour le devis
+        const quoteData = {
+          ...this.createQuoteForm.value,
+          products_id: this.products().map((product) => product.id!),
+          client_id: this.client()!.id,
+          isVatIncluded: this.isTvaIncluded(),
+          total: this.total(),
+          tva21: this.tva21(),
+          tva6: this.tva6(),
+          totalHtva: this.totalHtva(),
+        };
+
+        this.quoteService
+          .updateQuote(this.updatedQuoteId() || '', quoteData)
+          .pipe(take(1))
+          .subscribe({
+            next: () => {
+              // Réinitialiser la liste des produits modifiés
+              this.modifiedProducts.set([]);
+              this.location.back();
+            },
+            error: (error: Error) => {
+              console.error('Error updating quote:', error);
+            },
+          });
+      } catch (error: unknown) {
+        console.error('Error saving products:', error);
+      }
     }
-
-    const quote: QuoteDto = {
-      ...this.createQuoteForm.value,
-      products_id: this.products().map((product) => product.id!),
-      client_id: this.client()!.id,
-      isVatIncluded: this.isTvaIncluded(),
-    };
-
-    this.quoteService
-      .updateQuote(this.updatedQuoteId()!, quote)
-      .pipe(
-        take(1),
-        tap(() => this.goBack())
-      )
-      .subscribe();
   }
 
   toggleClientSelect() {

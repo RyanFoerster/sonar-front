@@ -303,7 +303,7 @@ export class FacturationComponent implements OnInit, OnDestroy {
   }
 
   private updateDocuments(): void {
-    if (!this.accountPrincipal?.quote) {
+    if (!this.accountPrincipal?.quote && !this.groupAccount()?.quote) {
       this.allDocuments.set([]);
       return;
     }
@@ -320,11 +320,17 @@ export class FacturationComponent implements OnInit, OnDestroy {
   }
 
   private getFormattedQuotes() {
-    return this.accountPrincipal!.quote.map((quote) => ({
-      ...quote,
-      documentDate: quote.quote_date,
-      documentType: 'quote',
-    }));
+    return this.typeOfProjet() === 'PRINCIPAL'
+      ? this.accountPrincipal!.quote.map((quote) => ({
+          ...quote,
+          documentDate: quote.quote_date,
+          documentType: 'quote',
+        }))
+      : this.groupAccount()!.quote.map((quote) => ({
+          ...quote,
+          documentDate: quote.quote_date,
+          documentType: 'quote',
+        }));
   }
 
   private getFormattedCreditNotes() {
@@ -514,5 +520,31 @@ export class FacturationComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.groupAccount.set(undefined);
+  }
+
+  protected hasAccessToBilling(): boolean {
+    if (this.connectedUser()?.role === 'ADMIN') return true;
+
+    if (this.typeOfProjet() === 'GROUP') {
+      const userAccount = this.connectedUser()?.userSecondaryAccounts.find(
+        (account) => account.id === +this.id()!
+      );
+      return userAccount?.role_billing !== 'NONE';
+    }
+
+    return false;
+  }
+
+  protected canEditBilling(): boolean {
+    if (this.connectedUser()?.role === 'ADMIN') return true;
+
+    if (this.typeOfProjet() === 'GROUP') {
+      const userAccount = this.connectedUser()?.userSecondaryAccounts.find(
+        (account) => account.id === +this.id()!
+      );
+      return userAccount?.role_billing === 'ADMIN';
+    }
+
+    return false;
   }
 }

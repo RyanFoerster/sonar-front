@@ -1,47 +1,52 @@
 <!-- En-tête -->
 <div
-  class="flex flex-col md:flex-row justify-between items-center mb-4 md:mb-6 p-2 md:p-4 gap-4"
+  class="flex flex-col sm:flex-row justify-between items-center mb-4 sm:mb-5 md:mb-6 p-2 sm:p-3 md:p-4 gap-2 sm:gap-3 md:gap-4"
 >
-  <h1 class="text-xl md:text-2xl font-bold">Facturation</h1>
-  <div class="flex flex-col sm:flex-row w-full md:w-auto gap-2 md:gap-4">
+  <h1 class="text-xl sm:text-xl md:text-2xl font-bold">Facturation</h1>
+  <div
+    class="flex flex-col sm:flex-row w-full sm:w-auto gap-2 sm:gap-3 md:gap-4"
+  >
     <a
       (click)="goBack()"
-      class="w-fit md:w-auto rounded-full text-sm md:text-base font-semibold py-2 px-4 md:px-6 bg-gray-sonar text-black flex justify-center items-center gap-2 hover:bg-gray-sonar/80 transition-colors cursor-pointer"
+      class="w-fit sm:w-auto rounded-full text-sm sm:text-base font-semibold py-1.5 sm:py-2 px-3 sm:px-4 md:px-6 bg-gray-sonar text-black flex justify-center items-center gap-2 hover:bg-gray-sonar/80 transition-colors cursor-pointer"
       hlmBtn
     >
       <hlm-icon size="sm" name="lucideArrowLeft" class="block" />
       Retour
     </a>
+    @if (canEditBilling()) {
     <a
       routerLink="new-quote"
       [queryParams]="{ typeOfProjet: typeOfProjet() }"
-      class="w-full md:w-auto rounded-full text-sm md:text-base font-semibold py-2 px-4 md:px-6 bg-gray-sonar text-black flex justify-center items-center gap-2 hover:bg-gray-sonar/80 transition-colors"
+      class="w-full sm:w-auto rounded-full text-sm sm:text-base font-semibold py-1.5 sm:py-2 px-3 sm:px-4 md:px-6 bg-gray-sonar text-black flex justify-center items-center gap-2 hover:bg-gray-sonar/80 transition-colors"
       hlmBtn
     >
-      <hlm-icon size="sm" name="lucideFilePlus" class="hidden md:block" />
+      <hlm-icon size="sm" name="lucideFilePlus" class="hidden sm:block" />
       Nouveau devis
     </a>
     @if (connectedUser()?.role === "ADMIN") {
     <a
       routerLink="new-credit-note"
       [queryParams]="{ typeOfProjet: typeOfProjet() }"
-      class="w-full md:w-auto rounded-full text-sm md:text-base font-semibold py-2 px-4 md:px-6 bg-gray-sonar text-black flex justify-center items-center gap-2 hover:bg-gray-sonar/80 transition-colors"
+      class="w-full sm:w-auto rounded-full text-sm sm:text-base font-semibold py-1.5 sm:py-2 px-3 sm:px-4 md:px-6 bg-gray-sonar text-black flex justify-center items-center gap-2 hover:bg-gray-sonar/80 transition-colors"
       hlmBtn
     >
-      <hlm-icon size="sm" name="lucideFileText" class="hidden md:block" />
+      <hlm-icon size="sm" name="lucideFileText" class="hidden sm:block" />
       Nouvelle note de crédit
     </a>
-    }
+    } }
   </div>
 </div>
 
 <!-- Filtres -->
-<div class="flex flex-wrap gap-2 md:gap-4 mb-4 md:mb-6 p-2 md:p-4">
+<div
+  class="flex flex-wrap gap-2 sm:gap-3 md:gap-4 mb-4 sm:mb-5 md:mb-6 p-2 sm:p-3 md:p-4"
+>
   <button
     hlmBtn
     [variant]="currentFilter === 'all' ? 'default' : 'outline'"
     (click)="filterList('all')"
-    class="rounded-full text-sm md:text-base py-1.5 px-3 md:px-4"
+    class="rounded-full text-sm sm:text-base py-1.5 px-2 sm:px-3 md:px-4"
   >
     Tout afficher
   </button>
@@ -49,7 +54,7 @@
     hlmBtn
     [variant]="currentFilter === 'quotes' ? 'default' : 'outline'"
     (click)="filterList('quotes')"
-    class="rounded-full text-sm md:text-base py-1.5 px-3 md:px-4"
+    class="rounded-full text-sm sm:text-base py-1.5 px-2 sm:px-3 md:px-4"
   >
     Devis en attente
   </button>
@@ -57,7 +62,7 @@
     hlmBtn
     [variant]="currentFilter === 'invoiced_quotes' ? 'default' : 'outline'"
     (click)="filterList('invoiced_quotes')"
-    class="rounded-full text-sm md:text-base py-1.5 px-3 md:px-4"
+    class="rounded-full text-sm sm:text-base py-1.5 px-2 sm:px-3 md:px-4"
   >
     Devis facturés
   </button>
@@ -65,7 +70,7 @@
     hlmBtn
     [variant]="currentFilter === 'credit-note' ? 'default' : 'outline'"
     (click)="filterList('credit-note')"
-    class="rounded-full text-sm md:text-base py-1.5 px-3 md:px-4"
+    class="rounded-full text-sm sm:text-base py-1.5 px-2 sm:px-3 md:px-4"
   >
     Notes de crédit
   </button>
@@ -73,78 +78,98 @@
 
 <!-- Tableau -->
 <div
-  class="relative overflow-x-auto rounded-xl border border-gray-200 bg-white p-2 md:p-4"
+  class="relative overflow-x-auto rounded-xl border border-gray-200 bg-white p-2 sm:p-3 md:p-4"
 >
-  <div class="min-w-full overflow-hidden">
+  <div class="min-w-full overflow-x-auto">
     <table class="w-full text-sm text-left">
       <caption
-        class="p-3 md:p-5 text-base md:text-lg font-semibold text-left text-gray-900 bg-white border-b border-gray-200"
+        class="p-2 sm:p-3 md:p-5 text-base sm:text-lg font-semibold text-left text-gray-900 bg-white border-b border-gray-200"
       >
         Liste des devis et notes de crédit
       </caption>
-      <thead class="hidden md:table-header-group">
+      <thead class="hidden lg:table-header-group">
         <tr
           class="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-200"
         >
-          <th scope="col" class="px-4 md:px-6 py-3 md:py-4 font-medium">N°</th>
-          <th scope="col" class="px-4 md:px-6 py-3 md:py-4 font-medium">
+          <th
+            scope="col"
+            class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4 font-medium whitespace-nowrap"
+          >
+            N°
+          </th>
+          <th
+            scope="col"
+            class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4 font-medium whitespace-nowrap"
+          >
             Date
           </th>
-          <th scope="col" class="px-4 md:px-6 py-3 md:py-4 font-medium">
+          <th
+            scope="col"
+            class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4 font-medium"
+          >
             Client
           </th>
-          <th scope="col" class="px-4 md:px-6 py-3 md:py-4 font-medium">
+          <th
+            scope="col"
+            class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4 font-medium whitespace-nowrap"
+          >
             Type
           </th>
-          <th scope="col" class="px-4 md:px-6 py-3 md:py-4 font-medium">
+          <th
+            scope="col"
+            class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4 font-medium whitespace-nowrap"
+          >
             Total
           </th>
           <th
             scope="col"
-            class="px-4 md:px-6 py-3 md:py-4 font-medium text-right"
+            class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4 font-medium text-right"
           >
             Actions
           </th>
         </tr>
       </thead>
       <tbody class="divide-y divide-gray-200">
-        @if (typeOfProjet() === "PRINCIPAL" && connectedUser()?.role ===
-        "ADMIN") { @for (doc of paginatedDocuments(); track doc.id + '-' +
-        doc.documentType) { @if (doc.documentType === 'quote') {
+        @if (hasAccessToBilling()) { @for (doc of paginatedDocuments(); track
+        doc.id + '-' + doc.documentType) { @if (doc.documentType === 'quote') {
         <tr
-          class="bg-white hover:bg-gray-50 transition-colors flex flex-col md:table-row mb-4 md:mb-0 rounded-lg md:rounded-none shadow-sm md:shadow-none"
+          class="bg-white hover:bg-gray-50 transition-colors flex flex-col lg:table-row mb-4 lg:mb-0 rounded-lg lg:rounded-none shadow-sm lg:shadow-none"
         >
           <td
-            class="px-4 md:px-6 py-2 md:py-4 flex md:table-cell items-center justify-between md:justify-start"
+            class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4 flex lg:table-cell items-center justify-between lg:justify-start"
           >
-            <span class="font-medium md:font-normal md:hidden">N° :</span>
-            <span>D-{{ doc.quote_number }}</span>
+            <span class="font-medium lg:font-normal lg:hidden">N° :</span>
+            <span class="whitespace-nowrap">D-{{ doc.quote_number }}</span>
           </td>
           <td
-            class="px-4 md:px-6 py-2 md:py-4 flex md:table-cell items-center justify-between md:justify-start"
+            class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4 flex lg:table-cell items-center justify-between lg:justify-start"
           >
-            <span class="font-medium md:font-normal md:hidden">Date :</span>
-            <span>{{ doc.quote_date | date : "dd/MM/yyyy" }}</span>
+            <span class="font-medium lg:font-normal lg:hidden">Date :</span>
+            <span class="whitespace-nowrap">{{
+              doc.quote_date | date : "dd/MM/yyyy"
+            }}</span>
           </td>
-          <td class="px-4 md:px-6 py-2 md:py-4">
-            <div class="flex items-center gap-3">
+          <td class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4">
+            <div class="flex items-center gap-2 sm:gap-3">
               <div
-                class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600"
+                class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 flex-shrink-0"
               >
                 {{ doc.client.name.charAt(0).toUpperCase() }}
               </div>
-              <div>
-                <div class="font-medium text-gray-900">
+              <div class="min-w-0">
+                <div class="font-medium text-gray-900 truncate">
                   {{ doc.client.name }}
                 </div>
-                <div class="text-xs text-gray-500">{{ doc.client.email }}</div>
+                <div class="text-xs text-gray-500 truncate">
+                  {{ doc.client.email }}
+                </div>
               </div>
             </div>
           </td>
           <td
-            class="px-4 md:px-6 py-2 md:py-4 flex md:table-cell items-center justify-between md:justify-start"
+            class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4 flex lg:table-cell items-center justify-between lg:justify-start"
           >
-            <span class="font-medium md:font-normal md:hidden">Statut :</span>
+            <span class="font-medium lg:font-normal lg:hidden">Statut :</span>
             <span
               class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
               [ngClass]="{
@@ -156,20 +181,20 @@
             </span>
           </td>
           <td
-            class="px-4 md:px-6 py-2 md:py-4 flex md:table-cell items-center justify-between md:justify-start"
+            class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4 flex lg:table-cell items-center justify-between lg:justify-start"
           >
-            <span class="font-medium md:font-normal md:hidden">Total :</span>
+            <span class="font-medium lg:font-normal lg:hidden">Total :</span>
             <span class="font-medium">{{ doc.total | euroFormat }}</span>
           </td>
-          <td class="px-4 md:px-6 py-2 md:py-4">
+          <td class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4">
             <div
-              class="flex flex-col md:flex-row items-stretch md:items-center justify-end gap-2"
+              class="flex flex-col lg:flex-row items-stretch lg:items-center justify-end gap-2 lg:gap-3"
             >
               <button
                 hlmBtn
                 variant="ghost"
                 size="sm"
-                class="flex items-center justify-center gap-2 w-full md:w-auto"
+                class="flex items-center justify-center gap-2 w-full lg:w-auto whitespace-nowrap"
                 [ngClass]="{ 'opacity-50 cursor-not-allowed': doc.invoice }"
                 (click)="generateQuotePDF(doc)"
                 [disabled]="doc.invoice"
@@ -182,18 +207,18 @@
                 hlmBtn
                 variant="ghost"
                 size="sm"
-                class="flex items-center justify-center gap-2 w-full md:w-auto"
+                class="flex items-center justify-center gap-2 w-full lg:w-auto whitespace-nowrap"
                 (click)="generateInvoicePDF(doc.invoice)"
               >
                 <hlm-icon size="sm" name="lucideFileDown" />
                 <span>Télécharger facture</span>
               </button>
-              @if (!doc.invoice.linkedInvoiceId) {
+              @if (canEditBilling()) { @if (!doc.invoice.linkedInvoiceId) {
               <button
                 hlmBtn
                 variant="ghost"
                 size="sm"
-                class="flex items-center justify-center gap-2 w-full md:w-auto"
+                class="flex items-center justify-center gap-2 w-full lg:w-auto whitespace-nowrap"
                 routerLink="new-credit-note"
                 [queryParams]="{
                   typeOfProjet: typeOfProjet(),
@@ -203,23 +228,23 @@
                 <hlm-icon size="sm" name="lucideFileText" />
                 <span>Créer note de crédit</span>
               </button>
-              } @if (doc.invoice.linkedInvoiceId) {
+              } } @if (doc.invoice.linkedInvoiceId) {
               <button
                 hlmBtn
                 variant="ghost"
                 size="sm"
-                class="flex items-center justify-center gap-2 w-full md:w-auto"
+                class="flex items-center justify-center gap-2 w-full lg:w-auto whitespace-nowrap"
                 (click)="loadCreditNote(doc.invoice.linkedInvoiceId)"
               >
                 <hlm-icon size="sm" name="lucideFileDown" />
                 <span>Télécharger note de crédit liée</span>
               </button>
-              } } @if (!doc.invoice) {
+              } } @if (!doc.invoice && canEditBilling()) {
               <button
                 hlmBtn
                 variant="ghost"
                 size="sm"
-                class="flex items-center justify-center gap-2 w-full md:w-auto"
+                class="flex items-center justify-center gap-2 w-full lg:w-auto whitespace-nowrap"
                 routerLink="new-quote"
                 [queryParams]="{
                   typeOfProjet: typeOfProjet(),
@@ -234,7 +259,7 @@
                   hlmBtn
                   variant="default"
                   size="sm"
-                  class="flex items-center justify-center gap-2 w-full md:w-auto"
+                  class="flex items-center justify-center gap-2 w-full lg:w-auto whitespace-nowrap"
                   brnAlertDialogTrigger
                 >
                   <hlm-icon size="sm" name="lucideFileText" />
@@ -267,39 +292,43 @@
         </tr>
         } @if (doc.documentType === 'credit_note') {
         <tr
-          class="bg-red-50 hover:bg-red-100 transition-colors flex flex-col md:table-row mb-4 md:mb-0 rounded-lg md:rounded-none shadow-sm md:shadow-none"
+          class="bg-red-50 hover:bg-red-100 transition-colors flex flex-col lg:table-row mb-4 lg:mb-0 rounded-lg lg:rounded-none shadow-sm lg:shadow-none"
         >
           <td
-            class="px-4 md:px-6 py-2 md:py-4 flex md:table-cell items-center justify-between md:justify-start"
+            class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4 flex lg:table-cell items-center justify-between lg:justify-start"
           >
-            <span class="font-medium md:font-normal md:hidden">N° :</span>
-            <span>NC-{{ doc.invoice_number }}</span>
+            <span class="font-medium lg:font-normal lg:hidden">N° :</span>
+            <span class="whitespace-nowrap">NC-{{ doc.invoice_number }}</span>
           </td>
           <td
-            class="px-4 md:px-6 py-2 md:py-4 flex md:table-cell items-center justify-between md:justify-start"
+            class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4 flex lg:table-cell items-center justify-between lg:justify-start"
           >
-            <span class="font-medium md:font-normal md:hidden">Date :</span>
-            <span>{{ doc.invoice_date | date : "dd/MM/yyyy" }}</span>
+            <span class="font-medium lg:font-normal lg:hidden">Date :</span>
+            <span class="whitespace-nowrap">{{
+              doc.invoice_date | date : "dd/MM/yyyy"
+            }}</span>
           </td>
-          <td class="px-4 md:px-6 py-2 md:py-4">
-            <div class="flex items-center gap-3">
+          <td class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4">
+            <div class="flex items-center gap-2 sm:gap-3">
               <div
-                class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-600"
+                class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-600 flex-shrink-0"
               >
                 {{ doc.client?.name.charAt(0).toUpperCase() }}
               </div>
-              <div>
-                <div class="font-medium text-gray-900">
+              <div class="min-w-0">
+                <div class="font-medium text-gray-900 truncate">
                   {{ doc.client?.name }}
                 </div>
-                <div class="text-xs text-gray-500">{{ doc.client?.email }}</div>
+                <div class="text-xs text-gray-500 truncate">
+                  {{ doc.client?.email }}
+                </div>
               </div>
             </div>
           </td>
           <td
-            class="px-4 md:px-6 py-2 md:py-4 flex md:table-cell items-center justify-between md:justify-start"
+            class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4 flex lg:table-cell items-center justify-between lg:justify-start"
           >
-            <span class="font-medium md:font-normal md:hidden">Type :</span>
+            <span class="font-medium lg:font-normal lg:hidden">Type :</span>
             <span
               class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-red-100 text-red-700"
             >
@@ -307,20 +336,22 @@
             </span>
           </td>
           <td
-            class="px-4 md:px-6 py-2 md:py-4 flex md:table-cell items-center justify-between md:justify-start"
+            class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4 flex lg:table-cell items-center justify-between lg:justify-start"
           >
-            <span class="font-medium md:font-normal md:hidden">Total :</span>
-            <span class="font-medium">{{ doc.total | euroFormat }}</span>
+            <span class="font-medium lg:font-normal lg:hidden">Total :</span>
+            <span class="font-medium">{{
+              doc.creditNoteAmount | euroFormat
+            }}</span>
           </td>
-          <td class="px-4 md:px-6 py-2 md:py-4">
+          <td class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4">
             <div
-              class="flex flex-col md:flex-row items-stretch md:items-center justify-end gap-2"
+              class="flex flex-col lg:flex-row items-stretch lg:items-center justify-end gap-2 lg:gap-3"
             >
               <button
                 hlmBtn
                 variant="ghost"
                 size="sm"
-                class="flex items-center justify-center gap-2 w-full md:w-auto hover:text-red-700 hover:bg-transparent"
+                class="flex items-center justify-center gap-2 w-full lg:w-auto whitespace-nowrap hover:text-red-700 hover:bg-transparent"
                 (click)="generateCreditNotePdf(doc)"
               >
                 <hlm-icon size="sm" name="lucideFileDown" />

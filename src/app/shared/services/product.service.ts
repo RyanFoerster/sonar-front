@@ -15,14 +15,21 @@ export class ProductService {
   createProduct(productDto: ProductDto) {
     return this.httpClient.post<ProductEntity>(
       `${environment.API_URL}/product`,
-      productDto,
+      productDto
     );
   }
 
   update(product_id: string, productDto: ProductDto) {
     return this.httpClient.put<ProductEntity>(
       `${environment.API_URL}/product/update/${product_id}`,
-      productDto,
+      { ...productDto, shouldSave: false }
+    );
+  }
+
+  saveProduct(product_id: string, productDto: ProductDto) {
+    return this.httpClient.put<ProductEntity>(
+      `${environment.API_URL}/product/save/${product_id}`,
+      productDto
     );
   }
 }

@@ -746,10 +746,16 @@ export class NewCreditNoteComponent implements AfterViewInit {
     }
 
     const serviceToCall = this.existingInvoice()
-      ? this.invoiceService.createCreditNote({
-          ...creditNote,
-          products_ids: creditNote.products_id,
-        })
+      ? this.invoiceService.createCreditNote(
+          {
+            ...creditNote,
+            products_ids: creditNote.products_id,
+          },
+          {
+            account_id: +this.id()!,
+            type: this.typeOfProjet() as 'PRINCIPAL' | 'GROUP',
+          }
+        )
       : this.invoiceService.createCreditNoteWithoutInvoice(
           creditNote,
           +this.id()!,

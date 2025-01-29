@@ -49,10 +49,14 @@ export class InvoiceService {
     );
   }
 
-  createCreditNote(creditNoteData: any): Observable<InvoiceEntity> {
+  createCreditNote(
+    creditNoteData: any,
+    params: { account_id: number; type: 'PRINCIPAL' | 'GROUP' }
+  ): Observable<InvoiceEntity> {
     return this.httpClient.post<InvoiceEntity>(
       `${this.API_URL}/invoice/credit-note`,
-      creditNoteData
+      creditNoteData,
+      { params }
     );
   }
 

@@ -3,6 +3,7 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { InvoiceEntity } from '../entities/invoice.entity';
 import { QuoteEntity } from '../entities/quote.entity';
+import * as QRCode from 'qrcode';
 
 @Injectable({
   providedIn: 'root',
@@ -16,6 +17,8 @@ export class PdfGeneratorService {
     city: '4460 Grâce-Hollogne, Belgique',
     email: 'info@sonarartists.be',
     vat: 'TVA BE0700273583',
+    iban: 'BE0700273583', // À remplacer par l'IBAN réel
+    bic: 'GEBABEBB', // À remplacer par le BIC réel
   };
 
   constructor() {}
@@ -110,17 +113,32 @@ export class PdfGeneratorService {
     );
   }
 
-  private addProductsTable(doc: jsPDF, products: any[]): number {
+  private addProductsTable(doc: jsPDF, products: any[], type: string): number {
     const tableStart = 120;
     autoTable(doc, {
       startY: tableStart,
       head: [['Description', 'Quantité', 'Prix unitaire', 'Total HT']],
-      body: products.map((product) => [
-        product.description,
-        product.quantity,
-        `${product.price.toFixed(2)} €`,
-        `${(product.quantity * product.price).toFixed(2)} €`,
-      ]),
+      body:
+        type === 'credit_note'
+          ? products.map((product) => {
+              if (product.price < 0) {
+                return [
+                  product.description,
+                  product.quantity,
+                  `${product.price.toFixed(2)} €`,
+                  `${(product.quantity * product.price).toFixed(2)} €`,
+                ];
+              }
+              return [];
+            })
+          : products.map((product) => {
+              return [
+                product.description,
+                product.quantity,
+                `${product.price.toFixed(2)} €`,
+                `${(product.quantity * product.price).toFixed(2)} €`,
+              ];
+            }),
       styles: { fontSize: 9 },
       headStyles: { fillColor: [70, 70, 70], textColor: 255 },
       columnStyles: {
@@ -166,7 +184,7 @@ export class PdfGeneratorService {
       yPosition
     );
 
-    const finalY = this.addProductsTable(doc, quote.products);
+    const finalY = this.addProductsTable(doc, quote.products, 'quote');
 
     // Totaux et conditions
     this.addTotals(doc, quote, finalY);
@@ -179,7 +197,89 @@ export class PdfGeneratorService {
     doc.save(`devis_${new Date().getFullYear()}-${quote.id}.pdf`);
   }
 
-  generateInvoicePDF(invoice: InvoiceEntity): void {
+  private async generatePaymentQRCode(invoice: InvoiceEntity): Promise<string> {
+    // Format EPC069-12 pour les virements SEPA
+    const reference = `facture_${
+      invoice.invoice_number
+    }_${invoice.client.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
+    const qrData = [
+      'BCD', // Service Tag
+      '002', // Version
+      '1', // Character Set
+      'SCT', // Identification
+      this.COMPANY_INFO.bic, // BIC
+      this.COMPANY_INFO.name, // Nom du bénéficiaire
+      this.COMPANY_INFO.iban, // IBAN
+      `EUR${Math.abs(invoice.total).toFixed(2)}`, // Montant
+      '', // Purpose (peut être laissé vide)
+      reference, // Référence personnalisée
+      `FACTURE ${invoice.invoice_number} - ${this.formatDateBelgium(
+        invoice.invoice_date
+      )}`, // Description détaillée
+    ].join('\n');
+
+    try {
+      return await QRCode.toDataURL(qrData, { width: 100 });
+    } catch (err) {
+      console.error('Erreur lors de la génération du QR code:', err);
+      return '';
+    }
+  }
+
+  private async addPaymentQRCode(
+    doc: jsPDF,
+    invoice: InvoiceEntity,
+    yPosition: number
+  ): Promise<void> {
+    const qrCodeDataUrl = await this.generatePaymentQRCode(invoice);
+    if (qrCodeDataUrl) {
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const qrCodeWidth = 40;
+      const qrCodeHeight = 40;
+      const qrCodeX = this.PAGE_MARGIN;
+      // Augmenter l'espace entre les totaux et le QR code
+      const qrCodeY = yPosition + 50;
+
+      // Ajout du QR code sans fond blanc
+      doc.addImage(
+        qrCodeDataUrl,
+        'PNG',
+        qrCodeX,
+        qrCodeY,
+        qrCodeWidth,
+        qrCodeHeight
+      );
+
+      // Ajout des informations de paiement à côté du QR code
+      doc.setFontSize(9);
+      doc.setTextColor(0);
+      let textY = qrCodeY + 5;
+      doc.text('Informations de paiement:', qrCodeX + qrCodeWidth + 10, textY);
+      textY += 8;
+      doc.text(
+        `IBAN: ${this.COMPANY_INFO.iban}`,
+        qrCodeX + qrCodeWidth + 10,
+        textY
+      );
+      textY += 8;
+      doc.text(
+        `BIC: ${this.COMPANY_INFO.bic}`,
+        qrCodeX + qrCodeWidth + 10,
+        textY
+      );
+      textY += 8;
+      const reference = `facture_${
+        invoice.invoice_number
+      }_${invoice.client.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
+      doc.text(
+        `Communication: ${reference}`,
+        qrCodeX + qrCodeWidth + 10,
+        textY
+      );
+    }
+  }
+
+  async generateInvoicePDF(invoice: InvoiceEntity): Promise<void> {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
@@ -213,10 +313,17 @@ export class PdfGeneratorService {
       );
     }
 
-    const finalY = this.addProductsTable(doc, invoice.products);
+    const finalY = this.addProductsTable(doc, invoice.products, invoice.type);
 
     // Totaux et conditions
     this.addTotals(doc, invoice, finalY);
+
+    // Ajouter le QR code seulement pour les factures (pas pour les notes de crédit)
+    if (invoice.type !== 'credit_note') {
+      await this.addPaymentQRCode(doc, invoice, finalY);
+    }
+
+    // Ajuster la position du footer pour laisser de la place au QR code
     this.addFooter(doc, pageHeight, [
       `Conditions de paiement : ${Math.ceil(
         (new Date(invoice.payment_deadline).getTime() -
@@ -231,35 +338,66 @@ export class PdfGeneratorService {
     doc.save(`${prefix}_${invoice.invoice_number}.pdf`);
   }
 
+  private calculateTotals(products: any[], type: string) {
+    const isCredit = type === 'credit_note';
+    return {
+      totalHT: products.reduce(
+        (sum: number, product: any) =>
+          sum +
+          (isCredit
+            ? product.price_htva < 0
+              ? product.price_htva
+              : 0
+            : product.price_htva),
+        0
+      ),
+      totalVAT6: products
+        .filter((product: any) => product.vat === 0.06)
+        .reduce(
+          (sum: number, product: any) =>
+            sum +
+            (isCredit
+              ? product.tva_amount < 0
+                ? product.tva_amount
+                : 0
+              : product.tva_amount),
+          0
+        ),
+      totalVAT21: products
+        .filter((product: any) => product.vat === 0.21)
+        .reduce(
+          (sum: number, product: any) =>
+            sum +
+            (isCredit
+              ? product.tva_amount < 0
+                ? product.tva_amount
+                : 0
+              : product.tva_amount),
+          0
+        ),
+      totalTTC: products.reduce(
+        (sum: number, product: any) =>
+          sum +
+          (isCredit ? (product.total < 0 ? product.total : 0) : product.total),
+        0
+      ),
+    };
+  }
+
   private addTotals(doc: jsPDF, document: any, finalY: number): void {
     const pageWidth = doc.internal.pageSize.getWidth();
-
     doc.setFontSize(10);
     let yPos = finalY + 10;
 
-    // Calculer les totaux en fonction des produits
-    const totalHT = document.products.reduce(
-      (sum: number, product: any) => sum + product.price_htva,
-      0
-    );
-    const totalVAT6 = document.products
-      .filter((product: any) => product.vat === 0.06)
-      .reduce((sum: number, product: any) => sum + product.tva_amount, 0);
-    const totalVAT21 = document.products
-      .filter((product: any) => product.vat === 0.21)
-      .reduce((sum: number, product: any) => sum + product.tva_amount, 0);
-    const totalTTC = document.products.reduce(
-      (sum: number, product: any) => sum + product.total,
-      0
-    );
+    const totals = this.calculateTotals(document.products, document.type);
 
-    const totals = [
-      { label: 'Total HT:', value: totalHT },
-      { label: 'TVA 6%:', value: totalVAT6 },
-      { label: 'TVA 21%:', value: totalVAT21 },
+    const totalLines = [
+      { label: 'Total HT:', value: Math.abs(totals.totalHT) },
+      { label: 'TVA 6%:', value: Math.abs(totals.totalVAT6) },
+      { label: 'TVA 21%:', value: Math.abs(totals.totalVAT21) },
     ];
 
-    totals.forEach((total) => {
+    totalLines.forEach((total) => {
       doc.text(total.label, pageWidth - this.PAGE_MARGIN - 50, yPos, {
         align: 'right',
       });
@@ -272,15 +410,18 @@ export class PdfGeneratorService {
       yPos += 5;
     });
 
+    // Ajouter un peu d'espace avant le total TTC
+    yPos += 2;
+
     doc.setFontSize(12);
     doc.setFont('helvetica', 'bold');
-    doc.text('Total TTC:', pageWidth - this.PAGE_MARGIN - 50, yPos + 5, {
+    doc.text('Total TTC:', pageWidth - this.PAGE_MARGIN - 50, yPos, {
       align: 'right',
     });
     doc.text(
-      `${totalTTC.toFixed(2)} €`,
+      `${Math.abs(totals.totalTTC).toFixed(2)} €`,
       pageWidth - this.PAGE_MARGIN,
-      yPos + 5,
+      yPos,
       { align: 'right' }
     );
   }

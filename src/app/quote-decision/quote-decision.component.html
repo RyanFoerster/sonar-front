@@ -1,24 +1,202 @@
-
-@if(quoteStatus === 'pending') {
-  <div class="lg:flex lg:flex-col lg:justify-center lg:items-center mx-10">
-
-
-  <div class="lg:flex lg:mb-4 lg:self-start lg:gap-5">
-    <button (click)="acceptQuote()" class="rounded-full bg-emerald-500 hover:bg-emerald-700" hlmBtn>Accepter le devis</button>
-    <button (click)="rejectQuote()" class="rounded-full bg-red-500 hover:bg-red-700" hlmBtn>Refuser le devis</button>
-  </div>
-
-  <div class="lg:h-[75vh] lg:w-full lg:flex lg:justify-center lg:items-center ">
-    <iframe class="lg:rounded-xl" id="pdfPreview" width="100%" height="100%"></iframe>
+@if (!quoteFromDB) {
+<div class="flex justify-center items-center min-h-screen">
+  <div
+    class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"
+  ></div>
+</div>
+} @else if (!canAccess()) {
+<div class="flex justify-center items-center min-h-screen">
+  <div class="text-center p-6 bg-red-50 rounded-xl">
+    <h2 class="text-xl font-semibold text-red-700 mb-2">Accès non autorisé</h2>
+    <p class="text-red-600">
+      Vous n'avez pas les permissions nécessaires pour accéder à ce devis.
+    </p>
   </div>
 </div>
-} @else if(quoteStatus === 'accepted') {
-  <div class="lg:flex lg:flex-col lg:justify-center lg:items-center mx-10 text-emerald-500">
-    Le devis a déjà été accepté par le client ou le groupe
-  </div>
-} @else if(quoteStatus === 'rejected') {
-  <div class="lg:flex lg:flex-col lg:justify-center lg:items-center mx-10 text-red-500">
-    Le devis a déjà été refusé par le client ou le groupe
-  </div>
-}
+} @else {
+<div class="container mx-auto px-4 py-8">
+  <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
+    <!-- En-tête -->
+    <div class="p-6 border-b border-gray-200">
+      <h1 class="text-2xl font-bold text-gray-900">
+        Devis N° D-{{ quoteFromDB.quote_number }}
+      </h1>
+      <p class="mt-2 text-sm text-gray-600">
+        Date du devis: {{ quoteFromDB.quote_date | date : "dd/MM/yyyy" }}
+      </p>
+    </div>
 
+    <!-- Statuts actuels -->
+    <div class="p-6 bg-gray-50 border-b border-gray-200">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="flex items-center gap-2">
+          <span class="text-sm font-medium text-gray-600">Statut Groupe:</span>
+          <span
+            class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
+            [ngClass]="{
+              'bg-green-50 text-green-700':
+                quoteFromDB.group_acceptance === 'accepted',
+              'bg-red-50 text-red-700':
+                quoteFromDB.group_acceptance === 'refused',
+              'bg-yellow-50 text-yellow-700':
+                quoteFromDB.group_acceptance === 'pending'
+            }"
+          >
+            {{
+              quoteFromDB.group_acceptance === "accepted"
+                ? "Accepté"
+                : quoteFromDB.group_acceptance === "refused"
+                ? "Refusé"
+                : "En attente"
+            }}
+          </span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-sm font-medium text-gray-600">Statut Client:</span>
+          <span
+            class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
+            [ngClass]="{
+              'bg-green-50 text-green-700':
+                quoteFromDB.order_giver_acceptance === 'accepted',
+              'bg-red-50 text-red-700':
+                quoteFromDB.order_giver_acceptance === 'refused',
+              'bg-yellow-50 text-yellow-700':
+                quoteFromDB.order_giver_acceptance === 'pending'
+            }"
+          >
+            {{
+              quoteFromDB.order_giver_acceptance === "accepted"
+                ? "Accepté"
+                : quoteFromDB.order_giver_acceptance === "refused"
+                ? "Refusé"
+                : "En attente"
+            }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    @if(canTakeAction()) {
+    <div class="p-6 border-b border-gray-200">
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <button
+          (click)="acceptQuote()"
+          class="rounded-full bg-emerald-500 hover:bg-emerald-600 transition-colors px-6 py-2 text-white font-medium flex items-center justify-center gap-2"
+          [disabled]="quoteStatus !== 'pending'"
+          hlmBtn
+        >
+          <hlm-icon name="lucideCheck" size="sm" />
+          Accepter le devis
+        </button>
+        <button
+          (click)="rejectQuote()"
+          class="rounded-full bg-red-500 hover:bg-red-600 transition-colors px-6 py-2 text-white font-medium flex items-center justify-center gap-2"
+          [disabled]="quoteStatus !== 'pending'"
+          hlmBtn
+        >
+          <hlm-icon name="lucideX" size="sm" />
+          Refuser le devis
+        </button>
+      </div>
+    </div>
+    }
+
+    <!-- Message de statut -->
+    @if(quoteStatus === 'accepted') {
+    <div class="p-6 bg-emerald-50 border-b border-emerald-200">
+      <div class="flex items-center justify-center gap-2 text-emerald-700">
+        <hlm-icon name="lucideCheckCircle" size="sm" />
+        <span>Le devis a été accepté</span>
+      </div>
+    </div>
+    } @else if(quoteStatus === 'refused') {
+    <div class="p-6 bg-red-50 border-b border-red-200">
+      <div class="flex flex-col items-center gap-4">
+        <div class="flex items-center justify-center gap-2 text-red-700 mb-2">
+          <hlm-icon name="lucideXCircle" size="sm" />
+          <span>Le devis a été refusé</span>
+        </div>
+
+        <div class="w-full max-w-2xl bg-white rounded-lg p-6 shadow-sm">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">
+            Informations de contact
+          </h3>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Contact Client -->
+            <div class="space-y-3">
+              <h4 class="font-medium text-gray-700">Client</h4>
+              <div class="space-y-2">
+                <p class="text-sm text-gray-600">
+                  <span class="font-medium">Nom:</span>
+                  {{ quoteFromDB.client.name }}
+                </p>
+                <p class="text-sm text-gray-600">
+                  <span class="font-medium">Email:</span>
+                  {{ quoteFromDB.client.email }}
+                </p>
+                <p class="text-sm text-gray-600">
+                  <span class="font-medium">Téléphone:</span>
+                  {{ quoteFromDB.client.phone }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Contact Créateur -->
+            <div class="space-y-3">
+              <h4 class="font-medium text-gray-700">Créateur du devis</h4>
+              <div class="space-y-2">
+                <p class="text-sm text-gray-600">
+                  <span class="font-medium">Nom:</span>
+                  {{ connectedUser()?.firstName }} {{ connectedUser()?.name }}
+                </p>
+                <p class="text-sm text-gray-600">
+                  <span class="font-medium">Email:</span>
+                  {{ connectedUser()?.email }}
+                </p>
+                <p class="text-sm text-gray-600">
+                  <span class="font-medium">Téléphone:</span>
+                  {{ connectedUser()?.telephone }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Contact Sonar -->
+          <div class="mt-6 pt-6 border-t border-gray-200">
+            <div class="flex items-center gap-2">
+              <hlm-icon
+                name="lucideMailQuestion"
+                size="sm"
+                class="text-gray-500"
+              />
+              <p class="text-sm text-gray-600">
+                Pour toute question, vous pouvez contacter Sonar Artists à
+                <a
+                  href="mailto:info@sonarartists.be"
+                  class="text-blue-600 hover:text-blue-800 underline"
+                >
+                  info&#64;sonarartists.be
+                </a>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    }
+
+    <!-- Aperçu PDF -->
+    <div class="p-6">
+      <iframe
+        id="pdfPreview"
+        class="w-full h-[75vh] rounded-xl border border-gray-200"
+        [class.opacity-50]="
+          quoteStatus === 'accepted' || quoteStatus === 'refused'
+        "
+      ></iframe>
+    </div>
+  </div>
+</div>
+}

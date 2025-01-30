@@ -16,8 +16,8 @@ export interface QuoteEntity {
   validation_deadline: Date;
   isVatIncluded: boolean;
   status: string;
-  group_acceptance: 'accepted' | 'rejected' | 'pending';
-  order_giver_acceptance: 'accepted' | 'rejected' | 'pending';
+  group_acceptance: 'accepted' | 'refused' | 'pending';
+  order_giver_acceptance: 'accepted' | 'refused' | 'pending';
   comment: string;
   client: ClientEntity;
   products: ProductEntity[];

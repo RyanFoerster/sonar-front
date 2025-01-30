@@ -42,6 +42,24 @@
 <div
   class="flex flex-wrap gap-2 sm:gap-3 md:gap-4 mb-4 sm:mb-5 md:mb-6 p-2 sm:p-3 md:p-4"
 >
+  <!-- Champ de recherche -->
+  <div class="w-full flex gap-2 mb-2">
+    <div class="relative w-full sm:w-96">
+      <div
+        class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none"
+      >
+        <hlm-icon size="sm" name="lucideSearch" class="text-gray-500" />
+      </div>
+      <input
+        type="text"
+        [(ngModel)]="searchNumber"
+        (input)="onSearchChange()"
+        placeholder="Rechercher par numéro (ex: D-123, NC-456)"
+        class="w-full rounded-lg border border-gray-300 ps-10 pe-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400 placeholder:text-gray-400"
+      />
+    </div>
+  </div>
+
   <button
     hlmBtn
     [variant]="currentFilter === 'all' ? 'default' : 'outline'"
@@ -208,7 +226,7 @@
                     'bg-green-50 text-green-700':
                       doc.group_acceptance === 'accepted',
                     'bg-red-50 text-red-700':
-                      doc.group_acceptance === 'rejected',
+                      doc.group_acceptance === 'refused',
                     'bg-yellow-50 text-yellow-700':
                       doc.group_acceptance === 'pending'
                   }"
@@ -216,7 +234,7 @@
                   {{
                     doc.group_acceptance === "accepted"
                       ? "Accepté"
-                      : doc.group_acceptance === "rejected"
+                      : doc.group_acceptance === "refused"
                       ? "Refusé"
                       : "En attente"
                   }}

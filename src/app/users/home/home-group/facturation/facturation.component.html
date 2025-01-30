@@ -123,6 +123,12 @@
           </th>
           <th
             scope="col"
+            class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4 font-medium whitespace-nowrap"
+          >
+            Acceptation
+          </th>
+          <th
+            scope="col"
             class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4 font-medium text-right"
           >
             Actions
@@ -186,6 +192,61 @@
             <span class="font-medium lg:font-normal lg:hidden">Total :</span>
             <span class="font-medium">{{ doc.total | euroFormat }}</span>
           </td>
+
+          <td
+            class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4 flex lg:table-cell items-center justify-between lg:justify-start"
+          >
+            <span class="font-medium lg:font-normal lg:hidden"
+              >Acceptation :</span
+            >
+            <div class="flex flex-col gap-1">
+              <div class="flex items-center gap-2">
+                <span class="text-xs text-gray-500">Groupe:</span>
+                <span
+                  class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
+                  [ngClass]="{
+                    'bg-green-50 text-green-700':
+                      doc.group_acceptance === 'accepted',
+                    'bg-red-50 text-red-700':
+                      doc.group_acceptance === 'rejected',
+                    'bg-yellow-50 text-yellow-700':
+                      doc.group_acceptance === 'pending'
+                  }"
+                >
+                  {{
+                    doc.group_acceptance === "accepted"
+                      ? "Accepté"
+                      : doc.group_acceptance === "rejected"
+                      ? "Refusé"
+                      : "En attente"
+                  }}
+                </span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-xs text-gray-500">Donneur d'ordre:</span>
+                <span
+                  class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
+                  [ngClass]="{
+                    'bg-green-50 text-green-700':
+                      doc.order_giver_acceptance === 'accepted',
+                    'bg-red-50 text-red-700':
+                      doc.order_giver_acceptance === 'refused',
+                    'bg-yellow-50 text-yellow-700':
+                      doc.order_giver_acceptance === 'pending'
+                  }"
+                >
+                  {{
+                    doc.order_giver_acceptance === "accepted"
+                      ? "Accepté"
+                      : doc.order_giver_acceptance === "refused"
+                      ? "Refusé"
+                      : "En attente"
+                  }}
+                </span>
+              </div>
+            </div>
+          </td>
+
           <td class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4">
             <div
               class="flex flex-col lg:flex-row items-stretch lg:items-center justify-end gap-2 lg:gap-3"
@@ -254,6 +315,7 @@
                 <hlm-icon size="sm" name="lucideEdit" />
                 <span>Modifier</span>
               </button>
+              @if(connectedUser()?.role === 'ADMIN') {
               <hlm-alert-dialog>
                 <button
                   hlmBtn
@@ -286,7 +348,7 @@
                   </hlm-alert-dialog-footer>
                 </hlm-alert-dialog-content>
               </hlm-alert-dialog>
-              }
+              } }
             </div>
           </td>
         </tr>
@@ -342,6 +404,14 @@
             <span class="font-medium">{{
               doc.creditNoteAmount | euroFormat
             }}</span>
+          </td>
+          <td
+            class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4 flex lg:table-cell items-center justify-between lg:justify-start"
+          >
+            <span class="font-medium lg:font-normal lg:hidden"
+              >Acceptation :</span
+            >
+            <span class="text-gray-500 text-sm">Non applicable</span>
           </td>
           <td class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4">
             <div

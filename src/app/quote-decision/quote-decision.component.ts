@@ -1,76 +1,223 @@
-import {AfterViewInit, Component, inject, Injector, signal, WritableSignal} from '@angular/core';
-import {ActivatedRoute} from "@angular/router";
-import {QuoteService} from "../shared/services/quote.service";
-import {QuoteEntity} from "../shared/entities/quote.entity";
-import {takeUntilDestroyed, toSignal} from "@angular/core/rxjs-interop";
-import {switchMap, take, tap} from "rxjs";
-import {jsPDF} from "jspdf";
-import autoTable from "jspdf-autotable";
-import {AuthService} from "../shared/services/auth.service";
-import {HlmButtonDirective} from "@spartan-ng/ui-button-helm";
+import {
+  AfterViewInit,
+  Component,
+  inject,
+  Injector,
+  signal,
+  WritableSignal,
+} from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
+import { QuoteService } from '../shared/services/quote.service';
+import { QuoteEntity } from '../shared/entities/quote.entity';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { switchMap, take, tap } from 'rxjs';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { AuthService } from '../shared/services/auth.service';
+import { HlmButtonDirective } from '@spartan-ng/ui-button-helm';
+import { HlmIconComponent } from '@spartan-ng/ui-icon-helm';
+import { CommonModule, DatePipe } from '@angular/common';
+import { provideIcons } from '@ng-icons/core';
+import {
+  lucideCheck,
+  lucideCheckCircle,
+  lucideX,
+  lucideXCircle,
+  lucideMailQuestion,
+} from '@ng-icons/lucide';
 
 @Component({
   selector: 'app-quote-decision',
   standalone: true,
-  imports: [
-    HlmButtonDirective
+  imports: [HlmButtonDirective, HlmIconComponent, CommonModule, DatePipe],
+  providers: [
+    provideIcons({
+      lucideCheck,
+      lucideX,
+      lucideXCircle,
+      lucideCheckCircle,
+      lucideMailQuestion,
+    }),
   ],
   templateUrl: './quote-decision.component.html',
-  styleUrl: './quote-decision.component.css'
+  styleUrl: './quote-decision.component.css',
 })
 export class QuoteDecisionComponent implements AfterViewInit {
-
   private quoteService = inject(QuoteService);
   private authService = inject(AuthService);
   private _injector = inject(Injector);
 
   quoteId: string | null = null;
-  quoteStatus: string | null = "pending";
+  quoteStatus: 'pending' | 'accepted' | 'refused' = 'pending';
   quoteFromDB: QuoteEntity | null = null;
   role: string | null = null;
   connectedUser = signal(this.authService.getUser());
 
   constructor(private route: ActivatedRoute) {
     // Récupérer les paramètres de requête (query parameters)
-    this.route.queryParamMap.subscribe(async params => {
+    this.route.queryParamMap.subscribe((params) => {
       this.quoteId = params.get('quote_id');
       this.role = params.get('role');
-
-      // Assurer que quoteId existe avant de faire l'appel au service
-
     });
-
-
   }
 
   ngAfterViewInit() {
-    this.quoteService.getQuote(this.quoteId).pipe(
-      take(1),
-      tap(data => {
-        this.quoteFromDB = data
-        if (this.quoteFromDB?.status === 'rejected') {
-          this.quoteStatus = 'rejected';
-        }
+    if (!this.quoteId) return;
 
-        if (this.quoteFromDB?.status === 'accepted') {
+    this.quoteService
+      .getQuote(this.quoteId)
+      .pipe(
+        take(1),
+        tap((data) => {
+          this.quoteFromDB = data;
+          this.updateQuoteStatus();
+          return data;
+        }),
+        tap((data) => {
+          this.generateQuotePDF(data);
+        })
+      )
+      .subscribe();
+  }
+
+  private updateQuoteStatus() {
+    if (!this.quoteFromDB) return;
+
+    if (this.quoteFromDB.status === 'refused') {
+      this.quoteStatus = 'refused';
+      return;
+    }
+
+    if (this.quoteFromDB.status === 'accepted') {
+      this.quoteStatus = 'accepted';
+      return;
+    }
+
+    if (
+      this.role === 'GROUP' &&
+      this.quoteFromDB.group_acceptance === 'accepted'
+    ) {
+      this.quoteStatus = 'accepted';
+      return;
+    }
+
+    if (
+      this.role === 'CLIENT' &&
+      this.quoteFromDB.order_giver_acceptance === 'accepted'
+    ) {
+      this.quoteStatus = 'accepted';
+      return;
+    }
+
+    if (
+      this.role === 'GROUP' &&
+      this.quoteFromDB.group_acceptance === 'refused'
+    ) {
+      this.quoteStatus = 'refused';
+      return;
+    }
+
+    if (
+      this.role === 'CLIENT' &&
+      this.quoteFromDB.order_giver_acceptance === 'refused'
+    ) {
+      this.quoteStatus = 'refused';
+      return;
+    }
+  }
+
+  canAccess(): boolean {
+    if (!this.quoteFromDB || !this.role || !this.connectedUser()) return false;
+
+    // Vérifier si l'utilisateur est admin
+    if (this.connectedUser()?.role === 'ADMIN') return true;
+
+    // Vérifier si l'utilisateur fait partie du groupe et que c'est une décision de groupe
+    // if (
+    //   this.role === 'GROUP' &&
+    //   this.connectedUser()?.groupId === this.quoteFromDB.
+    // ) {
+    //   return true;
+    // }
+
+    // Vérifier si l'utilisateur est le client et que c'est une décision client
+    if (
+      this.role === 'CLIENT' &&
+      this.connectedUser()?.id === this.quoteFromDB.client.id
+    ) {
+      return true;
+    }
+
+    return false;
+  }
+
+  canTakeAction(): boolean {
+    if (
+      !this.canAccess() ||
+      !this.quoteFromDB ||
+      this.quoteStatus !== 'pending'
+    )
+      return false;
+
+    // Vérifier si le devis est déjà accepté ou refusé par le rôle actuel
+    if (
+      this.role === 'GROUP' &&
+      this.quoteFromDB.group_acceptance !== 'pending'
+    )
+      return false;
+    if (
+      this.role === 'CLIENT' &&
+      this.quoteFromDB.order_giver_acceptance !== 'pending'
+    )
+      return false;
+
+    return true;
+  }
+
+  acceptQuote() {
+    if (!this.canTakeAction() || !this.quoteId) return;
+
+    const action$ =
+      this.role === 'GROUP'
+        ? this.quoteService.acceptQuoteFromGroup(this.quoteId)
+        : this.quoteService.acceptQuoteFromClient(this.quoteId);
+
+    action$
+      .pipe(
+        take(1),
+        tap(() => {
           this.quoteStatus = 'accepted';
-        }
+          if (this.quoteFromDB && this.role === 'GROUP') {
+            this.quoteFromDB.group_acceptance = 'accepted';
+          } else if (this.quoteFromDB && this.role === 'CLIENT') {
+            this.quoteFromDB.order_giver_acceptance = 'accepted';
+          }
+        })
+      )
+      .subscribe();
+  }
 
-        if (this.role === 'GROUP' && this.quoteFromDB?.group_acceptance === 'accepted') {
-          this.quoteStatus = 'accepted';
-        }
+  rejectQuote() {
+    if (!this.canTakeAction() || !this.quoteId) return;
 
-        if (this.role === 'CLIENT' && this.quoteFromDB?.order_giver_acceptance === 'accepted') {
-          this.quoteStatus = 'accepted';
-        }
-        return data
-      }),
-      tap(data => {
-        this.generateQuotePDF(data); // Générer le PDF avec les données reçues
-      })
-    ).subscribe();
+    const action$ =
+      this.role === 'GROUP'
+        ? this.quoteService.rejectQuoteFromGroup(this.quoteId)
+        : this.quoteService.rejectQuoteFromClient(this.quoteId);
 
-
+    action$
+      .pipe(
+        take(1),
+        tap(() => {
+          this.quoteStatus = 'refused';
+          if (this.quoteFromDB && this.role === 'GROUP') {
+            this.quoteFromDB.group_acceptance = 'refused';
+          } else if (this.quoteFromDB && this.role === 'CLIENT') {
+            this.quoteFromDB.order_giver_acceptance = 'refused';
+          }
+        })
+      )
+      .subscribe();
   }
 
   generateQuotePDF(quote: QuoteEntity) {
@@ -86,7 +233,13 @@ export class QuoteDecisionComponent implements AfterViewInit {
 
       // Informations sur l'utilisateur (alignées à gauche)
       doc.setFontSize(12);
-      doc.text(`Créé par: ${this.connectedUser()?.firstName} ${this.connectedUser()?.name}`, 10, 40);
+      doc.text(
+        `Créé par: ${this.connectedUser()?.firstName} ${
+          this.connectedUser()?.name
+        }`,
+        10,
+        40
+      );
       doc.text(`Email: ${this.connectedUser()?.email}`, 10, 50);
       doc.text(`Téléphone: ${this.connectedUser()?.telephone}`, 10, 60);
 
@@ -124,26 +277,26 @@ export class QuoteDecisionComponent implements AfterViewInit {
         head: [['Information', 'Valeur']],
         body: invoiceData,
         startY: 100,
-        styles: {fontSize: 10},
-        headStyles: {fillColor: [100, 100, 100]}
+        styles: { fontSize: 10 },
+        headStyles: { fillColor: [100, 100, 100] },
       });
 
       // Récupérer la position Y après le premier tableau
       const yAfterInvoiceTable = doc.internal.pageSize.getHeight() - 100; // Laisser 100 unités en bas
 
       // Tableau pour les détails des produits
-      const productData = quote.products.map(product => [
+      const productData = quote.products.map((product) => [
         product.description,
         `Quantité: ${product.quantity}`,
-        `Prix: ${product.price.toFixed(2)} €`
+        `Prix: ${product.price.toFixed(2)} €`,
       ]);
 
       autoTable(doc, {
         head: [['Produit', 'Quantité', 'Prix']],
         body: productData,
         startY: yAfterInvoiceTable,
-        styles: {fontSize: 10},
-        headStyles: {fillColor: [100, 100, 100]}
+        styles: { fontSize: 10 },
+        headStyles: { fillColor: [100, 100, 100] },
       });
 
       // Générer l'URL Blob pour le PDF et afficher dans un <iframe> ou <embed>
@@ -154,42 +307,4 @@ export class QuoteDecisionComponent implements AfterViewInit {
       iframe.src = pdfBlobUrl.toString();
     };
   }
-
-  acceptQuote() {
-    if (this.role === 'GROUP') {
-      this.quoteService.acceptQuoteFromGroup(this.quoteId).pipe(
-        take(1),
-        tap(() => {
-          this.quoteStatus = 'accepted';
-        })
-      ).subscribe();
-    } else if (this.role === 'CLIENT') {
-      this.quoteService.acceptQuoteFromClient(this.quoteId).pipe(
-        take(1),
-        tap(() => {
-          this.quoteStatus = 'accepted';
-        })
-      ).subscribe();
-    }
-  }
-
-  rejectQuote() {
-    if (this.role === 'GROUP') {
-      this.quoteService.rejectQuoteFromGroup(this.quoteId).pipe(
-        take(1),
-        tap(() => {
-          this.quoteStatus = 'rejected';
-        })
-      ).subscribe();
-    } else if (this.role === 'CLIENT') {
-      this.quoteService.rejectQuoteFromClient(this.quoteId).pipe(
-        take(1),
-        tap(() => {
-          this.quoteStatus = 'rejected';
-        })
-      ).subscribe();
-    }
-  }
-
-
 }

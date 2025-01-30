@@ -17,6 +17,7 @@ import {
   lucideFileDown,
   lucideFilePlus,
   lucideFileText,
+  lucideSearch,
 } from '@ng-icons/lucide';
 import {
   BrnAlertDialogContentDirective,
@@ -149,6 +150,7 @@ import {
       lucideFileText,
       lucideArrowLeft,
       lucideFilePlus,
+      lucideSearch,
     }),
     DatePipe,
   ],
@@ -182,6 +184,8 @@ export class FacturationComponent implements OnInit, OnDestroy {
   protected reportDate = signal<Date>(this.currentDate);
   protected filterSelected = signal<'invoice' | 'credit-note' | 'all'>('all');
   protected isLoading = signal<boolean | null>(null);
+  protected searchNumber = signal<string>('');
+  protected originalDocuments = signal<any[]>([]);
 
   // Computed values
   protected reportDateFormatted = computed(() =>
@@ -314,6 +318,25 @@ export class FacturationComponent implements OnInit, OnDestroy {
 
     allDocs = this.filterDocuments(allDocs);
     allDocs.sort(this.sortByDate);
+
+    // Stocker les documents originaux avant la recherche
+    this.originalDocuments.set(allDocs);
+
+    // Appliquer le filtre de recherche
+    if (this.searchNumber()) {
+      allDocs = allDocs.filter((doc) => {
+        const searchTerm = this.searchNumber().toLowerCase();
+        if (doc.documentType === 'quote' && 'quote_number' in doc) {
+          return `D-${doc.quote_number}`.toLowerCase().includes(searchTerm);
+        } else if (
+          doc.documentType === 'credit_note' &&
+          'invoice_number' in doc
+        ) {
+          return `NC-${doc.invoice_number}`.toLowerCase().includes(searchTerm);
+        }
+        return false;
+      });
+    }
 
     this.updatePagination(allDocs);
     this.allDocuments.set(allDocs);
@@ -546,5 +569,10 @@ export class FacturationComponent implements OnInit, OnDestroy {
     }
 
     return false;
+  }
+
+  protected onSearchChange(): void {
+    this.pagination.currentPage.set(1);
+    this.updateDocuments();
   }
 }

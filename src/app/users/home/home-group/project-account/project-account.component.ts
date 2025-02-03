@@ -82,6 +82,7 @@ import {
   lucideChevronDown,
   lucideCornerDownLeft,
   lucideUpload,
+  lucideFileUp,
 } from '@ng-icons/lucide';
 import {
   BrnPopoverCloseDirective,
@@ -176,6 +177,7 @@ interface FormState {
       lucideBanknote,
       lucideArrowLeftRight,
       lucideChevronDown,
+      lucideFileUp,
     }),
   ],
   templateUrl: './project-account.component.html',
@@ -410,6 +412,17 @@ export class ProjectAccountComponent implements AfterViewInit {
   protected onFileSelected(event: Event): void {
     const target = event.target as HTMLInputElement;
     this.selectedFile = target.files?.[0] ?? null;
+  }
+
+  protected onFileDrop(event: DragEvent): void {
+    event.preventDefault();
+    const files = event.dataTransfer?.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      if (file.type === 'application/pdf') {
+        this.selectedFile = file;
+      }
+    }
   }
 
   protected goBack(): void {
@@ -726,5 +739,62 @@ export class ProjectAccountComponent implements AfterViewInit {
       });
 
     this.state.filteredPrincipalAccounts.set(filteredAccounts);
+  }
+
+  protected openConvertToPdfDialog(): void {
+    // Créer un input file temporaire pour la sélection du fichier
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png';
+    input.multiple = false;
+
+    input.onchange = (event) => {
+      const file = (event.target as HTMLInputElement).files?.[0];
+      if (file) {
+        this.convertToPdf(file);
+      }
+    };
+
+    input.click();
+  }
+
+  private convertToPdf(file: File): void {
+    this.state.isLoadingVirement.set(true);
+    this.state.errorMessage.set('');
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    this.services.virementSepa.convertToPdf(formData).subscribe({
+      next: (response: Blob) => {
+        // Créer un nouveau Blob avec le type MIME PDF explicite
+        const pdfBlob = new Blob([response], { type: 'application/pdf' });
+
+        // Créer une URL pour le blob
+        const url = window.URL.createObjectURL(pdfBlob);
+
+        // Créer un lien temporaire pour le téléchargement
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${file.name.split('.')[0]}.pdf`;
+
+        // Déclencher le téléchargement
+        document.body.appendChild(link);
+        link.click();
+
+        // Nettoyer
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+        this.state.isLoadingVirement.set(false);
+      },
+      error: (error) => {
+        console.error('Erreur lors de la conversion en PDF:', error);
+        this.state.errorMessage.set(
+          'Erreur lors de la conversion en PDF. Veuillez réessayer.'
+        );
+        this.state.isLoadingVirement.set(false);
+      },
+    });
   }
 }

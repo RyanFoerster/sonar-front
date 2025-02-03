@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { VirementSepaDto } from '../dtos/virement-sepa.dto';
 import { environment } from '../../../environments/environment';
 import { VirementSepaEntity } from '../entities/virement-sepa.entity';
+import { Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -86,5 +87,18 @@ export class VirementSepaService {
       message: string;
       processedTransfers: number;
     }>(`${environment.API_URL}/virement-sepa/initiate-transfers`, {});
+  }
+
+  convertToPdf(formData: FormData): Observable<Blob> {
+    return this.httpClient.post(
+      `${environment.API_URL}/virement-sepa/convert-pdf`,
+      formData,
+      {
+        responseType: 'blob',
+        headers: {
+          Accept: 'application/pdf',
+        },
+      }
+    );
   }
 }

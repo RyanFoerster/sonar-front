@@ -5,8 +5,7 @@ import { Component } from '@angular/core';
   standalone: true,
   imports: [],
   templateUrl: './rendez-vous.component.html',
-  styleUrl: './rendez-vous.component.css'
 })
 export class RendezVousComponent {
-
+  constructor() {}
 }

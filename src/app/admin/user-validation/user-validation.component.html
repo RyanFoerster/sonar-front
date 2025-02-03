@@ -1,39 +1,191 @@
-<div class="px-5 flex flex-col gap-5">
-  @if(usersPending().length > 0) {
-    <hlm-table class="overflow-x-auto p-4 bg-gray-sonar rounded-xl shadow-lg">
-      <p class="font-bold px-4 text-sm">Validation utilisateur</p>
-      <div class="overflow-auto touch-none">
-        <hlm-trow class="flex ">
-          <hlm-th class="w-32 lg:w-48 font-bold text-[10px]">ID utilisateur</hlm-th>
-          <hlm-th class="w-44 lg:w-48 font-bold  text-[10px]">E-mail</hlm-th>
-          <hlm-th class="w-48 font-bold text-[10px]">Projet</hlm-th>
-        </hlm-trow>
-        @for (user of usersPending(); track user.id) {
-          <hlm-trow class="flex border-none relative sm:flex-row md:flex md:justify-between">
-            <div class="flex">
-              <hlm-td class="w-32 lg:w-48 text-[10px]">{{ user.id }}</hlm-td>
-              <hlm-td class="w-44 lg:w-48 text-[10px]">{{ user.email }}</hlm-td>
-              <hlm-td class="w-48 text-[10px]">{{ user.username }}</hlm-td>
+<div class="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 py-8">
+  <div class="container mx-auto px-4">
+    @if(usersPending().length > 0 || searchQuery()) {
+    <div
+      class="bg-white rounded-2xl shadow-xl overflow-hidden border border-indigo-100"
+    >
+      <div class="p-6">
+        <div
+          class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4"
+        >
+          <h2 class="text-2xl font-bold text-indigo-900 flex items-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-7 w-7 mr-3 text-indigo-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+              />
+            </svg>
+            Validation des utilisateurs
+          </h2>
+
+          <div class="relative">
+            <div
+              class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+            >
+              <svg
+                class="h-5 w-5 text-indigo-400"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
             </div>
-
-            <hlm-td class="hidden md:flex md:gap-2 md:justify-end">
-              <button class="rounded-full pt-0 pb-0 h-auto bg-red-600 text-[10px]" hlmBtn (click)="deleteUser(user.id)">Refuser</button>
-              <button class="rounded-full pt-0 pb-0 h-auto text-[10px]" hlmBtn (click)="toggleActiveUser(user)">Accepter
-              </button>
-            </hlm-td>
-          </hlm-trow>
-
-          <div class="mb-3 w-auto flex justify-end sticky gap-2 bottom-0 left-0 md:hidden">
-            <button class="rounded-full pt-0 pb-0 h-auto bg-red-600 text-[10px]" hlmBtn (click)="deleteUser(user.id)">Refuser</button>
-            <button class="rounded-full pt-0 pb-0 h-auto text-[10px]" hlmBtn (click)="toggleActiveUser(user)">Accepter
-            </button>
+            <input
+              type="text"
+              [ngModel]="searchQuery()"
+              (ngModelChange)="filterUsers($event)"
+              class="block w-full pl-10 pr-4 py-2 border border-indigo-100 rounded-lg text-sm placeholder-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              placeholder="Rechercher par nom, prénom ou email..."
+            />
           </div>
+        </div>
 
+        @if(usersPending().length > 0) {
+        <div class="overflow-x-auto">
+          <table class="w-full min-w-full">
+            <thead>
+              <tr class="border-b border-indigo-100">
+                <th
+                  class="py-4 px-6 text-sm font-semibold text-indigo-900 text-left"
+                >
+                  Prénom
+                </th>
+                <th
+                  class="py-4 px-6 text-sm font-semibold text-indigo-900 text-left"
+                >
+                  Nom
+                </th>
+                <th
+                  class="py-4 px-6 text-sm font-semibold text-indigo-900 text-left"
+                >
+                  E-mail
+                </th>
+                <th
+                  class="py-4 px-6 text-sm font-semibold text-indigo-900 text-right"
+                >
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (user of usersPending(); track user.id) {
+              <tr
+                class="border-b border-indigo-50 hover:bg-indigo-50/30 transition-colors duration-200"
+              >
+                <td class="py-4 px-6 text-sm text-gray-700">
+                  {{ user.firstName }}
+                </td>
+                <td class="py-4 px-6 text-sm text-gray-700">{{ user.name }}</td>
+                <td class="py-4 px-6 text-sm text-gray-700">
+                  {{ user.email }}
+                </td>
+                <td class="py-4 px-6">
+                  <div class="flex justify-end gap-3">
+                    <button
+                      class="px-4 py-2 text-sm font-medium rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 transition-colors duration-200 flex items-center"
+                      hlmBtn
+                      (click)="deleteUser(user.id)"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-4 w-4 mr-1.5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                      Refuser
+                    </button>
+                    <button
+                      class="px-4 py-2 text-sm font-medium rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors duration-200 flex items-center"
+                      hlmBtn
+                      (click)="toggleActiveUser(user)"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-4 w-4 mr-1.5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                      Accepter
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        } @else {
+        <div class="text-center py-8">
+          <p class="text-lg text-indigo-900">
+            Aucun résultat trouvé pour "{{ searchQuery() }}"
+          </p>
+          <button
+            class="mt-4 px-4 py-2 text-sm font-medium rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors duration-200"
+            hlmBtn
+            (click)="filterUsers('')"
+          >
+            Réinitialiser la recherche
+          </button>
+        </div>
         }
       </div>
-    </hlm-table>
-  } @else {
-    <p class="text-xl text-red-400">Aucun utilisateur en attente de validation</p>
-  }
-
+    </div>
+    } @else {
+    <div
+      class="bg-white rounded-2xl shadow-xl p-8 text-center border border-indigo-100"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-16 w-16 mx-auto text-indigo-200 mb-4"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+        />
+      </svg>
+      <p class="text-xl text-indigo-900 font-medium">
+        Aucun utilisateur en attente de validation
+      </p>
+      <p class="text-indigo-500 mt-2">
+        Les nouvelles demandes apparaîtront ici
+      </p>
+    </div>
+    }
+  </div>
 </div>

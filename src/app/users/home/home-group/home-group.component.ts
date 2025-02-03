@@ -145,7 +145,11 @@ export class HomeGroupComponent implements AfterViewInit {
           if (user.role === 'ADMIN') {
             return this.typeOfProjet() === 'PRINCIPAL'
               ? this.comptePrincipalService.getGroupById(this.id()!).pipe(
-                  tap((data) => this.projet.set(data)),
+                  tap((data) => {
+                    console.log(data);
+                    this.projet.set(data);
+                  }),
+                  tap(() => console.log(this.projet())),
                   switchMap(() =>
                     this.comptePrincipalService.getAllMembers(this.id()!).pipe(
                       tap((data) => {
@@ -158,6 +162,7 @@ export class HomeGroupComponent implements AfterViewInit {
                 )
               : this.compteGroupeService.getGroupById(this.id()!).pipe(
                   tap((data) => this.projet.set(data)),
+                  tap(() => console.log(this.projet())),
                   switchMap(() =>
                     this.compteGroupeService.getAllMembers(this.id()!).pipe(
                       tap((members) => {
@@ -174,11 +179,20 @@ export class HomeGroupComponent implements AfterViewInit {
           // Pour les utilisateurs non-admin
           if (
             this.typeOfProjet() === 'PRINCIPAL' &&
-            user.comptePrincipal.id === this.id()
+            user.comptePrincipal.id === +this.id()!
           ) {
-            return this.comptePrincipalService
-              .getGroupById(this.id()!)
-              .pipe(tap((data) => this.projet.set(data)));
+            return this.comptePrincipalService.getGroupById(this.id()!).pipe(
+              tap((data) => this.projet.set(data)),
+              tap(() => console.log(this.projet())),
+              switchMap(() =>
+                this.comptePrincipalService.getAllMembers(this.id()!).pipe(
+                  tap((members) => {
+                    this.members.set(members);
+                    this.userInfo.set(members[0]);
+                  })
+                )
+              )
+            );
           }
 
           if (this.typeOfProjet() === 'GROUP') {

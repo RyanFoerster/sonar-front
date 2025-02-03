@@ -1,4 +1,4 @@
-import {AfterViewInit, Component, inject, signal} from '@angular/core';
+import { AfterViewInit, Component, inject, signal } from '@angular/core';
 import {
   HlmCaptionComponent,
   HlmTableComponent,
@@ -7,10 +7,10 @@ import {
   HlmTrowComponent,
 } from '@spartan-ng/ui-table-helm';
 import { HlmButtonDirective } from '@spartan-ng/ui-button-helm';
-import {UsersService} from "../../shared/services/users.service";
-import {UserEntity} from "../../shared/entities/user.entity";
-import {map, tap} from "rxjs";
-
+import { UsersService } from '../../shared/services/users.service';
+import { UserEntity } from '../../shared/entities/user.entity';
+import { map, tap } from 'rxjs';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-user-validation',
@@ -21,58 +21,66 @@ import {map, tap} from "rxjs";
     HlmTdComponent,
     HlmThComponent,
     HlmTrowComponent,
-    HlmButtonDirective
+    HlmButtonDirective,
+    FormsModule,
   ],
   templateUrl: './user-validation.component.html',
-  styleUrl: './user-validation.component.css'
+  styleUrl: './user-validation.component.css',
 })
 export class UserValidationComponent implements AfterViewInit {
+  private usersService: UsersService = inject(UsersService);
 
-  private usersService: UsersService = inject(UsersService)
-
-  protected usersPending = signal<UserEntity[] | []>([])
-  protected _invoices = [
-    {
-      invoice: '000001',
-      paymentStatus: 'test@test.be',
-      totalAmount: 'La folie des concert',
-      paymentMethod: 'La folie des concert',
-    },
-    {
-      invoice: '89687585',
-      paymentStatus: 'test@test.be',
-      totalAmount: 'La croisière samuse',
-      paymentMethod: 'La croisière samuse',
-    },
-    {
-      invoice: '97646',
-      paymentStatus: 'test@test.be',
-      totalAmount: 'cest la fete',
-      paymentMethod: 'cest la fete',
-    },
-  ];
+  protected usersPending = signal<UserEntity[] | []>([]);
+  protected searchQuery = signal<string>('');
+  protected allUsers = signal<UserEntity[] | []>([]);
 
   ngAfterViewInit() {
-    this.usersService.findAllPendingUser().subscribe(data => this.usersPending.set(data))
+    this.usersService.findAllPendingUser().subscribe((data) => {
+      this.usersPending.set(data);
+      this.allUsers.set(data);
+    });
+  }
+
+  protected filterUsers(query: string) {
+    this.searchQuery.set(query);
+    if (!query) {
+      this.usersPending.set(this.allUsers());
+      return;
+    }
+
+    const searchLower = query.toLowerCase();
+    const filtered = this.allUsers().filter(
+      (user) =>
+        user.firstName?.toLowerCase().includes(searchLower) ||
+        user.name?.toLowerCase().includes(searchLower) ||
+        user.email?.toLowerCase().includes(searchLower)
+    );
+    this.usersPending.set(filtered);
   }
 
   toggleActiveUser(user: UserEntity) {
-
-    this.usersService.toggleActiveUser(user).pipe(
-      tap(() => {
-        const filteredUsers = this.usersPending().filter(u => u.id !== user.id)
-        this.usersPending.set(filteredUsers)
-      })
-    ).subscribe()
+    this.usersService
+      .toggleActiveUser(user)
+      .pipe(
+        tap(() => {
+          const filteredUsers = this.allUsers().filter((u) => u.id !== user.id);
+          this.allUsers.set(filteredUsers);
+          this.filterUsers(this.searchQuery());
+        })
+      )
+      .subscribe();
   }
 
   deleteUser(id: number) {
-    this.usersService.deleteUser(id).pipe(
-      tap(() => {
-        const filteredUsers = this.usersPending().filter(u => u.id !== id)
-        this.usersPending.set(filteredUsers)
-      })
-    ).subscribe()
+    this.usersService
+      .deleteUser(id)
+      .pipe(
+        tap(() => {
+          const filteredUsers = this.allUsers().filter((u) => u.id !== id);
+          this.allUsers.set(filteredUsers);
+          this.filterUsers(this.searchQuery());
+        })
+      )
+      .subscribe();
   }
-
 }

@@ -3,6 +3,7 @@ import { authGuard } from './shared/guards/auth.guard';
 import { activatedUserGuard } from './shared/guards/activated-user.guard';
 import { adminGuard } from './shared/guards/admin.guard';
 import { maintenanceGuard } from './shared/guards/maintenance.guard';
+import { isLoggedInGuard } from './shared/guards/is-logged.guard';
 
 export const routes: Routes = [
   {
@@ -14,7 +15,7 @@ export const routes: Routes = [
     path: 'login',
     loadComponent: () =>
       import('./auth/login/login.component').then((m) => m.LoginComponent),
-    canActivate: [maintenanceGuard],
+    canActivate: [maintenanceGuard, isLoggedInGuard],
   },
   {
     path: 'register',
@@ -22,7 +23,7 @@ export const routes: Routes = [
       import('./auth/register/register.component').then(
         (m) => m.RegisterComponent
       ),
-    canActivate: [maintenanceGuard],
+    canActivate: [maintenanceGuard, isLoggedInGuard],
   },
   {
     path: 'forgotten-password',
@@ -30,7 +31,7 @@ export const routes: Routes = [
       import('./auth/forgotten-password/forgotten-password.component').then(
         (m) => m.ForgottenPasswordComponent
       ),
-    canActivate: [maintenanceGuard],
+    canActivate: [maintenanceGuard, isLoggedInGuard],
   },
   {
     path: 'home',

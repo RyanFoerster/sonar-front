@@ -358,22 +358,55 @@
 
                 <div class="w-full">
                   <label class="text-sm font-medium mb-2 block">Facture</label>
-                  <div class="relative">
-                    <input
-                      hlmInput
-                      type="file"
-                      (change)="onFileSelected($event)"
-                      accept=".pdf"
-                      class="rounded-full w-full focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
-                      [ngClass]="{
-                        'border border-red-500': !selectedFile
-                      }"
-                    />
-                    @if(!selectedFile) {
-                    <p class="text-red-500 text-sm">
-                      Veuillez sélectionner un fichier
+                  <div class="flex flex-col gap-2">
+                    <div
+                      class="relative"
+                      (dragover)="$event.preventDefault()"
+                      (dragleave)="$event.preventDefault()"
+                      (drop)="onFileDrop($event)"
+                    >
+                      <input
+                        #fileInput
+                        hlmInput
+                        type="file"
+                        (change)="onFileSelected($event)"
+                        accept=".pdf"
+                        class="opacity-0 absolute inset-0 w-full h-full cursor-pointer z-10"
+                      />
+                      <div
+                        class="border-2 border-dashed border-gray-300 hover:border-gray-400 rounded-full p-4 text-center"
+                        [class.border-red-500]="!selectedFile"
+                      >
+                        @if(selectedFile) {
+                        <p class="text-sm text-gray-700">
+                          {{ selectedFile.name }}
+                        </p>
+                        } @else {
+                        <p class="text-sm text-gray-500">
+                          Glissez-déposez un fichier PDF ou cliquez pour
+                          sélectionner
+                        </p>
+                        }
+                      </div>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                      <button
+                        type="button"
+                        class="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                        (click)="openConvertToPdfDialog()"
+                      >
+                        <hlm-icon name="lucideFileUp" size="sm" />
+                        Convertir un fichier en PDF
+                      </button>
+                      <p class="text-xs text-gray-500">
+                        (Word, Excel, Images...)
+                      </p>
+                    </div>
+
+                    <p class="text-sm text-red-500">
+                      Uniquement les fichiers PDF sont acceptés.
                     </p>
-                    }
                   </div>
                 </div>
               </div>
@@ -391,7 +424,7 @@
                   class="rounded-full px-6 self-center"
                   hlmBtn
                   variant="outline"
-                  (click)="ctx.close()"
+                  (click)="ctx.close(); virementSepaForm.reset()"
                   [disabled]="state.isLoadingVirement()"
                 >
                   Annuler

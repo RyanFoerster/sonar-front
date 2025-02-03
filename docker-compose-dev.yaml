@@ -1,0 +1,16 @@
+---
+services:
+  sonar-front-dev:
+    image: dimagin/sonar-front:dev
+    container_name: sonar-front-dev
+    ports:
+      - "${SONAR_FRONTEND_PORT}:80"
+    restart: unless-stopped
+    networks:
+      - sonar-network-dev
+    env_file:
+      - .env
+
+networks:
+  sonar-network-dev:
+    driver: bridge

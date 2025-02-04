@@ -1,29 +1,15 @@
 import { AfterViewInit, Component, inject, signal } from '@angular/core';
-import {
-  HlmCaptionComponent,
-  HlmTableComponent,
-  HlmTdComponent,
-  HlmThComponent,
-  HlmTrowComponent,
-} from '@spartan-ng/ui-table-helm';
+
 import { HlmButtonDirective } from '@spartan-ng/ui-button-helm';
 import { UsersService } from '../../shared/services/users.service';
 import { UserEntity } from '../../shared/entities/user.entity';
-import { map, tap } from 'rxjs';
+import { tap } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-user-validation',
   standalone: true,
-  imports: [
-    HlmCaptionComponent,
-    HlmTableComponent,
-    HlmTdComponent,
-    HlmThComponent,
-    HlmTrowComponent,
-    HlmButtonDirective,
-    FormsModule,
-  ],
+  imports: [HlmButtonDirective, FormsModule],
   templateUrl: './user-validation.component.html',
   styleUrl: './user-validation.component.css',
 })

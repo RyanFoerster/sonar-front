@@ -63,6 +63,9 @@
           <div
             class="w-full p-2 border rounded-lg flex items-center justify-between cursor-pointer hover:border-gray-400"
             (click)="toggleDropdown()"
+            role="button"
+            tabindex="0"
+            (keydown.enter)="toggleDropdown()"
           >
             <div class="flex-1">
               @if (selectedUsers().length === 0) {
@@ -122,6 +125,9 @@
                 class="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer"
                 [class.bg-gray-50]="isUserSelected(user)"
                 (click)="toggleUserSelection(user)"
+                role="button"
+                tabindex="0"
+                (keydown.enter)="toggleUserSelection(user)"
               >
                 <div
                   class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-sm font-medium"
@@ -207,7 +213,7 @@
             </td>
             <td class="px-6 py-4">
               <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <label class="flex items-center gap-2 text-sm" hlmLabel>
+                <p class="flex items-center gap-2 text-sm" hlmLabel>
                   <hlm-checkbox
                     [checked]="checkViewerRole(member.user, 'treasury')"
                     [disabled]="isDisabledViewer(member.user, 'treasury')"
@@ -217,8 +223,8 @@
                     class="rounded-full"
                   />
                   Compte du groupe
-                </label>
-                <label class="flex items-center gap-2 text-sm" hlmLabel>
+                </p>
+                <p class="flex items-center gap-2 text-sm" hlmLabel>
                   <hlm-checkbox
                     [checked]="checkViewerRole(member.user, 'billing')"
                     [disabled]="isDisabledViewer(member.user, 'billing')"
@@ -228,8 +234,8 @@
                     class="rounded-full"
                   />
                   Facturation
-                </label>
-                <label class="flex items-center gap-2 text-sm" hlmLabel>
+                </p>
+                <p class="flex items-center gap-2 text-sm" hlmLabel>
                   <hlm-checkbox
                     [checked]="checkViewerRole(member.user, 'gestion')"
                     [disabled]="isDisabledViewer(member.user, 'gestion')"
@@ -239,8 +245,8 @@
                     class="rounded-full"
                   />
                   Gestion d'équipe
-                </label>
-                <label class="flex items-center gap-2 text-sm" hlmLabel>
+                </p>
+                <p class="flex items-center gap-2 text-sm" hlmLabel>
                   <hlm-checkbox
                     [checked]="checkViewerRole(member.user, 'agenda')"
                     [disabled]="isDisabledViewer(member.user, 'agenda')"
@@ -250,12 +256,12 @@
                     class="rounded-full"
                   />
                   Agenda
-                </label>
+                </p>
               </div>
             </td>
             <td class="px-6 py-4">
               <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <label class="flex items-center gap-2 text-sm" hlmLabel>
+                <p class="flex items-center gap-2 text-sm" hlmLabel>
                   <hlm-checkbox
                     [checked]="checkAdminRole(member.user, 'treasury')"
                     [disabled]="isDisabledAdmin(member.user, 'treasury')"
@@ -265,8 +271,8 @@
                     class="rounded-full"
                   />
                   Compte du groupe
-                </label>
-                <label class="flex items-center gap-2 text-sm" hlmLabel>
+                </p>
+                <p class="flex items-center gap-2 text-sm" hlmLabel>
                   <hlm-checkbox
                     [checked]="checkAdminRole(member.user, 'billing')"
                     [disabled]="isDisabledAdmin(member.user, 'billing')"
@@ -276,8 +282,8 @@
                     class="rounded-full"
                   />
                   Facturation
-                </label>
-                <label class="flex items-center gap-2 text-sm" hlmLabel>
+                </p>
+                <p class="flex items-center gap-2 text-sm" hlmLabel>
                   <hlm-checkbox
                     [checked]="checkAdminRole(member.user, 'gestion')"
                     [disabled]="isDisabledAdmin(member.user, 'gestion')"
@@ -287,8 +293,8 @@
                     class="rounded-full"
                   />
                   Gestion d'équipe
-                </label>
-                <label class="flex items-center gap-2 text-sm" hlmLabel>
+                </p>
+                <p class="flex items-center gap-2 text-sm" hlmLabel>
                   <hlm-checkbox
                     [checked]="checkAdminRole(member.user, 'agenda')"
                     [disabled]="isDisabledAdmin(member.user, 'agenda')"
@@ -298,7 +304,7 @@
                     class="rounded-full"
                   />
                   Agenda
-                </label>
+                </p>
               </div>
             </td>
           </tr>

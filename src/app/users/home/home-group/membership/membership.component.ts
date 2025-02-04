@@ -1,4 +1,4 @@
-import { DatePipe, JsonPipe, Location } from '@angular/common';
+import { Location } from '@angular/common';
 import {
   AfterViewInit,
   Component,
@@ -6,6 +6,7 @@ import {
   input,
   signal,
   HostListener,
+  OnDestroy,
 } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { provideIcons } from '@ng-icons/core';
@@ -18,22 +19,13 @@ import {
   lucideSearch,
   lucideUserPlus,
 } from '@ng-icons/lucide';
-import { delay, finalize, map, tap, switchMap, EMPTY, forkJoin } from 'rxjs';
+import { finalize, map, tap, switchMap, EMPTY, forkJoin } from 'rxjs';
 import { Observable } from 'rxjs';
 
 // Spartan UI imports
-import { BrnAccordionContentComponent } from '@spartan-ng/ui-accordion-brain';
-import {
-  HlmAccordionContentComponent,
-  HlmAccordionDirective,
-  HlmAccordionIconDirective,
-  HlmAccordionItemDirective,
-  HlmAccordionTriggerDirective,
-} from '@spartan-ng/ui-accordion-helm';
+
 import { HlmButtonDirective } from '@spartan-ng/ui-button-helm';
 import { HlmCheckboxComponent } from '@spartan-ng/ui-checkbox-helm';
-import { BrnCommandImports } from '@spartan-ng/ui-command-brain';
-import { HlmCommandImports } from '@spartan-ng/ui-command-helm';
 import {
   BrnDialogContentDirective,
   BrnDialogTriggerDirective,
@@ -47,26 +39,10 @@ import {
   HlmDialogTitleDirective,
 } from '@spartan-ng/ui-dialog-helm';
 import { HlmIconComponent } from '@spartan-ng/ui-icon-helm';
-import { HlmInputDirective } from '@spartan-ng/ui-input-helm';
 import { HlmLabelDirective } from '@spartan-ng/ui-label-helm';
-import {
-  BrnPopoverComponent,
-  BrnPopoverContentDirective,
-  BrnPopoverTriggerDirective,
-} from '@spartan-ng/ui-popover-brain';
-import { HlmPopoverContentDirective } from '@spartan-ng/ui-popover-helm';
 import { BrnSelectImports } from '@spartan-ng/ui-select-brain';
 import { HlmSelectImports } from '@spartan-ng/ui-select-helm';
-import { BrnSeparatorComponent } from '@spartan-ng/ui-separator-brain';
-import { HlmSeparatorDirective } from '@spartan-ng/ui-separator-helm';
 import { HlmSpinnerComponent } from '@spartan-ng/ui-spinner-helm';
-import {
-  HlmCaptionComponent,
-  HlmTableComponent,
-  HlmTdComponent,
-  HlmThComponent,
-  HlmTrowComponent,
-} from '@spartan-ng/ui-table-helm';
 
 // Local imports
 import { CompteGroupeEntity } from '../../../../shared/entities/compte-groupe.entity';
@@ -96,21 +72,11 @@ interface MemberWithUser {
   selector: 'app-membership',
   standalone: true,
   imports: [
-    DatePipe,
-    HlmAccordionDirective,
-    HlmAccordionIconDirective,
-    HlmAccordionItemDirective,
-    HlmAccordionTriggerDirective,
-    HlmAccordionContentComponent,
     BrnSelectImports,
     HlmSelectImports,
     HlmCheckboxComponent,
     BrnDialogContentDirective,
     BrnDialogTriggerDirective,
-    HlmTableComponent,
-    HlmTdComponent,
-    HlmThComponent,
-    HlmTrowComponent,
     HlmButtonDirective,
     HlmDialogComponent,
     HlmDialogContentComponent,
@@ -121,8 +87,6 @@ interface MemberWithUser {
     HlmLabelDirective,
     HlmSpinnerComponent,
     HlmIconComponent,
-    BrnSeparatorComponent,
-    HlmSeparatorDirective,
   ],
   providers: [
     provideIcons({
@@ -138,7 +102,7 @@ interface MemberWithUser {
   templateUrl: './membership.component.html',
   styleUrl: './membership.component.css',
 })
-export class MembershipComponent implements AfterViewInit {
+export class MembershipComponent implements AfterViewInit, OnDestroy {
   protected id = input();
   protected typeOfProjet = input<string>();
   protected account = signal<CompteGroupeEntity | null>(null);
@@ -190,19 +154,21 @@ export class MembershipComponent implements AfterViewInit {
     });
   }
 
+  private refreshMembersHandler = () => {
+    if (this.typeOfProjet() === 'GROUP') {
+      this.refreshMembers().subscribe({
+        error: (error) => {
+          console.error('Erreur lors du chargement des membres:', error);
+          this.errorMessage.set('Erreur lors du chargement des membres');
+          this.isSpinner.set(false);
+        },
+      });
+    }
+  };
+
   ngAfterViewInit() {
     // Écouter l'événement de rafraîchissement des membres
-    window.addEventListener('refreshGroupMembers', () => {
-      if (this.typeOfProjet() === 'GROUP') {
-        this.refreshMembers().subscribe({
-          error: (error) => {
-            console.error('Erreur lors du chargement des membres:', error);
-            this.errorMessage.set('Erreur lors du chargement des membres');
-            this.isSpinner.set(false);
-          },
-        });
-      }
-    });
+    window.addEventListener('refreshGroupMembers', this.refreshMembersHandler);
 
     this.usersService.getInfo().subscribe({
       next: (data) => {
@@ -237,7 +203,10 @@ export class MembershipComponent implements AfterViewInit {
 
   ngOnDestroy() {
     // Nettoyer l'écouteur d'événement
-    window.removeEventListener('refreshGroupMembers', () => {});
+    window.removeEventListener(
+      'refreshGroupMembers',
+      this.refreshMembersHandler
+    );
   }
 
   stateChanged(state: 'open' | 'closed'): void {
@@ -331,6 +300,7 @@ export class MembershipComponent implements AfterViewInit {
       });
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private refreshMembers(): Observable<any> {
     if (this.typeOfProjet() === 'GROUP') {
       this.isSpinner.set(true);

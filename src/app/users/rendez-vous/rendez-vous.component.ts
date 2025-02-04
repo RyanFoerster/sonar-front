@@ -6,6 +6,4 @@ import { Component } from '@angular/core';
   imports: [],
   templateUrl: './rendez-vous.component.html',
 })
-export class RendezVousComponent {
-  constructor() {}
-}
+export class RendezVousComponent {}

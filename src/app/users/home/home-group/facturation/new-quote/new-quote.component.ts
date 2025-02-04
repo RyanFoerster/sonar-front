@@ -1,4 +1,4 @@
-import { DatePipe, Location, NgClass, PercentPipe } from '@angular/common';
+import { DatePipe, Location, NgClass } from '@angular/common';
 import {
   AfterViewInit,
   Component,
@@ -35,65 +35,18 @@ import {
   lucideChevronUp,
   lucideChevronDown,
 } from '@ng-icons/lucide';
-import {
-  HlmAlertDescriptionDirective,
-  HlmAlertDirective,
-  HlmAlertIconDirective,
-  HlmAlertTitleDirective,
-} from '@spartan-ng/ui-alert-helm';
+
 import { HlmButtonDirective } from '@spartan-ng/ui-button-helm';
 import { HlmCheckboxComponent } from '@spartan-ng/ui-checkbox-helm';
-import {
-  BrnCommandComponent,
-  BrnCommandGroupComponent,
-  BrnCommandInputDirective,
-  BrnCommandItemDirective,
-  BrnCommandListComponent,
-} from '@spartan-ng/ui-command-brain';
-import {
-  HlmCommandDirective,
-  HlmCommandEmptyDirective,
-  HlmCommandGroupDirective,
-  HlmCommandInputDirective,
-  HlmCommandInputWrapperComponent,
-  HlmCommandItemDirective,
-  HlmCommandItemIconDirective,
-  HlmCommandListDirective,
-} from '@spartan-ng/ui-command-helm';
-import {
-  BrnDialogContentDirective,
-  BrnDialogTriggerDirective,
-} from '@spartan-ng/ui-dialog-brain';
-import {
-  HlmDialogComponent,
-  HlmDialogContentComponent,
-  HlmDialogDescriptionDirective,
-  HlmDialogFooterComponent,
-  HlmDialogHeaderComponent,
-  HlmDialogTitleDirective,
-} from '@spartan-ng/ui-dialog-helm';
+
 import { HlmIconComponent } from '@spartan-ng/ui-icon-helm';
 import { HlmInputDirective } from '@spartan-ng/ui-input-helm';
 import { HlmLabelDirective } from '@spartan-ng/ui-label-helm';
-import {
-  BrnPopoverComponent,
-  BrnPopoverContentDirective,
-  BrnPopoverTriggerDirective,
-} from '@spartan-ng/ui-popover-brain';
-import { HlmPopoverContentDirective } from '@spartan-ng/ui-popover-helm';
+
 import { BrnSelectImports } from '@spartan-ng/ui-select-brain';
 import { HlmSelectImports } from '@spartan-ng/ui-select-helm';
-import { BrnSeparatorComponent } from '@spartan-ng/ui-separator-brain';
-import { HlmSeparatorDirective } from '@spartan-ng/ui-separator-helm';
-import {
-  HlmCaptionComponent,
-  HlmTableComponent,
-  HlmTdComponent,
-  HlmThComponent,
-  HlmTrowComponent,
-} from '@spartan-ng/ui-table-helm';
+
 import { take, tap, catchError, throwError } from 'rxjs';
-import { ClientDto } from '../../../../../shared/dtos/client.dto';
 import { QuoteDto } from '../../../../../shared/dtos/quote.dto';
 import { ClientEntity } from '../../../../../shared/entities/client.entity';
 import { ProductEntity } from '../../../../../shared/entities/product.entity';
@@ -112,66 +65,23 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
   imports: [
     HlmInputDirective,
     HlmLabelDirective,
-    HlmSeparatorDirective,
-    BrnSeparatorComponent,
     BrnSelectImports,
     HlmSelectImports,
     HlmButtonDirective,
     HlmIconComponent,
-    HlmCaptionComponent,
-    HlmTableComponent,
-    HlmTdComponent,
-    HlmThComponent,
-    HlmTrowComponent,
     EuroFormatPipe,
-    BrnDialogTriggerDirective,
-    BrnDialogContentDirective,
-
-    HlmDialogComponent,
-    HlmDialogContentComponent,
-    HlmDialogHeaderComponent,
-    HlmDialogFooterComponent,
-    HlmDialogTitleDirective,
-    HlmDialogDescriptionDirective,
 
     HlmLabelDirective,
     HlmInputDirective,
     HlmButtonDirective,
-    HlmAlertDirective,
-    HlmAlertDescriptionDirective,
-    HlmAlertIconDirective,
-    HlmAlertTitleDirective,
     HlmIconComponent,
     FormsModule,
     ReactiveFormsModule,
     NgClass,
     HlmCheckboxComponent,
-    PercentPipe,
     HlmIconComponent,
     HlmIconComponent,
     HlmIconComponent,
-    HlmTableComponent,
-    HlmTrowComponent,
-    HlmThComponent,
-    HlmTrowComponent,
-    HlmThComponent,
-    BrnCommandComponent,
-    BrnCommandGroupComponent,
-    BrnCommandInputDirective,
-    BrnCommandItemDirective,
-    BrnCommandListComponent,
-    BrnPopoverComponent,
-    BrnPopoverContentDirective,
-    BrnPopoverTriggerDirective,
-    HlmCommandDirective,
-    HlmCommandEmptyDirective,
-    HlmCommandGroupDirective,
-    HlmCommandInputDirective,
-    HlmCommandInputWrapperComponent,
-    HlmCommandItemDirective,
-    HlmCommandItemIconDirective,
-    HlmCommandListDirective,
-    HlmPopoverContentDirective,
     DatePipe,
   ],
   providers: [
@@ -216,7 +126,7 @@ export class NewQuoteComponent implements AfterViewInit {
   protected tva21 = signal(0);
   protected tva6 = signal(0);
   protected total = signal(0);
-  protected isValidBCENumber = signal<Boolean | null>(null);
+  protected isValidBCENumber = signal<boolean | null>(null);
   public state = signal<'closed' | 'open'>('closed');
   public currentClient = signal<ClientEntity | undefined>(undefined);
   protected idProductToEdit = signal<number | undefined>(undefined);
@@ -430,7 +340,7 @@ export class NewQuoteComponent implements AfterViewInit {
     this.connectedUser.set(this.authService.getUser());
   }
 
-  toggleClientForm(isNewClient: boolean = true) {
+  toggleClientForm(isNewClient: boolean) {
     if (isNewClient) {
       this.createClientForm.reset();
     } else {
@@ -661,7 +571,7 @@ export class NewQuoteComponent implements AfterViewInit {
 
             // Réinitialisation du formulaire et des états
             this.createClientForm.reset();
-            this.toggleClientForm();
+            this.toggleClientForm(false);
             this.isPhysicalPerson.set(false);
 
             // Sauvegarde de l'utilisateur connecté
@@ -961,7 +871,7 @@ export class NewQuoteComponent implements AfterViewInit {
   toggleClientSelect() {
     this.isClientSelectOpen.set(!this.isClientSelectOpen());
     if (this.isClientSelectOpen()) {
-      this.filterClients();
+      this.filterClients('');
       // Fermer le select quand on clique en dehors
       setTimeout(() => {
         document.addEventListener('click', this.handleClickOutside);
@@ -979,7 +889,7 @@ export class NewQuoteComponent implements AfterViewInit {
     }
   };
 
-  filterClients(search: string = '') {
+  filterClients(search: string) {
     const searchValue = search.toLowerCase().trim();
     const allClients =
       this.connectedUser()?.role === 'ADMIN'
@@ -1012,8 +922,8 @@ export class NewQuoteComponent implements AfterViewInit {
     this.location.back();
   }
 
-  updateValidationDeadline(event: any) {
-    const quoteDate = new Date(event.target.value);
+  updateValidationDeadline(event: Event) {
+    const quoteDate = new Date((event.target as HTMLInputElement).value);
     const validationDate = new Date(quoteDate);
     validationDate.setDate(validationDate.getDate() + 10);
     this.createQuoteForm.patchValue({

@@ -1,4 +1,4 @@
-import { DatePipe, Location, NgClass, PercentPipe } from '@angular/common';
+import { DatePipe, Location, NgClass } from '@angular/common';
 import {
   AfterViewInit,
   Component,
@@ -35,42 +35,13 @@ import {
   lucideChevronUp,
   lucideChevronDown,
 } from '@ng-icons/lucide';
-import {
-  HlmAlertDescriptionDirective,
-  HlmAlertDirective,
-  HlmAlertIconDirective,
-  HlmAlertTitleDirective,
-} from '@spartan-ng/ui-alert-helm';
 import { HlmButtonDirective } from '@spartan-ng/ui-button-helm';
 import { HlmCheckboxComponent } from '@spartan-ng/ui-checkbox-helm';
-import {
-  BrnCommandComponent,
-  BrnCommandGroupComponent,
-  BrnCommandInputDirective,
-  BrnCommandItemDirective,
-  BrnCommandListComponent,
-} from '@spartan-ng/ui-command-brain';
-import {
-  HlmCommandDirective,
-  HlmCommandEmptyDirective,
-  HlmCommandGroupDirective,
-  HlmCommandInputDirective,
-  HlmCommandInputWrapperComponent,
-  HlmCommandItemDirective,
-  HlmCommandItemIconDirective,
-  HlmCommandListDirective,
-} from '@spartan-ng/ui-command-helm';
 import { HlmIconComponent } from '@spartan-ng/ui-icon-helm';
 import { HlmInputDirective } from '@spartan-ng/ui-input-helm';
 import { HlmLabelDirective } from '@spartan-ng/ui-label-helm';
 import { BrnSelectImports } from '@spartan-ng/ui-select-brain';
 import { HlmSelectImports } from '@spartan-ng/ui-select-helm';
-import {
-  HlmTableComponent,
-  HlmTdComponent,
-  HlmThComponent,
-  HlmTrowComponent,
-} from '@spartan-ng/ui-table-helm';
 import { ClientService } from '../../../../../shared/services/client.service';
 import { ProductService } from '../../../../../shared/services/product.service';
 import { InvoiceService } from '../../../../../shared/services/invoice.service';
@@ -98,19 +69,6 @@ import { InvoiceEntity } from '../../../../../shared/entities/invoice.entity';
     HlmLabelDirective,
     BrnSelectImports,
     HlmSelectImports,
-    BrnCommandComponent,
-    BrnCommandGroupComponent,
-    BrnCommandInputDirective,
-    BrnCommandItemDirective,
-    BrnCommandListComponent,
-    HlmCommandDirective,
-    HlmCommandEmptyDirective,
-    HlmCommandGroupDirective,
-    HlmCommandInputDirective,
-    HlmCommandInputWrapperComponent,
-    HlmCommandItemDirective,
-    HlmCommandItemIconDirective,
-    HlmCommandListDirective,
     HlmButtonDirective,
     HlmIconComponent,
     HlmCheckboxComponent,
@@ -119,15 +77,6 @@ import { InvoiceEntity } from '../../../../../shared/entities/invoice.entity';
     ReactiveFormsModule,
     NgClass,
     DatePipe,
-    PercentPipe,
-    HlmTableComponent,
-    HlmTdComponent,
-    HlmThComponent,
-    HlmTrowComponent,
-    HlmAlertDirective,
-    HlmAlertDescriptionDirective,
-    HlmAlertIconDirective,
-    HlmAlertTitleDirective,
   ],
   providers: [
     provideIcons({
@@ -171,7 +120,7 @@ export class NewCreditNoteComponent implements AfterViewInit {
   protected tva21 = signal(0);
   protected tva6 = signal(0);
   protected total = signal(0);
-  protected isValidBCENumber = signal<Boolean | null>(null);
+  protected isValidBCENumber = signal<boolean | null>(null);
   public state = signal<'closed' | 'open'>('closed');
   public currentClient = signal<ClientEntity | undefined>(undefined);
   protected idProductToEdit = signal<number | undefined>(undefined);
@@ -386,7 +335,7 @@ export class NewCreditNoteComponent implements AfterViewInit {
     this.connectedUser.set(this.authService.getUser());
   }
 
-  toggleClientForm(isNewClient: boolean = true) {
+  toggleClientForm(isNewClient: boolean) {
     if (isNewClient) {
       this.createClientForm.reset();
     } else {
@@ -491,7 +440,7 @@ export class NewCreditNoteComponent implements AfterViewInit {
       });
       for (const product of this.products()) {
         this.productService
-          .update(product.id?.toString()!, product)
+          .update(product.id!.toString(), product)
           .pipe(take(1))
           .subscribe();
       }
@@ -507,7 +456,7 @@ export class NewCreditNoteComponent implements AfterViewInit {
       });
       for (const product of this.products()) {
         this.productService
-          .update(product.id?.toString()!, product)
+          .update(product.id!.toString(), product)
           .pipe(take(1))
           .subscribe();
       }
@@ -782,7 +731,7 @@ export class NewCreditNoteComponent implements AfterViewInit {
   toggleClientSelect() {
     this.isClientSelectOpen.set(!this.isClientSelectOpen());
     if (this.isClientSelectOpen()) {
-      this.filterClients();
+      this.filterClients('');
       setTimeout(() => {
         document.addEventListener('click', this.handleClickOutside);
       });
@@ -799,7 +748,7 @@ export class NewCreditNoteComponent implements AfterViewInit {
     }
   };
 
-  filterClients(search: string = '') {
+  filterClients(search: string) {
     const searchValue = search.toLowerCase().trim();
     const allClients =
       this.connectedUser()?.role === 'ADMIN'
@@ -849,7 +798,7 @@ export class NewCreditNoteComponent implements AfterViewInit {
           take(1),
           tap((newClient) => {
             this.setClient(newClient.id);
-            this.toggleClientForm();
+            this.toggleClientForm(false);
           })
         )
         .subscribe();

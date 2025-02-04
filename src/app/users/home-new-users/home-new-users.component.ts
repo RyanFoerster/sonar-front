@@ -107,6 +107,7 @@ export class HomeNewUsersComponent {
     this.updateInfoUser.patchValue(this.connectedUser()!);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   registerToMeet(ctx: any) {
     this.meetService
       .registerToMeet(this.meetToBeRegistered()!)

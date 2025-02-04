@@ -1,4 +1,4 @@
-import { DatePipe, JsonPipe, Location, NgClass } from '@angular/common';
+import { DatePipe, Location, NgClass } from '@angular/common';
 import {
   AfterViewInit,
   Component,
@@ -12,7 +12,6 @@ import { Router } from '@angular/router';
 import {
   HlmAccordionContentComponent,
   HlmAccordionDirective,
-  HlmAccordionIconDirective,
   HlmAccordionItemDirective,
   HlmAccordionTriggerDirective,
 } from '@spartan-ng/ui-accordion-helm';
@@ -25,41 +24,25 @@ import {
   HlmDialogComponent,
   HlmDialogContentComponent,
   HlmDialogDescriptionDirective,
-  HlmDialogFooterComponent,
   HlmDialogHeaderComponent,
   HlmDialogTitleDirective,
 } from '@spartan-ng/ui-dialog-helm';
 import { HlmIconComponent, provideIcons } from '@spartan-ng/ui-icon-helm';
 import { HlmInputDirective } from '@spartan-ng/ui-input-helm';
-import { HlmLabelDirective } from '@spartan-ng/ui-label-helm';
 import {
   HlmPaginationContentDirective,
   HlmPaginationDirective,
-  HlmPaginationEllipsisComponent,
   HlmPaginationItemDirective,
-  HlmPaginationLinkDirective,
-  HlmPaginationNextComponent,
-  HlmPaginationPreviousComponent,
 } from '@spartan-ng/ui-pagination-helm';
 import { BrnSelectImports } from '@spartan-ng/ui-select-brain';
 import { HlmSelectImports } from '@spartan-ng/ui-select-helm';
 import {
-  HlmCaptionComponent,
   HlmTableComponent,
   HlmTdComponent,
   HlmThComponent,
   HlmTrowComponent,
 } from '@spartan-ng/ui-table-helm';
-import {
-  catchError,
-  delay,
-  EMPTY,
-  forkJoin,
-  from,
-  of,
-  switchMap,
-  tap,
-} from 'rxjs';
+import { catchError, delay, forkJoin, from, of, switchMap, tap } from 'rxjs';
 import { CompteGroupeEntity } from '../../../../shared/entities/compte-groupe.entity';
 import { PrincipalAccountEntity } from '../../../../shared/entities/principal-account.entity';
 import { TransactionEntity } from '../../../../shared/entities/transaction.entity';
@@ -85,15 +68,11 @@ import {
   lucideFileUp,
 } from '@ng-icons/lucide';
 import {
-  BrnPopoverCloseDirective,
   BrnPopoverComponent,
   BrnPopoverContentDirective,
   BrnPopoverTriggerDirective,
 } from '@spartan-ng/ui-popover-brain';
-import {
-  HlmPopoverCloseDirective,
-  HlmPopoverContentDirective,
-} from '@spartan-ng/ui-popover-helm';
+import { HlmPopoverContentDirective } from '@spartan-ng/ui-popover-helm';
 import { HlmSpinnerComponent } from '@spartan-ng/ui-spinner-helm';
 import { TransactionDto } from '../../../../shared/dtos/transaction.dto';
 import { VirementSepaDto } from '../../../../shared/dtos/virement-sepa.dto';
@@ -129,7 +108,6 @@ interface FormState {
     BrnDialogContentDirective,
     BrnDialogTriggerDirective,
     HlmButtonDirective,
-    HlmCaptionComponent,
     HlmTableComponent,
     HlmTdComponent,
     HlmThComponent,
@@ -137,36 +115,26 @@ interface FormState {
     HlmDialogComponent,
     HlmDialogContentComponent,
     HlmDialogDescriptionDirective,
-    HlmDialogFooterComponent,
     HlmDialogHeaderComponent,
     HlmDialogTitleDirective,
     HlmInputDirective,
-    HlmLabelDirective,
     EuroFormatPipe,
     DatePipe,
     HlmIconComponent,
     HlmAccordionTriggerDirective,
     HlmAccordionItemDirective,
     HlmAccordionDirective,
-    HlmAccordionIconDirective,
     HlmAccordionContentComponent,
     HlmThComponent,
     NgClass,
     ReactiveFormsModule,
     HlmSpinnerComponent,
-    JsonPipe,
     HlmPaginationDirective,
     HlmPaginationContentDirective,
     HlmPaginationItemDirective,
-    HlmPaginationLinkDirective,
-    HlmPaginationEllipsisComponent,
-    HlmPaginationNextComponent,
-    HlmPaginationPreviousComponent,
-    BrnPopoverCloseDirective,
     BrnPopoverComponent,
     BrnPopoverContentDirective,
     BrnPopoverTriggerDirective,
-    HlmPopoverCloseDirective,
     HlmPopoverContentDirective,
   ],
   providers: [
@@ -267,6 +235,7 @@ export class ProjectAccountComponent implements AfterViewInit {
     this.initializeForms();
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   protected downloadInvoice(virement: any): void {
     if (!virement || !virement.id) return;
 
@@ -446,7 +415,6 @@ export class ProjectAccountComponent implements AfterViewInit {
     totalPages: number
   ): (number | 'ellipsis')[] {
     const result: (number | 'ellipsis')[] = [];
-    const visibleCount = 3; // Nombre de pages visibles consécutives
 
     if (totalPages <= 5) {
       // Si moins de 5 pages, on affiche tout
@@ -551,10 +519,11 @@ export class ProjectAccountComponent implements AfterViewInit {
     this.getAllGroupAccount();
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   sendTransaction(ctx: any) {
     if (this.transactionForm.valid) {
       this.state.isLoadingTransfer.set(true);
-      let transactionDto: TransactionDto = { ...this.transactionForm.value };
+      const transactionDto: TransactionDto = { ...this.transactionForm.value };
       if (this.state.accountPrincipal()) {
         transactionDto.senderPrincipal = this.state.accountPrincipal()?.id;
       } else {

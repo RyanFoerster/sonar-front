@@ -25,6 +25,7 @@ export class AppComponent {
   constructor(private router: Router) {
     this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .subscribe((event: any) => {
         this.isIndexRoute = event.url === '/';
       });

@@ -86,9 +86,9 @@
           >
             <div class="space-y-4">
               <div class="w-full">
-                <label class="text-sm font-medium mb-1 block"
-                  >Projets individuels</label
-                >
+                <p class="text-sm font-medium mb-1 block">
+                  Projets individuels
+                </p>
                 <brn-select
                   formControlName="recipientPrincipal"
                   class="rounded-full w-full"
@@ -120,9 +120,7 @@
               </div>
 
               <div class="w-full">
-                <label class="text-sm font-medium mb-1 block"
-                  >Projets de groupe</label
-                >
+                <p class="text-sm font-medium mb-1 block">Projets de groupe</p>
                 <brn-select
                   formControlName="recipientGroup"
                   class="rounded-full w-full"
@@ -154,7 +152,7 @@
               </div>
 
               <div class="w-full">
-                <label class="text-sm font-medium mb-1 block">Montant</label>
+                <p class="text-sm font-medium mb-1 block">Montant</p>
                 <input
                   formControlName="amount"
                   hlmInput
@@ -165,9 +163,7 @@
               </div>
 
               <div class="w-full">
-                <label class="text-sm font-medium mb-1 block"
-                  >Communication</label
-                >
+                <p class="text-sm font-medium mb-1 block">Communication</p>
                 <input
                   formControlName="communication"
                   hlmInput
@@ -260,9 +256,9 @@
               <div class="space-y-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div class="w-full">
-                    <label class="text-sm font-medium mb-2 block"
-                      >Titulaire du compte</label
-                    >
+                    <p class="text-sm font-medium mb-2 block">
+                      Titulaire du compte
+                    </p>
                     <input
                       formControlName="account_owner"
                       class="rounded-full w-full focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
@@ -273,7 +269,7 @@
                   </div>
 
                   <div class="w-full">
-                    <label class="text-sm font-medium mb-2 block">IBAN</label>
+                    <p class="text-sm font-medium mb-2 block">IBAN</p>
                     <input
                       formControlName="iban"
                       class="rounded-full w-full focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
@@ -286,9 +282,7 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div class="w-full">
-                    <label class="text-sm font-medium mb-2 block"
-                      >Montant Total</label
-                    >
+                    <p class="text-sm font-medium mb-2 block">Montant Total</p>
                     <input
                       formControlName="amount_htva"
                       class="rounded-full w-full focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
@@ -300,9 +294,7 @@
                   </div>
 
                   <div class="w-full">
-                    <label class="text-sm font-medium mb-2 block"
-                      >Montant TVA</label
-                    >
+                    <p class="text-sm font-medium mb-2 block">Montant TVA</p>
                     <input
                       formControlName="amount_tva"
                       class="rounded-full w-full focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
@@ -315,9 +307,9 @@
                 </div>
 
                 <div class="w-full">
-                  <label class="text-sm font-medium mb-2 block"
-                    >Montant débité du projet</label
-                  >
+                  <p class="text-sm font-medium mb-2 block">
+                    Montant débité du projet
+                  </p>
                   <input
                     class="rounded-full w-full font-bold focus:outline-none bg-gray-50 focus-visible:ring-0 focus-visible:ring-offset-0"
                     [value]="amount_debited()"
@@ -330,9 +322,7 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div class="w-full">
-                    <label class="text-sm font-medium mb-2 block"
-                      >Communication</label
-                    >
+                    <p class="text-sm font-medium mb-2 block">Communication</p>
                     <input
                       formControlName="communication"
                       class="rounded-full w-full focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
@@ -343,9 +333,9 @@
                   </div>
 
                   <div class="w-full">
-                    <label class="text-sm font-medium mb-2 block"
-                      >Communication structurée</label
-                    >
+                    <p class="text-sm font-medium mb-2 block">
+                      Communication structurée
+                    </p>
                     <input
                       formControlName="structured_communication"
                       class="rounded-full w-full focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
@@ -357,7 +347,7 @@
                 </div>
 
                 <div class="w-full">
-                  <label class="text-sm font-medium mb-2 block">Facture</label>
+                  <p class="text-sm font-medium mb-2 block">Facture</p>
                   <div class="flex flex-col gap-2">
                     <div
                       class="relative"
@@ -1005,9 +995,11 @@
             <div class="flex justify-between items-center">
               <span class="text-sm font-semibold">Facture:</span>
               <a
-                class="text-sm text-blue-600 border p-2 border-blue-600 transition-all rounded-full hover:bg-blue-600 hover:text-white"
                 (click)="downloadInvoice(virement)"
-                style="cursor: pointer"
+                (keydown.enter)="downloadInvoice(virement)"
+                class="cursor-pointer text-sm text-blue-600 border p-2 border-blue-600 transition-all rounded-full hover:bg-blue-600 hover:text-white"
+                role="button"
+                tabindex="0"
                 >Voir</a
               >
             </div>
@@ -1092,8 +1084,10 @@
             <hlm-td class="lg:w-[8%] text-sm">
               <a
                 (click)="downloadInvoice(virement)"
-                style="cursor: pointer"
-                class="text-blue-600 border p-2 border-blue-600 transition-all rounded-full hover:bg-blue-600 hover:text-white"
+                (keydown.enter)="downloadInvoice(virement)"
+                class="cursor-pointer text-blue-600 border p-2 border-blue-600 transition-all rounded-full hover:bg-blue-600 hover:text-white"
+                role="button"
+                tabindex="0"
                 >Voir</a
               >
             </hlm-td>
@@ -1195,8 +1189,11 @@
             <div class="flex justify-between items-center">
               <span class="text-sm font-semibold">Facture:</span>
               <a
-                class="cursor-pointer text-sm text-blue-600 border p-2 border-blue-600 transition-all rounded-full hover:bg-blue-600 hover:text-white"
                 (click)="downloadInvoice(virement)"
+                (keydown.enter)="downloadInvoice(virement)"
+                class="cursor-pointer text-blue-600 border p-2 border-blue-600 transition-all rounded-full hover:bg-blue-600 hover:text-white"
+                role="button"
+                tabindex="0"
                 >Voir</a
               >
             </div>
@@ -1277,7 +1274,10 @@
             <hlm-td class="lg:w-[8%] text-sm">
               <a
                 (click)="downloadInvoice(virement)"
+                (keydown.enter)="downloadInvoice(virement)"
                 class="cursor-pointer text-blue-600 border p-2 border-blue-600 transition-all rounded-full hover:bg-blue-600 hover:text-white"
+                role="button"
+                tabindex="0"
                 >Voir</a
               >
             </hlm-td>

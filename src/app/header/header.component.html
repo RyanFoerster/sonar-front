@@ -46,9 +46,16 @@
           connectedUser()?.name?.slice(0, 1)
       }}
     </a>
-    <a (click)="logout()" class="cursor-pointer rounded-full" hlmBtn
-      >Déconnexion</a
+    <a
+      (click)="logout()"
+      tabindex="0"
+      (keydown.enter)="logout()"
+      (keydown.space)="logout()"
+      class="cursor-pointer rounded-full"
+      hlmBtn
     >
+      Déconnexion
+    </a>
   </div>
   <app-header-mobile class="md:hidden" />
   } @else {

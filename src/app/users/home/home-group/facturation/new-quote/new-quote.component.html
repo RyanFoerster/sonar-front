@@ -25,7 +25,7 @@
       <!-- Dates Section -->
       <div class="grid md:grid-cols-2 gap-6">
         <div class="space-y-2">
-          <label class="font-medium text-gray-900 text-sm" hlmLabel>
+          <p class="font-medium text-gray-900 text-sm" hlmLabel>
             Date du devis
             <input
               formControlName="quote_date"
@@ -43,11 +43,11 @@
               La date est requise
             </span>
             }
-          </label>
+          </p>
         </div>
 
         <div class="space-y-2">
-          <label class="font-medium text-gray-900 text-sm" hlmLabel>
+          <p class="font-medium text-gray-900 text-sm" hlmLabel>
             Date de prestation
             <input
               formControlName="service_date"
@@ -62,14 +62,14 @@
               La date de prestation est requise
             </span>
             }
-          </label>
+          </p>
         </div>
       </div>
 
       <!-- Délais Section -->
       <div class="grid md:grid-cols-2 gap-6">
         <div class="space-y-2">
-          <label class="font-medium text-gray-900 text-sm" hlmLabel>
+          <p class="font-medium text-gray-900 text-sm" hlmLabel>
             Délai de paiement (jours)
             <input
               formControlName="payment_deadline"
@@ -93,11 +93,11 @@
               délai maximum est de 30 jours }
             </span>
             }
-          </label>
+          </p>
         </div>
 
         <div class="space-y-2">
-          <label class="font-medium text-gray-900 text-sm" hlmLabel>
+          <p class="font-medium text-gray-900 text-sm" hlmLabel>
             Devis valable jusqu'au
             <input
               formControlName="validation_deadline"
@@ -113,7 +113,7 @@
               La date de validité est requise
             </span>
             }
-          </label>
+          </p>
         </div>
       </div>
 
@@ -226,7 +226,7 @@
 
             <button
               type="button"
-              (click)="toggleClientForm()"
+              (click)="toggleClientForm(true)"
               class="bg-primary text-white font-medium text-sm rounded-lg px-4 py-2.5 flex items-center justify-center gap-2 hover:bg-primary/90 transition-all w-full sm:w-auto"
               hlmBtn
             >
@@ -336,7 +336,7 @@
               </div>
 
               <div class="space-y-4">
-                <label class="block" hlmLabel>
+                <p class="block" hlmLabel>
                   <span class="text-sm font-medium text-gray-900"
                     >Description*</span
                   >
@@ -346,10 +346,10 @@
                     placeholder="Description du service"
                     class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
                   />
-                </label>
+                </p>
 
                 <div class="grid md:grid-cols-2 gap-4">
-                  <label class="block" hlmLabel>
+                  <p class="block" hlmLabel>
                     <span class="text-sm font-medium text-gray-900">Prix*</span>
                     <input
                       formControlName="price"
@@ -358,9 +358,9 @@
                       placeholder="0.00"
                       class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
                     />
-                  </label>
+                  </p>
 
-                  <label class="block" hlmLabel>
+                  <p class="block" hlmLabel>
                     <span class="text-sm font-medium text-gray-900"
                       >Quantité*</span
                     >
@@ -371,10 +371,10 @@
                       placeholder="1"
                       class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
                     />
-                  </label>
+                  </p>
                 </div>
 
-                <label class="flex items-center gap-2 cursor-pointer group">
+                <p class="flex items-center gap-2 cursor-pointer group">
                   <hlm-checkbox
                     (checkedChange)="toggleArtisticPerformance()"
                     formControlName="vat"
@@ -385,7 +385,7 @@
                   >
                     TVA 6% (Prestation artistique)
                   </span>
-                </label>
+                </p>
               </div>
 
               <div class="flex justify-end gap-3 pt-6 border-t border-gray-200">
@@ -547,7 +547,7 @@
             </div>
 
             <div class="space-y-4">
-              <label class="block" hlmLabel>
+              <p class="block" hlmLabel>
                 <span class="text-sm font-medium text-gray-900"
                   >Description*</span
                 >
@@ -557,10 +557,10 @@
                   placeholder="Description du service"
                   class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
                 />
-              </label>
+              </p>
 
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <label class="block" hlmLabel>
+                <p class="block" hlmLabel>
                   <span class="text-sm font-medium text-gray-900">Prix*</span>
                   <input
                     formControlName="price"
@@ -569,9 +569,9 @@
                     placeholder="0.00"
                     class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
                   />
-                </label>
+                </p>
 
-                <label class="block" hlmLabel>
+                <p class="block" hlmLabel>
                   <span class="text-sm font-medium text-gray-900"
                     >Quantité*</span
                   >
@@ -582,10 +582,10 @@
                     placeholder="1"
                     class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
                   />
-                </label>
+                </p>
               </div>
 
-              <label class="flex items-center gap-2 cursor-pointer group">
+              <p class="flex items-center gap-2 cursor-pointer group">
                 <hlm-checkbox
                   (checkedChange)="toggleArtisticPerformance()"
                   formControlName="vat"
@@ -596,7 +596,7 @@
                 >
                   TVA 6% (Prestation artistique)
                 </span>
-              </label>
+              </p>
             </div>
 
             <div
@@ -628,7 +628,7 @@
       <div class="border-t border-gray-200 pt-4 md:pt-6">
         <div class="flex justify-end">
           <div class="w-full md:w-72 space-y-3 md:space-y-4">
-            <label class="flex items-center gap-2 text-sm text-gray-700">
+            <p class="flex items-center gap-2 text-sm text-gray-700">
               <hlm-checkbox
                 [checked]="isTvaIncluded()"
                 (checkedChange)="toggleTvaIncluded()"
@@ -636,7 +636,7 @@
                 class="rounded-md"
               />
               Montant TVA comprise
-            </label>
+            </p>
 
             <div class="space-y-2 text-sm">
               <div class="flex justify-between py-1.5 md:py-2">
@@ -694,7 +694,7 @@
         <h2 class="text-xl font-bold text-gray-900">Nouveau client</h2>
         <button
           type="button"
-          (click)="toggleClientForm()"
+          (click)="toggleClientForm(false)"
           class="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-all"
         >
           <hlm-icon size="sm" name="lucideXCircle" />
@@ -702,7 +702,7 @@
       </div>
 
       <div class="space-y-6">
-        <label class="block" hlmLabel>
+        <p class="block" hlmLabel>
           <span class="text-sm font-medium text-gray-900">Pays</span>
           <brn-select
             formControlName="country"
@@ -720,9 +720,9 @@
               }
             </hlm-select-content>
           </brn-select>
-        </label>
+        </p>
 
-        <label class="flex items-center gap-2 cursor-pointer group">
+        <p class="flex items-center gap-2 cursor-pointer group">
           <hlm-checkbox
             (checkedChange)="togglePhysicalPerson()"
             class="rounded-md group-hover:border-primary transition-colors"
@@ -732,11 +732,11 @@
           >
             Personne physique ou association de fait ?
           </span>
-        </label>
+        </p>
 
         @if (!isPhysicalPerson()) {
         <div class="space-y-4">
-          <label class="block" hlmLabel>
+          <div class="block" hlmLabel>
             <span class="text-sm font-medium text-gray-900"
               >Numéro d'entreprise</span
             >
@@ -763,9 +763,9 @@
                 <hlm-icon size="sm" name="lucideCheck" />
               </button>
             </div>
-          </label>
+          </div>
 
-          <label class="block" hlmLabel>
+          <p class="block" hlmLabel>
             <span class="text-sm font-medium text-gray-900">Numéro de TVA</span>
             <input
               formControlName="company_vat_number"
@@ -773,9 +773,9 @@
               placeholder="BE0XXX XXX XXX"
               class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
             />
-          </label>
+          </p>
 
-          <label class="block" hlmLabel>
+          <div class="block" hlmLabel>
             <span class="text-sm font-medium text-gray-900"
               >Nom de l'entreprise*</span
             >
@@ -792,11 +792,11 @@
               Le nom de l'entreprise est requis
             </span>
             }
-          </label>
+          </div>
         </div>
         } @else {
         <div class="space-y-4">
-          <label class="block" hlmLabel>
+          <p class="block" hlmLabel>
             <span class="text-sm font-medium text-gray-900"
               >Numéro national</span
             >
@@ -806,10 +806,10 @@
               placeholder="12345678910"
               class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
             />
-          </label>
+          </p>
 
           <div class="grid md:grid-cols-2 gap-4">
-            <label class="block" hlmLabel>
+            <p class="block" hlmLabel>
               <span class="text-sm font-medium text-gray-900">Prénom*</span>
               <input
                 formControlName="firstname"
@@ -824,9 +824,9 @@
                 Le prénom est requis
               </span>
               }
-            </label>
+            </p>
 
-            <label class="block" hlmLabel>
+            <p class="block" hlmLabel>
               <span class="text-sm font-medium text-gray-900">Nom*</span>
               <input
                 formControlName="lastname"
@@ -841,13 +841,13 @@
                 Le nom est requis
               </span>
               }
-            </label>
+            </p>
           </div>
         </div>
         }
 
         <div class="grid md:grid-cols-2 gap-4">
-          <label class="block" hlmLabel>
+          <p class="block" hlmLabel>
             <span class="text-sm font-medium text-gray-900">Email*</span>
             <input
               formControlName="email"
@@ -866,9 +866,9 @@
               pas valide }
             </span>
             }
-          </label>
+          </p>
 
-          <label class="block" hlmLabel>
+          <p class="block" hlmLabel>
             <span class="text-sm font-medium text-gray-900">Téléphone*</span>
             <input
               formControlName="phone"
@@ -884,12 +884,12 @@
               Le numéro de téléphone est requis
             </span>
             }
-          </label>
+          </p>
         </div>
 
         <div class="space-y-4">
           <div class="grid md:grid-cols-2 gap-4">
-            <label class="block" hlmLabel>
+            <p class="block" hlmLabel>
               <span class="text-sm font-medium text-gray-900">Rue*</span>
               <input
                 formControlName="street"
@@ -904,9 +904,9 @@
                 La rue est requise
               </span>
               }
-            </label>
+            </p>
 
-            <label class="block" hlmLabel>
+            <p class="block" hlmLabel>
               <span class="text-sm font-medium text-gray-900">Numéro*</span>
               <input
                 formControlName="number"
@@ -921,11 +921,11 @@
                 Le numéro est requis
               </span>
               }
-            </label>
+            </p>
           </div>
 
           <div class="grid md:grid-cols-3 gap-4">
-            <label class="block" hlmLabel>
+            <p class="block" hlmLabel>
               <span class="text-sm font-medium text-gray-900"
                 >Code postal*</span
               >
@@ -942,9 +942,9 @@
                 Le code postal est requis
               </span>
               }
-            </label>
+            </p>
 
-            <label class="block md:col-span-2" hlmLabel>
+            <p class="block md:col-span-2" hlmLabel>
               <span class="text-sm font-medium text-gray-900">Ville*</span>
               <input
                 formControlName="city"
@@ -959,7 +959,7 @@
                 La ville est requise
               </span>
               }
-            </label>
+            </p>
           </div>
         </div>
       </div>
@@ -967,7 +967,7 @@
       <div class="flex justify-end gap-3 pt-6 border-t border-gray-200">
         <button
           type="button"
-          (click)="toggleClientForm()"
+          (click)="toggleClientForm(false)"
           class="bg-gray-100 text-gray-700 font-medium text-sm rounded-lg px-4 py-2 hover:bg-gray-200 transition-all"
           hlmBtn
         >

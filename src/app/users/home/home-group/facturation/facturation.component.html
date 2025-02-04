@@ -10,6 +10,9 @@
       (click)="goBack()"
       class="w-fit sm:w-auto rounded-full text-sm sm:text-base font-semibold py-1.5 sm:py-2 px-3 sm:px-4 md:px-6 bg-gray-sonar text-black flex justify-center items-center gap-2 hover:bg-gray-sonar/80 transition-colors cursor-pointer"
       hlmBtn
+      tabindex="0"
+      role="button"
+      (keydown.enter)="goBack()"
     >
       <hlm-icon size="sm" name="lucideArrowLeft" class="block" />
       Retour

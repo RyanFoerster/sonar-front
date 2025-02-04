@@ -1,4 +1,4 @@
-import { DatePipe, JsonPipe, Location, NgClass } from '@angular/common';
+import { DatePipe, Location, NgClass } from '@angular/common';
 import {
   Component,
   computed,
@@ -24,40 +24,17 @@ import {
   BrnAlertDialogTriggerDirective,
 } from '@spartan-ng/ui-alertdialog-brain';
 import {
-  HlmAlertDialogActionButtonDirective,
-  HlmAlertDialogCancelButtonDirective,
   HlmAlertDialogComponent,
   HlmAlertDialogContentComponent,
   HlmAlertDialogDescriptionDirective,
   HlmAlertDialogFooterComponent,
   HlmAlertDialogHeaderComponent,
-  HlmAlertDialogOverlayDirective,
   HlmAlertDialogTitleDirective,
 } from '@spartan-ng/ui-alertdialog-helm';
 import { HlmButtonDirective } from '@spartan-ng/ui-button-helm';
-import {
-  BrnDialogContentDirective,
-  BrnDialogTriggerDirective,
-} from '@spartan-ng/ui-dialog-brain';
-import {
-  HlmDialogComponent,
-  HlmDialogContentComponent,
-  HlmDialogDescriptionDirective,
-  HlmDialogFooterComponent,
-  HlmDialogHeaderComponent,
-  HlmDialogTitleDirective,
-} from '@spartan-ng/ui-dialog-helm';
+
 import { HlmIconComponent } from '@spartan-ng/ui-icon-helm';
-import { BrnSeparatorComponent } from '@spartan-ng/ui-separator-brain';
-import { HlmSeparatorDirective } from '@spartan-ng/ui-separator-helm';
-import {
-  HlmCaptionComponent,
-  HlmTableComponent,
-  HlmTableImports,
-  HlmTdComponent,
-  HlmThComponent,
-  HlmTrowComponent,
-} from '@spartan-ng/ui-table-helm';
+import { HlmTableImports } from '@spartan-ng/ui-table-helm';
 import { take, tap } from 'rxjs';
 import { CompteGroupeEntity } from '../../../../shared/entities/compte-groupe.entity';
 import { InvoiceEntity } from '../../../../shared/entities/invoice.entity';
@@ -72,22 +49,15 @@ import { QuoteService } from '../../../../shared/services/quote.service';
 import { UsersService } from '../../../../shared/services/users.service';
 import { PdfGeneratorService } from '../../../../shared/services/pdf-generator.service';
 import { toast } from 'ngx-sonner';
-import { HlmToasterComponent } from '@spartan-ng/ui-sonner-helm';
 import { FormsModule } from '@angular/forms';
 import { CompteGroupeService } from '../../../../shared/services/compte-groupe.service';
 import { BrnSelectImports } from '@spartan-ng/ui-select-brain';
 import { HlmSelectImports } from '@spartan-ng/ui-select-helm';
 
-import { HlmSpinnerComponent } from '@spartan-ng/ui-spinner-helm';
-
 import {
   HlmPaginationDirective,
   HlmPaginationContentDirective,
   HlmPaginationItemDirective,
-  HlmPaginationLinkDirective,
-  HlmPaginationEllipsisComponent,
-  HlmPaginationNextComponent,
-  HlmPaginationPreviousComponent,
 } from '@spartan-ng/ui-pagination-helm';
 
 @Component({
@@ -97,50 +67,25 @@ import {
     HlmButtonDirective,
     HlmIconComponent,
     RouterLink,
-    JsonPipe,
-    HlmCaptionComponent,
-    HlmTableComponent,
-    HlmTdComponent,
-    HlmThComponent,
-    HlmTrowComponent,
     DatePipe,
     EuroFormatPipe,
-    HlmSeparatorDirective,
-    BrnSeparatorComponent,
     HlmTableImports,
-    HlmAlertDialogActionButtonDirective,
-    HlmAlertDialogCancelButtonDirective,
     HlmAlertDialogComponent,
     HlmAlertDialogContentComponent,
     HlmAlertDialogDescriptionDirective,
     HlmAlertDialogFooterComponent,
     HlmAlertDialogHeaderComponent,
-    HlmAlertDialogOverlayDirective,
     HlmAlertDialogTitleDirective,
     BrnAlertDialogContentDirective,
     BrnAlertDialogTriggerDirective,
-    HlmDialogComponent,
-    HlmDialogContentComponent,
-    HlmDialogDescriptionDirective,
-    HlmDialogFooterComponent,
-    HlmDialogHeaderComponent,
-    HlmDialogTitleDirective,
-    BrnDialogContentDirective,
-    BrnDialogTriggerDirective,
     FormsModule,
     DatePipe,
-    HlmToasterComponent,
     NgClass,
     BrnSelectImports,
     HlmSelectImports,
     HlmPaginationDirective,
     HlmPaginationContentDirective,
     HlmPaginationItemDirective,
-    HlmPaginationLinkDirective,
-    HlmPaginationEllipsisComponent,
-    HlmPaginationNextComponent,
-    HlmPaginationPreviousComponent,
-    HlmSpinnerComponent,
   ],
   providers: [
     provideIcons({
@@ -179,12 +124,13 @@ export class FacturationComponent implements OnInit, OnDestroy {
   protected groupAccount = signal<CompteGroupeEntity | undefined>(undefined);
   protected creditNote = signal<InvoiceEntity | null>(null);
   protected creditNoteList = signal<InvoiceEntity[]>([]);
-  protected isCreditNote = signal<Boolean | null>(null);
+  protected isCreditNote = signal<boolean | null>(null);
   protected currentDate = new Date();
   protected reportDate = signal<Date>(this.currentDate);
   protected filterSelected = signal<'invoice' | 'credit-note' | 'all'>('all');
   protected isLoading = signal<boolean | null>(null);
   protected searchNumber = signal<string>('');
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   protected originalDocuments = signal<any[]>([]);
 
   // Computed values
@@ -211,6 +157,7 @@ export class FacturationComponent implements OnInit, OnDestroy {
   // Documents state
   currentFilter: 'all' | 'quotes' | 'invoiced_quotes' | 'credit-note' = 'all';
   invoices: InvoiceEntity[] = [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   protected allDocuments = signal<any[]>([]);
   protected paginatedDocuments = computed(() => {
     const startIndex =
@@ -366,6 +313,7 @@ export class FacturationComponent implements OnInit, OnDestroy {
       }));
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private filterDocuments(docs: any[]) {
     switch (this.currentFilter) {
       case 'quotes':
@@ -383,12 +331,14 @@ export class FacturationComponent implements OnInit, OnDestroy {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private sortByDate(a: any, b: any) {
     return (
       new Date(b.documentDate).getTime() - new Date(a.documentDate).getTime()
     );
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private updatePagination(docs: any[]) {
     this.pagination.totalItems.set(docs.length);
     this.pagination.totalPages.set(
@@ -414,6 +364,7 @@ export class FacturationComponent implements OnInit, OnDestroy {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   createInvoice(quote: QuoteEntity, ctx: any): void {
     this.services.invoice
       .createInvoice(quote, {
@@ -461,6 +412,7 @@ export class FacturationComponent implements OnInit, OnDestroy {
     this.reportDate.set(date);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   reportQuoteDate(quote_id: number, ctx: any): void {
     if (!this.reportDate()) return;
 

@@ -1,8 +1,6 @@
 import {
   AfterViewInit,
   Component,
-  computed,
-  effect,
   inject,
   input,
   signal,
@@ -15,7 +13,6 @@ import {
   lucideEdit,
   lucideUsers,
 } from '@ng-icons/lucide';
-import { HlmAspectRatioDirective } from '@spartan-ng/ui-aspectratio-helm';
 import { HlmButtonDirective } from '@spartan-ng/ui-button-helm';
 import { HlmIconComponent, provideIcons } from '@spartan-ng/ui-icon-helm';
 import { CompteGroupeService } from '../../../shared/services/compte-groupe.service';
@@ -27,7 +24,7 @@ import { UserEntity } from '../../../shared/entities/user.entity';
 import { EMPTY, switchMap, take, tap } from 'rxjs';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../shared/services/auth.service';
-import { JsonPipe, Location } from '@angular/common';
+import { Location } from '@angular/common';
 import {
   FormBuilder,
   FormGroup,
@@ -37,17 +34,6 @@ import {
 import { HlmInputDirective } from '@spartan-ng/ui-input-helm';
 import { HlmLabelDirective } from '@spartan-ng/ui-label-helm';
 import { HlmSpinnerComponent } from '@spartan-ng/ui-spinner-helm';
-
-import {
-  BrnPopoverCloseDirective,
-  BrnPopoverComponent,
-  BrnPopoverContentDirective,
-  BrnPopoverTriggerDirective,
-} from '@spartan-ng/ui-popover-brain';
-import {
-  HlmPopoverCloseDirective,
-  HlmPopoverContentDirective,
-} from '@spartan-ng/ui-popover-helm';
 
 import {
   BrnDialogContentDirective,
@@ -66,16 +52,9 @@ import {
   selector: 'app-home-group',
   standalone: true,
   imports: [
-    HlmAspectRatioDirective,
     HlmButtonDirective,
     HlmIconComponent,
     RouterLink,
-    BrnPopoverCloseDirective,
-    BrnPopoverComponent,
-    BrnPopoverContentDirective,
-    BrnPopoverTriggerDirective,
-    HlmPopoverCloseDirective,
-    HlmPopoverContentDirective,
     HlmDialogComponent,
     HlmDialogContentComponent,
     HlmDialogDescriptionDirective,
@@ -84,7 +63,6 @@ import {
     HlmDialogTitleDirective,
     BrnDialogContentDirective,
     BrnDialogTriggerDirective,
-    JsonPipe,
     ReactiveFormsModule,
     HlmInputDirective,
     HlmLabelDirective,
@@ -109,6 +87,7 @@ export class HomeGroupComponent implements AfterViewInit {
     signal(null);
   connectedUser: WritableSignal<UserEntity | null> = signal(null);
   userInfo: WritableSignal<UserEntity | null> = signal(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   members: WritableSignal<any[]> = signal([]);
 
   private compteGroupeService: CompteGroupeService =

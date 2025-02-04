@@ -1,10 +1,4 @@
-import {
-  AfterViewInit,
-  Component,
-  effect,
-  inject,
-  signal,
-} from '@angular/core';
+import { Component, effect, inject, signal } from '@angular/core';
 import { lucideEdit } from '@ng-icons/lucide';
 import { HlmAspectRatioDirective } from '@spartan-ng/ui-aspectratio-helm';
 import { HlmButtonDirective } from '@spartan-ng/ui-button-helm';
@@ -30,7 +24,6 @@ import {
   Validators,
 } from '@angular/forms';
 import { UpdateUserDto } from '../../shared/dtos/update-user.dto';
-import { switchMap } from 'rxjs';
 import { NgOptimizedImage } from '@angular/common';
 import { AuthService } from '../../shared/services/auth.service';
 
@@ -80,7 +73,6 @@ export class ProfileComponent {
       () => {
         this.connectedUser.set(this.authService.getUser());
         if (this.connectedUser()) {
-          const user = this.connectedUser()!;
           this.updateUserForm.patchValue({ iban: this.connectedUser()?.iban });
           this.updateUserForm.patchValue({
             username: this.connectedUser()?.comptePrincipal.username,
@@ -105,10 +97,11 @@ export class ProfileComponent {
       },
       {
         allowSignalWrites: true,
-      },
+      }
     );
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   updateUser(ctx: any) {
     if (this.updateUserForm.valid) {
       const updateUserDto: UpdateUserDto = this.updateUserForm.value;

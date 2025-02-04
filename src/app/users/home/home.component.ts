@@ -1,17 +1,5 @@
-import {
-  Component,
-  computed,
-  inject,
-  signal,
-  WritableSignal,
-} from '@angular/core';
-import {
-  FormBuilder,
-  FormGroup,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
-import { JsonPipe } from '@angular/common';
+import { Component, computed, inject, signal } from '@angular/core';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { tap, catchError, throwError } from 'rxjs';
 import {
   HlmAccordionContentComponent,
@@ -31,7 +19,6 @@ import {
   HlmDialogComponent,
   HlmDialogContentComponent,
   HlmDialogDescriptionDirective,
-  HlmDialogFooterComponent,
   HlmDialogHeaderComponent,
   HlmDialogTitleDirective,
 } from '@spartan-ng/ui-dialog-helm';
@@ -58,11 +45,9 @@ import { UserSecondaryAccountEntity } from '../../shared/entities/user-secondary
     HlmInputDirective,
     HlmButtonDirective,
     AccountComponentComponent,
-    JsonPipe,
     HlmDialogComponent,
     HlmDialogContentComponent,
     HlmDialogDescriptionDirective,
-    HlmDialogFooterComponent,
     HlmDialogHeaderComponent,
     HlmDialogTitleDirective,
     BrnDialogContentDirective,

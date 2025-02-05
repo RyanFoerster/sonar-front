@@ -123,12 +123,25 @@
                           [class.bg-blue-100]="account.type === 'PRINCIPAL'"
                           [class.bg-green-100]="account.type === 'GROUP'"
                         >
-                          <span
-                            [class.text-blue-700]="account.type === 'PRINCIPAL'"
-                            [class.text-green-700]="account.type === 'GROUP'"
-                          >
-                            {{ account.username }}
-                          </span>
+                          <div class="flex flex-col">
+                            @if (account.type === 'PRINCIPAL') {
+                            <div class="flex items-center gap-1">
+                              <span class="font-medium">
+                                {{ account.firstName }} {{ account.name }}
+                              </span>
+                              <span class="text-xs text-gray-500">
+                                ({{ account.username }})
+                              </span>
+                            </div>
+                            } @else {
+                            <span class="font-medium">
+                              {{ account.username }}
+                            </span>
+                            }
+                            <span class="text-xs text-gray-500">
+                              N° {{ account.id }}
+                            </span>
+                          </div>
                           <button
                             type="button"
                             (click)="removeAccount(account)"
@@ -154,7 +167,7 @@
                       @if (sortedPrincipalAccounts().length > 0) {
                       <div class="mb-4">
                         <h3
-                          class="text-sm font-semibold text-gray-700 px-2 mb-2"
+                          class="text-sm font-semibold text-blue-700 px-2 mb-2"
                         >
                           Projets individuels
                         </h3>
@@ -172,9 +185,18 @@
                             "
                             class="w-full px-3 py-2 rounded-lg text-left hover:bg-gray-50 transition-colors flex items-center justify-between group"
                           >
-                            <span class="text-sm text-gray-700">{{
-                              account.username
-                            }}</span>
+                            <div class="flex flex-col">
+                              <div class="flex items-center gap-2">
+                                <span class="text-sm font-medium text-gray-900">
+                                  {{ account.user?.firstName }}
+                                  {{ account.user?.name }}
+                                </span>
+                              </div>
+                              <div class="flex flex-col text-xs text-gray-500">
+                                <span>{{ account.username }}</span>
+                                <span>N° PI-{{ account.id }}</span>
+                              </div>
+                            </div>
                             <span
                               class="text-xs text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"
                             >
@@ -187,7 +209,7 @@
                       } @if (sortedGroupAccounts()?.length) {
                       <div>
                         <h3
-                          class="text-sm font-semibold text-gray-700 px-2 mb-2"
+                          class="text-sm font-semibold text-green-700 px-2 mb-2"
                         >
                           Projets de groupe
                         </h3>
@@ -205,9 +227,14 @@
                             "
                             class="w-full px-3 py-2 rounded-lg text-left hover:bg-gray-50 transition-colors flex items-center justify-between group"
                           >
-                            <span class="text-sm text-gray-700">{{
-                              account.username
-                            }}</span>
+                            <div class="flex flex-col">
+                              <span class="text-sm font-medium text-gray-900">
+                                {{ account.username }}
+                              </span>
+                              <span class="text-xs text-gray-500">
+                                N° PG-{{ account.id }}
+                              </span>
+                            </div>
                             <span
                               class="text-xs text-green-500 opacity-0 group-hover:opacity-100 transition-opacity"
                             >

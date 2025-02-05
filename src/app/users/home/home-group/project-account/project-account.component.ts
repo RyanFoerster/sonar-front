@@ -109,6 +109,14 @@ interface Recipient {
   type: 'PRINCIPAL' | 'GROUP';
 }
 
+interface SelectedAccount {
+  id: number;
+  username: string;
+  type: 'PRINCIPAL' | 'GROUP';
+  firstName?: string;
+  name?: string;
+}
+
 @Component({
   selector: 'app-project-account',
   standalone: true,
@@ -563,7 +571,11 @@ export class ProjectAccountComponent implements AfterViewInit {
             selection.id === account.id && selection.type === 'PRINCIPAL'
         );
         return (
-          !isSelected && account.username?.toLowerCase().includes(searchValue)
+          !isSelected &&
+          (account.username?.toLowerCase().includes(searchValue) ||
+            account.id.toString().includes(searchValue) ||
+            account.user?.firstName?.toLowerCase().includes(searchValue) ||
+            account.user?.name?.toLowerCase().includes(searchValue))
         );
       });
 
@@ -577,25 +589,19 @@ export class ProjectAccountComponent implements AfterViewInit {
             selection.id === account.id && selection.type === 'GROUP'
         );
         return (
-          !isSelected && account.username?.toLowerCase().includes(searchValue)
+          !isSelected &&
+          (account.username?.toLowerCase().includes(searchValue) ||
+            account.id.toString().includes(searchValue))
         );
       }) || [];
 
     this.state.filteredGroupAccounts.set(filteredGroupAccounts);
   }
 
-  protected getSelectedAccounts(): {
-    id: number;
-    username: string;
-    type: 'PRINCIPAL' | 'GROUP';
-  }[] {
+  protected getSelectedAccounts(): SelectedAccount[] {
     const currentSelections =
       this.transactionForm.get('recipients')?.value || [];
-    const selectedAccounts: {
-      id: number;
-      username: string;
-      type: 'PRINCIPAL' | 'GROUP';
-    }[] = [];
+    const selectedAccounts: SelectedAccount[] = [];
 
     // Ajouter les comptes principaux sélectionnés
     currentSelections.forEach((selection: Recipient) => {
@@ -608,6 +614,8 @@ export class ProjectAccountComponent implements AfterViewInit {
             id: account.id,
             username: account.username || '',
             type: 'PRINCIPAL',
+            firstName: account.user?.firstName || '',
+            name: account.user?.name || '',
           });
         }
       } else {

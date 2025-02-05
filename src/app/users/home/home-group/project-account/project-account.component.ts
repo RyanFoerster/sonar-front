@@ -10,6 +10,13 @@ import {
 } from '@angular/core';
 import { Router } from '@angular/router';
 import {
+  FormBuilder,
+  FormControl,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
+import {
   HlmAccordionContentComponent,
   HlmAccordionDirective,
   HlmAccordionItemDirective,
@@ -42,7 +49,8 @@ import {
   HlmThComponent,
   HlmTrowComponent,
 } from '@spartan-ng/ui-table-helm';
-import { catchError, delay, forkJoin, from, of, switchMap, tap } from 'rxjs';
+import { catchError, delay, forkJoin, from, of, tap } from 'rxjs';
+import { switchMap, take } from 'rxjs/operators';
 import { CompteGroupeEntity } from '../../../../shared/entities/compte-groupe.entity';
 import { PrincipalAccountEntity } from '../../../../shared/entities/principal-account.entity';
 import { TransactionEntity } from '../../../../shared/entities/transaction.entity';
@@ -50,14 +58,8 @@ import { EuroFormatPipe } from '../../../../shared/pipes/euro-format.pipe';
 import { CompteGroupeService } from '../../../../shared/services/compte-groupe.service';
 import { ComptePrincipalService } from '../../../../shared/services/compte-principal.service';
 import { TransactionService } from '../../../../shared/services/transaction.service';
-
-import {
-  FormBuilder,
-  FormControl,
-  FormGroup,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
+import { BeneficiaryService } from '../../../../shared/services/beneficiary.service';
+import { Beneficiary } from '../../../../shared/entities/beneficiary.entity';
 import {
   lucideArrowLeftRight,
   lucideBanknote,
@@ -78,6 +80,7 @@ import { TransactionDto } from '../../../../shared/dtos/transaction.dto';
 import { VirementSepaDto } from '../../../../shared/dtos/virement-sepa.dto';
 import { VirementSepaService } from '../../../../shared/services/virement-sepa.service';
 import { atLeastOneRequired } from '../../../../shared/validators/at-least-one-required.validator';
+import { HostListener } from '@angular/core';
 
 // Constantes
 const ITEMS_PER_PAGE = 10;
@@ -158,6 +161,7 @@ export class ProjectAccountComponent implements AfterViewInit {
     groupAccount: inject(CompteGroupeService),
     transaction: inject(TransactionService),
     virementSepa: inject(VirementSepaService),
+    beneficiary: inject(BeneficiaryService),
     formBuilder: inject(FormBuilder),
     router: inject(Router),
     location: inject(Location),
@@ -183,6 +187,10 @@ export class ProjectAccountComponent implements AfterViewInit {
     amountHtva: signal(0),
     amountTva: signal(0),
     errorMessage: signal(''),
+    beneficiaries: signal<Beneficiary[]>([]),
+    filteredBeneficiaries: signal<Beneficiary[]>([]),
+    selectedBeneficiary: signal<Beneficiary | null>(null),
+    showBeneficiariesDropdown: signal(false),
   };
 
   // Computed values
@@ -311,6 +319,7 @@ export class ProjectAccountComponent implements AfterViewInit {
   async ngAfterViewInit() {
     await this.fetchTransaction();
     await this.fetchVirements();
+    await this.loadBeneficiaries();
   }
 
   protected setAmountHtva(event: Event): void {
@@ -332,22 +341,34 @@ export class ProjectAccountComponent implements AfterViewInit {
         amount_htva: this.amount_debited(),
       };
 
-      this.services.virementSepa
-        .createVirementSepa(
-          virementSepa,
-          +this.id()!,
-          this.typeOfProjet()!,
-          this.selectedFile
-        )
+      // Créer ou mettre à jour le bénéficiaire si les champs sont remplis
+      const beneficiaryData = {
+        account_owner: this.virementSepaForm.value.account_owner,
+        iban: this.virementSepaForm.value.iban,
+      };
+
+      this.services.beneficiary
+        .createBeneficiary(beneficiaryData)
         .pipe(
+          switchMap(() =>
+            this.services.virementSepa.createVirementSepa(
+              virementSepa,
+              +this.id()!,
+              this.typeOfProjet()!,
+              this.selectedFile!
+            )
+          ),
           tap(() => {
             ctx.close();
             this.resetFormState();
+            this.selectedFile = null;
+            this.state.selectedBeneficiary.set(null);
           }),
           switchMap(() => {
             return forkJoin([
               from(this.fetchTransaction()),
               from(this.fetchVirements()),
+              from(this.loadBeneficiaries()),
             ]);
           }),
           delay(300),
@@ -765,5 +786,96 @@ export class ProjectAccountComponent implements AfterViewInit {
         this.state.isLoadingVirement.set(false);
       },
     });
+  }
+
+  private async loadBeneficiaries() {
+    try {
+      const beneficiaries: Beneficiary[] = [];
+
+      this.services.beneficiary
+        .getAllBeneficiaries()
+        .pipe(
+          take(1),
+          tap((data) => {
+            console.log(data.items);
+            beneficiaries.push(...data.items);
+            if (beneficiaries && beneficiaries.length > 0) {
+              this.state.beneficiaries.set(beneficiaries);
+              this.state.filteredBeneficiaries.set(beneficiaries);
+            } else {
+              this.state.beneficiaries.set([]);
+              this.state.filteredBeneficiaries.set([]);
+            }
+          })
+        )
+        .subscribe();
+    } catch (error) {
+      console.error('Erreur lors du chargement des bénéficiaires:', error);
+      this.state.beneficiaries.set([]);
+      this.state.filteredBeneficiaries.set([]);
+    }
+  }
+
+  protected filterBeneficiaries(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    const value = target.value.toLowerCase();
+    const currentBeneficiaries = this.state.beneficiaries();
+
+    if (!Array.isArray(currentBeneficiaries)) {
+      this.state.filteredBeneficiaries.set([]);
+      return;
+    }
+
+    if (!value) {
+      this.state.filteredBeneficiaries.set(currentBeneficiaries);
+      return;
+    }
+
+    const filtered = currentBeneficiaries.filter(
+      (beneficiary) =>
+        beneficiary?.account_owner?.toLowerCase().includes(value) ||
+        beneficiary?.iban?.toLowerCase().includes(value)
+    );
+
+    this.state.filteredBeneficiaries.set(filtered);
+  }
+
+  protected toggleBeneficiariesDropdown(event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.state.showBeneficiariesDropdown.set(
+      !this.state.showBeneficiariesDropdown()
+    );
+    if (this.state.showBeneficiariesDropdown()) {
+      this.state.filteredBeneficiaries.set(this.state.beneficiaries());
+    }
+  }
+
+  protected selectBeneficiary(beneficiary: Beneficiary): void {
+    this.state.selectedBeneficiary.set(beneficiary);
+    this.state.showBeneficiariesDropdown.set(false);
+    this.state.filteredBeneficiaries.set([]); // Vider les suggestions
+    this.virementSepaForm.patchValue({
+      account_owner: beneficiary.account_owner,
+      iban: beneficiary.iban,
+    });
+  }
+
+  @HostListener('document:click', ['$event'])
+  protected onClickOutside(event: Event): void {
+    const target = event.target as HTMLElement;
+    const dropdownElement = target.closest('.beneficiary-dropdown');
+
+    if (!dropdownElement) {
+      this.state.showBeneficiariesDropdown.set(false);
+      this.state.filteredBeneficiaries.set(this.state.beneficiaries());
+    }
+  }
+
+  @HostListener('document:keydown.escape', ['$event'])
+  protected onEscapePressed(event: KeyboardEvent): void {
+    event.stopPropagation();
+    this.state.showBeneficiariesDropdown.set(false);
+    this.state.filteredBeneficiaries.set(this.state.beneficiaries());
   }
 }

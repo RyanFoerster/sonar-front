@@ -500,27 +500,20 @@ export class NewQuoteComponent implements AfterViewInit {
       .pipe(
         take(1),
         tap((data) => {
-          if (data.Vat.isValid) {
-            this.isValidBCENumber.set(data.Vat.isValid);
+          console.log(JSON.stringify(data, null, 2));
+          this.isValidBCENumber.set(data ? true : false);
 
-            const { vatNumber, details } = data.Vat;
-            const { name, address } = details;
+          const { entrepriseName, street, addressNumber, postalCode, city } =
+            data;
 
-            const [streetAndNumber, postalAndCity] = address.split('\n');
-            const [street, number] =
-              this.extractStreetAndNumber(streetAndNumber);
-            const [postalCode, ...cityParts] = postalAndCity.split(' ');
-            const city = cityParts.join(' ');
-
-            this.createClientForm.patchValue({
-              company_vat_number: vatNumber,
-              name,
-              street,
-              number,
-              postalCode,
-              city,
-            });
-          }
+          this.createClientForm.patchValue({
+            company_vat_number: formattedCompanyNumber,
+            name: entrepriseName,
+            street,
+            number: addressNumber,
+            postalCode,
+            city,
+          });
         })
       )
       .subscribe();

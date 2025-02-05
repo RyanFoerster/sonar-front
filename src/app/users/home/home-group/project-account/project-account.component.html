@@ -87,68 +87,145 @@
             <div class="space-y-4">
               <div class="w-full">
                 <p class="text-sm font-medium mb-1 block">
-                  Projets individuels
+                  Sélection des projets
                 </p>
-                <brn-select
-                  formControlName="recipientPrincipal"
-                  class="rounded-full w-full"
-                  placeholder="Selectionner des projets individuels"
-                  [multiple]="true"
-                >
-                  <hlm-select-trigger class="w-full max-w-[375px] rounded-full">
-                    <hlm-select-value class="w-full" />
-                  </hlm-select-trigger>
-                  <hlm-select-content
-                    class="w-full"
-                    style="max-height: 200px; overflow-y: auto"
-                  >
+                <div class="relative">
+                  <!-- Barre de recherche -->
+                  <div class="relative mb-4">
                     <input
-                      hlmInput
                       type="text"
-                      placeholder="Rechercher"
-                      (input)="filterPrincipalAccounts($event)"
-                      class="rounded-full w-full focus:outline-none focus-visible:ring-0 mb-2"
+                      (input)="filterAllAccounts($event)"
+                      placeholder="Rechercher un projet..."
+                      class="w-full px-4 py-2 rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
-                    @for (principalAccount of sortedPrincipalAccounts(); track
-                    principalAccount.id) {
-                    <hlm-option [value]="principalAccount.id" class="text-sm">
-                      {{ principalAccount.username }}
-                    </hlm-option>
-                    }
-                  </hlm-select-content>
-                </brn-select>
-              </div>
+                    <span
+                      class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400"
+                    >
+                      <hlm-icon name="lucideSearch" size="sm" />
+                    </span>
+                  </div>
 
-              <div class="w-full">
-                <p class="text-sm font-medium mb-1 block">Projets de groupe</p>
-                <brn-select
-                  formControlName="recipientGroup"
-                  class="rounded-full w-full"
-                  placeholder="Selectionner des projets de groupe"
-                  [multiple]="true"
-                >
-                  <hlm-select-trigger class="w-full max-w-[375px] rounded-full">
-                    <hlm-select-value />
-                  </hlm-select-trigger>
-                  <hlm-select-content
-                    class="w-full"
-                    style="max-height: 200px; overflow-y: auto"
+                  <!-- Conteneur des projets -->
+                  <div
+                    class="bg-white rounded-xl border border-gray-200 overflow-hidden"
                   >
-                    <input
-                      hlmInput
-                      type="text"
-                      placeholder="Rechercher"
-                      (input)="filterGroupAccounts($event)"
-                      class="rounded-full w-full focus:outline-none focus-visible:ring-0 mb-2"
-                    />
-                    @for (groupAccount of sortedGroupAccounts(); track
-                    groupAccount.id) {
-                    <hlm-option [value]="groupAccount.id" class="text-sm">
-                      {{ groupAccount.username }}
-                    </hlm-option>
+                    <!-- Projets sélectionnés -->
+                    @if (getSelectedAccounts().length > 0) {
+                    <div class="p-3 bg-gray-50 border-b border-gray-200">
+                      <h3 class="text-sm font-semibold text-gray-700 mb-2">
+                        Projets sélectionnés
+                      </h3>
+                      <div class="flex flex-wrap gap-2">
+                        @for (account of getSelectedAccounts(); track
+                        account.id) {
+                        <div
+                          class="group flex items-center gap-2 px-3 py-1.5 rounded-full text-sm"
+                          [class.bg-blue-100]="account.type === 'PRINCIPAL'"
+                          [class.bg-green-100]="account.type === 'GROUP'"
+                        >
+                          <span
+                            [class.text-blue-700]="account.type === 'PRINCIPAL'"
+                            [class.text-green-700]="account.type === 'GROUP'"
+                          >
+                            {{ account.username }}
+                          </span>
+                          <button
+                            type="button"
+                            (click)="removeAccount(account)"
+                            class="opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <hlm-icon
+                              name="lucideX"
+                              size="sm"
+                              [class.text-blue-700]="
+                                account.type === 'PRINCIPAL'
+                              "
+                              [class.text-green-700]="account.type === 'GROUP'"
+                            />
+                          </button>
+                        </div>
+                        }
+                      </div>
+                    </div>
                     }
-                  </hlm-select-content>
-                </brn-select>
+
+                    <!-- Liste des projets disponibles -->
+                    <div class="max-h-[300px] overflow-y-auto p-2">
+                      @if (sortedPrincipalAccounts().length > 0) {
+                      <div class="mb-4">
+                        <h3
+                          class="text-sm font-semibold text-gray-700 px-2 mb-2"
+                        >
+                          Projets individuels
+                        </h3>
+                        <div class="space-y-1">
+                          @for (account of sortedPrincipalAccounts(); track
+                          account.id) {
+                          <button
+                            type="button"
+                            (click)="
+                              addAccount({
+                                id: account.id,
+                                type: 'PRINCIPAL',
+                                username: account.username
+                              })
+                            "
+                            class="w-full px-3 py-2 rounded-lg text-left hover:bg-gray-50 transition-colors flex items-center justify-between group"
+                          >
+                            <span class="text-sm text-gray-700">{{
+                              account.username
+                            }}</span>
+                            <span
+                              class="text-xs text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              Ajouter
+                            </span>
+                          </button>
+                          }
+                        </div>
+                      </div>
+                      } @if (sortedGroupAccounts()?.length) {
+                      <div>
+                        <h3
+                          class="text-sm font-semibold text-gray-700 px-2 mb-2"
+                        >
+                          Projets de groupe
+                        </h3>
+                        <div class="space-y-1">
+                          @for (account of sortedGroupAccounts(); track
+                          account.id) {
+                          <button
+                            type="button"
+                            (click)="
+                              addAccount({
+                                id: account.id,
+                                type: 'GROUP',
+                                username: account.username
+                              })
+                            "
+                            class="w-full px-3 py-2 rounded-lg text-left hover:bg-gray-50 transition-colors flex items-center justify-between group"
+                          >
+                            <span class="text-sm text-gray-700">{{
+                              account.username
+                            }}</span>
+                            <span
+                              class="text-xs text-green-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              Ajouter
+                            </span>
+                          </button>
+                          }
+                        </div>
+                      </div>
+                      } @if (!sortedPrincipalAccounts().length &&
+                      !sortedGroupAccounts()?.length) {
+                      <div class="text-center py-8 text-gray-500">
+                        Aucun projet trouvé
+                      </div>
+                      }
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div class="w-full">

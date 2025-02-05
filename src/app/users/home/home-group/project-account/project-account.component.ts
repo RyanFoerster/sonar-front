@@ -68,6 +68,8 @@ import {
   lucideCornerDownLeft,
   lucideUpload,
   lucideFileUp,
+  lucideSearch,
+  lucideX,
 } from '@ng-icons/lucide';
 import {
   BrnPopoverComponent,
@@ -100,6 +102,11 @@ interface FormState {
   structured_communication: FormControl<string>;
   account_owner: FormControl<string>;
   iban: FormControl<string>;
+}
+
+interface Recipient {
+  id: number;
+  type: 'PRINCIPAL' | 'GROUP';
 }
 
 @Component({
@@ -149,6 +156,8 @@ interface FormState {
       lucideArrowLeftRight,
       lucideChevronDown,
       lucideFileUp,
+      lucideSearch,
+      lucideX,
     }),
   ],
   templateUrl: './project-account.component.html',
@@ -285,8 +294,7 @@ export class ProjectAccountComponent implements AfterViewInit {
     this.transactionForm = this.services.formBuilder.group({
       communication: ['', [Validators.required]],
       amount: ['', [Validators.required]],
-      recipientGroup: [''],
-      recipientPrincipal: [''],
+      recipients: ['', [Validators.required]],
     });
 
     this.virementSepaForm = this.services.formBuilder.group<FormState>(
@@ -540,21 +548,114 @@ export class ProjectAccountComponent implements AfterViewInit {
     this.getAllGroupAccount();
   }
 
+  protected filterAllAccounts(event: Event) {
+    const target = event.target as HTMLInputElement;
+    const searchValue = target.value.toLowerCase().trim();
+    const currentSelections =
+      this.transactionForm.get('recipients')?.value || [];
+
+    // Filtrer les comptes principaux en excluant ceux déjà sélectionnés
+    const filteredPrincipalAccounts = this.state
+      .principalAccounts()
+      .filter((account) => {
+        const isSelected = currentSelections.some(
+          (selection: Recipient) =>
+            selection.id === account.id && selection.type === 'PRINCIPAL'
+        );
+        return (
+          !isSelected && account.username?.toLowerCase().includes(searchValue)
+        );
+      });
+
+    this.state.filteredPrincipalAccounts.set(filteredPrincipalAccounts);
+
+    // Filtrer les comptes de groupe en excluant ceux déjà sélectionnés
+    const filteredGroupAccounts =
+      this.state.groupAccounts()?.filter((account) => {
+        const isSelected = currentSelections.some(
+          (selection: Recipient) =>
+            selection.id === account.id && selection.type === 'GROUP'
+        );
+        return (
+          !isSelected && account.username?.toLowerCase().includes(searchValue)
+        );
+      }) || [];
+
+    this.state.filteredGroupAccounts.set(filteredGroupAccounts);
+  }
+
+  protected getSelectedAccounts(): {
+    id: number;
+    username: string;
+    type: 'PRINCIPAL' | 'GROUP';
+  }[] {
+    const currentSelections =
+      this.transactionForm.get('recipients')?.value || [];
+    const selectedAccounts: {
+      id: number;
+      username: string;
+      type: 'PRINCIPAL' | 'GROUP';
+    }[] = [];
+
+    // Ajouter les comptes principaux sélectionnés
+    currentSelections.forEach((selection: Recipient) => {
+      if (selection.type === 'PRINCIPAL') {
+        const account = this.state
+          .principalAccounts()
+          .find((a) => a.id === selection.id);
+        if (account) {
+          selectedAccounts.push({
+            id: account.id,
+            username: account.username || '',
+            type: 'PRINCIPAL',
+          });
+        }
+      } else {
+        const account = this.state
+          .groupAccounts()
+          ?.find((a) => a.id === selection.id);
+        if (account) {
+          selectedAccounts.push({
+            id: account.id,
+            username: account.username || '',
+            type: 'GROUP',
+          });
+        }
+      }
+    });
+
+    return selectedAccounts;
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   sendTransaction(ctx: any) {
     if (this.transactionForm.valid) {
       this.state.isLoadingTransfer.set(true);
-      const transactionDto: TransactionDto = { ...this.transactionForm.value };
+      const formValues = this.transactionForm.value;
+
+      // Séparer les destinataires par type
+      const recipients = (formValues.recipients || []) as Recipient[];
+      const recipientPrincipal = recipients
+        .filter((r) => r.type === 'PRINCIPAL')
+        .map((r) => r.id);
+      const recipientGroup = recipients
+        .filter((r) => r.type === 'GROUP')
+        .map((r) => r.id);
+
+      const transactionDto: TransactionDto = {
+        communication: formValues.communication,
+        amount: formValues.amount,
+        recipientPrincipal,
+        recipientGroup,
+      };
+
       if (this.state.accountPrincipal()) {
         transactionDto.senderPrincipal = this.state.accountPrincipal()?.id;
       } else {
         transactionDto.senderGroup = this.state.accountGroup()?.id;
       }
 
-      if (
-        transactionDto.recipientGroup?.length === 0 &&
-        transactionDto.recipientPrincipal?.length === 0
-      ) {
+      if (recipientGroup.length === 0 && recipientPrincipal.length === 0) {
         throw new Error('Aucun destinataire');
       }
 
@@ -877,5 +978,61 @@ export class ProjectAccountComponent implements AfterViewInit {
     event.stopPropagation();
     this.state.showBeneficiariesDropdown.set(false);
     this.state.filteredBeneficiaries.set(this.state.beneficiaries());
+  }
+
+  protected addAccount(account: {
+    id: number;
+    type: 'PRINCIPAL' | 'GROUP';
+    username: string;
+  }): void {
+    const currentSelections =
+      this.transactionForm.get('recipients')?.value || [];
+    if (
+      !currentSelections.some(
+        (selection: Recipient) =>
+          selection.id === account.id && selection.type === account.type
+      )
+    ) {
+      this.transactionForm.patchValue({
+        recipients: [
+          ...currentSelections,
+          { id: account.id, type: account.type },
+        ],
+      });
+      const mockEvent = new InputEvent('input', {
+        bubbles: true,
+        cancelable: true,
+        data: '',
+      });
+      Object.defineProperty(mockEvent, 'target', {
+        value: { value: '' },
+        writable: false,
+      });
+      this.filterAllAccounts(mockEvent);
+    }
+  }
+
+  protected removeAccount(account: {
+    id: number;
+    type: 'PRINCIPAL' | 'GROUP';
+    username: string;
+  }): void {
+    const currentSelections =
+      this.transactionForm.get('recipients')?.value || [];
+    const updatedSelections = currentSelections.filter(
+      (selection: Recipient) =>
+        !(selection.id === account.id && selection.type === account.type)
+    );
+    this.transactionForm.patchValue({ recipients: updatedSelections });
+    const mockEvent = new InputEvent('input', {
+      bubbles: true,
+      cancelable: true,
+      data: '',
+    });
+    Object.defineProperty(mockEvent, 'target', {
+      value: { value: '' },
+      writable: false,
+    });
+    this.filterAllAccounts(mockEvent);
   }
 }

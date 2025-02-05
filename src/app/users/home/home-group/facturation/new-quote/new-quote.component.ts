@@ -57,7 +57,6 @@ import { AuthService } from '../../../../../shared/services/auth.service';
 import { ClientService } from '../../../../../shared/services/client.service';
 import { ProductService } from '../../../../../shared/services/product.service';
 import { QuoteService } from '../../../../../shared/services/quote.service';
-import { UsersService } from '../../../../../shared/services/users.service';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 @Component({
   selector: 'app-new-quote',
@@ -112,7 +111,6 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 export class NewQuoteComponent implements AfterViewInit {
   private formBuilder: FormBuilder = inject(FormBuilder);
   private clientService: ClientService = inject(ClientService);
-  private usersService: UsersService = inject(UsersService);
   private productService: ProductService = inject(ProductService);
   private quoteService: QuoteService = inject(QuoteService);
   private location: Location = inject(Location);
@@ -492,15 +490,20 @@ export class NewQuoteComponent implements AfterViewInit {
     const companyNumber = this.createClientForm.get('company_number')?.value;
     if (!companyNumber) return;
 
+    // Supprime les espaces et les points dans le numéro de TVA
+    const formattedCompanyNumber = companyNumber
+      .replace(/\s+/g, '')
+      .replace(/\./g, '');
+
     this.clientService
-      .checkBce(companyNumber)
+      .checkBce(formattedCompanyNumber)
       .pipe(
         take(1),
-        tap(({ vat }) => {
-          if (vat.isValid) {
-            this.isValidBCENumber.set(vat.isValid);
+        tap((data) => {
+          if (data.Vat.isValid) {
+            this.isValidBCENumber.set(data.Vat.isValid);
 
-            const { vatNumber, details } = vat;
+            const { vatNumber, details } = data.Vat;
             const { name, address } = details;
 
             const [streetAndNumber, postalAndCity] = address.split('\n');

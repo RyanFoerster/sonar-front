@@ -45,9 +45,11 @@ export class ClientService {
     return this.httpClient.delete<void>(`${this.API_URL}/clients/${id}`);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   checkBce(companyNumber: string): Observable<any> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return this.httpClient.get<any>(
-      `${this.API_URL}/clients/check-bce/${companyNumber}`
+      `${this.API_URL}/clients/bce/${companyNumber}`
     );
   }
 }

@@ -125,10 +125,8 @@ export class HomeGroupComponent implements AfterViewInit {
             return this.typeOfProjet() === 'PRINCIPAL'
               ? this.comptePrincipalService.getGroupById(this.id()!).pipe(
                   tap((data) => {
-                    console.log(data);
                     this.projet.set(data);
                   }),
-                  tap(() => console.log(this.projet())),
                   switchMap(() =>
                     this.comptePrincipalService.getAllMembers(this.id()!).pipe(
                       tap((data) => {
@@ -141,7 +139,6 @@ export class HomeGroupComponent implements AfterViewInit {
                 )
               : this.compteGroupeService.getGroupById(this.id()!).pipe(
                   tap((data) => this.projet.set(data)),
-                  tap(() => console.log(this.projet())),
                   switchMap(() =>
                     this.compteGroupeService.getAllMembers(this.id()!).pipe(
                       tap((members) => {
@@ -162,7 +159,6 @@ export class HomeGroupComponent implements AfterViewInit {
           ) {
             return this.comptePrincipalService.getGroupById(this.id()!).pipe(
               tap((data) => this.projet.set(data)),
-              tap(() => console.log(this.projet())),
               switchMap(() =>
                 this.comptePrincipalService.getAllMembers(this.id()!).pipe(
                   tap((members) => {

@@ -20,6 +20,8 @@ services:
       - "traefik.http.routers.sonar-front-secure.rule=Host(`${SONAR_FRONTEND_HOST}`)"
       - "traefik.http.routers.sonar-front-secure.tls=true"
       - "traefik.http.routers.sonar-front-secure.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.sonar-front-secure.tls.domains[0].main=${SONAR_FRONTEND_HOST}"
+      - "traefik.http.routers.sonar-front-secure.tls.domains[0].sans=*.${SONAR_FRONTEND_HOST}"
       # Service configuration
       - "traefik.http.services.sonar-front.loadbalancer.server.port=80"
       # Use common middleware for HTTPS redirect

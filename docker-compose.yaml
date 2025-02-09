@@ -3,32 +3,14 @@ services:
   sonar-front:
     image: dimagin/sonar-front:latest
     container_name: sonar-front
+    ports:
+      - "${SONAR_FRONTEND_PORT}:80"
     restart: unless-stopped
     networks:
-      - traefik-network
       - sonar-network
     env_file:
       - .env
-    labels:
-      - "traefik.enable=true"
-      # HTTP router (for redirect)
-      - "traefik.http.routers.sonar-front.entrypoints=web"
-      - "traefik.http.routers.sonar-front.rule=Host(`${SONAR_FRONTEND_HOST}`)"
-      - "traefik.http.routers.sonar-front.middlewares=https-redirect"
-      # HTTPS router
-      - "traefik.http.routers.sonar-front-secure.entrypoints=websecure"
-      - "traefik.http.routers.sonar-front-secure.rule=Host(`${SONAR_FRONTEND_HOST}`)"
-      - "traefik.http.routers.sonar-front-secure.tls=true"
-      - "traefik.http.routers.sonar-front-secure.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.sonar-front-secure.tls.domains[0].main=${SONAR_FRONTEND_HOST}"
-      - "traefik.http.routers.sonar-front-secure.tls.domains[0].sans=*.${SONAR_FRONTEND_HOST}"
-      # Service configuration
-      - "traefik.http.services.sonar-front.loadbalancer.server.port=80"
-      # Use common middleware for HTTPS redirect
-      - "traefik.http.middlewares.https-redirect.redirectscheme.scheme=https"
 
 networks:
-  traefik-network:
-    external: true
   sonar-network:
     driver: bridge

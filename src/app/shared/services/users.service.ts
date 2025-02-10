@@ -1,4 +1,4 @@
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { CreateUserDto } from '../dtos/create-user.dto';
 import { environment } from '../../../environments/environment';
@@ -12,8 +12,6 @@ import { UpdateUserDto } from '../dtos/update-user.dto';
 })
 export class UsersService {
   httpClient: HttpClient = inject(HttpClient);
-
-  constructor() {}
 
   signUp(createuserDto: CreateUserDto) {
     return this.httpClient.post<boolean>(
@@ -72,6 +70,12 @@ export class UsersService {
   findAll() {
     return this.httpClient.get<UserEntity[]>(
       `${environment.API_URL}/users/all`
+    );
+  }
+
+  findAllUsersWithoutRelations() {
+    return this.httpClient.get<UserEntity[]>(
+      `${environment.API_URL}/users/all-without-relations`
     );
   }
 

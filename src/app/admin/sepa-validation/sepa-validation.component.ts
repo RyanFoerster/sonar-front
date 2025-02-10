@@ -16,7 +16,7 @@ import {
 import { HlmButtonDirective } from '@spartan-ng/ui-button-helm';
 import { VirementSepaService } from '../../shared/services/virement-sepa.service';
 import { VirementSepaEntity } from '../../shared/entities/virement-sepa.entity';
-import { map, tap, throwError } from 'rxjs';
+import { tap } from 'rxjs';
 import { DatePipe, JsonPipe } from '@angular/common';
 import { EuroFormatPipe } from '../../shared/pipes/euro-format.pipe';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';

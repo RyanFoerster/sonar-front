@@ -11,8 +11,6 @@ import { Observable } from 'rxjs';
 export class VirementSepaService {
   private httpClient: HttpClient = inject(HttpClient);
 
-  constructor() {}
-
   createVirementSepa(
     createVirementSepaDto: VirementSepaDto,
     id: number,

@@ -66,10 +66,10 @@
           Transfert d'argent
         </button>
         <hlm-dialog-content
-          class="sm:max-w-[425px] rounded-xl m-2"
+          class="sm:max-w-[425px] rounded-xl m-2 max-h-[90vh] flex flex-col overflow-hidden"
           *brnDialogContent="let ctx"
         >
-          <hlm-dialog-header>
+          <hlm-dialog-header class="flex-none">
             <h3 hlmDialogTitle class="text-lg font-semibold">
               Transfert d'argent
             </h3>
@@ -81,7 +81,7 @@
 
           <form
             [formGroup]="transactionForm"
-            class="flex flex-col gap-4 mt-4"
+            class="flex flex-col gap-4 mt-4 flex-1 overflow-y-auto px-1"
             (ngSubmit)="sendTransaction(ctx)"
           >
             <div class="space-y-4">
@@ -322,7 +322,7 @@
           Paiement
         </button>
         <hlm-dialog-content
-          class="sm:max-w-[525px] rounded-xl m-2 max-h-[90vh] flex flex-col"
+          class="sm:max-w-[525px] rounded-xl m-2 max-h-[90vh] flex flex-col overflow-hidden"
           *brnDialogContent="let ctx"
         >
           <hlm-dialog-header class="flex-none">
@@ -348,13 +348,10 @@
             </div>
           </hlm-dialog-header>
 
-          <div
-            class="overflow-y-auto flex-1 mt-8"
-            style="scrollbar-width: none"
-          >
+          <div class="flex-1 overflow-y-auto px-1">
             <form
               [formGroup]="virementSepaForm"
-              class="flex flex-col gap-6"
+              class="flex flex-col gap-6 py-8"
               (ngSubmit)="createVirement(ctx)"
             >
               <div class="space-y-6">

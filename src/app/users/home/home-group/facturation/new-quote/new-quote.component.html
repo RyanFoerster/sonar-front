@@ -757,6 +757,16 @@
 
       <!-- Submit Button -->
       <div class="flex justify-end pt-4 md:pt-6">
+        @if (isLoadingQuote()) {
+        <button
+          class="bg-gray-100 text-gray-700 font-medium text-sm rounded-lg px-4 py-2 md:px-6 md:py-2.5 flex items-center gap-2 hover:bg-gray-200 transition-all w-full md:w-auto"
+          hlmBtn
+          type="submit"
+          disabled
+        >
+          <hlm-icon size="sm" name="lucideLoader" />
+        </button>
+        } @else {
         <button
           class="bg-primary text-white font-medium text-sm rounded-lg px-4 py-2 md:px-6 md:py-2.5 flex items-center gap-2 hover:bg-primary/90 transition-all w-full md:w-auto"
           hlmBtn
@@ -765,6 +775,7 @@
           <hlm-icon size="sm" name="lucideFileDown" />
           {{ updatedQuoteId() ? "Modifier le devis" : "Générer le devis" }}
         </button>
+        }
       </div>
     </form>
     } @else {

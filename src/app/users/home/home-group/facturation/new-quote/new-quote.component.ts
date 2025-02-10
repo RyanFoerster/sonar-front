@@ -187,6 +187,7 @@ export class NewQuoteComponent implements AfterViewInit {
   protected isArtisticPerformance = signal(false);
   protected isPhysicalPerson = signal(false);
   protected isTvaIncluded = signal(false);
+  protected isLoadingQuote = signal(false);
 
   protected createQuoteForm!: FormGroup;
   protected createClientForm!: FormGroup;
@@ -197,6 +198,7 @@ export class NewQuoteComponent implements AfterViewInit {
   protected isClientSelectOpen = signal(false);
   protected selectedClient = signal<ClientEntity | null>(null);
   protected filteredClients = signal<ClientEntity[]>([]);
+
   protected searchControl = new FormControl('');
 
   protected modifiedProducts = signal<ProductEntity[]>([]);
@@ -812,8 +814,10 @@ export class NewQuoteComponent implements AfterViewInit {
       .createQuote(quote, this.file())
       .pipe(
         take(1),
+        tap(() => this.isLoadingQuote.set(true)),
         tap((response) => {
           console.log("Réponse de l'API:", response);
+          this.isLoadingQuote.set(false);
           this.goBack();
         }),
         catchError((error) => {

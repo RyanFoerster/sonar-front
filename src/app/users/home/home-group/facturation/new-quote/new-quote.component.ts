@@ -37,6 +37,7 @@ import {
   lucideChevronUp,
   lucideChevronDown,
   lucideUpload,
+  lucideLoader,
 } from '@ng-icons/lucide';
 
 import { HlmButtonDirective } from '@spartan-ng/ui-button-helm';
@@ -107,6 +108,7 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
       lucideChevronUp,
       lucideChevronDown,
       lucideUpload,
+      lucideLoader,
     }),
     DatePipe,
   ],
@@ -809,12 +811,12 @@ export class NewQuoteComponent implements AfterViewInit {
     };
 
     console.log('DTO du devis:', quote);
+    this.isLoadingQuote.set(true);
 
     this.quoteService
       .createQuote(quote, this.file())
       .pipe(
         take(1),
-        tap(() => this.isLoadingQuote.set(true)),
         tap((response) => {
           console.log("Réponse de l'API:", response);
           this.isLoadingQuote.set(false);

@@ -74,6 +74,7 @@ export class HomeComponent {
   );
   protected readonly searchTerm = signal<string>('');
   protected readonly errorMessage = signal<string>('');
+  protected readonly isLoadingAccounts = signal<boolean>(false);
 
   // Computed signals pour les données filtrées
   readonly filteredGroupAccounts = computed(() => {
@@ -131,6 +132,7 @@ export class HomeComponent {
         tap((user) => {
           this.userConnected.set(user);
           if (this.isAdmin()) {
+            this.isLoadingAccounts.set(true);
             this.loadAdminData();
           }
         })
@@ -151,7 +153,8 @@ export class HomeComponent {
       .pipe(
         tap((data) =>
           this.comptePrincipal.set(data.sort((a, b) => a.id - b.id))
-        )
+        ),
+        tap(() => this.isLoadingAccounts.set(false))
       )
       .subscribe();
   }

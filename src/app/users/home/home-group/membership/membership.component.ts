@@ -7,6 +7,7 @@ import {
   signal,
   HostListener,
   OnDestroy,
+  computed,
 } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { provideIcons } from '@ng-icons/core';
@@ -19,7 +20,7 @@ import {
   lucideSearch,
   lucideUserPlus,
 } from '@ng-icons/lucide';
-import { finalize, map, tap, switchMap, EMPTY, forkJoin } from 'rxjs';
+import { finalize, tap, switchMap, EMPTY, forkJoin, catchError } from 'rxjs';
 import { Observable } from 'rxjs';
 
 // Spartan UI imports
@@ -130,6 +131,27 @@ export class MembershipComponent implements AfterViewInit, OnDestroy {
   protected filteredUsers = signal<UserEntity[]>([]);
   protected searchTerm = signal<string>('');
   protected isDropdownOpen = signal(false);
+  protected isLoadingUsers = signal<boolean>(false);
+  private hasLoadedUsers = false;
+
+  // Ajout des signaux computed
+  protected readonly sortedUsers = computed(() =>
+    this.usersFromDB().sort((a, b) => a.name.localeCompare(b.name))
+  );
+
+  protected readonly filteredAndSortedUsers = computed(() => {
+    const searchTerm = this.searchTerm().toLowerCase();
+    const users = this.sortedUsers();
+
+    if (!searchTerm) return users;
+
+    return users.filter(
+      (user) =>
+        user.firstName.toLowerCase().includes(searchTerm) ||
+        user.name.toLowerCase().includes(searchTerm) ||
+        user.username.toLowerCase().includes(searchTerm)
+    );
+  });
 
   // Map des rôles pour éviter la répétition
   private readonly roleMap: Record<RoleType, keyof UserSecondaryAccountEntity> =
@@ -179,6 +201,7 @@ export class MembershipComponent implements AfterViewInit, OnDestroy {
         this.userGroup.set(account);
 
         if (this.typeOfProjet() === 'GROUP') {
+          // Charger les membres du groupe
           this.refreshMembers().subscribe({
             error: (error) => {
               console.error('Erreur lors du chargement des membres:', error);
@@ -186,6 +209,9 @@ export class MembershipComponent implements AfterViewInit, OnDestroy {
               this.isSpinner.set(false);
             },
           });
+
+          // Précharger la liste des utilisateurs
+          this.fetchAllUsers();
         }
       },
       error: (error) => {
@@ -223,18 +249,27 @@ export class MembershipComponent implements AfterViewInit, OnDestroy {
   }
 
   async fetchAllUsers(): Promise<void> {
+    if (this.hasLoadedUsers) return;
+
+    this.isLoadingUsers.set(true);
+    this.errorMessage.set(undefined);
+
     this.usersService
-      .findAll()
-      .pipe(map((users) => users.sort((a, b) => a.name.localeCompare(b.name))))
-      .subscribe({
-        next: (sortedUsers) => {
-          this.usersFromDB.set(sortedUsers);
-          this.filteredUsers.set(sortedUsers);
-        },
-        error: (error) => {
+      .findAllUsersWithoutRelations()
+      .pipe(
+        catchError((error) => {
           console.error('Erreur lors du chargement des utilisateurs:', error);
           this.errorMessage.set('Erreur lors du chargement des utilisateurs');
-        },
+          return EMPTY;
+        }),
+        finalize(() => {
+          this.isLoadingUsers.set(false);
+          this.hasLoadedUsers = true;
+        })
+      )
+      .subscribe((users) => {
+        this.usersFromDB.set(users);
+        this.filteredUsers.set(users);
       });
   }
 
@@ -413,19 +448,7 @@ export class MembershipComponent implements AfterViewInit, OnDestroy {
   protected filterUsers(event: Event): void {
     const input = event.target as HTMLInputElement;
     this.searchTerm.set(input.value.toLowerCase());
-
-    if (!input.value.trim()) {
-      this.filteredUsers.set(this.usersFromDB());
-      return;
-    }
-
-    const filtered = this.usersFromDB().filter(
-      (user) =>
-        user.firstName.toLowerCase().includes(this.searchTerm()) ||
-        user.name.toLowerCase().includes(this.searchTerm()) ||
-        user.username.toLowerCase().includes(this.searchTerm())
-    );
-    this.filteredUsers.set(filtered);
+    this.filteredUsers.set(this.filteredAndSortedUsers());
   }
 
   @HostListener('document:click', ['$event'])
@@ -459,7 +482,7 @@ export class MembershipComponent implements AfterViewInit, OnDestroy {
       searchInput.value = '';
     }
     this.searchTerm.set('');
-    this.filteredUsers.set(this.usersFromDB());
+    this.filteredUsers.set(this.filteredAndSortedUsers());
   }
 
   protected isUserSelected(user: UserEntity): boolean {
@@ -499,7 +522,7 @@ export class MembershipComponent implements AfterViewInit, OnDestroy {
 
   protected getSortedUsers(): UserEntity[] {
     const currentUsers = this.selectedUsers();
-    const allUsers = this.filteredUsers();
+    const allUsers = this.filteredAndSortedUsers();
 
     // Séparer les utilisateurs sélectionnés et non sélectionnés
     const selectedUsers = allUsers.filter((user) =>

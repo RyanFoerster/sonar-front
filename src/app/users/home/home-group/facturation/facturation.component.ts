@@ -18,6 +18,7 @@ import {
   lucideFilePlus,
   lucideFileText,
   lucideSearch,
+  lucideMessageCircle,
 } from '@ng-icons/lucide';
 import {
   BrnAlertDialogContentDirective,
@@ -96,6 +97,7 @@ import {
       lucideArrowLeft,
       lucideFilePlus,
       lucideSearch,
+      lucideMessageCircle,
     }),
     DatePipe,
   ],

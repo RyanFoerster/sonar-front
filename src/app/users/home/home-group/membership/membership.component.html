@@ -32,7 +32,7 @@
         hlmBtn
         aria-haspopup="dialog"
         aria-controls="dialog-content"
-        (click)="fetchAllUsers(); errorMessage.set(undefined)"
+        (click)="errorMessage.set(undefined)"
       >
         <hlm-icon name="lucideUserPlus" class="h-4 w-4" />
         Ajouter un membre
@@ -116,7 +116,14 @@
 
             <!-- Liste des utilisateurs -->
             <div class="overflow-y-auto flex-1">
-              @if (filteredUsers().length === 0) {
+              @if (isLoadingUsers()) {
+              <div class="p-4 text-center">
+                <hlm-spinner
+                  class="w-6 h-6"
+                  aria-label="Chargement des utilisateurs"
+                />
+              </div>
+              } @else if (filteredUsers().length === 0) {
               <div class="p-4 text-center text-gray-500">
                 Aucun résultat trouvé
               </div>

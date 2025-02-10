@@ -6,6 +6,8 @@ import {
   inject,
   input,
   signal,
+  ElementRef,
+  ViewChild,
 } from '@angular/core';
 import {
   FormBuilder,
@@ -34,6 +36,7 @@ import {
   lucideXCircle,
   lucideChevronUp,
   lucideChevronDown,
+  lucideUpload,
 } from '@ng-icons/lucide';
 
 import { HlmButtonDirective } from '@spartan-ng/ui-button-helm';
@@ -58,6 +61,7 @@ import { ClientService } from '../../../../../shared/services/client.service';
 import { ProductService } from '../../../../../shared/services/product.service';
 import { QuoteService } from '../../../../../shared/services/quote.service';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+
 @Component({
   selector: 'app-new-quote',
   standalone: true,
@@ -102,6 +106,7 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
       lucideX,
       lucideChevronUp,
       lucideChevronDown,
+      lucideUpload,
     }),
     DatePipe,
   ],
@@ -195,6 +200,12 @@ export class NewQuoteComponent implements AfterViewInit {
   protected searchControl = new FormControl('');
 
   protected modifiedProducts = signal<ProductEntity[]>([]);
+
+  protected file = signal<File | null>(null);
+
+  @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
+  isDragging = false;
+  selectedFile: File | null = null;
 
   constructor() {
     this.searchControl.valueChanges
@@ -313,13 +324,6 @@ export class NewQuoteComponent implements AfterViewInit {
   private formatDate(date: Date): string {
     return this.datePipe.transform(date, 'yyyy-MM-dd') || '';
   }
-
-  // formatDateToISO(date: Date): string {
-  //   const year = date.getUTCFullYear();
-  //   const month = (date.getMonth() + 1).toString().padStart(2, '0'); // getMonth() retourne un index commençant à 0
-  //   const day = date.getDate().toString().padStart(2, '0');
-  //   return `${year}-${month}-${day}`;
-  // }
 
   stateChanged(state: 'open' | 'closed') {
     this.state.set(state);
@@ -805,7 +809,7 @@ export class NewQuoteComponent implements AfterViewInit {
     console.log('DTO du devis:', quote);
 
     this.quoteService
-      .createQuote(quote)
+      .createQuote(quote, this.file())
       .pipe(
         take(1),
         tap((response) => {
@@ -818,6 +822,68 @@ export class NewQuoteComponent implements AfterViewInit {
         })
       )
       .subscribe();
+  }
+
+  onDragOver(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = true;
+  }
+
+  onDragLeave(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = false;
+  }
+
+  onDrop(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = false;
+
+    const files = event.dataTransfer?.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      if (this.isValidPdfFile(file)) {
+        this.handleFile(file);
+      } else {
+        // TODO: Ajouter un toast d'erreur
+        console.error('Seuls les fichiers PDF sont acceptés');
+      }
+    }
+  }
+
+  onFileChange(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const files = input.files;
+
+    if (files && files.length > 0) {
+      const file = files[0];
+      if (this.isValidPdfFile(file)) {
+        this.handleFile(file);
+      } else {
+        // TODO: Ajouter un toast d'erreur
+        console.error('Seuls les fichiers PDF sont acceptés');
+        input.value = '';
+      }
+    }
+  }
+
+  private isValidPdfFile(file: File): boolean {
+    return file.type === 'application/pdf';
+  }
+
+  private handleFile(file: File) {
+    this.selectedFile = file;
+    this.file.set(file);
+  }
+
+  removeFile() {
+    this.selectedFile = null;
+    this.file.set(null);
+    if (this.fileInput) {
+      this.fileInput.nativeElement.value = '';
+    }
   }
 
   async updateQuote() {

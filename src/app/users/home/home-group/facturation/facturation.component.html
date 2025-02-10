@@ -190,6 +190,43 @@
                 <div class="text-xs text-gray-500 truncate">
                   {{ doc.client.email }}
                 </div>
+                @if (doc.comment) {
+                <div class="flex items-center mt-1">
+                  <div
+                    class="relative group cursor-help"
+                    data-tooltip="Commentaire"
+                  >
+                    <div class="inline-flex items-center">
+                      <span
+                        class="inline-flex items-center gap-1.5 px-2 py-1 bg-primary/10 text-primary rounded-full text-xs font-medium"
+                      >
+                        <hlm-icon
+                          size="sm"
+                          name="lucideMessageCircle"
+                          class="text-primary group-hover:text-primary/80 transition-colors"
+                        />
+                        <span class="hidden sm:inline">Commentaire ajouté</span>
+                      </span>
+                    </div>
+                    <div
+                      class="hidden group-hover:block absolute z-50 bottom-full left-0 sm:left-1/2 sm:-translate-x-1/2 mb-2 w-[calc(100vw-2rem)] sm:w-max max-w-xs"
+                    >
+                      <div
+                        class="bg-gray-900 text-white text-xs sm:text-sm rounded-lg py-2 sm:py-3 px-3 sm:px-4 shadow-lg whitespace-normal break-words"
+                      >
+                        {{ doc.comment }}
+                      </div>
+                      <div
+                        class="absolute top-full left-4 sm:left-1/2 transform sm:-translate-x-1/2 -mt-2"
+                      >
+                        <div
+                          class="border-8 border-transparent border-t-gray-900"
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                }
               </div>
             </div>
           </td>

@@ -76,7 +76,7 @@
               class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
               hlmInput
               type="number"
-              [min]="connectedUser()?.role === 'USER' ? 10 : null"
+              [min]="connectedUser()?.role === 'USER' ? 10 : 10"
               [max]="connectedUser()?.role === 'USER' ? 30 : null"
               placeholder="Min: 10, Max: 30"
             />
@@ -668,6 +668,91 @@
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- Commentaire Section -->
+      <div
+        class="space-y-2 bg-white rounded-xl p-6 shadow-sm border border-gray-100"
+      >
+        <label for="quote-comment" class="block">
+          <span class="text-sm font-medium text-gray-900">Commentaire</span>
+          <textarea
+            id="quote-comment"
+            formControlName="comment"
+            class="mt-2 w-full min-h-[120px] bg-white border border-gray-200 text-sm rounded-lg p-4 focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+            placeholder="Ajoutez un commentaire au devis (conditions particulières, informations supplémentaires...)"
+          ></textarea>
+        </label>
+      </div>
+
+      <!-- Fichier Section -->
+      <div
+        class="space-y-2 bg-white rounded-xl p-6 shadow-sm border border-gray-100"
+        (dragover)="onDragOver($event)"
+        (dragleave)="onDragLeave($event)"
+        (drop)="onDrop($event)"
+      >
+        <label for="quote-attachment" class="block">
+          <span class="text-sm font-medium text-gray-900">Fichier</span>
+          <div
+            class="mt-2 relative border-2 border-dashed rounded-lg p-6 transition-all"
+            [ngClass]="{
+              'border-primary bg-primary/5': isDragging,
+              'border-gray-200': !isDragging
+            }"
+          >
+            <input
+              #fileInput
+              id="quote-attachment"
+              type="file"
+              accept=".pdf"
+              (change)="onFileChange($event)"
+              class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+            />
+            <div class="text-center">
+              <hlm-icon
+                size="lg"
+                name="lucideUpload"
+                class="mx-auto text-gray-400 mb-3"
+              />
+              <p class="text-sm text-gray-600">
+                <span class="font-medium text-primary"
+                  >Cliquez pour télécharger</span
+                >
+                ou glissez-déposez
+              </p>
+              <p class="text-xs text-gray-500 mt-1">PDF uniquement</p>
+            </div>
+            @if (selectedFile) {
+            <div
+              class="mt-4 flex items-center justify-between bg-gray-50 rounded-lg p-3"
+            >
+              <div class="flex items-center gap-2">
+                <hlm-icon
+                  size="sm"
+                  name="lucideFileText"
+                  class="text-primary"
+                />
+                <span
+                  class="text-sm font-medium text-gray-900 truncate max-w-[200px]"
+                >
+                  {{ selectedFile.name }}
+                </span>
+              </div>
+              <button
+                type="button"
+                (click)="removeFile()"
+                class="text-gray-400 p-1 rounded-full transition-all"
+                [ngClass]="{
+                  'hover:text-red-600 hover:bg-red-50': !isDragging
+                }"
+              >
+                <hlm-icon size="sm" name="lucideX" />
+              </button>
+            </div>
+            }
+          </div>
+        </label>
       </div>
 
       <!-- Submit Button -->

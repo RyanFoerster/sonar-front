@@ -15,6 +15,7 @@ export interface ClientEntity {
   company_number?: number;
   company_vat_number?: string;
   national_number: string;
+  is_physical_person: boolean;
   createdAt: Date;
   updatedAt: Date;
   user: UserEntity;

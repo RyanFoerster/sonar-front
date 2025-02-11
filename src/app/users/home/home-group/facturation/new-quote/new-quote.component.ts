@@ -38,6 +38,11 @@ import {
   lucideChevronDown,
   lucideUpload,
   lucideLoader,
+  lucideFolder,
+  lucideFileText,
+  lucideSave,
+  lucideFiles,
+  lucideEye,
 } from '@ng-icons/lucide';
 
 import { HlmButtonDirective } from '@spartan-ng/ui-button-helm';
@@ -46,6 +51,9 @@ import { HlmCheckboxComponent } from '@spartan-ng/ui-checkbox-helm';
 import { HlmIconComponent } from '@spartan-ng/ui-icon-helm';
 import { HlmInputDirective } from '@spartan-ng/ui-input-helm';
 import { HlmLabelDirective } from '@spartan-ng/ui-label-helm';
+
+import { toast } from 'ngx-sonner';
+import { HlmToasterComponent } from '@spartan-ng/ui-sonner-helm';
 
 import { BrnSelectImports } from '@spartan-ng/ui-select-brain';
 import { HlmSelectImports } from '@spartan-ng/ui-select-helm';
@@ -62,6 +70,10 @@ import { ClientService } from '../../../../../shared/services/client.service';
 import { ProductService } from '../../../../../shared/services/product.service';
 import { QuoteService } from '../../../../../shared/services/quote.service';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import {
+  UserAttachmentService,
+  UserAttachment,
+} from '../../../../../shared/services/user-attachment.service';
 
 @Component({
   selector: 'app-new-quote',
@@ -87,6 +99,7 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
     HlmIconComponent,
     HlmIconComponent,
     DatePipe,
+    HlmToasterComponent,
   ],
   providers: [
     provideIcons({
@@ -109,6 +122,11 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
       lucideChevronDown,
       lucideUpload,
       lucideLoader,
+      lucideFolder,
+      lucideFileText,
+      lucideSave,
+      lucideFiles,
+      lucideEye,
     }),
     DatePipe,
   ],
@@ -123,6 +141,9 @@ export class NewQuoteComponent implements AfterViewInit {
   private location: Location = inject(Location);
   private authService: AuthService = inject(AuthService);
   private datePipe: DatePipe = inject(DatePipe);
+  private userAttachmentService: UserAttachmentService = inject(
+    UserAttachmentService
+  );
 
   protected client = signal<ClientEntity | null>(null);
   protected connectedUser = signal<UserEntity | null>(null);
@@ -211,6 +232,10 @@ export class NewQuoteComponent implements AfterViewInit {
   isDragging = false;
   selectedFile: File | null = null;
 
+  protected userAttachments = signal<UserAttachment[]>([]);
+  protected selectedAttachment = signal<UserAttachment | null>(null);
+  protected showAttachmentModal = signal(false);
+
   constructor() {
     this.searchControl.valueChanges
       .pipe(debounceTime(300), distinctUntilChanged())
@@ -267,6 +292,7 @@ export class NewQuoteComponent implements AfterViewInit {
 
   async ngAfterViewInit() {
     await this.getConnectedUser();
+    await this.loadUserAttachments();
 
     this.createClientForm.patchValue({
       country: 'Belgique',
@@ -349,20 +375,48 @@ export class NewQuoteComponent implements AfterViewInit {
   toggleClientForm(isNewClient: boolean) {
     if (isNewClient) {
       this.createClientForm.reset();
+      this.isPhysicalPerson.set(false);
     } else {
-      this.createClientForm.patchValue({
-        name: this.currentClient()?.name,
-        email: this.currentClient()?.email,
-        phone: this.currentClient()?.phone,
-        street: this.currentClient()?.street,
-        number: this.currentClient()?.number,
-        city: this.currentClient()?.city,
-        country: this.currentClient()?.country,
-        postalCode: this.currentClient()?.postalCode,
-        company_number: this.currentClient()?.company_number,
-        company_vat_number: this.currentClient()?.company_vat_number,
-        national_number: this.currentClient()?.national_number,
-      });
+      if (this.client()) {
+        // Pré-remplir le formulaire avec les données du client existant
+        const currentClient = this.client()!;
+        this.isPhysicalPerson.set(currentClient.is_physical_person || false);
+
+        if (currentClient.is_physical_person) {
+          // Pour une personne physique, séparer le nom en prénom et nom
+          const [firstname = '', lastname = ''] = currentClient.name.split(' ');
+          this.createClientForm.patchValue({
+            firstname,
+            lastname,
+            email: currentClient.email,
+            phone: currentClient.phone,
+            street: currentClient.street,
+            number: currentClient.number,
+            city: currentClient.city,
+            country: currentClient.country,
+            postalCode: currentClient.postalCode,
+            national_number: currentClient.national_number,
+            is_physical_person: true,
+          });
+        } else {
+          // Pour une entreprise
+          this.createClientForm.patchValue({
+            name: currentClient.name,
+            email: currentClient.email,
+            phone: currentClient.phone,
+            street: currentClient.street,
+            number: currentClient.number,
+            city: currentClient.city,
+            country: currentClient.country,
+            postalCode: currentClient.postalCode,
+            company_number: currentClient.company_number,
+            company_vat_number: currentClient.company_vat_number,
+            is_physical_person: false,
+          });
+        }
+      } else {
+        this.createClientForm.reset();
+      }
     }
     this.isToggleClientForm.set(!this.isToggleClientForm());
   }
@@ -586,6 +640,54 @@ export class NewQuoteComponent implements AfterViewInit {
     }
   }
 
+  updateClient() {
+    if (this.createClientForm.valid && this.client()) {
+      const formData = { ...this.createClientForm.value };
+
+      // Si c'est une personne physique, on combine firstname et lastname pour le name
+      if (this.isPhysicalPerson()) {
+        formData.name = `${formData.firstname} ${formData.lastname}`.trim();
+        formData.is_physical_person = true;
+      } else {
+        formData.is_physical_person = false;
+      }
+
+      this.clientService
+        .update(this.client()!.id, formData)
+        .pipe(
+          take(1),
+          tap(() => {
+            // Mettre à jour le client dans la liste
+            const updatedClient = { ...this.client(), ...formData };
+            const clientList =
+              this.connectedUser()?.role === 'ADMIN'
+                ? this.clients()
+                : this.connectedUser()!.clients;
+            const existingIndex = clientList.findIndex(
+              (client) => client.id === updatedClient.id
+            );
+
+            if (existingIndex !== -1) {
+              clientList[existingIndex] = updatedClient;
+            }
+
+            // Mise à jour du client actuel
+            this.currentClient.set(updatedClient);
+            this.client.set(updatedClient);
+
+            // Réinitialisation du formulaire et des états
+            this.createClientForm.reset();
+            this.toggleClientForm(false);
+            this.isPhysicalPerson.set(false);
+
+            // Notification de succès
+            toast.success('Client mis à jour avec succès');
+          })
+        )
+        .subscribe();
+    }
+  }
+
   setClient(clientId: number | null) {
     if (clientId === null) {
       this.client.set(null);
@@ -773,23 +875,18 @@ export class NewQuoteComponent implements AfterViewInit {
   }
 
   createQuote() {
-    console.log('Tentative de création du devis');
-    console.log('Form valide:', this.createQuoteForm.valid);
-    console.log('Client présent:', !!this.client());
-    console.log('Nombre de produits:', this.products().length);
-
     // Vérification détaillée de chaque champ du formulaire
-    const formControls = this.createQuoteForm.controls;
-    Object.keys(formControls).forEach((key) => {
-      const control = formControls[key];
-      console.log(`Champ ${key}:`, {
-        valeur: control.value,
-        valide: control.valid,
-        erreurs: control.errors,
-        pristine: control.pristine,
-        touched: control.touched,
-      });
-    });
+    // const formControls = this.createQuoteForm.controls;
+    // Object.keys(formControls).forEach((key) => {
+    //   const control = formControls[key];
+    //   console.log(`Champ ${key}:`, {
+    //     valeur: control.value,
+    //     valide: control.valid,
+    //     erreurs: control.errors,
+    //     pristine: control.pristine,
+    //     touched: control.touched,
+    //   });
+    // });
 
     if (
       !this.createQuoteForm.valid ||
@@ -808,17 +905,16 @@ export class NewQuoteComponent implements AfterViewInit {
         ? 'main_account_id'
         : 'group_account_id']: +this.id()!,
       isVatIncluded: this.isTvaIncluded(),
+      attachment_key: this.selectedAttachment()?.key,
     };
 
-    console.log('DTO du devis:', quote);
     this.isLoadingQuote.set(true);
 
     this.quoteService
       .createQuote(quote, this.file())
       .pipe(
         take(1),
-        tap((response) => {
-          console.log("Réponse de l'API:", response);
+        tap(() => {
           this.isLoadingQuote.set(false);
           this.goBack();
         }),
@@ -854,7 +950,7 @@ export class NewQuoteComponent implements AfterViewInit {
         this.handleFile(file);
       } else {
         // TODO: Ajouter un toast d'erreur
-        console.error('Seuls les fichiers PDF sont acceptés');
+        toast.error('Seuls les fichiers PDF sont acceptés');
       }
     }
   }
@@ -869,7 +965,7 @@ export class NewQuoteComponent implements AfterViewInit {
         this.handleFile(file);
       } else {
         // TODO: Ajouter un toast d'erreur
-        console.error('Seuls les fichiers PDF sont acceptés');
+        toast.error('Seuls les fichiers PDF sont acceptés');
         input.value = '';
       }
     }
@@ -882,11 +978,21 @@ export class NewQuoteComponent implements AfterViewInit {
   private handleFile(file: File) {
     this.selectedFile = file;
     this.file.set(file);
+    this.selectedAttachment.set(null);
+    if (this.fileInput) {
+      // Réinitialiser l'input file pour éviter des problèmes de sélection
+      this.fileInput.nativeElement.value = '';
+      // Puis définir le nouveau fichier
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(file);
+      this.fileInput.nativeElement.files = dataTransfer.files;
+    }
   }
 
   removeFile() {
     this.selectedFile = null;
     this.file.set(null);
+    this.selectedAttachment.set(null);
     if (this.fileInput) {
       this.fileInput.nativeElement.value = '';
     }
@@ -997,5 +1103,102 @@ export class NewQuoteComponent implements AfterViewInit {
     this.createQuoteForm.patchValue({
       validation_deadline: this.formatDate(validationDate),
     });
+  }
+
+  async loadUserAttachments() {
+    this.userAttachmentService
+      .getUserAttachments()
+      .pipe(
+        take(1),
+        tap((attachments) => {
+          this.userAttachments.set(attachments);
+        })
+      )
+      .subscribe();
+  }
+
+  selectUserAttachment(attachment: UserAttachment) {
+    this.selectedAttachment.set(attachment);
+    this.selectedFile = null;
+    this.file.set(null);
+    this.showAttachmentModal.set(false);
+  }
+
+  toggleAttachmentModal() {
+    this.showAttachmentModal.set(!this.showAttachmentModal());
+  }
+
+  async uploadNewAttachment(file: File, description?: string) {
+    this.userAttachmentService
+      .uploadAttachment(file, description)
+      .pipe(
+        take(1),
+        tap((attachment) => {
+          this.userAttachments.update((attachments) => [
+            ...attachments,
+            attachment,
+          ]);
+          this.selectUserAttachment(attachment);
+        })
+      )
+      .subscribe();
+  }
+
+  async saveAsAttachment() {
+    if (this.selectedFile) {
+      const description = await this.openDescriptionDialog();
+      if (description !== null) {
+        this.userAttachmentService
+          .uploadAttachment(this.selectedFile, description)
+          .pipe(
+            take(1),
+            tap((attachment) => {
+              this.userAttachments.update((attachments) => [
+                ...attachments,
+                attachment,
+              ]);
+              this.selectedAttachment.set(attachment);
+            })
+          )
+          .subscribe();
+      }
+    }
+  }
+
+  async openDescriptionDialog(): Promise<string | null> {
+    return new Promise((resolve) => {
+      const description = prompt(
+        'Description de la pièce jointe (optionnel):',
+        ''
+      );
+      resolve(description);
+    });
+  }
+
+  async deleteAttachment(id: number, event: Event) {
+    event.stopPropagation();
+    if (confirm('Êtes-vous sûr de vouloir supprimer cette pièce jointe ?')) {
+      this.userAttachmentService
+        .deleteAttachment(id)
+        .pipe(
+          take(1),
+          tap(() => {
+            this.userAttachments.update((attachments) =>
+              attachments.filter((a) => a.id !== id)
+            );
+            if (this.selectedAttachment()?.id === id) {
+              this.selectedAttachment.set(null);
+              this.selectedFile = null;
+              this.file.set(null);
+            }
+          })
+        )
+        .subscribe();
+    }
+  }
+
+  async previewAttachment(attachment: UserAttachment, event: Event) {
+    event.stopPropagation();
+    this.userAttachmentService.previewAttachment(attachment);
   }
 }

@@ -71,6 +71,8 @@ export class LoginComponent {
         password: this.password,
       };
 
+      console.debug(credentials);
+
       this.usersService
         .signIn(credentials)
         .pipe(

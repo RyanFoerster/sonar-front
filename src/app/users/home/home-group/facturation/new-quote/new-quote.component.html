@@ -688,18 +688,30 @@
       <!-- Fichier Section -->
       <div
         class="space-y-2 bg-white rounded-xl p-6 shadow-sm border border-gray-100"
-        (dragover)="onDragOver($event)"
-        (dragleave)="onDragLeave($event)"
-        (drop)="onDrop($event)"
       >
-        <label for="quote-attachment" class="block">
+        <div class="flex justify-between items-center mb-4">
           <span class="text-sm font-medium text-gray-900">Fichier</span>
+          <button
+            type="button"
+            (click)="toggleAttachmentModal()"
+            class="text-primary hover:text-primary/80 text-sm font-medium flex items-center gap-2"
+          >
+            <hlm-icon size="sm" name="lucideFolder" />
+            Mes pièces jointes
+          </button>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-4">
+          <!-- Zone de dépôt de fichier -->
           <div
-            class="mt-2 relative border-2 border-dashed rounded-lg p-6 transition-all"
+            class="relative border-2 border-dashed rounded-lg transition-all"
             [ngClass]="{
               'border-primary bg-primary/5': isDragging,
               'border-gray-200': !isDragging
             }"
+            (dragover)="onDragOver($event)"
+            (dragleave)="onDragLeave($event)"
+            (drop)="onDrop($event)"
           >
             <input
               #fileInput
@@ -709,7 +721,7 @@
               (change)="onFileChange($event)"
               class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
             />
-            <div class="text-center">
+            <div class="text-center p-6">
               <hlm-icon
                 size="lg"
                 name="lucideUpload"
@@ -723,48 +735,185 @@
               </p>
               <p class="text-xs text-gray-500 mt-1">PDF uniquement</p>
             </div>
-            @if (selectedFile) {
-            <div
-              class="mt-4 flex items-center justify-between bg-gray-50 rounded-lg p-3"
-            >
-              <div class="flex items-center gap-2">
-                <hlm-icon
-                  size="sm"
-                  name="lucideFileText"
-                  class="text-primary"
-                />
-                <span
-                  class="text-sm font-medium text-gray-900 truncate max-w-[200px]"
+          </div>
+
+          <!-- Aperçu du fichier sélectionné -->
+          <div class="bg-gray-50 rounded-lg p-4">
+            @if (!selectedFile && !selectedAttachment()) {
+            <div class="h-full flex items-center justify-center">
+              <p class="text-sm text-gray-500">Aucun fichier sélectionné</p>
+            </div>
+            } @else {
+            <div class="space-y-4">
+              <div class="flex items-start gap-3">
+                <div class="shrink-0">
+                  <hlm-icon
+                    size="lg"
+                    name="lucideFileText"
+                    class="text-primary"
+                  />
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="font-medium text-gray-900 truncate">
+                    {{
+                      selectedFile
+                        ? selectedFile.name
+                        : selectedAttachment()?.name
+                    }}
+                  </p>
+                  <p class="text-sm text-gray-500 mt-0.5">
+                    @if (selectedFile) {
+                    {{ (selectedFile.size / 1024).toFixed(0) }} Ko } @else {
+                    Pièce jointe enregistrée }
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  (click)="removeFile()"
+                  class="shrink-0 text-gray-400 p-1 rounded-full hover:text-red-600 hover:bg-red-50 transition-all"
                 >
-                  {{ selectedFile.name }}
-                </span>
+                  <hlm-icon size="sm" name="lucideX" />
+                </button>
               </div>
-              <button
-                type="button"
-                (click)="removeFile()"
-                class="text-gray-400 p-1 rounded-full transition-all"
-                [ngClass]="{
-                  'hover:text-red-600 hover:bg-red-50': !isDragging
-                }"
-              >
-                <hlm-icon size="sm" name="lucideX" />
-              </button>
+
+              @if (selectedFile && !selectedAttachment()) {
+              <div class="border-t border-gray-200 pt-4">
+                <button
+                  type="button"
+                  (click)="saveAsAttachment()"
+                  class="w-full bg-white text-primary border border-primary/20 font-medium text-sm rounded-lg px-4 py-2 flex items-center justify-center gap-2 hover:bg-primary/5 transition-all"
+                >
+                  <hlm-icon size="sm" name="lucideSave" />
+                  Sauvegarder comme pièce jointe
+                </button>
+              </div>
+              }
             </div>
             }
           </div>
-        </label>
+        </div>
       </div>
+
+      <!-- Modal pour les pièces jointes -->
+      @if (showAttachmentModal()) {
+      <div
+        class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center"
+      >
+        <div
+          class="bg-white rounded-xl p-6 max-w-4xl w-full mx-4 max-h-[80vh] flex flex-col"
+        >
+          <div
+            class="flex justify-between items-center border-b border-gray-200 pb-4"
+          >
+            <h3 class="text-lg font-semibold text-gray-900">
+              Mes pièces jointes
+            </h3>
+            <button
+              type="button"
+              (click)="toggleAttachmentModal()"
+              class="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-all"
+            >
+              <hlm-icon size="sm" name="lucideX" />
+            </button>
+          </div>
+
+          <div class="overflow-y-auto flex-1 mt-4">
+            @if (userAttachments().length === 0) {
+            <div class="text-center text-gray-500 py-8">
+              <hlm-icon
+                size="lg"
+                name="lucideFiles"
+                class="mx-auto text-gray-400 mb-3"
+              />
+              <p>Aucune pièce jointe enregistrée</p>
+              <p class="text-sm mt-1">
+                Commencez par ajouter des fichiers que vous utilisez fréquemment
+              </p>
+            </div>
+            } @else {
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              @for (attachment of userAttachments(); track attachment.id) {
+              <button
+                type="button"
+                (click)="selectUserAttachment(attachment)"
+                class="flex items-start gap-3 p-4 rounded-lg hover:bg-gray-50 text-left transition-all border border-gray-100"
+                [ngClass]="{
+                  'bg-primary/5': selectedAttachment()?.id === attachment.id
+                }"
+              >
+                <div class="shrink-0">
+                  <hlm-icon
+                    size="lg"
+                    name="lucideFileText"
+                    class="text-primary"
+                  />
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center justify-between gap-2">
+                    <p class="font-medium text-gray-900 truncate">
+                      {{ attachment.name }}
+                    </p>
+                    <div class="flex items-center gap-1">
+                      <button
+                        type="button"
+                        (click)="previewAttachment(attachment, $event)"
+                        class="shrink-0 text-gray-400 p-1 rounded-full hover:text-primary hover:bg-primary/5 transition-all"
+                        title="Prévisualiser"
+                      >
+                        <hlm-icon size="sm" name="lucideEye" />
+                      </button>
+                      <button
+                        type="button"
+                        (click)="deleteAttachment(attachment.id, $event)"
+                        class="shrink-0 text-gray-400 p-1 rounded-full hover:text-red-600 hover:bg-red-50 transition-all"
+                        title="Supprimer"
+                      >
+                        <hlm-icon size="sm" name="lucideTrash" />
+                      </button>
+                    </div>
+                  </div>
+                  @if (attachment.description) {
+                  <p class="text-sm text-gray-500 mt-0.5">
+                    {{ attachment.description }}
+                  </p>
+                  }
+                  <p class="text-xs text-gray-400 mt-1">
+                    Ajouté le {{ attachment.created_at | date : "dd/MM/yyyy" }}
+                  </p>
+                </div>
+              </button>
+              }
+            </div>
+            }
+          </div>
+
+          <div
+            class="flex justify-end gap-3 pt-4 mt-4 border-t border-gray-200"
+          >
+            <button
+              type="button"
+              (click)="toggleAttachmentModal()"
+              class="bg-gray-100 text-gray-700 font-medium text-sm rounded-lg px-4 py-2 hover:bg-gray-200 transition-all"
+              hlmBtn
+            >
+              Fermer
+            </button>
+          </div>
+        </div>
+      </div>
+      }
 
       <!-- Submit Button -->
       <div class="flex justify-end pt-4 md:pt-6">
         @if (isLoadingQuote()) {
         <button
-          class="bg-gray-100 text-gray-700 font-medium text-sm rounded-lg px-4 py-2 md:px-6 md:py-2.5 flex items-center gap-2 hover:bg-gray-200 transition-all w-full md:w-auto"
+          class="bg-gray-700 text-gray-100 font-medium text-sm rounded-lg px-4 py-2 md:px-6 md:py-2.5 flex items-center gap-2 hover:bg-gray-200 transition-all w-full md:w-auto"
           hlmBtn
           type="submit"
           disabled
         >
-          <hlm-icon size="sm" name="lucideLoader" />
+          <hlm-icon class="animate-spin" size="sm" name="lucideLoader" />
+          Génération du devis...
         </button>
         } @else {
         <button
@@ -777,17 +926,20 @@
         </button>
         }
       </div>
+      <hlm-toaster />
     </form>
     } @else {
     <form
       [formGroup]="createClientForm"
       class="bg-white rounded-xl p-8 space-y-6 max-w-2xl mx-auto"
-      (ngSubmit)="createClient()"
+      (ngSubmit)="client() ? updateClient() : createClient()"
     >
       <div
         class="flex justify-between items-center border-b border-gray-200 pb-6"
       >
-        <h2 class="text-xl font-bold text-gray-900">Nouveau client</h2>
+        <h2 class="text-xl font-bold text-gray-900">
+          {{ client() ? "Modifier le client" : "Nouveau client" }}
+        </h2>
         <button
           type="button"
           (click)="toggleClientForm(false)"
@@ -1076,7 +1228,7 @@
           [disabled]="!createClientForm.valid"
         >
           <hlm-icon size="sm" name="lucideCheck" />
-          Créer le client
+          {{ client() ? "Mettre à jour le client" : "Créer le client" }}
         </button>
       </div>
     </form>

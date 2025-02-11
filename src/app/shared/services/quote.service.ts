@@ -35,10 +35,7 @@ export class QuoteService {
       console.log(`${key}:`, value);
     });
 
-    return this.httpClient.post<QuoteEntity>(
-      `${environment.API_URL}/quote`,
-      form
-    );
+    return this.httpClient.post<boolean>(`${environment.API_URL}/quote`, form);
   }
 
   updateQuote(quoteId: string | null, quoteDto: QuoteDto) {

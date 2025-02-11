@@ -906,6 +906,10 @@ export class NewQuoteComponent implements AfterViewInit {
         : 'group_account_id']: +this.id()!,
       isVatIncluded: this.isTvaIncluded(),
       attachment_key: this.selectedAttachment()?.key,
+      created_by:
+        this.connectedUser()?.firstName + ' ' + this.connectedUser()?.name,
+      created_by_mail: this.connectedUser()?.email,
+      created_by_phone: this.connectedUser()?.telephone,
     };
 
     this.isLoadingQuote.set(true);

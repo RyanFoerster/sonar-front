@@ -4,13 +4,11 @@ import {
   inject,
   Injector,
   signal,
-  WritableSignal,
 } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { QuoteService } from '../shared/services/quote.service';
 import { QuoteEntity } from '../shared/entities/quote.entity';
-import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
-import { switchMap, take, tap } from 'rxjs';
+import { take, tap } from 'rxjs';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { AuthService } from '../shared/services/auth.service';
@@ -70,6 +68,7 @@ export class QuoteDecisionComponent implements AfterViewInit {
         take(1),
         tap((data) => {
           this.quoteFromDB = data;
+          console.log('quoteFromDB', this.quoteFromDB);
           this.updateQuoteStatus();
           return data;
         }),
@@ -127,7 +126,7 @@ export class QuoteDecisionComponent implements AfterViewInit {
   }
 
   canAccess(): boolean {
-    if (!this.quoteFromDB || !this.role || !this.connectedUser()) return false;
+    if (!this.quoteFromDB || !this.role) return false;
 
     // Vérifier si l'utilisateur est admin
     if (this.connectedUser()?.role === 'ADMIN') return true;
@@ -141,14 +140,14 @@ export class QuoteDecisionComponent implements AfterViewInit {
     // }
 
     // Vérifier si l'utilisateur est le client et que c'est une décision client
-    if (
-      this.role === 'CLIENT' &&
-      this.connectedUser()?.id === this.quoteFromDB.client.id
-    ) {
-      return true;
-    }
+    // if (
+    //   this.role === 'CLIENT' &&
+    //   this.connectedUser()?.id === this.quoteFromDB.client.id
+    // ) {
+    //   return true;
+    // }
 
-    return false;
+    return true;
   }
 
   canTakeAction(): boolean {
@@ -233,15 +232,9 @@ export class QuoteDecisionComponent implements AfterViewInit {
 
       // Informations sur l'utilisateur (alignées à gauche)
       doc.setFontSize(12);
-      doc.text(
-        `Créé par: ${this.connectedUser()?.firstName} ${
-          this.connectedUser()?.name
-        }`,
-        10,
-        40
-      );
-      doc.text(`Email: ${this.connectedUser()?.email}`, 10, 50);
-      doc.text(`Téléphone: ${this.connectedUser()?.telephone}`, 10, 60);
+      doc.text(`Créé par: ${quote.created_by}`, 10, 40);
+      doc.text(`Email: ${quote.created_by_mail}`, 10, 50);
+      doc.text(`Téléphone: ${quote.created_by_phone}`, 10, 60);
 
       // Informations sur le client (alignées à droite)
       const clientInfo = `

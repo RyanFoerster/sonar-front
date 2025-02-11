@@ -19,6 +19,10 @@ export interface QuoteEntity {
   group_acceptance: 'accepted' | 'refused' | 'pending';
   order_giver_acceptance: 'accepted' | 'refused' | 'pending';
   comment: string;
+  attachment_key: string;
+  created_by: string;
+  created_by_mail: string;
+  created_by_phone: string;
   client: ClientEntity;
   products: ProductEntity[];
   invoice: InvoiceEntity;

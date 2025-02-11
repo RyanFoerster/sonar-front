@@ -1,9 +1,45 @@
 <div
-  class="py-5 px-10 h-20 flex gap-5 rounded justify-between items-center relative"
+  class="py-3 md:py-5 px-4 md:px-10 h-auto md:h-20 flex flex-wrap gap-3 md:gap-5 rounded justify-between items-center relative"
 >
-  <a routerLink="/home">
-    <img class="w-36" src="assets/images/Groupe-30.png" alt="Logo de sonar" />
+  <a routerLink="/home" class="flex-shrink-0">
+    <img
+      class="w-28 md:w-36"
+      src="assets/images/Groupe-30.png"
+      alt="Logo de sonar"
+    />
   </a>
+
+  <div
+    class="flex-1 basis-full md:basis-auto px-4 py-3 md:px-6 md:py-4 bg-red-50 border-l-4 border-red-400 rounded-r shadow-sm order-last md:order-none"
+  >
+    <div class="flex items-center space-x-3">
+      <div class="flex-shrink-0">
+        <svg
+          class="h-5 w-5 text-red-400"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 6a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 6zm0 9a1 1 0 100-2 1 1 0 000 2z"
+            clip-rule="evenodd"
+          />
+        </svg>
+      </div>
+      <div class="flex-1 md:flex md:justify-between">
+        <div>
+          <h3 class="text-sm md:text-base font-medium text-red-800">
+            Application en cours de développement
+          </h3>
+          <div class="mt-1 text-xs md:text-sm text-red-700">
+            Cette application est en cours de développement ce qui veut dire
+            qu'elle peut être instable et mise à jour fréquemment.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
   @if (isUserConnected()) {
   <div class="gap-2 justify-center items-center hidden md:flex">

@@ -17,5 +17,13 @@ export interface QuoteDto {
 
   client_id: number;
 
-  comment: string
+  comment: string;
+
+  attachment_key?: string;
+
+  created_by?: string;
+
+  created_by_mail?: string;
+
+  created_by_phone?: string;
 }

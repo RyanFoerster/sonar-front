@@ -4,7 +4,8 @@
     class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"
   ></div>
 </div>
-} @else if (!canAccess()) {
+}
+<!-- @else if (!canAccess()) {
 <div class="flex justify-center items-center min-h-screen">
   <div class="text-center p-6 bg-red-50 rounded-xl">
     <h2 class="text-xl font-semibold text-red-700 mb-2">Accès non autorisé</h2>
@@ -13,7 +14,8 @@
     </p>
   </div>
 </div>
-} @else {
+}  -->
+@else {
 <div class="container mx-auto px-4 py-8">
   <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
     <!-- En-tête -->
@@ -144,7 +146,7 @@
             </div>
 
             <!-- Contact Créateur -->
-            <div class="space-y-3">
+            <!-- <div class="space-y-3">
               <h4 class="font-medium text-gray-700">Créateur du devis</h4>
               <div class="space-y-2">
                 <p class="text-sm text-gray-600">
@@ -160,7 +162,7 @@
                   {{ connectedUser()?.telephone }}
                 </p>
               </div>
-            </div>
+            </div> -->
           </div>
 
           <!-- Contact Sonar -->

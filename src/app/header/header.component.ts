@@ -13,37 +13,19 @@ import {
   HlmMenuBarComponent,
   HlmMenuBarItemDirective,
   HlmMenuComponent,
-  HlmMenuGroupComponent,
-  HlmMenuItemCheckboxDirective,
-  HlmMenuItemCheckComponent,
-  HlmMenuItemDirective,
-  HlmMenuItemIconDirective,
   HlmMenuItemRadioComponent,
   HlmMenuItemRadioDirective,
-  HlmMenuItemSubIndicatorComponent,
-  HlmMenuLabelComponent,
-  HlmMenuSeparatorComponent,
-  HlmMenuShortcutComponent,
-  HlmSubMenuComponent,
 } from '@spartan-ng/ui-menu-helm';
 
-import { HlmBadgeDirective } from '@spartan-ng/ui-badge-helm';
+import {
+  HlmAlertDescriptionDirective,
+  HlmAlertDirective,
+  HlmAlertTitleDirective,
+} from '@spartan-ng/ui-alert-helm';
 
-import { DatePipe, JsonPipe, NgClass, NgOptimizedImage } from '@angular/common';
 import { lucideBell } from '@ng-icons/lucide';
-import { HlmIconComponent, provideIcons } from '@spartan-ng/ui-icon-helm';
-import {
-  BrnPopoverCloseDirective,
-  BrnPopoverComponent,
-  BrnPopoverContentDirective,
-  BrnPopoverTriggerDirective,
-} from '@spartan-ng/ui-popover-brain';
-import {
-  HlmPopoverCloseDirective,
-  HlmPopoverContentDirective,
-} from '@spartan-ng/ui-popover-helm';
-import { BrnSeparatorComponent } from '@spartan-ng/ui-separator-brain';
-import { HlmSeparatorDirective } from '@spartan-ng/ui-separator-helm';
+import { provideIcons } from '@spartan-ng/ui-icon-helm';
+
 import { Subscription } from 'rxjs';
 import { HeaderMobileComponent } from '../header-mobile/header-mobile.component';
 import { InvitationEntity } from '../shared/entities/invitation.entity';
@@ -63,35 +45,14 @@ import { PwaService } from '../shared/services/pwa.service';
     HlmMenuBarComponent,
     HlmMenuBarItemDirective,
     HlmMenuComponent,
-    HlmMenuGroupComponent,
-    HlmMenuItemCheckboxDirective,
-    HlmMenuItemCheckComponent,
-    HlmMenuItemDirective,
-    HlmMenuItemIconDirective,
     HlmMenuItemRadioComponent,
     HlmMenuItemRadioDirective,
-    HlmMenuItemSubIndicatorComponent,
-    HlmMenuLabelComponent,
-    HlmMenuSeparatorComponent,
-    HlmMenuShortcutComponent,
-    HlmSubMenuComponent,
     BrnMenuTriggerDirective,
-    HlmIconComponent,
-    NgClass,
     HeaderMobileComponent,
-    NgOptimizedImage,
-    JsonPipe,
-    HlmBadgeDirective,
-    HlmPopoverCloseDirective,
-    HlmPopoverContentDirective,
-    BrnPopoverCloseDirective,
-    BrnPopoverComponent,
-    BrnPopoverContentDirective,
-    BrnPopoverTriggerDirective,
-    DatePipe,
-    BrnSeparatorComponent,
-    HlmSeparatorDirective,
     NotificationsComponent,
+    HlmAlertDescriptionDirective,
+    HlmAlertDirective,
+    HlmAlertTitleDirective,
   ],
   providers: [provideIcons({ lucideBell })],
   templateUrl: './header.component.html',
@@ -107,6 +68,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   isUserConnected = signal(false);
   connectedUser = signal<UserEntity | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   profilePicture = signal<any>('');
   invitations = signal<InvitationEntity[]>([]);
   invitationCount = signal(0);
@@ -176,6 +138,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   updateInvitation(
     invitation: InvitationEntity,
     status: 'accepted' | 'refused',
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ctx: any
   ) {
     invitation.status = status;

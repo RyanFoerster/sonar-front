@@ -294,10 +294,6 @@ export class NewQuoteComponent implements AfterViewInit {
     await this.getConnectedUser();
     await this.loadUserAttachments();
 
-    this.createClientForm.patchValue({
-      country: 'Belgique',
-    });
-
     if (this.connectedUser()?.role === 'ADMIN') {
       this.clientService
         .getAll()
@@ -376,6 +372,9 @@ export class NewQuoteComponent implements AfterViewInit {
     if (isNewClient) {
       this.createClientForm.reset();
       this.isPhysicalPerson.set(false);
+      this.createClientForm.patchValue({
+        country: 'Belgique',
+      });
     } else {
       if (this.client()) {
         // Pré-remplir le formulaire avec les données du client existant
@@ -562,7 +561,6 @@ export class NewQuoteComponent implements AfterViewInit {
       .pipe(
         take(1),
         tap((data) => {
-          console.log(JSON.stringify(data, null, 2));
           this.isValidBCENumber.set(data ? true : false);
 
           const { entrepriseName, street, addressNumber, postalCode, city } =
@@ -1028,7 +1026,7 @@ export class NewQuoteComponent implements AfterViewInit {
         };
 
         this.quoteService
-          .updateQuote(this.updatedQuoteId() || '', quoteData)
+          .updateQuote(this.updatedQuoteId() || '', quoteData, this.file())
           .pipe(take(1))
           .subscribe({
             next: () => {

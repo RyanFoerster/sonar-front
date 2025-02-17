@@ -38,10 +38,27 @@ export class QuoteService {
     return this.httpClient.post<boolean>(`${environment.API_URL}/quote`, form);
   }
 
-  updateQuote(quoteId: string | null, quoteDto: QuoteDto) {
+  updateQuote(quoteId: string | null, quoteDto: QuoteDto, file: File | null) {
+    const form = new FormData();
+
+    const cleanQuoteDto = {
+      ...quoteDto,
+      products_id: Array.isArray(quoteDto.products_id)
+        ? quoteDto.products_id
+        : [],
+    };
+
+    // Ajouter le fichier seulement s'il existe
+    if (file) {
+      form.append('attachment', file);
+    }
+
+    // Convertir les données du DTO en JSON string
+    form.append('data', JSON.stringify(cleanQuoteDto));
+
     return this.httpClient.patch<QuoteEntity>(
       `${environment.API_URL}/quote/${quoteId}`,
-      quoteDto
+      form
     );
   }
 

@@ -31,6 +31,8 @@ import { CompteGroupeEntity } from '../../shared/entities/compte-groupe.entity';
 import { PrincipalAccountEntity } from '../../shared/entities/principal-account.entity';
 import { GroupProjectDto } from '../../shared/dtos/group-project.dto';
 import { UserSecondaryAccountEntity } from '../../shared/entities/user-secondary-account.entity';
+import { provideIcons } from '@ng-icons/core';
+import { lucideLoader } from '@ng-icons/lucide';
 
 @Component({
   selector: 'app-home',
@@ -54,6 +56,7 @@ import { UserSecondaryAccountEntity } from '../../shared/entities/user-secondary
     BrnDialogTriggerDirective,
     ReactiveFormsModule,
   ],
+  providers: [provideIcons({ lucideLoader })],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css',
 })

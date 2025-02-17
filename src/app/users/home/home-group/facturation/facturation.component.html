@@ -373,7 +373,8 @@
                 <hlm-icon size="sm" name="lucideEdit" />
                 <span>Modifier</span>
               </button>
-              @if(connectedUser()?.role === 'ADMIN') {
+              @if(connectedUser()?.role === 'ADMIN' ||
+              doc.order_giver_acceptance === 'accepted') {
               <hlm-alert-dialog>
                 <button
                   hlmBtn
@@ -459,9 +460,7 @@
             class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4 flex lg:table-cell items-center justify-between lg:justify-start"
           >
             <span class="font-medium lg:font-normal lg:hidden">Total :</span>
-            <span class="font-medium">{{
-              doc.creditNoteAmount | euroFormat
-            }}</span>
+            <span class="font-medium">{{ doc.total | euroFormat }}</span>
           </td>
           <td
             class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4 flex lg:table-cell items-center justify-between lg:justify-start"

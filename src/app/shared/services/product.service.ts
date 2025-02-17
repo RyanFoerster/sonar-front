@@ -10,8 +10,6 @@ import { ProductEntity } from '../entities/product.entity';
 export class ProductService {
   private readonly httpClient: HttpClient = inject(HttpClient);
 
-  constructor() {}
-
   createProduct(productDto: ProductDto) {
     return this.httpClient.post<ProductEntity>(
       `${environment.API_URL}/product`,

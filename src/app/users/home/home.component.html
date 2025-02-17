@@ -266,7 +266,10 @@
           Aucun résultat trouvé
         </p>
         } @else if(isLoadingAccounts()){
-        <p class="text-gray-500 col-span-full text-center py-4">
+        <p
+          class="flex justify-center items-center gap-2 text-gray-500 col-span-full text-center py-4"
+        >
+          <hlm-icon class="animate-spin" name="lucideLoader" />
           Chargement des comptes...
         </p>
         } @else { @for (projet of filteredPrincipalAccounts(); track projet.id)
@@ -342,6 +345,13 @@
         <p class="text-gray-500 col-span-full text-center py-4">
           Aucun résultat trouvé
         </p>
+        } @else if(isLoadingAccounts()){
+        <p
+          class="flex justify-center items-center gap-2 text-gray-500 col-span-full text-center py-4"
+        >
+          <hlm-icon class="animate-spin" name="lucideLoader" />
+          Chargement des comptes...
+        </p>
         } @else { @for (projet of filteredGroupAccounts(); track projet.id) {
         <app-account-component
           [id]="projet.id"
@@ -349,15 +359,17 @@
           [solde]="projet.solde"
           typeOfProjet="GROUP"
         />
-        } } } @else { @for (projet of
-        getUserConnected()()?.userSecondaryAccounts; track $index) {
+        } } }
+
+        <!-- @else { @for (projet of
+        groupAccounts(); track $index) {
         <app-account-component
           [id]="projet.group_account.id"
           [name]="projet.group_account.username"
           [solde]="projet.group_account.solde"
           typeOfProjet="GROUP"
         />
-        } }
+        } } -->
       </div>
     </div>
   </div>

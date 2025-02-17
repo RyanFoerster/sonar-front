@@ -34,6 +34,7 @@ import {
   lucideXCircle,
   lucideChevronUp,
   lucideChevronDown,
+  lucideLoader,
 } from '@ng-icons/lucide';
 import { HlmButtonDirective } from '@spartan-ng/ui-button-helm';
 import { HlmCheckboxComponent } from '@spartan-ng/ui-checkbox-helm';
@@ -97,6 +98,7 @@ import { InvoiceEntity } from '../../../../../shared/entities/invoice.entity';
       lucideX,
       lucideChevronUp,
       lucideChevronDown,
+      lucideLoader,
     }),
     DatePipe,
   ],
@@ -147,6 +149,7 @@ export class NewCreditNoteComponent implements AfterViewInit {
   protected isArtisticPerformance = signal(false);
   protected isPhysicalPerson = signal(false);
   protected isTvaIncluded = signal(false);
+  protected isLoading = signal(false);
 
   protected createCreditNoteForm!: FormGroup;
   protected createClientForm!: FormGroup;
@@ -223,7 +226,7 @@ export class NewCreditNoteComponent implements AfterViewInit {
       street: ['', [Validators.required]],
       number: ['', [Validators.required]],
       city: ['', [Validators.required]],
-      country: ['Belgique', [Validators.required]],
+      country: [''],
       postalCode: ['', [Validators.required]],
       company_number: [null],
       company_vat_number: [null],
@@ -294,10 +297,6 @@ export class NewCreditNoteComponent implements AfterViewInit {
         .subscribe();
     }
 
-    this.createClientForm.patchValue({
-      country: 'Belgique',
-    });
-
     if (this.connectedUser()?.role === 'ADMIN') {
       this.clientService
         .getAll()
@@ -338,20 +337,49 @@ export class NewCreditNoteComponent implements AfterViewInit {
   toggleClientForm(isNewClient: boolean) {
     if (isNewClient) {
       this.createClientForm.reset();
-    } else {
       this.createClientForm.patchValue({
-        name: this.currentClient()?.name,
-        email: this.currentClient()?.email,
-        phone: this.currentClient()?.phone,
-        street: this.currentClient()?.street,
-        number: this.currentClient()?.number,
-        city: this.currentClient()?.city,
-        country: this.currentClient()?.country,
-        postalCode: this.currentClient()?.postalCode,
-        company_number: this.currentClient()?.company_number,
-        company_vat_number: this.currentClient()?.company_vat_number,
-        national_number: this.currentClient()?.national_number,
+        country: 'Belgique',
       });
+    }
+    if (this.client()) {
+      // Pré-remplir le formulaire avec les données du client existant
+      const currentClient = this.client()!;
+      this.isPhysicalPerson.set(currentClient.is_physical_person || false);
+
+      if (currentClient.is_physical_person) {
+        // Pour une personne physique, séparer le nom en prénom et nom
+        const [firstname = '', lastname = ''] = currentClient.name.split(' ');
+        this.createClientForm.patchValue({
+          firstname,
+          lastname,
+          email: currentClient.email,
+          phone: currentClient.phone,
+          street: currentClient.street,
+          number: currentClient.number,
+          city: currentClient.city,
+          country: currentClient.country,
+          postalCode: currentClient.postalCode,
+          national_number: currentClient.national_number,
+          is_physical_person: true,
+        });
+      } else {
+        // Pour une entreprise
+        this.createClientForm.patchValue({
+          name: currentClient.name,
+          email: currentClient.email,
+          phone: currentClient.phone,
+          street: currentClient.street,
+          number: currentClient.number,
+          city: currentClient.city,
+          country: currentClient.country,
+          postalCode: currentClient.postalCode,
+          company_number: currentClient.company_number,
+          company_vat_number: currentClient.company_vat_number,
+          is_physical_person: false,
+        });
+      }
+    } else {
+      this.createClientForm.reset();
     }
     this.isToggleClientForm.set(!this.isToggleClientForm());
   }
@@ -468,32 +496,30 @@ export class NewCreditNoteComponent implements AfterViewInit {
     const companyNumber = this.createClientForm.get('company_number')?.value;
     if (!companyNumber) return;
 
+    // Supprime les espaces et les points dans le numéro de TVA
+    const formattedCompanyNumber = companyNumber
+      .replace(/\s+/g, '')
+      .replace(/\./g, '');
+
     this.clientService
-      .checkBce(companyNumber)
+      .checkBce(formattedCompanyNumber)
       .pipe(
         take(1),
-        tap(({ vat }) => {
-          if (vat.isValid) {
-            this.isValidBCENumber.set(vat.isValid);
+        tap((data) => {
+          console.log(JSON.stringify(data, null, 2));
+          this.isValidBCENumber.set(data ? true : false);
 
-            const { vatNumber, details } = vat;
-            const { name, address } = details;
+          const { entrepriseName, street, addressNumber, postalCode, city } =
+            data;
 
-            const [streetAndNumber, postalAndCity] = address.split('\n');
-            const [street, number] =
-              this.extractStreetAndNumber(streetAndNumber);
-            const [postalCode, ...cityParts] = postalAndCity.split(' ');
-            const city = cityParts.join(' ');
-
-            this.createClientForm.patchValue({
-              company_vat_number: vatNumber,
-              name,
-              street,
-              number,
-              postalCode,
-              city,
-            });
-          }
+          this.createClientForm.patchValue({
+            company_vat_number: formattedCompanyNumber,
+            name: entrepriseName,
+            street,
+            number: addressNumber,
+            postalCode,
+            city,
+          });
         })
       )
       .subscribe();
@@ -711,11 +737,15 @@ export class NewCreditNoteComponent implements AfterViewInit {
           this.typeOfProjet() as 'PRINCIPAL' | 'GROUP'
         );
 
+    this.isLoading.set(true);
     serviceToCall
       .pipe(
         take(1),
-        tap(() => {
-          this.goBack();
+        tap((data) => {
+          if (data) {
+            this.isLoading.set(false);
+            this.goBack();
+          }
         }),
         catchError((error) => {
           console.error(
@@ -792,16 +822,18 @@ export class NewCreditNoteComponent implements AfterViewInit {
         clientData.name = `${clientData.firstname} ${clientData.lastname}`;
       }
 
-      this.clientService
-        .create(clientData)
-        .pipe(
-          take(1),
-          tap((newClient) => {
-            this.setClient(newClient.id);
-            this.toggleClientForm(false);
-          })
-        )
-        .subscribe();
+      console.log(clientData);
+
+      // this.clientService
+      //   .create(clientData)
+      //   .pipe(
+      //     take(1),
+      //     tap((newClient) => {
+      //       this.setClient(newClient.id);
+      //       this.toggleClientForm(false);
+      //     })
+      //   )
+      //   .subscribe();
     }
   }
 }

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Injectable } from '@angular/core';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -20,8 +21,6 @@ export class PdfGeneratorService {
     iban: 'BE0700273583', // À remplacer par l'IBAN réel
     bic: 'GEBABEBB', // À remplacer par le BIC réel
   };
-
-  constructor() {}
 
   private formatDateBelgium(date: Date): string {
     return new Date(date).toLocaleDateString('fr-BE');
@@ -154,7 +153,6 @@ export class PdfGeneratorService {
 
   generateQuotePDF(quote: QuoteEntity): void {
     const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
 
     this.addHeader(doc);
@@ -233,7 +231,6 @@ export class PdfGeneratorService {
   ): Promise<void> {
     const qrCodeDataUrl = await this.generatePaymentQRCode(invoice);
     if (qrCodeDataUrl) {
-      const pageWidth = doc.internal.pageSize.getWidth();
       const qrCodeWidth = 40;
       const qrCodeHeight = 40;
       const qrCodeX = this.PAGE_MARGIN;
@@ -284,55 +281,190 @@ export class PdfGeneratorService {
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
 
-    this.addHeader(doc);
-    this.addClientInfo(doc, invoice.client);
-
-    // Titre et informations de la facture
-    let yPosition = 60;
-    const title =
-      invoice.type === 'credit_note'
-        ? 'NOTE DE CRÉDIT N°: NC-'
-        : 'FACTURE N°: F-';
-    doc.setFontSize(18);
-    doc.setTextColor(0);
-    doc.text(`${title}${invoice.invoice_number}`, this.PAGE_MARGIN, yPosition);
-
+    // Configuration initiale du document
     doc.setFontSize(10);
-    yPosition += 10;
-    doc.text(
-      `Date: ${this.formatDateBelgium(invoice.invoice_date)}`,
-      this.PAGE_MARGIN,
-      yPosition
-    );
-    if (invoice.service_date) {
-      yPosition += 7;
-      doc.text(
-        `Date de service: ${this.formatDateBelgium(invoice.service_date)}`,
-        this.PAGE_MARGIN,
-        yPosition
-      );
+    doc.setFont('helvetica');
+
+    // En-tête avec logo et titre
+    try {
+      const logoUrl = '/assets/images/SONAR.png';
+      doc.addImage(logoUrl, 'PNG', 10, 10, 50, 20);
+    } catch (error: any) {
+      console.warn(`Impossible de charger le logo: ${error.message}`);
     }
 
-    const finalY = this.addProductsTable(doc, invoice.products, invoice.type);
+    // Titre Facture et date
+    doc.setFontSize(28);
+    doc.setTextColor(51, 51, 51);
+    doc.setFont('helvetica', 'bold');
+    const title = invoice.type === 'credit_note' ? 'Note de crédit' : 'Facture';
+    doc.text(title, pageWidth - 60, 30, { align: 'right' });
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    doc.text(this.formatDateBelgium(invoice.invoice_date), pageWidth - 60, 40, {
+      align: 'right',
+    });
+    doc.text(`N°${invoice.invoice_number}`, pageWidth - 60, 45, {
+      align: 'right',
+    });
 
-    // Totaux et conditions
-    this.addTotals(doc, invoice, finalY);
+    // Informations de l'émetteur (alignées à gauche)
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text(this.COMPANY_INFO.name, 10, 50);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(this.COMPANY_INFO.address, 10, 60);
+    doc.text(this.COMPANY_INFO.email, 10, 70);
+
+    // Informations du client (alignées à droite)
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text(invoice.client.name, pageWidth - 60, 50, { align: 'right' });
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(
+      `${invoice.client.street} ${invoice.client.number}`,
+      pageWidth - 60,
+      60,
+      { align: 'right' }
+    );
+    doc.text(
+      `${invoice.client.postalCode} ${invoice.client.city}`,
+      pageWidth - 60,
+      65,
+      { align: 'right' }
+    );
+    doc.text(
+      `TVA: ${invoice.client.company_vat_number || 'Non assujetti'}`,
+      pageWidth - 60,
+      70,
+      { align: 'right' }
+    );
+
+    // Titre de la facture
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    const documentTitle =
+      invoice.type === 'credit_note'
+        ? `Note de crédit n°${invoice.invoice_number}`
+        : `Facture n°${invoice.invoice_number}`;
+    doc.text(documentTitle, 10, 95);
+
+    // Date limite de paiement
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(
+      `Date limite de paiement : ${
+        invoice.payment_deadline
+          ? this.formatDateBelgium(invoice.payment_deadline)
+          : 'N/A'
+      }`,
+      10,
+      105
+    );
+
+    const startY = 115;
+
+    // Tableau des produits
+    const productHeaders = [
+      ['Description', 'Qté', 'Prix HT', 'Remise', 'Total HT'],
+    ];
+    const productData = invoice.products.map((product) => [
+      product.description,
+      product.quantity.toString(),
+      `${product.price_htva!.toFixed(2)}€`,
+      '0,00€',
+      `${(product.price_htva! * product.quantity).toFixed(2)}€`,
+    ]);
+
+    // Tableau des produits
+    autoTable(doc, {
+      head: productHeaders,
+      body: productData,
+      startY: startY,
+      styles: {
+        fontSize: 9,
+        cellPadding: 5,
+      },
+      headStyles: {
+        fillColor: [156, 139, 209],
+        textColor: 255,
+        fontSize: 9,
+        fontStyle: 'bold',
+        halign: 'left',
+      },
+      columnStyles: {
+        0: { cellWidth: 80 },
+        1: { cellWidth: 20, halign: 'center' },
+        2: { cellWidth: 30, halign: 'right' },
+        3: { cellWidth: 30, halign: 'right' },
+        4: { cellWidth: 30, halign: 'right' },
+      },
+    });
+
+    // Position Y après le tableau
+    const finalY = (doc as any).lastAutoTable.finalY + 10;
+
+    // Tableau des totaux avec alignement amélioré
+    autoTable(doc, {
+      body: [
+        ['Sous-total', `${invoice.price_htva.toFixed(2)}€`],
+        ['TVA 6%', `${invoice.total_vat_6.toFixed(2)}€`],
+        ['TVA 21%', `${invoice.total_vat_21.toFixed(2)}€`],
+        ['Total', `${invoice.total.toFixed(2)}€`],
+        ['Payé', '0,00€'],
+        ['Solde', `${invoice.total.toFixed(2)}€`],
+      ],
+      startY: finalY,
+      margin: { left: pageWidth - 90 },
+      styles: {
+        fontSize: 9,
+        cellPadding: 2,
+      },
+      theme: 'plain',
+      columnStyles: {
+        0: { cellWidth: 40, halign: 'right' },
+        1: { cellWidth: 40, halign: 'right', fontStyle: 'bold' },
+      },
+      didDrawCell: (data) => {
+        // Mettre en surbrillance la dernière ligne (Solde)
+        if (data.row.index === 5) {
+          doc.setFillColor(0, 0, 0);
+          doc.setTextColor(255, 255, 255);
+        }
+      },
+    });
+
+    // Informations bancaires en bas de page
+    doc.setFontSize(9);
+    doc.setTextColor(51, 51, 51);
+
+    // Colonne 1 - Siège social
+    doc.setFont('helvetica', 'bold');
+    doc.text('Siège social', 10, pageHeight - 40);
+    doc.setFont('helvetica', 'normal');
+    doc.text(this.COMPANY_INFO.address, 10, pageHeight - 35);
+    doc.text(this.COMPANY_INFO.city, 10, pageHeight - 30);
+
+    // Colonne 2 - Coordonnées
+    doc.setFont('helvetica', 'bold');
+    doc.text('Coordonnées', 80, pageHeight - 40);
+    doc.setFont('helvetica', 'normal');
+    doc.text(this.COMPANY_INFO.name, 80, pageHeight - 35);
+    doc.text(this.COMPANY_INFO.email, 80, pageHeight - 30);
+
+    // Colonne 3 - Détails bancaires
+    doc.setFont('helvetica', 'bold');
+    doc.text('Détails bancaires', 150, pageHeight - 40);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`IBAN: ${this.COMPANY_INFO.iban}`, 150, pageHeight - 35);
+    doc.text('BIC: GEBABEBB', 150, pageHeight - 30);
 
     // Ajouter le QR code seulement pour les factures (pas pour les notes de crédit)
     if (invoice.type !== 'credit_note') {
       await this.addPaymentQRCode(doc, invoice, finalY);
     }
-
-    // Ajuster la position du footer pour laisser de la place au QR code
-    this.addFooter(doc, pageHeight, [
-      `Conditions de paiement : ${Math.ceil(
-        (new Date(invoice.payment_deadline).getTime() -
-          new Date(invoice.invoice_date).getTime()) /
-          (1000 * 60 * 60 * 24)
-      )} jours`,
-      `Date d'émission : ${this.formatDateBelgium(invoice.invoice_date)}`,
-      'Nous vous remercions de votre confiance',
-    ]);
 
     const prefix = invoice.type === 'credit_note' ? 'note-credit' : 'facture';
     doc.save(`${prefix}_${invoice.invoice_number}.pdf`);

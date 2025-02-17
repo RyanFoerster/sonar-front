@@ -153,6 +153,7 @@ export class NewQuoteComponent implements AfterViewInit {
   protected tva6 = signal(0);
   protected total = signal(0);
   protected isValidBCENumber = signal<boolean | null>(null);
+  protected isUpdating = signal(false);
   public state = signal<'closed' | 'open'>('closed');
   public currentClient = signal<ClientEntity | undefined>(undefined);
   protected idProductToEdit = signal<number | undefined>(undefined);
@@ -324,6 +325,27 @@ export class NewQuoteComponent implements AfterViewInit {
               comment: data.comment,
               client_id: data.client.id,
             });
+
+            console.log('Données complètes du devis:', data);
+
+            // Gestion du fichier attaché
+            if (data.attachment_url) {
+              const s3Key = this.extractS3KeyFromUrl(data.attachment_url);
+              console.log('Données du fichier reçues:', {
+                url: data.attachment_url,
+                extracted_key: s3Key,
+              });
+              // Créer un objet UserAttachment pour le fichier existant
+              const existingAttachment: UserAttachment = {
+                id: -1, // ID temporaire pour le fichier existant
+                name: this.extractFileNameFromUrl(data.attachment_url),
+                url: data.attachment_url,
+                key: s3Key,
+                type: 'application/pdf',
+                created_at: new Date(),
+              };
+              this.selectedAttachment.set(existingAttachment);
+            }
 
             this.products.set(
               data.products.map((product) => {
@@ -1023,23 +1045,36 @@ export class NewQuoteComponent implements AfterViewInit {
           tva21: this.tva21(),
           tva6: this.tva6(),
           totalHtva: this.totalHtva(),
+          attachment_key: this.selectedAttachment()?.key || null,
         };
+        this.isUpdating.set(true);
+
+        let fileToSend: File | null = null;
+        if (this.file()) {
+          // Uniquement envoyer un fichier si c'est un nouveau fichier
+          fileToSend = this.file();
+          console.log("Envoi d'un nouveau fichier:", fileToSend!.name);
+        }
 
         this.quoteService
-          .updateQuote(this.updatedQuoteId() || '', quoteData, this.file())
+          .updateQuote(this.updatedQuoteId() || '', quoteData, fileToSend)
           .pipe(take(1))
           .subscribe({
             next: () => {
-              // Réinitialiser la liste des produits modifiés
               this.modifiedProducts.set([]);
+              this.isUpdating.set(false);
               this.location.back();
             },
             error: (error: Error) => {
               console.error('Error updating quote:', error);
+              this.isUpdating.set(false);
+              toast.error('Erreur lors de la mise à jour du devis');
             },
           });
       } catch (error: unknown) {
         console.error('Error saving products:', error);
+        this.isUpdating.set(false);
+        toast.error('Erreur lors de la sauvegarde des produits');
       }
     }
   }
@@ -1202,5 +1237,23 @@ export class NewQuoteComponent implements AfterViewInit {
   async previewAttachment(attachment: UserAttachment, event: Event) {
     event.stopPropagation();
     this.userAttachmentService.previewAttachment(attachment);
+  }
+
+  private extractFileNameFromUrl(url: string): string {
+    const decodedUrl = decodeURIComponent(url);
+    const parts = decodedUrl.split('/');
+    return parts[parts.length - 1];
+  }
+
+  private extractS3KeyFromUrl(url: string): string {
+    try {
+      // L'URL est de la forme: https://sonar-artists-files.s3.eu-central-1.amazonaws.com/user-1/attachments/file.pdf
+      const urlObj = new URL(url);
+      // On enlève le premier slash pour avoir la clé
+      return urlObj.pathname.substring(1);
+    } catch (error) {
+      console.error("Erreur lors de l'extraction de la clé S3:", error);
+      return '';
+    }
   }
 }

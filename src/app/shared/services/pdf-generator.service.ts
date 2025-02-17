@@ -26,6 +26,15 @@ export class PdfGeneratorService {
     return new Date(date).toLocaleDateString('fr-BE');
   }
 
+  private getOptimizedPdfConfig(): any {
+    return {
+      compress: true,
+      putOnlyUsedFonts: true,
+      precision: 2,
+      format: 'a4',
+    };
+  }
+
   private addHeader(doc: jsPDF): void {
     const pageWidth = doc.internal.pageSize.getWidth();
     const logoUrl = '/assets/images/SONAR.png';
@@ -33,56 +42,72 @@ export class PdfGeneratorService {
     const aspectRatio = 1;
     const newLogoHeight = logoWidth / aspectRatio;
 
-    doc.addImage(logoUrl, 'PNG', this.PAGE_MARGIN, 5, logoWidth, newLogoHeight);
+    // Optimisation de l'ajout du logo avec espacement correct
+    doc.addImage(
+      logoUrl,
+      'PNG',
+      this.PAGE_MARGIN,
+      10,
+      logoWidth,
+      newLogoHeight,
+      undefined,
+      'MEDIUM'
+    );
 
+    // Ajustement des espacements pour le texte d'en-tête
+    const headerStartY = 20;
+    doc.setFont('helvetica', 'normal');
     doc.setFontSize(10);
     doc.setTextColor(100);
+
     doc.text(
       this.COMPANY_INFO.name,
       pageWidth - this.PAGE_MARGIN,
-      this.PAGE_MARGIN,
+      headerStartY,
       { align: 'right' }
     );
     doc.text(
       this.COMPANY_INFO.address,
       pageWidth - this.PAGE_MARGIN,
-      this.PAGE_MARGIN + 5,
+      headerStartY + 7,
       { align: 'right' }
     );
     doc.text(
       this.COMPANY_INFO.city,
       pageWidth - this.PAGE_MARGIN,
-      this.PAGE_MARGIN + 10,
+      headerStartY + 14,
       { align: 'right' }
     );
     doc.text(
       `Email: ${this.COMPANY_INFO.email}`,
       pageWidth - this.PAGE_MARGIN,
-      this.PAGE_MARGIN + 20,
+      headerStartY + 21,
       { align: 'right' }
     );
 
+    // Ligne de séparation
     doc.setDrawColor(200);
     doc.line(
       this.PAGE_MARGIN,
-      this.PAGE_MARGIN + 30,
+      headerStartY + 30,
       pageWidth - this.PAGE_MARGIN,
-      this.PAGE_MARGIN + 30
+      headerStartY + 30
     );
   }
 
   private addClientInfo(doc: jsPDF, client: any): void {
     const pageWidth = doc.internal.pageSize.getWidth();
-    let yPosition = 75;
+    let yPosition = 80;
+    const lineHeight = 7;
 
     doc.setFontSize(11);
-    doc.text('Adressé à:', pageWidth - this.PAGE_MARGIN - 60, 70);
+    doc.text('Adressé à:', pageWidth - this.PAGE_MARGIN - 60, yPosition - 10);
     doc.setFontSize(10);
 
     const clientName = doc.splitTextToSize(client.name, this.MAX_WIDTH);
     clientName.forEach((line: string) => {
       doc.text(line, pageWidth - this.PAGE_MARGIN - 60, yPosition);
-      yPosition += 5;
+      yPosition += lineHeight;
     });
 
     doc.text(
@@ -90,21 +115,25 @@ export class PdfGeneratorService {
       pageWidth - this.PAGE_MARGIN - 60,
       yPosition
     );
-    yPosition += 5;
+    yPosition += lineHeight;
+
     doc.text(
       `${client.postalCode} ${client.city}`,
       pageWidth - this.PAGE_MARGIN - 60,
       yPosition
     );
-    yPosition += 5;
+    yPosition += lineHeight;
+
     doc.text(client.country, pageWidth - this.PAGE_MARGIN - 60, yPosition);
-    yPosition += 5;
+    yPosition += lineHeight;
+
     doc.text(
       `Tél: ${client.phone}`,
       pageWidth - this.PAGE_MARGIN - 60,
       yPosition
     );
-    yPosition += 5;
+    yPosition += lineHeight;
+
     doc.text(
       `Email: ${client.email}`,
       pageWidth - this.PAGE_MARGIN - 60,
@@ -113,7 +142,7 @@ export class PdfGeneratorService {
   }
 
   private addProductsTable(doc: jsPDF, products: any[], type: string): number {
-    const tableStart = 120;
+    const tableStart = 140; // Augmenté pour laisser plus d'espace en haut
     autoTable(doc, {
       startY: tableStart,
       head: [['Description', 'Quantité', 'Prix unitaire', 'Total HT']],
@@ -138,21 +167,30 @@ export class PdfGeneratorService {
                 `${(product.quantity * product.price).toFixed(2)} €`,
               ];
             }),
-      styles: { fontSize: 9 },
-      headStyles: { fillColor: [70, 70, 70], textColor: 255 },
+      styles: {
+        fontSize: 9,
+        cellPadding: 5,
+        minCellHeight: 12,
+      },
+      headStyles: {
+        fillColor: [70, 70, 70],
+        textColor: 255,
+        minCellHeight: 14,
+      },
       columnStyles: {
         0: { cellWidth: 'auto' },
         1: { cellWidth: 30, halign: 'center' },
         2: { cellWidth: 40, halign: 'right' },
         3: { cellWidth: 40, halign: 'right' },
       },
+      margin: { top: 30 },
     });
 
     return (doc as any).lastAutoTable.finalY || tableStart;
   }
 
   generateQuotePDF(quote: QuoteEntity): void {
-    const doc = new jsPDF();
+    const doc = new jsPDF(this.getOptimizedPdfConfig());
     const pageHeight = doc.internal.pageSize.getHeight();
 
     this.addHeader(doc);
@@ -183,6 +221,7 @@ export class PdfGeneratorService {
     );
 
     const finalY = this.addProductsTable(doc, quote.products, 'quote');
+    console.log('payment_deadline', quote.payment_deadline);
 
     // Totaux et conditions
     this.addTotals(doc, quote, finalY);
@@ -217,7 +256,13 @@ export class PdfGeneratorService {
     ].join('\n');
 
     try {
-      return await QRCode.toDataURL(qrData, { width: 100 });
+      // Optimisation de la génération du QR code
+      return await QRCode.toDataURL(qrData, {
+        width: 100,
+        margin: 0,
+        scale: 4,
+        errorCorrectionLevel: 'L',
+      });
     } catch (err) {
       console.error('Erreur lors de la génération du QR code:', err);
       return '';
@@ -234,17 +279,18 @@ export class PdfGeneratorService {
       const qrCodeWidth = 40;
       const qrCodeHeight = 40;
       const qrCodeX = this.PAGE_MARGIN;
-      // Augmenter l'espace entre les totaux et le QR code
       const qrCodeY = yPosition + 50;
 
-      // Ajout du QR code sans fond blanc
+      // Optimisation de l'ajout du QR code
       doc.addImage(
         qrCodeDataUrl,
         'PNG',
         qrCodeX,
         qrCodeY,
         qrCodeWidth,
-        qrCodeHeight
+        qrCodeHeight,
+        undefined,
+        'MEDIUM'
       );
 
       // Ajout des informations de paiement à côté du QR code
@@ -277,7 +323,7 @@ export class PdfGeneratorService {
   }
 
   async generateInvoicePDF(invoice: InvoiceEntity): Promise<void> {
-    const doc = new jsPDF();
+    const doc = new jsPDF(this.getOptimizedPdfConfig());
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
 
@@ -285,73 +331,91 @@ export class PdfGeneratorService {
     doc.setFontSize(10);
     doc.setFont('helvetica');
 
-    // En-tête avec logo et titre
+    // Définition des marges pour aligner avec le tableau
+    const tableWidth = 190; // Largeur standard du tableau
+    const contentLeftMargin = (pageWidth - tableWidth) / 2;
+    const contentRightMargin = pageWidth - contentLeftMargin;
+
+    // Optimisation de l'ajout du logo avec dimensions carrées
     try {
       const logoUrl = '/assets/images/SONAR.png';
-      doc.addImage(logoUrl, 'PNG', 10, 10, 50, 20);
+      const logoSize = 40; // Taille carrée pour le logo
+      doc.addImage(
+        logoUrl,
+        'PNG',
+        contentLeftMargin,
+        this.PAGE_MARGIN,
+        logoSize,
+        logoSize,
+        undefined,
+        'MEDIUM'
+      );
     } catch (error: any) {
       console.warn(`Impossible de charger le logo: ${error.message}`);
     }
 
-    // Titre Facture et date
+    // Titre Facture et date (ajusté pour le nouveau positionnement du logo)
     doc.setFontSize(28);
     doc.setTextColor(51, 51, 51);
     doc.setFont('helvetica', 'bold');
     const title = invoice.type === 'credit_note' ? 'Note de crédit' : 'Facture';
-    doc.text(title, pageWidth - 60, 30, { align: 'right' });
+    doc.text(title, contentRightMargin, 35, { align: 'right' });
     doc.setFontSize(11);
     doc.setFont('helvetica', 'normal');
-    doc.text(this.formatDateBelgium(invoice.invoice_date), pageWidth - 60, 40, {
-      align: 'right',
-    });
-    doc.text(`N°${invoice.invoice_number}`, pageWidth - 60, 45, {
+    doc.text(
+      this.formatDateBelgium(invoice.invoice_date),
+      contentRightMargin,
+      45,
+      { align: 'right' }
+    );
+    doc.text(`N°${invoice.invoice_number}`, contentRightMargin, 50, {
       align: 'right',
     });
 
-    // Informations de l'émetteur (alignées à gauche)
+    // Informations de l'émetteur (ajustées pour le nouveau positionnement du logo)
     doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
-    doc.text(this.COMPANY_INFO.name, 10, 50);
+    doc.text(this.COMPANY_INFO.name, contentLeftMargin, 70);
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    doc.text(this.COMPANY_INFO.address, 10, 60);
-    doc.text(this.COMPANY_INFO.email, 10, 70);
+    doc.text(this.COMPANY_INFO.address, contentLeftMargin, 80);
+    doc.text(this.COMPANY_INFO.email, contentLeftMargin, 85);
 
-    // Informations du client (alignées à droite)
+    // Informations du client (ajustées pour maintenir l'alignement)
     doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
-    doc.text(invoice.client.name, pageWidth - 60, 50, { align: 'right' });
+    doc.text(invoice.client.name, contentRightMargin, 70, { align: 'right' });
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
     doc.text(
       `${invoice.client.street} ${invoice.client.number}`,
-      pageWidth - 60,
-      60,
+      contentRightMargin,
+      80,
       { align: 'right' }
     );
     doc.text(
       `${invoice.client.postalCode} ${invoice.client.city}`,
-      pageWidth - 60,
-      65,
+      contentRightMargin,
+      85,
       { align: 'right' }
     );
     doc.text(
       `TVA: ${invoice.client.company_vat_number || 'Non assujetti'}`,
-      pageWidth - 60,
-      70,
+      contentRightMargin,
+      90,
       { align: 'right' }
     );
 
-    // Titre de la facture
+    // Titre de la facture (aligné avec le bord gauche du tableau)
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
     const documentTitle =
       invoice.type === 'credit_note'
         ? `Note de crédit n°${invoice.invoice_number}`
         : `Facture n°${invoice.invoice_number}`;
-    doc.text(documentTitle, 10, 95);
+    doc.text(documentTitle, contentLeftMargin, 95);
 
-    // Date limite de paiement
+    // Date limite de paiement (alignée avec le bord gauche du tableau)
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
     doc.text(
@@ -360,28 +424,22 @@ export class PdfGeneratorService {
           ? this.formatDateBelgium(invoice.payment_deadline)
           : 'N/A'
       }`,
-      10,
+      contentLeftMargin,
       105
     );
 
     const startY = 115;
 
-    // Tableau des produits
-    const productHeaders = [
-      ['Description', 'Qté', 'Prix HT', 'Remise', 'Total HT'],
-    ];
-    const productData = invoice.products.map((product) => [
-      product.description,
-      product.quantity.toString(),
-      `${product.price_htva!.toFixed(2)}€`,
-      '0,00€',
-      `${(product.price_htva! * product.quantity).toFixed(2)}€`,
-    ]);
-
-    // Tableau des produits
+    // Tableau des produits avec marges alignées
     autoTable(doc, {
-      head: productHeaders,
-      body: productData,
+      head: [['Description', 'Qté', 'Prix HT', 'Remise', 'Total HT']],
+      body: invoice.products.map((product) => [
+        product.description,
+        product.quantity.toString(),
+        `${product.price_htva!.toFixed(2)}€`,
+        '0,00€',
+        `${(product.price_htva! * product.quantity).toFixed(2)}€`,
+      ]),
       startY: startY,
       styles: {
         fontSize: 9,
@@ -401,6 +459,7 @@ export class PdfGeneratorService {
         3: { cellWidth: 30, halign: 'right' },
         4: { cellWidth: 30, halign: 'right' },
       },
+      margin: { left: contentLeftMargin, right: contentLeftMargin },
     });
 
     // Position Y après le tableau

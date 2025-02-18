@@ -1,4 +1,4 @@
-import { DatePipe, JsonPipe, Location, NgClass } from '@angular/common';
+import { DatePipe, Location, NgClass } from '@angular/common';
 import {
   Component,
   computed,
@@ -87,7 +87,6 @@ import {
     HlmPaginationDirective,
     HlmPaginationContentDirective,
     HlmPaginationItemDirective,
-    JsonPipe,
   ],
   providers: [
     provideIcons({

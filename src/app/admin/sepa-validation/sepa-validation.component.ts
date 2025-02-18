@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   AfterViewInit,
   Component,
@@ -6,18 +7,11 @@ import {
   signal,
   computed,
 } from '@angular/core';
-import {
-  HlmCaptionComponent,
-  HlmTableComponent,
-  HlmTdComponent,
-  HlmThComponent,
-  HlmTrowComponent,
-} from '@spartan-ng/ui-table-helm';
 import { HlmButtonDirective } from '@spartan-ng/ui-button-helm';
 import { VirementSepaService } from '../../shared/services/virement-sepa.service';
 import { VirementSepaEntity } from '../../shared/entities/virement-sepa.entity';
 import { tap } from 'rxjs';
-import { DatePipe, JsonPipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { EuroFormatPipe } from '../../shared/pipes/euro-format.pipe';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { HlmIconComponent } from '@spartan-ng/ui-icon-helm';
@@ -51,21 +45,12 @@ import {
 import { provideIcons } from '@ng-icons/core';
 import { PdfViewerComponent } from '../../shared/components/pdf-viewer/pdf-viewer.component';
 
-import { HlmSeparatorDirective } from '@spartan-ng/ui-separator-helm';
-import { BrnSeparatorComponent } from '@spartan-ng/ui-separator-brain';
-
 @Component({
   selector: 'app-sepa-validation',
   standalone: true,
   imports: [
-    HlmCaptionComponent,
-    HlmTableComponent,
-    HlmTdComponent,
-    HlmThComponent,
-    HlmTrowComponent,
     HlmButtonDirective,
     HlmIconComponent,
-    JsonPipe,
     DatePipe,
     EuroFormatPipe,
     FormsModule,
@@ -78,8 +63,6 @@ import { BrnSeparatorComponent } from '@spartan-ng/ui-separator-brain';
     HlmDialogHeaderComponent,
     HlmDialogTitleDirective,
     PdfViewerComponent,
-    HlmSeparatorDirective,
-    BrnSeparatorComponent,
   ],
   providers: [
     provideIcons({

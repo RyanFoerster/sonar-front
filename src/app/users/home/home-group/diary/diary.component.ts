@@ -28,7 +28,6 @@ import { BrnSelectImports } from '@spartan-ng/ui-select-brain';
 import { HlmSelectImports } from '@spartan-ng/ui-select-helm';
 import { CalendarModule } from 'primeng/calendar';
 import {
-  HlmCaptionComponent,
   HlmTableComponent,
   HlmTdComponent,
   HlmThComponent,
@@ -44,22 +43,6 @@ import {
   lucideUndo2,
 } from '@ng-icons/lucide';
 import { HlmIconComponent } from '@spartan-ng/ui-icon-helm';
-import { BrnMenuTriggerDirective } from '@spartan-ng/ui-menu-brain';
-import {
-  HlmMenuComponent,
-  HlmMenuGroupComponent,
-  HlmMenuItemCheckboxDirective,
-  HlmMenuItemCheckComponent,
-  HlmMenuItemDirective,
-  HlmMenuItemIconDirective,
-  HlmMenuItemRadioComponent,
-  HlmMenuItemRadioDirective,
-  HlmMenuItemSubIndicatorComponent,
-  HlmMenuLabelComponent,
-  HlmMenuSeparatorComponent,
-  HlmMenuShortcutComponent,
-  HlmSubMenuComponent,
-} from '@spartan-ng/ui-menu-helm';
 import { ComptePrincipalService } from '../../../../shared/services/compte-principal.service';
 import { CompteGroupeService } from '../../../../shared/services/compte-groupe.service';
 import {
@@ -73,22 +56,10 @@ import { CompteGroupeEntity } from '../../../../shared/entities/compte-groupe.en
 import { EventEntity } from '../../../../shared/entities/event.entity';
 import { map, switchMap, take, tap } from 'rxjs';
 import { EventService } from '../../../../shared/services/event.service';
-import { BrnSeparatorComponent } from '@spartan-ng/ui-separator-brain';
-import { HlmSeparatorDirective } from '@spartan-ng/ui-separator-helm';
-import { DatePipe, JsonPipe, Location, NgClass } from '@angular/common';
+import { DatePipe, Location, NgClass } from '@angular/common';
 import { UserEntity } from '../../../../shared/entities/user.entity';
 import { AuthService } from '../../../../shared/services/auth.service';
 
-import {
-  BrnPopoverCloseDirective,
-  BrnPopoverComponent,
-  BrnPopoverContentDirective,
-  BrnPopoverTriggerDirective,
-} from '@spartan-ng/ui-popover-brain';
-import {
-  HlmPopoverCloseDirective,
-  HlmPopoverContentDirective,
-} from '@spartan-ng/ui-popover-helm';
 import { HlmBadgeDirective } from '@spartan-ng/ui-badge-helm';
 import {
   HlmAlertDescriptionDirective,
@@ -104,23 +75,8 @@ import { CommentDto } from '../../../../shared/dtos/comment.dto';
   selector: 'app-diary',
   standalone: true,
   imports: [
-    BrnMenuTriggerDirective,
-    HlmMenuComponent,
-    HlmSubMenuComponent,
-    HlmMenuItemDirective,
-    HlmMenuItemSubIndicatorComponent,
-    HlmMenuLabelComponent,
-    HlmMenuShortcutComponent,
-    HlmMenuSeparatorComponent,
-    HlmMenuItemIconDirective,
-    HlmMenuItemCheckComponent,
-    HlmMenuItemRadioComponent,
-    HlmMenuGroupComponent,
-    HlmMenuItemRadioDirective,
-    HlmMenuItemCheckboxDirective,
     HlmIconComponent,
     HlmCheckboxComponent,
-    HlmCaptionComponent,
     HlmTableComponent,
     HlmTdComponent,
     HlmThComponent,
@@ -139,17 +95,8 @@ import { CommentDto } from '../../../../shared/dtos/comment.dto';
     BrnDialogContentDirective,
     BrnDialogTriggerDirective,
     CalendarModule,
-    BrnSeparatorComponent,
-    HlmSeparatorDirective,
     NgClass,
     DatePipe,
-    JsonPipe,
-    BrnPopoverCloseDirective,
-    BrnPopoverComponent,
-    BrnPopoverContentDirective,
-    BrnPopoverTriggerDirective,
-    HlmPopoverCloseDirective,
-    HlmPopoverContentDirective,
     HlmBadgeDirective,
     ReactiveFormsModule,
     HlmAlertDescriptionDirective,
@@ -248,7 +195,7 @@ export class DiaryComponent {
                 );
               }),
               map((data) => {
-                let eventUser: EventEntity[] = [];
+                const eventUser: EventEntity[] = [];
                 for (const event of data) {
                   if (
                     event.participants?.find(

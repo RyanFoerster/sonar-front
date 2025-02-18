@@ -41,6 +41,20 @@ export class QuoteService {
   updateQuote(quoteId: string | null, quoteDto: QuoteDto, file: File | null) {
     const form = new FormData();
 
+    console.log('QuoteDto:', quoteDto);
+    console.log('File reçu:', file);
+
+    // Ajouter le fichier seulement s'il existe
+    if (file) {
+      console.log(
+        'Ajout du fichier au FormData:',
+        file.name,
+        file.type,
+        file.size
+      );
+      form.append('attachment', file, file.name);
+    }
+
     const cleanQuoteDto = {
       ...quoteDto,
       products_id: Array.isArray(quoteDto.products_id)
@@ -48,16 +62,23 @@ export class QuoteService {
         : [],
     };
 
-    // Ajouter le fichier seulement s'il existe
-    if (file) {
-      form.append('attachment', file);
-    }
-
     // Convertir les données du DTO en JSON string
     form.append('data', JSON.stringify(cleanQuoteDto));
 
-    return this.httpClient.patch<QuoteEntity>(
-      `${environment.API_URL}/quote/${quoteId}`,
+    // Log du contenu du FormData
+    console.log('Contenu du FormData:');
+    form.forEach((value, key) => {
+      if (value instanceof File) {
+        console.log(
+          `${key}: File[name=${value.name}, type=${value.type}, size=${value.size}]`
+        );
+      } else {
+        console.log(`${key}:`, value);
+      }
+    });
+
+    return this.httpClient.post<QuoteEntity>(
+      `${environment.API_URL}/quote/${quoteId}/update`,
       form
     );
   }

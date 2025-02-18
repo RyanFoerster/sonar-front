@@ -429,6 +429,7 @@ export class PdfGeneratorService {
     );
 
     const startY = 115;
+    console.log('invoice products', invoice);
 
     // Tableau des produits avec marges alignées
     autoTable(doc, {

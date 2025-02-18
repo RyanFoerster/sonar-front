@@ -10,15 +10,8 @@ import {
 import { UsersService } from '../../shared/services/users.service';
 import { CreateUserDto } from '../../shared/dtos/create-user.dto';
 import { tap } from 'rxjs';
-import {
-  HlmAlertDescriptionDirective,
-  HlmAlertDirective,
-  HlmAlertIconDirective,
-  HlmAlertTitleDirective,
-} from '@spartan-ng/ui-alert-helm';
 import { provideIcons } from '@ng-icons/core';
 import { lucideBox } from '@ng-icons/lucide';
-import { HlmIconComponent } from '@spartan-ng/ui-icon-helm';
 import { toast } from 'ngx-sonner';
 import { HlmToasterComponent } from '@spartan-ng/ui-sonner-helm';
 
@@ -28,12 +21,7 @@ import { HlmToasterComponent } from '@spartan-ng/ui-sonner-helm';
   imports: [
     HlmInputDirective,
     HlmButtonDirective,
-    HlmAlertDescriptionDirective,
-    HlmAlertDirective,
-    HlmAlertIconDirective,
-    HlmAlertTitleDirective,
     ReactiveFormsModule,
-    HlmIconComponent,
     HlmToasterComponent,
   ],
   providers: [provideIcons({ lucideBox })],
@@ -55,7 +43,7 @@ export class CreatingNewUsersComponent {
           Validators.required,
           Validators.minLength(8),
           Validators.pattern(
-            '^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$=%^&*-]).{8,}$',
+            '^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$=%^&*-]).{8,}$'
           ),
         ],
       ],
@@ -65,7 +53,7 @@ export class CreatingNewUsersComponent {
           Validators.required,
           Validators.minLength(8),
           Validators.pattern(
-            '^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$=%^&*-]).{8,}$',
+            '^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$=%^&*-]).{8,}$'
           ),
         ],
       ],
@@ -99,7 +87,7 @@ export class CreatingNewUsersComponent {
             } else {
               throw Error("Création de l'utilisateur échouée");
             }
-          }),
+          })
         )
         .subscribe();
     }

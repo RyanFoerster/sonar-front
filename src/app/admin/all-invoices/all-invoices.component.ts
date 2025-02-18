@@ -12,7 +12,6 @@ import { HlmSelectImports } from '@spartan-ng/ui-select-helm';
 import { BrnSeparatorComponent } from '@spartan-ng/ui-separator-brain';
 import { HlmSeparatorDirective } from '@spartan-ng/ui-separator-helm';
 import {
-  HlmCaptionComponent,
   HlmTableComponent,
   HlmTdComponent,
   HlmThComponent,
@@ -32,7 +31,6 @@ import { UsersService } from '../../shared/services/users.service';
     HlmTrowComponent,
     HlmThComponent,
     HlmTdComponent,
-    HlmCaptionComponent,
     EuroFormatPipe,
     DatePipe,
     BrnSeparatorComponent,
@@ -58,8 +56,6 @@ export class AllInvoicesComponent implements AfterViewInit {
       .sort((a, b) => b.id - a.id)
       .filter((invoice) => invoice.type === 'invoice');
   });
-
-  constructor() {}
 
   ngAfterViewInit(): void {
     this.usersService

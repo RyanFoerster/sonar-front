@@ -24,7 +24,7 @@
       class="w-full sm:w-auto rounded-full text-sm sm:text-base font-semibold py-1.5 sm:py-2 px-3 sm:px-4 md:px-6 bg-gray-sonar text-black flex justify-center items-center gap-2 hover:bg-gray-sonar/80 transition-colors"
       hlmBtn
     >
-      <hlm-icon size="sm" name="lucideFilePlus" class="hidden sm:block" />
+      <hlm-icon size="sm" name="lucideFilePlus" class="block" />
       Nouveau devis
     </a>
     @if (connectedUser()?.role === "ADMIN") {
@@ -34,7 +34,7 @@
       class="w-full sm:w-auto rounded-full text-sm sm:text-base font-semibold py-1.5 sm:py-2 px-3 sm:px-4 md:px-6 bg-gray-sonar text-black flex justify-center items-center gap-2 hover:bg-gray-sonar/80 transition-colors"
       hlmBtn
     >
-      <hlm-icon size="sm" name="lucideFileText" class="hidden sm:block" />
+      <hlm-icon size="sm" name="lucideFileText" class="block" />
       Nouvelle note de crédit
     </a>
     } }
@@ -47,7 +47,7 @@
 >
   <!-- Champ de recherche -->
   <div class="w-full flex gap-2 mb-2">
-    <div class="relative w-full sm:w-96">
+    <div class="relative w-full">
       <div
         class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none"
       >
@@ -63,38 +63,40 @@
     </div>
   </div>
 
-  <button
-    hlmBtn
-    [variant]="currentFilter === 'all' ? 'default' : 'outline'"
-    (click)="filterList('all')"
-    class="rounded-full text-sm sm:text-base py-1.5 px-2 sm:px-3 md:px-4"
-  >
-    Tout afficher
-  </button>
-  <button
-    hlmBtn
-    [variant]="currentFilter === 'quotes' ? 'default' : 'outline'"
-    (click)="filterList('quotes')"
-    class="rounded-full text-sm sm:text-base py-1.5 px-2 sm:px-3 md:px-4"
-  >
-    Devis en attente
-  </button>
-  <button
-    hlmBtn
-    [variant]="currentFilter === 'invoiced_quotes' ? 'default' : 'outline'"
-    (click)="filterList('invoiced_quotes')"
-    class="rounded-full text-sm sm:text-base py-1.5 px-2 sm:px-3 md:px-4"
-  >
-    Devis facturés
-  </button>
-  <button
-    hlmBtn
-    [variant]="currentFilter === 'credit-note' ? 'default' : 'outline'"
-    (click)="filterList('credit-note')"
-    class="rounded-full text-sm sm:text-base py-1.5 px-2 sm:px-3 md:px-4"
-  >
-    Notes de crédit
-  </button>
+  <div class="flex flex-wrap gap-2 w-full">
+    <button
+      hlmBtn
+      [variant]="currentFilter === 'all' ? 'default' : 'outline'"
+      (click)="filterList('all')"
+      class="flex-1 sm:flex-none rounded-full text-sm sm:text-base py-1.5 px-2 sm:px-3 md:px-4 min-w-[120px]"
+    >
+      Tout afficher
+    </button>
+    <button
+      hlmBtn
+      [variant]="currentFilter === 'quotes' ? 'default' : 'outline'"
+      (click)="filterList('quotes')"
+      class="flex-1 sm:flex-none rounded-full text-sm sm:text-base py-1.5 px-2 sm:px-3 md:px-4 min-w-[120px]"
+    >
+      Devis en attente
+    </button>
+    <button
+      hlmBtn
+      [variant]="currentFilter === 'invoiced_quotes' ? 'default' : 'outline'"
+      (click)="filterList('invoiced_quotes')"
+      class="flex-1 sm:flex-none rounded-full text-sm sm:text-base py-1.5 px-2 sm:px-3 md:px-4 min-w-[120px]"
+    >
+      Devis facturés
+    </button>
+    <button
+      hlmBtn
+      [variant]="currentFilter === 'credit-note' ? 'default' : 'outline'"
+      (click)="filterList('credit-note')"
+      class="flex-1 sm:flex-none rounded-full text-sm sm:text-base py-1.5 px-2 sm:px-3 md:px-4 min-w-[120px]"
+    >
+      Notes de crédit
+    </button>
+  </div>
 </div>
 
 <!-- Tableau -->
@@ -114,13 +116,13 @@
         >
           <th
             scope="col"
-            class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4 font-medium whitespace-nowrap"
+            class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4 font-medium whitespace-nowrap w-24"
           >
             N°
           </th>
           <th
             scope="col"
-            class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4 font-medium whitespace-nowrap"
+            class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4 font-medium whitespace-nowrap w-32"
           >
             Date
           </th>
@@ -132,19 +134,19 @@
           </th>
           <th
             scope="col"
-            class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4 font-medium whitespace-nowrap"
+            class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4 font-medium whitespace-nowrap w-32"
           >
             Type
           </th>
           <th
             scope="col"
-            class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4 font-medium whitespace-nowrap"
+            class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4 font-medium whitespace-nowrap w-28"
           >
             Total
           </th>
           <th
             scope="col"
-            class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4 font-medium whitespace-nowrap"
+            class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4 font-medium whitespace-nowrap w-40"
           >
             Acceptation
           </th>
@@ -233,15 +235,22 @@
           <td
             class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4 flex lg:table-cell items-center justify-between lg:justify-start"
           >
-            <span class="font-medium lg:font-normal lg:hidden">Statut :</span>
+            <span class="font-medium lg:font-normal lg:hidden">Type :</span>
             <span
-              class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium"
+              class="inline-flex items-center justify-center rounded-full px-3 py-1 text-xs font-medium min-w-[140px] lg:min-w-[120px] text-center"
               [ngClass]="{
                 'bg-blue-50 text-blue-700': !doc.invoice,
-                'bg-green-50 text-green-700': doc.invoice
+                'bg-green-50 text-green-700': doc.invoice,
+                'bg-red-50 text-red-700': doc.documentType === 'credit-note'
               }"
             >
-              {{ doc.invoice ? "Devis facturé" : "Devis en attente" }}
+              {{
+                doc.documentType === "credit-note"
+                  ? "Note de crédit"
+                  : doc.invoice
+                  ? "Devis facturé"
+                  : "Devis en attente"
+              }}
             </span>
           </td>
           <td
@@ -307,13 +316,13 @@
 
           <td class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4">
             <div
-              class="flex flex-col lg:flex-row items-stretch lg:items-center justify-end gap-2 lg:gap-3"
+              class="flex flex-col lg:flex-row items-stretch lg:items-center justify-end gap-2 lg:gap-1.5"
             >
               <button
                 hlmBtn
                 variant="ghost"
                 size="sm"
-                class="flex items-center justify-center gap-2 w-full lg:w-auto whitespace-nowrap"
+                class="flex items-center justify-center gap-1.5 w-full lg:w-auto text-xs whitespace-nowrap px-2"
                 [ngClass]="{ 'opacity-50 cursor-not-allowed': doc.invoice }"
                 (click)="generateQuotePDF(doc)"
                 [disabled]="doc.invoice"
@@ -326,7 +335,7 @@
                 hlmBtn
                 variant="ghost"
                 size="sm"
-                class="flex items-center justify-center gap-2 w-full lg:w-auto whitespace-nowrap"
+                class="flex items-center justify-center gap-1.5 w-full lg:w-auto text-xs whitespace-nowrap px-2"
                 (click)="generateInvoicePDF(doc.invoice)"
               >
                 <hlm-icon size="sm" name="lucideFileDown" />
@@ -337,7 +346,7 @@
                 hlmBtn
                 variant="ghost"
                 size="sm"
-                class="flex items-center justify-center gap-2 w-full lg:w-auto whitespace-nowrap"
+                class="flex items-center justify-center gap-1.5 w-full lg:w-auto text-xs whitespace-nowrap px-2"
                 routerLink="new-credit-note"
                 [queryParams]="{
                   typeOfProjet: typeOfProjet(),
@@ -352,7 +361,7 @@
                 hlmBtn
                 variant="ghost"
                 size="sm"
-                class="flex items-center justify-center gap-2 w-full lg:w-auto whitespace-nowrap"
+                class="flex items-center justify-center gap-1.5 w-full lg:w-auto text-xs whitespace-nowrap px-2"
                 (click)="loadCreditNote(doc.invoice.linkedInvoiceId)"
               >
                 <hlm-icon size="sm" name="lucideFileDown" />
@@ -363,7 +372,7 @@
                 hlmBtn
                 variant="ghost"
                 size="sm"
-                class="flex items-center justify-center gap-2 w-full lg:w-auto whitespace-nowrap"
+                class="flex items-center justify-center gap-1.5 w-full lg:w-auto text-xs whitespace-nowrap px-2"
                 routerLink="new-quote"
                 [queryParams]="{
                   typeOfProjet: typeOfProjet(),
@@ -380,7 +389,7 @@
                   hlmBtn
                   variant="default"
                   size="sm"
-                  class="flex items-center justify-center gap-2 w-full lg:w-auto whitespace-nowrap"
+                  class="flex items-center justify-center gap-1.5 w-full lg:w-auto text-xs whitespace-nowrap px-2"
                   brnAlertDialogTrigger
                 >
                   <hlm-icon size="sm" name="lucideFileText" />
@@ -451,9 +460,16 @@
           >
             <span class="font-medium lg:font-normal lg:hidden">Type :</span>
             <span
-              class="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-red-100 text-red-700"
+              class="inline-flex items-center justify-center rounded-full px-3 py-1 text-xs font-medium min-w-[140px] lg:min-w-[120px] text-center"
+              [ngClass]="{
+                'bg-red-50 text-red-700': doc.documentType === 'credit-note'
+              }"
             >
-              Note de crédit
+              {{
+                doc.documentType === "credit-note"
+                  ? "Note de crédit"
+                  : "Non applicable"
+              }}
             </span>
           </td>
           <td
@@ -478,7 +494,7 @@
                 hlmBtn
                 variant="ghost"
                 size="sm"
-                class="flex items-center justify-center gap-2 w-full lg:w-auto whitespace-nowrap hover:text-red-700 hover:bg-transparent"
+                class="flex items-center justify-center gap-2 w-full lg:w-auto whitespace-nowrap"
                 (click)="generateCreditNotePdf(doc)"
               >
                 <hlm-icon size="sm" name="lucideFileDown" />

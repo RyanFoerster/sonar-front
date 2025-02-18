@@ -17,12 +17,6 @@ import {
   HlmMenuItemRadioDirective,
 } from '@spartan-ng/ui-menu-helm';
 
-import {
-  HlmAlertDescriptionDirective,
-  HlmAlertDirective,
-  HlmAlertTitleDirective,
-} from '@spartan-ng/ui-alert-helm';
-
 import { lucideBell } from '@ng-icons/lucide';
 import { provideIcons } from '@spartan-ng/ui-icon-helm';
 
@@ -50,9 +44,6 @@ import { PwaService } from '../shared/services/pwa.service';
     BrnMenuTriggerDirective,
     HeaderMobileComponent,
     NotificationsComponent,
-    HlmAlertDescriptionDirective,
-    HlmAlertDirective,
-    HlmAlertTitleDirective,
   ],
   providers: [provideIcons({ lucideBell })],
   templateUrl: './header.component.html',

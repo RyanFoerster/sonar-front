@@ -359,17 +359,14 @@
           [solde]="projet.solde"
           typeOfProjet="GROUP"
         />
-        } } }
-
-        <!-- @else { @for (projet of
-        groupAccounts(); track $index) {
+        } } } @else { @for (projet of filteredGroupAccounts(); track $index) {
         <app-account-component
-          [id]="projet.group_account.id"
-          [name]="projet.group_account.username"
-          [solde]="projet.group_account.solde"
+          [id]="projet.id"
+          [name]="projet.username"
+          [solde]="projet.solde"
           typeOfProjet="GROUP"
         />
-        } } -->
+        } }
       </div>
     </div>
   </div>

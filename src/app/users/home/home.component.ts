@@ -71,7 +71,7 @@ export class HomeComponent {
   });
 
   private readonly userConnected = signal<UserEntity | null>(null);
-  private readonly groupAccounts = signal<CompteGroupeEntity[] | null>(null);
+  protected readonly groupAccounts = signal<CompteGroupeEntity[] | null>(null);
   private readonly comptePrincipal = signal<PrincipalAccountEntity[] | null>(
     null
   );
@@ -83,6 +83,7 @@ export class HomeComponent {
   readonly filteredGroupAccounts = computed(() => {
     const accounts = this.groupAccounts();
     const term = this.searchTerm().toLowerCase().trim();
+    console.log(term);
 
     if (!accounts || !term) return accounts;
 
@@ -137,6 +138,8 @@ export class HomeComponent {
           if (this.isAdmin()) {
             this.isLoadingAccounts.set(true);
             this.loadAdminData();
+          } else {
+            this.loadUserData();
           }
         })
       )
@@ -158,6 +161,16 @@ export class HomeComponent {
           this.comptePrincipal.set(data.sort((a, b) => a.id - b.id))
         ),
         tap(() => this.isLoadingAccounts.set(false))
+      )
+      .subscribe();
+  }
+
+  private loadUserData(): void {
+    this.groupAccountService
+      .getGroupByUser(this.userConnected()?.id || 0)
+      .pipe(
+        tap((data) => this.groupAccounts.set(data.sort((a, b) => a.id - b.id))),
+        tap(() => console.log(this.groupAccounts()))
       )
       .subscribe();
   }

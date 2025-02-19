@@ -2,9 +2,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { CompteGroupeEntity } from '../entities/compte-groupe.entity';
 import { environment } from '../../../environments/environment';
-import { PrincipalAccountEntity } from '../entities/principal-account.entity';
 import { GroupProjectDto } from '../dtos/group-project.dto';
-import { UpdateUserSecondaryAccountDto } from '../dtos/update-user-secondary-account.dto';
 import { UserEntity } from '../entities/user.entity';
 import { Observable } from 'rxjs';
 import { AuthService } from './auth.service';
@@ -15,8 +13,6 @@ import { AuthService } from './auth.service';
 export class CompteGroupeService {
   httpClient: HttpClient = inject(HttpClient);
   private authService = inject(AuthService);
-
-  constructor() {}
 
   private getHeaders(): HttpHeaders {
     const token = this.authService.getToken();
@@ -38,6 +34,13 @@ export class CompteGroupeService {
   getGroupById(id?: number) {
     return this.httpClient.get<CompteGroupeEntity>(
       `${environment.API_URL}/compte-groupe/${id}`,
+      { headers: this.getHeaders() }
+    );
+  }
+
+  getGroupByUser(id: number) {
+    return this.httpClient.get<CompteGroupeEntity[]>(
+      `${environment.API_URL}/compte-groupe/user/${id}`,
       { headers: this.getHeaders() }
     );
   }

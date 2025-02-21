@@ -2,6 +2,13 @@
 <div
   class="lg:hidden bg-gray-sonar p-4 sm:p-6 mx-4 sm:mx-10 my-6 sm:my-10 rounded-2xl shadow-lg"
 >
+  <!-- Création d'une bannière pour mobile afin de prévenir que ce week-end la plateforme pourrait être plus lente voir ne plus fonctionner pour des raisons de mise a jour-->
+  <div class="bg-red-500 p-4 rounded-2xl mb-4">
+    <p class="text-white text-center">
+      Ce week-end, la plateforme pourrait être plus lente voir ne plus
+      fonctionner pour des raisons de mise a jour.
+    </p>
+  </div>
   <div hlmAccordion>
     <!-- Section Admin -->
     @if (getUserConnected()()?.role === "ADMIN") {
@@ -190,6 +197,13 @@
 <div
   class="hidden lg:block flex-col bg-gray-sonar h-auto p-4 sm:p-6 mx-4 sm:mx-10 lg:mx-28 my-6 rounded-2xl shadow-md"
 >
+  <!-- Création d'une bannière afin de prévenir que ce week-end la plateforme pourrait être plus lente voir ne plus fonctionner pour des raisons de mise a jour-->
+  <div class="bg-red-500 p-4 rounded-2xl mb-4">
+    <p class="text-white text-center">
+      Ce week-end, la plateforme pourrait être plus lente voir ne plus
+      fonctionner pour des raisons de mise a jour.
+    </p>
+  </div>
   <div class="flex flex-col gap-6 lg:gap-10">
     <!-- Section Admin Bureau -->
     @if (isAdmin()) {

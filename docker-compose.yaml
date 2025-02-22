@@ -3,13 +3,26 @@ services:
   sonar-front:
     image: dimagin/sonar-front:latest
     container_name: sonar-front
-    ports:
-      - "${SONAR_FRONTEND_PORT}:80"
     restart: unless-stopped
     networks:
       - sonar-network
+      - traefik-network
     env_file:
       - .env
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.sonar-front.entrypoints=web
+      - traefik.http.routers.sonar-front.rule=Host(`sonartists.be` || `www.sonartists.be`)"
+      - traefik.http.middlewares.sonar-front-redirect.redirectscheme.scheme=https
+      - "traefik.http.middlewares.sslheaders.headers.customresponseheaders.X-Forwarded-Proto=https"
+      - "traefik.http.routers.sonar-front.middlewares=traefik-https-redirect"
+      - "traefik.http.routers.sonar-front-secure.entrypoints=websecure"
+      - "traefik.http.routers.sonar-front-secure.rule=Host(`sonartists.be` || `www.sonartists.be`)"
+      - "traefik.http.routers.sonar-front-secure.tls=true"
+      - "traefik.http.routers.sonar-front-secure.tls.certresolver=cloudflare"
+      - "traefik.http.routers.sonar-front-secure.tls.domains[0].main=sonartists.be"
+      - "traefik.http.routers.sonar-front-secure.tls.domains[0].sans=*.sonartists.be"
+      - "traefik.http.routers.sonar-front-secure.service=api@internal"
 
 networks:
   sonar-network:

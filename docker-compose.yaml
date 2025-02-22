@@ -11,11 +11,6 @@ services:
       - .env
     labels:
       - traefik.enable=true
-      - traefik.http.routers.sonar-front.entrypoints=web
-      - traefik.http.routers.sonar-front.rule=Host(`sonarartists.be`) || Host(`www.sonarartists.be`)
-      - traefik.http.middlewares.sonar-https-redirect.redirectscheme.scheme=https
-      - traefik.http.middlewares.sslheaders.headers.customresponseheaders.X-Forwarded-Proto=https
-      - traefik.http.routers.sonar-front.middlewares=sonar-https-redirect
       - traefik.http.routers.sonar-front-secure.entrypoints=websecure
       - traefik.http.routers.sonar-front-secure.rule=Host(`sonarartists.be`) || Host(`www.sonarartists.be`)
       - traefik.http.routers.sonar-front-secure.tls=true

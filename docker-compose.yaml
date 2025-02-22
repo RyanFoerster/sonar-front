@@ -27,3 +27,5 @@ services:
 networks:
   sonar-network:
     driver: bridge
+  traefik-network:
+    external: true

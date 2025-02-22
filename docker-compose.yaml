@@ -12,17 +12,17 @@ services:
     labels:
       - traefik.enable=true
       - traefik.http.routers.sonar-front.entrypoints=web
-      - traefik.http.routers.sonar-front.rule=Host(`sonarartists.be` || `www.sonarartists.be`)"
+      - traefik.http.routers.sonar-front.rule=Host(`sonarartists.be`) || Host(`www.sonarartists.be`)
       - traefik.http.middlewares.sonar-front-redirect.redirectscheme.scheme=https
-      - "traefik.http.middlewares.sslheaders.headers.customresponseheaders.X-Forwarded-Proto=https"
-      - "traefik.http.routers.sonar-front.middlewares=traefik-https-redirect"
-      - "traefik.http.routers.sonar-front-secure.entrypoints=websecure"
-      - "traefik.http.routers.sonar-front-secure.rule=Host(`sonarartists.be` || `www.sonarartists.be`)"
-      - "traefik.http.routers.sonar-front-secure.tls=true"
-      - "traefik.http.routers.sonar-front-secure.tls.certresolver=cloudflare"
-      - "traefik.http.routers.sonar-front-secure.tls.domains[0].main=sonarartists.be"
-      - "traefik.http.routers.sonar-front-secure.tls.domains[0].sans=*.sonarartists.be"
-      - "traefik.http.routers.sonar-front-secure.service=api@internal"
+      - traefik.http.middlewares.sslheaders.headers.customresponseheaders.X-Forwarded-Proto=https
+      - traefik.http.routers.sonar-front.middlewares=traefik-https-redirect
+      - traefik.http.routers.sonar-front-secure.entrypoints=websecure
+      - traefik.http.routers.sonar-front-secure.rule=Host(`sonarartists.be`) || Host(`www.sonarartists.be`)
+      - traefik.http.routers.sonar-front-secure.tls=true
+      - traefik.http.routers.sonar-front-secure.tls.certresolver=cloudflare
+      - traefik.http.routers.sonar-front-secure.tls.domains[0].main=sonarartists.be
+      - traefik.http.routers.sonar-front-secure.tls.domains[0].sans=*.sonarartists.be
+      - traefik.http.routers.sonar-front-secure.service=api@internal
 
 networks:
   sonar-network:

@@ -14,6 +14,7 @@ services:
       - traefik.http.routers.sonar-front-secure.entrypoints=websecure
       - traefik.http.routers.sonar-front-secure.rule=Host(`sonarartists.be`) || Host(`www.sonarartists.be`)
       - traefik.http.routers.sonar-front-secure.tls=true
+      - traefik.http.middlewares.sonar-redirect.redirectregex.replacement=https://sonarartists.be/$${1}
       - traefik.http.routers.sonar-front-secure.tls.certresolver=cloudflare
       - traefik.http.routers.sonar-front-secure.tls.domains[0].main=sonarartists.be
       - traefik.http.routers.sonar-front-secure.tls.domains[0].sans=*.sonarartists.be

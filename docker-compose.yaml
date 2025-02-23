@@ -5,7 +5,6 @@ services:
     container_name: sonar-front
     restart: unless-stopped
     networks:
-      - sonar-network
       - traefik-network
     env_file:
       - .env
@@ -30,7 +29,5 @@ services:
       - traefik.http.middlewares.sonar-cors.headers.addvaryheader=true
 
 networks:
-  sonar-network:
-    driver: bridge
   traefik-network:
     external: true

@@ -15,7 +15,7 @@ services:
       - traefik.http.routers.sonar.rule=Host(`${DOMAIN}`)
       - traefik.http.middlewares.sonar-https-redirect.redirectscheme.scheme=https
       - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https
-      - traefik.http.routers.sonar.middlewares=sonar-https-redirect,sslheader
+      - traefik.http.routers.sonar.middlewares=sonar-https-redirect
       - traefik.http.routers.sonar-secure.entrypoints=websecure
       - traefik.http.routers.sonar-secure.rule=Host(`${DOMAIN}`)
       - traefik.http.routers.sonar-secure.tls=true

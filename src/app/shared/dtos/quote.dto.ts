@@ -19,7 +19,7 @@ export interface QuoteDto {
 
   comment: string;
 
-  attachment_key?: string;
+  attachment_key?: string[];
 
   created_by?: string;
 

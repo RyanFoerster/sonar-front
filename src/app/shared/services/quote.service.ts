@@ -11,12 +11,14 @@ import { tap, map } from 'rxjs/operators';
 export class QuoteService {
   httpClient: HttpClient = inject(HttpClient);
 
-  createQuote(quoteDto: QuoteDto, file: File | null) {
+  createQuote(quoteDto: QuoteDto, files: File[]) {
     const form = new FormData();
 
-    // Ajouter le fichier seulement s'il existe
-    if (file) {
-      form.append('attachment', file);
+    // Ajouter les fichiers s'ils existent
+    if (files && files.length > 0) {
+      files.forEach((file) => {
+        form.append('attachments', file);
+      });
     }
 
     // Nettoyer et préparer les données
@@ -30,30 +32,17 @@ export class QuoteService {
     // Convertir les données du DTO en JSON string
     form.append('data', JSON.stringify(cleanQuoteDto));
 
-    // Log pour debug
-    console.log('FormData content:');
-    form.forEach((value, key) => {
-      console.log(`${key}:`, value);
-    });
-
     return this.httpClient.post<boolean>(`${environment.API_URL}/quote`, form);
   }
 
-  updateQuote(quoteId: string | null, quoteDto: QuoteDto, file: File | null) {
+  updateQuote(quoteId: string | null, quoteDto: QuoteDto, files: File[]) {
     const form = new FormData();
 
-    console.log('QuoteDto:', quoteDto);
-    console.log('File reçu:', file);
-
-    // Ajouter le fichier seulement s'il existe
-    if (file) {
-      console.log(
-        'Ajout du fichier au FormData:',
-        file.name,
-        file.type,
-        file.size
-      );
-      form.append('attachment', file, file.name);
+    // Ajouter les fichiers s'ils existent
+    if (files && files.length > 0) {
+      files.forEach((file) => {
+        form.append('attachments', file);
+      });
     }
 
     const cleanQuoteDto = {
@@ -65,18 +54,6 @@ export class QuoteService {
 
     // Convertir les données du DTO en JSON string
     form.append('data', JSON.stringify(cleanQuoteDto));
-
-    // Log du contenu du FormData
-    console.log('Contenu du FormData:');
-    form.forEach((value, key) => {
-      if (value instanceof File) {
-        console.log(
-          `${key}: File[name=${value.name}, type=${value.type}, size=${value.size}]`
-        );
-      } else {
-        console.log(`${key}:`, value);
-      }
-    });
 
     return this.httpClient.post<QuoteEntity>(
       `${environment.API_URL}/quote/${quoteId}/update`,

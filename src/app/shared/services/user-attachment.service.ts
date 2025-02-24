@@ -52,8 +52,16 @@ export class ProjectAttachmentService {
     return this.http.get<ProjectAttachment[]>(this.apiUrl, { params });
   }
 
-  deleteAttachment(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  deleteAttachment(
+    id: number,
+    projectType: ProjectType,
+    projectId: number
+  ): Observable<void> {
+    const params = new HttpParams()
+      .set('projectType', projectType)
+      .set('projectId', projectId.toString());
+
+    return this.http.delete<void>(`${this.apiUrl}/${id}`, { params });
   }
 
   previewAttachment(attachment: ProjectAttachment): void {
@@ -64,5 +72,20 @@ export class ProjectAttachmentService {
 
   getAttachment(id: number): Observable<ProjectAttachment> {
     return this.http.get<ProjectAttachment>(`${this.apiUrl}/${id}`);
+  }
+
+  downloadAttachment(
+    id: number,
+    projectType: ProjectType,
+    projectId: number
+  ): Observable<Blob> {
+    const params = new HttpParams()
+      .set('projectType', projectType)
+      .set('projectId', projectId.toString());
+
+    return this.http.get(`${this.apiUrl}/${id}/download`, {
+      params,
+      responseType: 'blob',
+    });
   }
 }

@@ -19,8 +19,8 @@ export interface QuoteEntity {
   group_acceptance: 'accepted' | 'refused' | 'pending';
   order_giver_acceptance: 'accepted' | 'refused' | 'pending';
   comment: string;
-  attachment_key: string;
-  attachment_url: string;
+  attachment_key: string[];
+  attachment_url: string[];
   created_by: string;
   created_by_mail: string;
   created_by_phone: string;

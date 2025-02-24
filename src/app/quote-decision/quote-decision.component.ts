@@ -281,6 +281,28 @@ export class QuoteDecisionComponent implements AfterViewInit {
     }
   }
 
+  getAttachments(): { url: string; name: string }[] {
+    if (!this.quoteFromDB) return [];
+
+    const attachments: { url: string; name: string }[] = [];
+
+    console.log(this.quoteFromDB);
+
+    if (
+      this.quoteFromDB.attachment_url &&
+      this.quoteFromDB.attachment_url.length > 0
+    ) {
+      this.quoteFromDB.attachment_url.forEach((url) => {
+        attachments.push({
+          url: url,
+          name: this.getAttachmentFileName(url),
+        });
+      });
+    }
+
+    return attachments;
+  }
+
   getAttachmentFileName(url: string): string {
     try {
       const decodedUrl = decodeURIComponent(url);
@@ -304,21 +326,6 @@ export class QuoteDecisionComponent implements AfterViewInit {
     }
   }
 
-  getAttachments(): { url: string; name: string }[] {
-    if (!this.quoteFromDB) return [];
-
-    const attachments: { url: string; name: string }[] = [];
-
-    if (this.quoteFromDB.attachment_url) {
-      attachments.push({
-        url: this.quoteFromDB.attachment_url,
-        name: this.getAttachmentFileName(this.quoteFromDB.attachment_url),
-      });
-    }
-
-    return attachments;
-  }
-
   async downloadAttachment(url: string) {
     if (!url) {
       console.error("URL d'attachement manquante");
@@ -334,7 +341,6 @@ export class QuoteDecisionComponent implements AfterViewInit {
     try {
       console.log('Téléchargement avec la clé S3:', s3Key);
 
-      // On utilise le service pour récupérer le fichier via le backend
       const response = await lastValueFrom(
         this.quoteService.downloadAttachment(s3Key)
       );

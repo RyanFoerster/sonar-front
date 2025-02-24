@@ -1,22 +1,36 @@
-import { DatePipe, Location, NgClass } from '@angular/common';
 import {
-  AfterViewInit,
   Component,
-  computed,
-  inject,
-  input,
-  signal,
+  AfterViewInit,
   ElementRef,
   ViewChild,
+  inject,
+  signal,
+  computed,
+  input,
 } from '@angular/core';
 import {
   FormBuilder,
+  FormControl,
   FormGroup,
   FormsModule,
   ReactiveFormsModule,
   Validators,
-  FormControl,
 } from '@angular/forms';
+import { Location, DatePipe, NgClass } from '@angular/common';
+import { take, tap } from 'rxjs';
+import { toast } from 'ngx-sonner';
+import { ClientEntity } from '../../../../../shared/entities/client.entity';
+import { ProductEntity } from '../../../../../shared/entities/product.entity';
+import { QuoteEntity } from '../../../../../shared/entities/quote.entity';
+import { ClientService } from '../../../../../shared/services/client.service';
+import { ProductService } from '../../../../../shared/services/product.service';
+import { QuoteService } from '../../../../../shared/services/quote.service';
+import { AuthService } from '../../../../../shared/services/auth.service';
+import {
+  ProjectAttachment,
+  ProjectAttachmentService,
+} from '../../../../../shared/services/user-attachment.service';
+import { UserEntity } from '../../../../../shared/entities/user.entity';
 import { provideIcons } from '@ng-icons/core';
 import {
   lucideAlertCircle,
@@ -52,28 +66,13 @@ import { HlmIconComponent } from '@spartan-ng/ui-icon-helm';
 import { HlmInputDirective } from '@spartan-ng/ui-input-helm';
 import { HlmLabelDirective } from '@spartan-ng/ui-label-helm';
 
-import { toast } from 'ngx-sonner';
 import { HlmToasterComponent } from '@spartan-ng/ui-sonner-helm';
 
 import { BrnSelectImports } from '@spartan-ng/ui-select-brain';
 import { HlmSelectImports } from '@spartan-ng/ui-select-helm';
 
-import { take, tap, catchError, throwError } from 'rxjs';
-import { QuoteDto } from '../../../../../shared/dtos/quote.dto';
-import { ClientEntity } from '../../../../../shared/entities/client.entity';
-import { ProductEntity } from '../../../../../shared/entities/product.entity';
-import { QuoteEntity } from '../../../../../shared/entities/quote.entity';
-import { UserEntity } from '../../../../../shared/entities/user.entity';
 import { EuroFormatPipe } from '../../../../../shared/pipes/euro-format.pipe';
-import { AuthService } from '../../../../../shared/services/auth.service';
-import { ClientService } from '../../../../../shared/services/client.service';
-import { ProductService } from '../../../../../shared/services/product.service';
-import { QuoteService } from '../../../../../shared/services/quote.service';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
-import {
-  ProjectAttachmentService,
-  ProjectAttachment,
-} from '../../../../../shared/services/user-attachment.service';
 
 @Component({
   selector: 'app-new-quote',
@@ -227,13 +226,15 @@ export class NewQuoteComponent implements AfterViewInit {
 
   protected modifiedProducts = signal<ProductEntity[]>([]);
 
-  protected file = signal<File | null>(null);
+  protected file = signal<File[]>([]);
+  protected selectedFiles: File[] = [];
 
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
   isDragging = false;
   selectedFile: File | null = null;
 
   protected userAttachments = signal<ProjectAttachment[]>([]);
+  protected selectedAttachments = signal<ProjectAttachment[]>([]);
   protected selectedAttachment = signal<ProjectAttachment | null>(null);
   protected showAttachmentModal = signal(false);
 
@@ -313,58 +314,47 @@ export class NewQuoteComponent implements AfterViewInit {
     }
 
     if (this.updatedQuoteId()) {
+      this.isLoadingQuote.set(true);
       this.quoteService
-        .getQuote(this.updatedQuoteId()!)
+        .getQuote(this.updatedQuoteId() || '')
         .pipe(
+          take(1),
           tap((data) => {
             this.updatedQuote.set(data);
+            this.client.set(data.client);
+            this.products.set(data.products);
             this.isTvaIncluded.set(data.isVatIncluded);
-            this.createQuoteForm.patchValue({
-              quote_date: this.formatDate(data.quote_date),
-              service_date: this.formatDate(data.service_date),
-              payment_deadline: data.payment_deadline,
-              validation_deadline: this.formatDate(data.validation_deadline),
-              comment: data.comment,
-              client_id: data.client.id,
-            });
-
-            console.log('Données complètes du devis:', data);
 
             // Gestion du fichier attaché
-            if (data.attachment_url) {
-              const s3Key = this.extractS3KeyFromUrl(data.attachment_url);
+            if (data.attachment_url && data.attachment_url.length > 0) {
+              const s3Key = this.extractS3KeyFromUrl(data.attachment_url[0]);
               console.log('Données du fichier reçues:', {
                 url: data.attachment_url,
                 extracted_key: s3Key,
               });
-              // Créer un objet UserAttachment pour le fichier existant
+
               const existingAttachment: ProjectAttachment = {
                 id: -1, // ID temporaire pour le fichier existant
-                name: this.extractFileNameFromUrl(data.attachment_url),
-                url: data.attachment_url,
+                name: this.extractFileNameFromUrl(data.attachment_url[0]),
+                url: data.attachment_url[0],
                 key: s3Key,
                 type: 'application/pdf',
                 created_at: new Date(),
+                description: '',
               };
               this.selectedAttachment.set(existingAttachment);
             }
 
-            this.products.set(
-              data.products.map((product) => {
-                return {
-                  ...product,
-                };
-              })
-            );
+            this.createQuoteForm.patchValue({
+              quote_date: data.quote_date,
+              service_date: data.service_date,
+              payment_deadline: data.payment_deadline,
+              validation_deadline: data.validation_deadline,
+              comment: data.comment,
+            });
 
-            this.client.set(data.client);
-            this.currentClient.set(data.client);
-            this.tva21.set(this.setTva21(this.products()));
-            this.tva6.set(this.setTva6(this.products()));
-            this.totalHtva.set(
-              this.products().reduce((a, b) => a + b.price_htva!, 0)
-            );
-            this.total.set(this.totalHtva() + this.tva21() + this.tva6());
+            this.calculateTotals();
+            this.isLoadingQuote.set(false);
           })
         )
         .subscribe();
@@ -896,60 +886,61 @@ export class NewQuoteComponent implements AfterViewInit {
     return baseAmount * 0.06;
   }
 
-  createQuote() {
-    // Vérification détaillée de chaque champ du formulaire
-    // const formControls = this.createQuoteForm.controls;
-    // Object.keys(formControls).forEach((key) => {
-    //   const control = formControls[key];
-    //   console.log(`Champ ${key}:`, {
-    //     valeur: control.value,
-    //     valide: control.valid,
-    //     erreurs: control.errors,
-    //     pristine: control.pristine,
-    //     touched: control.touched,
-    //   });
-    // });
+  private getAllAttachmentKeys(): string[] {
+    const keys: string[] = [];
 
-    if (
-      !this.createQuoteForm.valid ||
-      !this.client() ||
-      this.products().length === 0
-    ) {
-      console.log('Validation échouée');
-      return;
+    // Ajouter les clés des pièces jointes sélectionnées
+    this.selectedAttachments().forEach((attachment) => {
+      if (attachment.key) {
+        keys.push(attachment.key);
+      }
+    });
+
+    // Ajouter les clés des fichiers uploadés
+    if (this.selectedFiles.length > 0) {
+      this.selectedFiles.forEach((file) => {
+        const key = `uploads/${file.name}`;
+        keys.push(key);
+      });
     }
 
-    const quote: QuoteDto = {
-      ...this.createQuoteForm.value,
-      products_id: this.products().map((product) => product.id!),
-      client_id: this.client()!.id,
-      [this.typeOfProjet() === 'PRINCIPAL'
-        ? 'main_account_id'
-        : 'group_account_id']: +this.id()!,
-      isVatIncluded: this.isTvaIncluded(),
-      attachment_key: this.selectedAttachment()?.key,
-      created_by:
-        this.connectedUser()?.firstName + ' ' + this.connectedUser()?.name,
-      created_by_mail: this.connectedUser()?.email,
-      created_by_phone: this.connectedUser()?.telephone,
-    };
+    return keys;
+  }
 
-    this.isLoadingQuote.set(true);
+  createQuote() {
+    if (this.createQuoteForm.valid) {
+      const quote = {
+        ...this.createQuoteForm.value,
+        products_id: this.products().map((product) => product.id!),
+        client_id: this.client()!.id,
+        isVatIncluded: this.isTvaIncluded(),
+        total: this.total(),
+        tva21: this.tva21(),
+        tva6: this.tva6(),
+        totalHtva: this.totalHtva(),
+        attachment_keys: this.getAllAttachmentKeys(),
+      };
 
-    this.quoteService
-      .createQuote(quote, this.file())
-      .pipe(
-        take(1),
-        tap(() => {
-          this.isLoadingQuote.set(false);
-          this.goBack();
-        }),
-        catchError((error) => {
-          console.error('Erreur lors de la création du devis:', error);
-          return throwError(() => error);
-        })
-      )
-      .subscribe();
+      // Ajouter l'ID du compte en fonction du type de projet
+      if (this.typeOfProjet() === 'PRINCIPAL') {
+        quote.main_account_id = this.id();
+      } else {
+        quote.group_account_id = this.id();
+      }
+
+      this.quoteService
+        .createQuote(quote, this.file())
+        .pipe(take(1))
+        .subscribe({
+          next: () => {
+            this.location.back();
+          },
+          error: (error: Error) => {
+            console.error('Error creating quote:', error);
+            toast.error('Erreur lors de la création du devis');
+          },
+        });
+    }
   }
 
   onDragOver(event: DragEvent) {
@@ -971,11 +962,16 @@ export class NewQuoteComponent implements AfterViewInit {
 
     const files = event.dataTransfer?.files;
     if (files && files.length > 0) {
-      const file = files[0];
-      if (this.isValidPdfFile(file)) {
-        this.handleFile(file);
-      } else {
-        // TODO: Ajouter un toast d'erreur
+      let hasInvalidFile = false;
+      Array.from(files).forEach((file) => {
+        if (this.isValidPdfFile(file)) {
+          this.handleFile(file);
+        } else {
+          hasInvalidFile = true;
+        }
+      });
+
+      if (hasInvalidFile) {
         toast.error('Seuls les fichiers PDF sont acceptés');
       }
     }
@@ -986,39 +982,47 @@ export class NewQuoteComponent implements AfterViewInit {
     const files = input.files;
 
     if (files && files.length > 0) {
-      const file = files[0];
-      if (this.isValidPdfFile(file)) {
-        this.handleFile(file);
-      } else {
-        // TODO: Ajouter un toast d'erreur
+      let hasInvalidFile = false;
+      Array.from(files).forEach((file) => {
+        if (this.isValidPdfFile(file)) {
+          this.handleFile(file);
+        } else {
+          hasInvalidFile = true;
+        }
+      });
+
+      if (hasInvalidFile) {
         toast.error('Seuls les fichiers PDF sont acceptés');
         input.value = '';
       }
     }
   }
 
+  private handleFile(file: File) {
+    if (!this.isValidPdfFile(file)) {
+      console.error(
+        'Format de fichier non valide. Seuls les fichiers PDF sont acceptés.'
+      );
+      return;
+    }
+    this.selectedFiles.push(file);
+  }
+
   private isValidPdfFile(file: File): boolean {
     return file.type === 'application/pdf';
   }
 
-  private handleFile(file: File) {
-    this.selectedFile = file;
-    this.file.set(file);
-    this.selectedAttachment.set(null);
-    if (this.fileInput) {
-      // Réinitialiser l'input file pour éviter des problèmes de sélection
+  removeFile(index: number) {
+    this.selectedFiles.splice(index, 1);
+    this.file.update((files) => files.filter((_, i) => i !== index));
+    if (this.selectedFiles.length === 0 && this.fileInput) {
       this.fileInput.nativeElement.value = '';
-      // Puis définir le nouveau fichier
-      const dataTransfer = new DataTransfer();
-      dataTransfer.items.add(file);
-      this.fileInput.nativeElement.files = dataTransfer.files;
     }
   }
 
-  removeFile() {
-    this.selectedFile = null;
-    this.file.set(null);
-    this.selectedAttachment.set(null);
+  removeAllFiles() {
+    this.selectedFiles = [];
+    this.file.set([]);
     if (this.fileInput) {
       this.fileInput.nativeElement.value = '';
     }
@@ -1047,16 +1051,11 @@ export class NewQuoteComponent implements AfterViewInit {
           tva21: this.tva21(),
           tva6: this.tva6(),
           totalHtva: this.totalHtva(),
-          attachment_key: this.selectedAttachment()?.key || null,
+          attachment_keys: this.getAllAttachmentKeys(),
         };
         this.isUpdating.set(true);
 
-        let fileToSend: File | null = null;
-        if (this.file()) {
-          // Uniquement envoyer un fichier si c'est un nouveau fichier
-          fileToSend = this.file();
-          console.log("Envoi d'un nouveau fichier:", fileToSend!.name);
-        }
+        const fileToSend = this.file();
 
         this.quoteService
           .updateQuote(this.updatedQuoteId() || '', quoteData, fileToSend)
@@ -1172,44 +1171,140 @@ export class NewQuoteComponent implements AfterViewInit {
   }
 
   selectUserAttachment(attachment: ProjectAttachment) {
-    this.selectedAttachment.set(attachment);
-    this.selectedFile = null;
-    this.file.set(null);
-    this.showAttachmentModal.set(false);
+    const currentSelected = this.selectedAttachments();
+    const index = currentSelected.findIndex((a) => a.id === attachment.id);
+
+    if (index === -1) {
+      // Ajouter à la sélection
+      this.selectedAttachments.update((attachments) => [
+        ...attachments,
+        attachment,
+      ]);
+    } else {
+      // Retirer de la sélection
+      this.selectedAttachments.update((attachments) =>
+        attachments.filter((a) => a.id !== attachment.id)
+      );
+    }
   }
 
-  toggleAttachmentModal() {
-    this.showAttachmentModal.set(!this.showAttachmentModal());
+  isAttachmentSelected(attachment: ProjectAttachment): boolean {
+    return this.selectedAttachments().some((a) => a.id === attachment.id);
   }
 
-  async saveAsAttachment() {
+  addSelectedAttachmentsToQuote() {
+    const projectId = this.id();
+    if (!projectId) {
+      toast.error('ID du projet non trouvé');
+      return;
+    }
+
+    if (this.selectedAttachments().length === 0) {
+      toast.error('Aucune pièce jointe sélectionnée');
+      return;
+    }
+
+    const projectType =
+      this.typeOfProjet() === 'PRINCIPAL' ? 'principal' : 'groupe';
+    let hasError = false;
+
+    // Traiter chaque pièce jointe individuellement
+    const downloadPromises = this.selectedAttachments().map((attachment) => {
+      return new Promise<void>((resolve) => {
+        this.userAttachmentService
+          .downloadAttachment(attachment.id, projectType, projectId)
+          .subscribe({
+            next: (blob) => {
+              // Vérifier si le fichier existe déjà dans selectedFiles
+              const fileExists = this.selectedFiles.some(
+                (file) => file.name === attachment.name
+              );
+
+              if (!fileExists) {
+                const file = new File([blob], attachment.name, {
+                  type: 'application/pdf',
+                });
+                this.selectedFiles.push(file);
+                this.file.set(this.selectedFiles);
+              }
+              resolve();
+            },
+            error: (error) => {
+              console.error(
+                `Erreur lors du téléchargement de ${attachment.name}:`,
+                error
+              );
+              hasError = true;
+              toast.error(
+                `Impossible de récupérer le fichier ${attachment.name}`
+              );
+              resolve(); // On résout quand même pour continuer avec les autres fichiers
+            },
+          });
+      });
+    });
+
+    // Attendre que tous les téléchargements soient terminés
+    Promise.all(downloadPromises)
+      .then(() => {
+        if (!hasError) {
+          toast.success('Pièces jointes ajoutées avec succès');
+        }
+        // Fermer la modal et réinitialiser la sélection même en cas d'erreur partielle
+        this.showAttachmentModal.set(false);
+        this.selectedAttachments.set([]);
+      })
+      .catch((error) => {
+        console.error('Erreur lors du traitement des pièces jointes:', error);
+        toast.error(
+          'Une erreur est survenue lors du traitement des pièces jointes'
+        );
+      });
+  }
+
+  async saveAsAttachment(fileToSave: File) {
     const projectId = this.id();
     if (!projectId) return;
 
-    if (this.selectedFile) {
-      const description = await this.openDescriptionDialog();
-      if (description !== null) {
-        const projectType =
-          this.typeOfProjet() === 'PRINCIPAL' ? 'principal' : 'groupe';
-        this.userAttachmentService
-          .uploadAttachment(
-            this.selectedFile,
-            projectType,
-            projectId,
-            description
-          )
-          .pipe(
-            take(1),
-            tap((attachment) => {
-              this.userAttachments.update((attachments) => [
-                ...attachments,
-                attachment,
-              ]);
-              this.selectedAttachment.set(attachment);
-            })
-          )
-          .subscribe();
-      }
+    // Vérifier si un fichier avec le même nom existe déjà
+    const existingAttachment = this.userAttachments().find(
+      (attachment) => attachment.name === fileToSave.name
+    );
+
+    if (existingAttachment) {
+      toast.error('Un fichier avec ce nom existe déjà dans vos pièces jointes');
+      return;
+    }
+
+    const description = await this.openDescriptionDialog();
+    if (description !== null) {
+      const projectType =
+        this.typeOfProjet() === 'PRINCIPAL' ? 'principal' : 'groupe';
+
+      this.userAttachmentService
+        .uploadAttachment(fileToSave, projectType, projectId, description)
+        .pipe(
+          take(1),
+          tap((attachment) => {
+            // Ajouter le nouveau fichier à userAttachments
+            this.userAttachments.update((attachments) => [
+              ...attachments,
+              attachment,
+            ]);
+
+            // Ne pas retirer le fichier de selectedFiles
+            // Mettre à jour le signal file pour refléter le statut actuel
+            this.file.set([...this.selectedFiles]);
+
+            toast.success('Pièce jointe sauvegardée avec succès');
+          })
+        )
+        .subscribe({
+          error: (error) => {
+            console.error('Erreur lors de la sauvegarde:', error);
+            toast.error('Erreur lors de la sauvegarde de la pièce jointe');
+          },
+        });
     }
   }
 
@@ -1226,8 +1321,14 @@ export class NewQuoteComponent implements AfterViewInit {
   async deleteAttachment(id: number, event: Event) {
     event.stopPropagation();
     if (confirm('Êtes-vous sûr de vouloir supprimer cette pièce jointe ?')) {
+      const projectId = this.id();
+      if (!projectId) return;
+
+      const projectType =
+        this.typeOfProjet() === 'PRINCIPAL' ? 'principal' : 'groupe';
+
       this.userAttachmentService
-        .deleteAttachment(id)
+        .deleteAttachment(id, projectType, projectId)
         .pipe(
           take(1),
           tap(() => {
@@ -1237,7 +1338,7 @@ export class NewQuoteComponent implements AfterViewInit {
             if (this.selectedAttachment()?.id === id) {
               this.selectedAttachment.set(null);
               this.selectedFile = null;
-              this.file.set(null);
+              this.file.set([]);
             }
           })
         )
@@ -1250,21 +1351,35 @@ export class NewQuoteComponent implements AfterViewInit {
     this.userAttachmentService.previewAttachment(attachment);
   }
 
-  private extractFileNameFromUrl(url: string): string {
+  private extractFileNameFromUrl(url: string | string[]): string {
+    if (Array.isArray(url)) {
+      return url.length > 0 ? this.extractFileNameFromUrl(url[0]) : '';
+    }
     const decodedUrl = decodeURIComponent(url);
     const parts = decodedUrl.split('/');
     return parts[parts.length - 1];
   }
 
-  private extractS3KeyFromUrl(url: string): string {
+  private extractS3KeyFromUrl(url: string | string[]): string {
+    if (Array.isArray(url)) {
+      return url.length > 0 ? this.extractS3KeyFromUrl(url[0]) : '';
+    }
     try {
-      // L'URL est de la forme: https://sonar-artists-files.s3.eu-central-1.amazonaws.com/user-1/attachments/file.pdf
       const urlObj = new URL(url);
-      // On enlève le premier slash pour avoir la clé
       return urlObj.pathname.substring(1);
     } catch (error) {
       console.error("Erreur lors de l'extraction de la clé S3:", error);
       return '';
     }
+  }
+
+  toggleAttachmentModal() {
+    this.showAttachmentModal.set(!this.showAttachmentModal());
+  }
+
+  isFileAlreadySaved(fileName: string): boolean {
+    return this.userAttachments().some(
+      (attachment) => attachment.name === fileName
+    );
   }
 }

@@ -9,25 +9,34 @@ import { ActivatedRoute } from '@angular/router';
 import { QuoteService } from '../shared/services/quote.service';
 import { QuoteEntity } from '../shared/entities/quote.entity';
 import { take, tap } from 'rxjs';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import { AuthService } from '../shared/services/auth.service';
 import { HlmButtonDirective } from '@spartan-ng/ui-button-helm';
 import { HlmIconComponent } from '@spartan-ng/ui-icon-helm';
 import { CommonModule, DatePipe } from '@angular/common';
 import { provideIcons } from '@ng-icons/core';
+import { FormsModule } from '@angular/forms';
 import {
   lucideCheck,
   lucideCheckCircle,
   lucideX,
   lucideXCircle,
   lucideMailQuestion,
+  lucideFileText,
+  lucideDownload,
 } from '@ng-icons/lucide';
+import { lastValueFrom } from 'rxjs';
+import { PdfGeneratorService } from '../shared/services/pdf-generator.service';
 
 @Component({
   selector: 'app-quote-decision',
   standalone: true,
-  imports: [HlmButtonDirective, HlmIconComponent, CommonModule, DatePipe],
+  imports: [
+    HlmButtonDirective,
+    HlmIconComponent,
+    CommonModule,
+    DatePipe,
+    FormsModule,
+  ],
   providers: [
     provideIcons({
       lucideCheck,
@@ -35,6 +44,8 @@ import {
       lucideXCircle,
       lucideCheckCircle,
       lucideMailQuestion,
+      lucideFileText,
+      lucideDownload,
     }),
   ],
   templateUrl: './quote-decision.component.html',
@@ -43,6 +54,7 @@ import {
 export class QuoteDecisionComponent implements AfterViewInit {
   private quoteService = inject(QuoteService);
   private authService = inject(AuthService);
+  private pdfGenerator = inject(PdfGeneratorService);
   private _injector = inject(Injector);
 
   quoteId: string | null = null;
@@ -50,6 +62,8 @@ export class QuoteDecisionComponent implements AfterViewInit {
   quoteFromDB: QuoteEntity | null = null;
   role: string | null = null;
   connectedUser = signal(this.authService.getUser());
+  termsAccepted = false;
+  isLoadingPdf = false;
 
   constructor(private route: ActivatedRoute) {
     // Récupérer les paramètres de requête (query parameters)
@@ -68,12 +82,13 @@ export class QuoteDecisionComponent implements AfterViewInit {
         take(1),
         tap((data) => {
           this.quoteFromDB = data;
-          console.log('quoteFromDB', this.quoteFromDB);
           this.updateQuoteStatus();
           return data;
         }),
         tap((data) => {
-          this.generateQuotePDF(data);
+          setTimeout(() => {
+            this.generateQuotePDF(data);
+          }, 100);
         })
       )
       .subscribe();
@@ -220,84 +235,134 @@ export class QuoteDecisionComponent implements AfterViewInit {
   }
 
   generateQuotePDF(quote: QuoteEntity) {
-    const doc = new jsPDF();
+    if (!quote) {
+      console.error('Pas de devis fourni pour la génération du PDF');
+      return;
+    }
 
-    // Ajouter le logo
-    const logoUrl = '/assets/images/Groupe-30.png'; // Remplacez par le chemin de votre logo
-    const img = new Image();
-    img.src = logoUrl;
+    this.isLoadingPdf = true;
 
-    img.onload = () => {
-      doc.addImage(img, 'PNG', 10, 10, 50, 20); // Position et taille du logo
+    try {
+      const doc = this.pdfGenerator.previewQuotePDF(quote);
 
-      // Informations sur l'utilisateur (alignées à gauche)
-      doc.setFontSize(12);
-      doc.text(`Créé par: ${quote.created_by}`, 10, 40);
-      doc.text(`Email: ${quote.created_by_mail}`, 10, 50);
-      doc.text(`Téléphone: ${quote.created_by_phone}`, 10, 60);
+      // Rechercher l'iframe avec un maximum de 5 tentatives
+      let attempts = 0;
+      const maxAttempts = 5;
+      const findAndUpdateIframe = () => {
+        const iframe = document.getElementById(
+          'pdfPreview'
+        ) as HTMLIFrameElement;
 
-      // Informations sur le client (alignées à droite)
-      const clientInfo = `
-      Client: ${quote.client.name}
-      Email: ${quote.client.email}
-      Téléphone: ${quote.client.phone}
-      Adresse: ${quote.client.street} ${quote.client.number}, ${quote.client.city}, ${quote.client.country}, ${quote.client.postalCode}
-    `;
-      const clientLines = clientInfo.split('\n');
-      const clientYStart = 40; // Position Y de départ pour le client
-      const clientYSpacing = 10; // Espacement entre les lignes
+        if (iframe) {
+          try {
+            const blob = doc.output('blob');
+            const blobUrl = URL.createObjectURL(blob);
+            iframe.src = blobUrl;
+            this.isLoadingPdf = false;
+          } catch (error) {
+            console.error('Erreur lors de la création du blob:', error);
+            this.isLoadingPdf = false;
+          }
+        } else if (attempts < maxAttempts) {
+          attempts++;
+          setTimeout(findAndUpdateIframe, 100);
+        } else {
+          console.error(
+            "L'élément iframe 'pdfPreview' n'a pas été trouvé après plusieurs tentatives"
+          );
+          this.isLoadingPdf = false;
+        }
+      };
 
-      // Aligner à droite
-      clientLines.forEach((line, index) => {
-        const yPosition = clientYStart + index * clientYSpacing;
-        const textWidth = doc.getTextWidth(line);
-        const pageWidth = doc.internal.pageSize.getWidth();
-        doc.text(line, pageWidth - textWidth - 10, yPosition); // Alignement à droite
+      findAndUpdateIframe();
+    } catch (error) {
+      console.error('Erreur lors de la génération du PDF:', error);
+      this.isLoadingPdf = false;
+    }
+  }
+
+  getAttachmentFileName(url: string): string {
+    try {
+      const decodedUrl = decodeURIComponent(url);
+      const urlParts = decodedUrl.split('/');
+      const fileName = urlParts[urlParts.length - 1];
+      // Supprimer les paramètres d'URL potentiels
+      return fileName.split('?')[0];
+    } catch {
+      return 'Pièce jointe';
+    }
+  }
+
+  getS3KeyFromUrl(url: string): string {
+    try {
+      // L'URL est de la forme: https://sonar-artists-files.s3.eu-central-1.amazonaws.com/KEY
+      const decodedUrl = decodeURIComponent(url);
+      const match = decodedUrl.match(/amazonaws\.com\/(.*?)(\?|$)/);
+      return match ? match[1] : '';
+    } catch {
+      return '';
+    }
+  }
+
+  getAttachments(): { url: string; name: string }[] {
+    if (!this.quoteFromDB) return [];
+
+    const attachments: { url: string; name: string }[] = [];
+
+    if (this.quoteFromDB.attachment_url) {
+      attachments.push({
+        url: this.quoteFromDB.attachment_url,
+        name: this.getAttachmentFileName(this.quoteFromDB.attachment_url),
       });
+    }
 
-      // Tableau pour les informations sur le devis
-      const invoiceData = [
-        ['Information', 'Valeur'],
-        ['Date du devis', quote.quote_date.toLocaleString()],
-        ['Date de service', quote.service_date.toLocaleString()],
-        ['Total HTVA', `${quote.price_htva.toFixed(2)} €`],
-        ['Total TVA 6%', `${quote.total_vat_6.toFixed(2)} €`],
-        ['Total TVA 21%', `${quote.total_vat_21.toFixed(2)} €`],
-        ['Total TTC', `${quote.total.toFixed(2)} €`],
-      ];
+    return attachments;
+  }
 
-      autoTable(doc, {
-        head: [['Information', 'Valeur']],
-        body: invoiceData,
-        startY: 100,
-        styles: { fontSize: 10 },
-        headStyles: { fillColor: [100, 100, 100] },
-      });
+  async downloadAttachment(url: string) {
+    if (!url) {
+      console.error("URL d'attachement manquante");
+      return;
+    }
 
-      // Récupérer la position Y après le premier tableau
-      const yAfterInvoiceTable = doc.internal.pageSize.getHeight() - 100; // Laisser 100 unités en bas
+    const s3Key = this.getS3KeyFromUrl(url);
+    if (!s3Key) {
+      console.error("Impossible d'extraire la clé S3 de l'URL");
+      return;
+    }
 
-      // Tableau pour les détails des produits
-      const productData = quote.products.map((product) => [
-        product.description,
-        `Quantité: ${product.quantity}`,
-        `Prix: ${product.price.toFixed(2)} €`,
-      ]);
+    try {
+      console.log('Téléchargement avec la clé S3:', s3Key);
 
-      autoTable(doc, {
-        head: [['Produit', 'Quantité', 'Prix']],
-        body: productData,
-        startY: yAfterInvoiceTable,
-        styles: { fontSize: 10 },
-        headStyles: { fillColor: [100, 100, 100] },
-      });
+      // On utilise le service pour récupérer le fichier via le backend
+      const response = await lastValueFrom(
+        this.quoteService.downloadAttachment(s3Key)
+      );
 
-      // Générer l'URL Blob pour le PDF et afficher dans un <iframe> ou <embed>
-      const pdfBlobUrl = doc.output('bloburl');
+      if (!response) {
+        console.error('Réponse vide du serveur');
+        return;
+      }
 
-      // Ajouter la prévisualisation dans un élément <iframe> sur la page
-      const iframe = document.getElementById('pdfPreview') as HTMLIFrameElement;
-      iframe.src = pdfBlobUrl.toString();
-    };
+      console.log('Réponse reçue, taille:', response.size);
+
+      const fileName = this.getAttachmentFileName(url);
+      console.log('Nom du fichier:', fileName);
+
+      // Créer un lien temporaire pour le téléchargement
+      const link = document.createElement('a');
+      link.href = window.URL.createObjectURL(response);
+      link.download = fileName;
+
+      // Déclencher le téléchargement
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // Nettoyer
+      window.URL.revokeObjectURL(link.href);
+    } catch (error) {
+      console.error('Erreur lors du téléchargement:', error);
+    }
   }
 }

@@ -16,7 +16,7 @@
 </div>
 }  -->
 @else {
-<div class="container mx-auto px-4 py-8">
+<div class="container mx-auto px-4 pb-32">
   <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
     <!-- En-tête -->
     <div class="p-6 border-b border-gray-200">
@@ -78,32 +78,6 @@
       </div>
     </div>
 
-    <!-- Actions -->
-    @if(canTakeAction()) {
-    <div class="p-6 border-b border-gray-200">
-      <div class="flex flex-col sm:flex-row gap-4 justify-center">
-        <button
-          (click)="acceptQuote()"
-          class="rounded-full bg-emerald-500 hover:bg-emerald-600 transition-colors px-6 py-2 text-white font-medium flex items-center justify-center gap-2"
-          [disabled]="quoteStatus !== 'pending'"
-          hlmBtn
-        >
-          <hlm-icon name="lucideCheck" size="sm" />
-          Accepter le devis
-        </button>
-        <button
-          (click)="rejectQuote()"
-          class="rounded-full bg-red-500 hover:bg-red-600 transition-colors px-6 py-2 text-white font-medium flex items-center justify-center gap-2"
-          [disabled]="quoteStatus !== 'pending'"
-          hlmBtn
-        >
-          <hlm-icon name="lucideX" size="sm" />
-          Refuser le devis
-        </button>
-      </div>
-    </div>
-    }
-
     <!-- Message de statut -->
     @if(quoteStatus === 'accepted') {
     <div class="p-6 bg-emerald-50 border-b border-emerald-200">
@@ -114,83 +88,229 @@
     </div>
     } @else if(quoteStatus === 'refused') {
     <div class="p-6 bg-red-50 border-b border-red-200">
-      <div class="flex flex-col items-center gap-4">
-        <div class="flex items-center justify-center gap-2 text-red-700 mb-2">
-          <hlm-icon name="lucideXCircle" size="sm" />
-          <span>Le devis a été refusé</span>
-        </div>
-
-        <div class="w-full max-w-2xl bg-white rounded-lg p-6 shadow-sm">
-          <h3 class="text-lg font-semibold text-gray-900 mb-4">
-            Informations de contact
-          </h3>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- Contact Client -->
-            <div class="space-y-3">
-              <h4 class="font-medium text-gray-700">Client</h4>
-              <div class="space-y-2">
-                <p class="text-sm text-gray-600">
-                  <span class="font-medium">Nom:</span>
-                  {{ quoteFromDB.client.name }}
-                </p>
-                <p class="text-sm text-gray-600">
-                  <span class="font-medium">Email:</span>
-                  {{ quoteFromDB.client.email }}
-                </p>
-                <p class="text-sm text-gray-600">
-                  <span class="font-medium">Téléphone:</span>
-                  {{ quoteFromDB.client.phone }}
-                </p>
-              </div>
-            </div>
-
-            <!-- Contact Créateur -->
-            <!-- <div class="space-y-3">
-              <h4 class="font-medium text-gray-700">Créateur du devis</h4>
-              <div class="space-y-2">
-                <p class="text-sm text-gray-600">
-                  <span class="font-medium">Nom:</span>
-                  {{ connectedUser()?.firstName }} {{ connectedUser()?.name }}
-                </p>
-                <p class="text-sm text-gray-600">
-                  <span class="font-medium">Email:</span>
-                  {{ connectedUser()?.email }}
-                </p>
-                <p class="text-sm text-gray-600">
-                  <span class="font-medium">Téléphone:</span>
-                  {{ connectedUser()?.telephone }}
-                </p>
-              </div>
-            </div> -->
-          </div>
-
-          <!-- Contact Sonar -->
-          <div class="mt-6 pt-6 border-t border-gray-200">
-            <div class="flex items-center gap-2">
-              <hlm-icon
-                name="lucideMailQuestion"
-                size="sm"
-                class="text-gray-500"
-              />
-              <p class="text-sm text-gray-600">
-                Pour toute question, vous pouvez contacter Sonar Artists à
-                <a
-                  href="mailto:info@sonarartists.be"
-                  class="text-blue-600 hover:text-blue-800 underline"
-                >
-                  info&#64;sonarartists.be
-                </a>
-              </p>
-            </div>
-          </div>
-        </div>
+      <div class="flex items-center justify-center gap-2 text-red-700">
+        <hlm-icon name="lucideXCircle" size="sm" />
+        <span>Le devis a été refusé</span>
       </div>
     </div>
     }
 
+    <!-- Récapitulatif du devis -->
+    <div class="p-6 space-y-8">
+      <!-- Informations principales -->
+      <div class="space-y-6">
+        <div class="grid grid-cols-2 gap-8">
+          <!-- Colonne de gauche -->
+          <div class="space-y-4">
+            <div>
+              <h3 class="text-sm font-semibold text-gray-600 mb-2">
+                Nom du projet
+              </h3>
+              <p class="text-base">
+                {{ quoteFromDB.created_by_project_name || "Non renseigné" }}
+              </p>
+            </div>
+
+            <div>
+              <h3 class="text-sm font-semibold text-gray-600 mb-2">Client</h3>
+              <div class="space-y-1">
+                <p class="text-base">{{ quoteFromDB.client.name }}</p>
+                <p class="text-sm text-gray-600">
+                  {{ quoteFromDB.client.street }}
+                  {{ quoteFromDB.client.number }}
+                </p>
+                <p class="text-sm text-gray-600">
+                  {{ quoteFromDB.client.postalCode }}
+                  {{ quoteFromDB.client.city }}
+                </p>
+                <p class="text-sm text-gray-600">
+                  N° TVA:
+                  {{ quoteFromDB.client.company_vat_number || "Non assujetti" }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Colonne de droite -->
+          <div class="space-y-4">
+            <div>
+              <h3 class="text-sm font-semibold text-gray-600 mb-2">
+                Sonar Artists
+              </h3>
+              <div class="space-y-1">
+                <p class="text-base">Sonar Artists ASBL</p>
+                <p class="text-sm text-gray-600">6 rue Francisco Ferrer</p>
+                <p class="text-sm text-gray-600">4460 Grâce-Hollogne</p>
+                <p class="text-sm text-gray-600">TVA BE0700273583</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Récapitulatif de la commande -->
+        <div>
+          <h3 class="text-sm font-semibold text-gray-600 mb-4">
+            Récapitulatif de la commande
+          </h3>
+
+          <div class="space-y-4">
+            <!-- <div>
+              <h4 class="text-sm text-gray-600 mb-1">Lieu(x)</h4>
+              <p class="text-base">Liège, Bruxelles</p>
+            </div>
+
+            <div>
+              <h4 class="text-sm text-gray-600 mb-1">Domaine</h4>
+              <p class="text-base">Musique</p>
+            </div> -->
+
+            <div>
+              <h4 class="text-sm text-gray-600 mb-1">
+                Prestations artistiques
+              </h4>
+            </div>
+
+            <div>
+              <h4 class="text-sm text-gray-600 mb-1">Date(s)</h4>
+              <p class="text-base">
+                {{ quoteFromDB.service_date | date : "dd/MM/yyyy" }}
+              </p>
+            </div>
+
+            <!-- Tableau des produits -->
+            <div class="mt-6">
+              <table class="w-full">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th
+                      class="px-4 py-2 text-left text-sm font-medium text-gray-600"
+                    >
+                      Description
+                    </th>
+                    <th
+                      class="px-4 py-2 text-right text-sm font-medium text-gray-600"
+                    >
+                      Quantité
+                    </th>
+                    <th
+                      class="px-4 py-2 text-right text-sm font-medium text-gray-600"
+                    >
+                      Prix unitaire
+                    </th>
+                    <th
+                      class="px-4 py-2 text-right text-sm font-medium text-gray-600"
+                    >
+                      Total HT
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                  @for(product of quoteFromDB.products; track product.id) {
+                  <tr>
+                    <td class="px-4 py-2 text-sm">{{ product.description }}</td>
+                    <td class="px-4 py-2 text-sm text-right">
+                      {{ product.quantity }}
+                    </td>
+                    <td class="px-4 py-2 text-sm text-right">
+                      {{ product.price_htva | number : "1.2-2" }} €
+                    </td>
+                    <td class="px-4 py-2 text-sm text-right">
+                      {{
+                        (product.price_htva || 0) * product.quantity
+                          | number : "1.2-2"
+                      }}
+                      €
+                    </td>
+                  </tr>
+                  }
+                </tbody>
+                <tfoot class="bg-gray-50">
+                  <tr>
+                    <td
+                      colspan="3"
+                      class="px-4 py-2 text-sm font-medium text-right"
+                    >
+                      Montant total HT
+                    </td>
+                    <td class="px-4 py-2 text-sm font-medium text-right">
+                      {{ quoteFromDB.price_htva | number : "1.2-2" }} €
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      colspan="3"
+                      class="px-4 py-2 text-sm font-medium text-right"
+                    >
+                      TVA 6%
+                    </td>
+                    <td class="px-4 py-2 text-sm font-medium text-right">
+                      {{ quoteFromDB.total_vat_6 | number : "1.2-2" }} €
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      colspan="3"
+                      class="px-4 py-2 text-sm font-medium text-right"
+                    >
+                      TVA 21%
+                    </td>
+                    <td class="px-4 py-2 text-sm font-medium text-right">
+                      {{ quoteFromDB.total_vat_21 | number : "1.2-2" }} €
+                    </td>
+                  </tr>
+                  <tr class="border-t-2 border-gray-300">
+                    <td
+                      colspan="3"
+                      class="px-4 py-2 text-base font-bold text-right"
+                    >
+                      Total TTC
+                    </td>
+                    <td class="px-4 py-2 text-base font-bold text-right">
+                      {{ quoteFromDB.total | number : "1.2-2" }} €
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Informations complémentaires -->
+        <div class="space-y-4">
+          <h3 class="text-sm font-semibold text-gray-600">
+            Informations complémentaires
+          </h3>
+          <div class="space-y-2 text-sm text-gray-600">
+            <p>
+              Conditions de paiement : {{ quoteFromDB.payment_deadline }} jours
+              à compter de la date de facturation
+            </p>
+            <p>
+              Validité du devis :
+              {{ quoteFromDB.validation_deadline | date : "dd/MM/yyyy" }}
+            </p>
+            @if(quoteFromDB.comment) {
+            <p>{{ quoteFromDB.comment }}</p>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Aperçu PDF -->
-    <div class="p-6">
+    <!-- <div class="p-6">
+      @if(isLoadingPdf) {
+      <div
+        class="flex justify-center items-center h-[75vh] bg-gray-50 rounded-xl border border-gray-200"
+      >
+        <div class="flex flex-col items-center gap-3">
+          <div
+            class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"
+          ></div>
+          <p class="text-gray-600">Chargement du devis en cours...</p>
+        </div>
+      </div>
+      } @else {
       <iframe
         id="pdfPreview"
         class="w-full h-[75vh] rounded-xl border border-gray-200"
@@ -198,6 +318,99 @@
           quoteStatus === 'accepted' || quoteStatus === 'refused'
         "
       ></iframe>
+      }
+    </div> -->
+  </div>
+</div>
+
+<!-- Barre d'action fixe -->
+<div
+  class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg"
+>
+  <div class="container mx-auto px-4">
+    <div class="max-w-4xl mx-auto py-4">
+      <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+        <!-- Pièces jointes -->
+        @if(getAttachments().length > 0) {
+        <div class="flex-shrink-0">
+          @for(attachment of getAttachments(); track attachment.url) {
+          <button
+            (click)="downloadAttachment(attachment.url)"
+            class="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 bg-blue-50 px-4 py-2 rounded-lg"
+            hlmBtn
+            variant="link"
+            type="button"
+          >
+            <hlm-icon name="lucideFileText" size="sm" />
+            <span>{{ attachment.name }}</span>
+            <hlm-icon name="lucideDownload" size="sm" />
+          </button>
+          }
+        </div>
+        }
+
+        <!-- Actions ou Message de confirmation -->
+        @if(canTakeAction()) {
+        <div class="flex items-center gap-4">
+          <!-- Conditions générales -->
+          <div class="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="terms"
+              [(ngModel)]="termsAccepted"
+              class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <label for="terms" class="text-sm text-gray-700 whitespace-nowrap">
+              J'ai lu et j'accepte les
+              <a
+                href="/conditions-generales"
+                target="_blank"
+                class="text-blue-600 hover:text-blue-800 underline"
+              >
+                conditions générales
+              </a>
+            </label>
+          </div>
+
+          <!-- Boutons d'action -->
+          <div class="flex gap-3">
+            <button
+              (click)="acceptQuote()"
+              class="rounded-full bg-emerald-500 hover:bg-emerald-600 transition-colors px-6 py-2 text-white font-medium flex items-center justify-center gap-2"
+              [disabled]="!termsAccepted"
+              hlmBtn
+            >
+              <hlm-icon name="lucideCheck" size="sm" />
+              Accepter
+            </button>
+            <button
+              (click)="rejectQuote()"
+              class="rounded-full bg-red-500 hover:bg-red-600 transition-colors px-6 py-2 text-white font-medium flex items-center justify-center gap-2"
+              [disabled]="!termsAccepted"
+              hlmBtn
+            >
+              <hlm-icon name="lucideX" size="sm" />
+              Refuser
+            </button>
+          </div>
+        </div>
+        } @else {
+        <!-- Message de confirmation -->
+        <div class="flex items-center justify-center flex-grow">
+          @if(quoteStatus === 'accepted') {
+          <div class="flex items-center gap-2 text-emerald-600">
+            <hlm-icon name="lucideCheckCircle" size="sm" />
+            <span class="font-medium">Vous avez accepté ce devis</span>
+          </div>
+          } @else if(quoteStatus === 'refused') {
+          <div class="flex items-center gap-2 text-red-600">
+            <hlm-icon name="lucideXCircle" size="sm" />
+            <span class="font-medium">Vous avez refusé ce devis</span>
+          </div>
+          }
+        </div>
+        }
+      </div>
     </div>
   </div>
 </div>

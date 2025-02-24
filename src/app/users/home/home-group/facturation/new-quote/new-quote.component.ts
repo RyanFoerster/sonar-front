@@ -71,8 +71,8 @@ import { ProductService } from '../../../../../shared/services/product.service';
 import { QuoteService } from '../../../../../shared/services/quote.service';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import {
-  UserAttachmentService,
-  UserAttachment,
+  ProjectAttachmentService,
+  ProjectAttachment,
 } from '../../../../../shared/services/user-attachment.service';
 
 @Component({
@@ -141,8 +141,8 @@ export class NewQuoteComponent implements AfterViewInit {
   private location: Location = inject(Location);
   private authService: AuthService = inject(AuthService);
   private datePipe: DatePipe = inject(DatePipe);
-  private userAttachmentService: UserAttachmentService = inject(
-    UserAttachmentService
+  private userAttachmentService: ProjectAttachmentService = inject(
+    ProjectAttachmentService
   );
 
   protected client = signal<ClientEntity | null>(null);
@@ -233,8 +233,8 @@ export class NewQuoteComponent implements AfterViewInit {
   isDragging = false;
   selectedFile: File | null = null;
 
-  protected userAttachments = signal<UserAttachment[]>([]);
-  protected selectedAttachment = signal<UserAttachment | null>(null);
+  protected userAttachments = signal<ProjectAttachment[]>([]);
+  protected selectedAttachment = signal<ProjectAttachment | null>(null);
   protected showAttachmentModal = signal(false);
 
   constructor() {
@@ -289,6 +289,8 @@ export class NewQuoteComponent implements AfterViewInit {
       vat: [false, [Validators.required]],
       quantity: [1, [Validators.required]],
     });
+
+    this.userAttachmentService = inject(ProjectAttachmentService);
   }
 
   async ngAfterViewInit() {
@@ -336,7 +338,7 @@ export class NewQuoteComponent implements AfterViewInit {
                 extracted_key: s3Key,
               });
               // Créer un objet UserAttachment pour le fichier existant
-              const existingAttachment: UserAttachment = {
+              const existingAttachment: ProjectAttachment = {
                 id: -1, // ID temporaire pour le fichier existant
                 name: this.extractFileNameFromUrl(data.attachment_url),
                 url: data.attachment_url,
@@ -1143,18 +1145,33 @@ export class NewQuoteComponent implements AfterViewInit {
   }
 
   async loadUserAttachments() {
-    this.userAttachmentService
-      .getUserAttachments()
-      .pipe(
-        take(1),
-        tap((attachments) => {
-          this.userAttachments.set(attachments);
-        })
-      )
-      .subscribe();
+    const projectId = this.id();
+    if (!projectId) return;
+
+    if (this.typeOfProjet() === 'PRINCIPAL') {
+      this.userAttachmentService
+        .getProjectAttachments('principal', projectId)
+        .pipe(
+          take(1),
+          tap((attachments: ProjectAttachment[]) => {
+            this.userAttachments.set(attachments);
+          })
+        )
+        .subscribe();
+    } else {
+      this.userAttachmentService
+        .getProjectAttachments('groupe', projectId)
+        .pipe(
+          take(1),
+          tap((attachments: ProjectAttachment[]) => {
+            this.userAttachments.set(attachments);
+          })
+        )
+        .subscribe();
+    }
   }
 
-  selectUserAttachment(attachment: UserAttachment) {
+  selectUserAttachment(attachment: ProjectAttachment) {
     this.selectedAttachment.set(attachment);
     this.selectedFile = null;
     this.file.set(null);
@@ -1165,28 +1182,22 @@ export class NewQuoteComponent implements AfterViewInit {
     this.showAttachmentModal.set(!this.showAttachmentModal());
   }
 
-  async uploadNewAttachment(file: File, description?: string) {
-    this.userAttachmentService
-      .uploadAttachment(file, description)
-      .pipe(
-        take(1),
-        tap((attachment) => {
-          this.userAttachments.update((attachments) => [
-            ...attachments,
-            attachment,
-          ]);
-          this.selectUserAttachment(attachment);
-        })
-      )
-      .subscribe();
-  }
-
   async saveAsAttachment() {
+    const projectId = this.id();
+    if (!projectId) return;
+
     if (this.selectedFile) {
       const description = await this.openDescriptionDialog();
       if (description !== null) {
+        const projectType =
+          this.typeOfProjet() === 'PRINCIPAL' ? 'principal' : 'groupe';
         this.userAttachmentService
-          .uploadAttachment(this.selectedFile, description)
+          .uploadAttachment(
+            this.selectedFile,
+            projectType,
+            projectId,
+            description
+          )
           .pipe(
             take(1),
             tap((attachment) => {
@@ -1234,7 +1245,7 @@ export class NewQuoteComponent implements AfterViewInit {
     }
   }
 
-  async previewAttachment(attachment: UserAttachment, event: Event) {
+  async previewAttachment(attachment: ProjectAttachment, event: Event) {
     event.stopPropagation();
     this.userAttachmentService.previewAttachment(attachment);
   }

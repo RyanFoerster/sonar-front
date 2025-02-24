@@ -24,6 +24,8 @@ export interface QuoteEntity {
   created_by: string;
   created_by_mail: string;
   created_by_phone: string;
+  created_by_project_name: string;
+
   client: ClientEntity;
   products: ProductEntity[];
   invoice: InvoiceEntity;

@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { QuoteDto } from '../dtos/quote.dto';
 import { environment } from '../../../environments/environment';
 import { QuoteEntity } from '../entities/quote.entity';
+import { tap, map } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root',
@@ -122,5 +123,36 @@ export class QuoteService {
       `${environment.API_URL}/quote/${quoteId}/order_giver_rejection`,
       {}
     );
+  }
+
+  downloadAttachment(attachmentKey: string) {
+    console.log('Service - Téléchargement de la clé:', attachmentKey);
+    return this.httpClient
+      .get(
+        `${environment.API_URL}/quote/attachment/${encodeURIComponent(
+          attachmentKey
+        )}`,
+        {
+          responseType: 'blob',
+          observe: 'response',
+          headers: {
+            Accept: 'application/octet-stream',
+          },
+        }
+      )
+      .pipe(
+        tap((response) => {
+          console.log('Service - Headers reçus:', response.headers);
+          console.log(
+            'Service - Content-Type:',
+            response.headers.get('Content-Type')
+          );
+          console.log(
+            'Service - Content-Disposition:',
+            response.headers.get('Content-Disposition')
+          );
+        }),
+        map((response) => response.body as Blob)
+      );
   }
 }

@@ -9,8 +9,6 @@ import { environment } from '../../../environments/environment';
 export class ComptePrincipalService {
   httpClient: HttpClient = inject(HttpClient);
 
-  constructor() {}
-
   getAllGroupPrincipal() {
     return this.httpClient.get<PrincipalAccountEntity[]>(
       `${environment.API_URL}/compte-principal`
@@ -20,6 +18,12 @@ export class ComptePrincipalService {
   getGroupById(id?: number) {
     return this.httpClient.get<PrincipalAccountEntity>(
       `${environment.API_URL}/compte-principal/${id}`
+    );
+  }
+
+  getGroupByIdWithRelations(id?: number) {
+    return this.httpClient.get<PrincipalAccountEntity>(
+      `${environment.API_URL}/compte-principal/${id}/relations`
     );
   }
 

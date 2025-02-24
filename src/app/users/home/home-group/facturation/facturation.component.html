@@ -98,7 +98,49 @@
     </button>
   </div>
 </div>
-
+<!-- Contenu principal -->
+@if (isLoading()) {
+<div class="flex justify-center items-center p-8">
+  <div class="flex flex-col items-center gap-4">
+    <div
+      class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"
+    ></div>
+    <p class="text-gray-600">Chargement des documents...</p>
+  </div>
+</div>
+} @else if (!allDocuments().length && !isLoading()) {
+<div class="bg-white rounded-xl border border-gray-200 p-8 text-center">
+  <div class="flex flex-col items-center gap-4">
+    <div
+      class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center"
+    >
+      <hlm-icon name="lucideFileText" size="lg" class="text-gray-400" />
+    </div>
+    <div class="space-y-2">
+      <h3 class="text-lg font-medium text-gray-900">Aucun document trouvé</h3>
+      <p class="text-gray-500">
+        @if (currentFilter === 'all') { Il n'y a actuellement aucun devis ou
+        note de crédit. } @else if (currentFilter === 'quotes') { Il n'y a
+        actuellement aucun devis en attente. } @else if (currentFilter ===
+        'invoiced_quotes') { Il n'y a actuellement aucun devis facturé. } @else
+        { Il n'y a actuellement aucune note de crédit. }
+      </p>
+      @if (canEditBilling()) {
+      <div class="mt-4">
+        <a
+          routerLink="new-quote"
+          [queryParams]="{ typeOfProjet: typeOfProjet() }"
+          class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gray-sonar text-black hover:bg-gray-sonar/80 transition-colors"
+        >
+          <hlm-icon size="sm" name="lucideFilePlus" />
+          Créer un nouveau devis
+        </a>
+      </div>
+      }
+    </div>
+  </div>
+</div>
+} @else {
 <!-- Tableau -->
 <div
   class="relative overflow-x-auto rounded-xl border border-gray-200 bg-white p-2 sm:p-3 md:p-4"
@@ -563,4 +605,4 @@
     </li>
   </ul>
 </nav>
-}
+} }

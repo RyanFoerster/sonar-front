@@ -130,7 +130,7 @@ export class FacturationComponent implements OnInit, OnDestroy {
   protected currentDate = new Date();
   protected reportDate = signal<Date>(this.currentDate);
   protected filterSelected = signal<'invoice' | 'credit-note' | 'all'>('all');
-  protected isLoading = signal<boolean | null>(null);
+  protected isLoading = signal<boolean>(true);
   protected searchNumber = signal<string>('');
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   protected originalDocuments = signal<any[]>([]);
@@ -195,13 +195,13 @@ export class FacturationComponent implements OnInit, OnDestroy {
         tap((user) => {
           this.connectedUser.set(user);
           this.initializeAccount(user);
-          this.isLoading.set(false);
         })
       )
       .subscribe();
   }
 
   private initializeAccount(user: UserEntity): void {
+    this.isLoading.set(true);
     if (user.role === 'ADMIN') {
       this.initializeAdminAccount();
     } else {
@@ -210,9 +210,10 @@ export class FacturationComponent implements OnInit, OnDestroy {
   }
 
   private initializeAdminAccount(): void {
+    this.isLoading.set(true);
     if (this.typeOfProjet() === 'PRINCIPAL') {
       this.services.principal
-        .getGroupById(+this.id()!)
+        .getGroupByIdWithRelations(+this.id()!)
         .pipe(
           take(1),
           tap((data) => {
@@ -237,6 +238,7 @@ export class FacturationComponent implements OnInit, OnDestroy {
   }
 
   private initializeUserAccount(user: UserEntity): void {
+    this.isLoading.set(true);
     const groupAccount = user.userSecondaryAccounts.find(
       (account) => account.id === +this.id()!
     );
@@ -460,6 +462,7 @@ export class FacturationComponent implements OnInit, OnDestroy {
         ? [...(this.accountPrincipal?.invoice || [])]
         : [...(this.groupAccount()?.invoice || [])];
     this.updateDocuments();
+    this.isLoading.set(false);
   }
 
   protected getVisiblePages(

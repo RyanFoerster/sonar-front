@@ -119,7 +119,9 @@ export class HomeGroupComponent implements AfterViewInit {
     this.usersService
       .getInfo()
       .pipe(
-        tap((user) => this.connectedUser.set(user)),
+        tap((user) => {
+          this.connectedUser.set(user);
+        }),
         switchMap((user) => {
           if (user.role === 'ADMIN') {
             return this.typeOfProjet() === 'PRINCIPAL'

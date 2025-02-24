@@ -19,11 +19,13 @@ export interface QuoteDto {
 
   comment: string;
 
-  attachment_key?: string;
+  attachment_key?: string[];
 
   created_by?: string;
 
   created_by_mail?: string;
 
   created_by_phone?: string;
+
+  created_by_project_name?: string;
 }

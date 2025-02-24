@@ -738,14 +738,16 @@
             </div>
           </div>
 
-          <!-- Aperçu du fichier sélectionné -->
+          <!-- Aperçu des fichiers sélectionnés -->
           <div class="bg-gray-50 rounded-lg p-4">
-            @if (!selectedFile && !selectedAttachment()) {
+            @if (!selectedFiles.length && !selectedAttachment()) {
             <div class="h-full flex items-center justify-center">
               <p class="text-sm text-gray-500">Aucun fichier sélectionné</p>
             </div>
             } @else {
             <div class="space-y-4">
+              @if (selectedFiles.length > 0) { @for (file of selectedFiles;
+              track $index) {
               <div class="flex items-start gap-3">
                 <div class="shrink-0">
                   <hlm-icon
@@ -756,36 +758,55 @@
                 </div>
                 <div class="flex-1 min-w-0">
                   <p class="font-medium text-gray-900 truncate">
-                    {{
-                      selectedFile
-                        ? selectedFile.name
-                        : selectedAttachment()?.name
-                    }}
+                    {{ file.name }}
                   </p>
                   <p class="text-sm text-gray-500 mt-0.5">
-                    @if (selectedFile) {
-                    {{ (selectedFile.size / 1024).toFixed(0) }} Ko } @else {
-                    Pièce jointe enregistrée }
+                    {{ (file.size / 1024).toFixed(0) }} Ko
+                  </p>
+                </div>
+                <div class="flex items-center gap-2">
+                  @if (!isFileAlreadySaved(file.name)) {
+                  <button
+                    type="button"
+                    (click)="saveAsAttachment(file)"
+                    class="shrink-0 text-primary p-1 rounded-full hover:text-primary/80 hover:bg-primary/5 transition-all"
+                    title="Sauvegarder comme pièce jointe"
+                  >
+                    <hlm-icon size="sm" name="lucideSave" />
+                  </button>
+                  }
+                  <button
+                    type="button"
+                    (click)="removeFile($index)"
+                    class="shrink-0 text-gray-400 p-1 rounded-full hover:text-red-600 hover:bg-red-50 transition-all"
+                  >
+                    <hlm-icon size="sm" name="lucideX" />
+                  </button>
+                </div>
+              </div>
+              } } @if (selectedAttachment()) {
+              <div class="flex items-start gap-3">
+                <div class="shrink-0">
+                  <hlm-icon
+                    size="lg"
+                    name="lucideFileText"
+                    class="text-primary"
+                  />
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="font-medium text-gray-900 truncate">
+                    {{ selectedAttachment()?.name }}
+                  </p>
+                  <p class="text-sm text-gray-500 mt-0.5">
+                    Pièce jointe enregistrée
                   </p>
                 </div>
                 <button
                   type="button"
-                  (click)="removeFile()"
+                  (click)="removeAllFiles()"
                   class="shrink-0 text-gray-400 p-1 rounded-full hover:text-red-600 hover:bg-red-50 transition-all"
                 >
                   <hlm-icon size="sm" name="lucideX" />
-                </button>
-              </div>
-
-              @if (selectedFile && !selectedAttachment()) {
-              <div class="border-t border-gray-200 pt-4">
-                <button
-                  type="button"
-                  (click)="saveAsAttachment()"
-                  class="w-full bg-white text-primary border border-primary/20 font-medium text-sm rounded-lg px-4 py-2 flex items-center justify-center gap-2 hover:bg-primary/5 transition-all"
-                >
-                  <hlm-icon size="sm" name="lucideSave" />
-                  Sauvegarder comme pièce jointe
                 </button>
               </div>
               }
@@ -807,7 +828,7 @@
             class="flex justify-between items-center border-b border-gray-200 pb-4"
           >
             <h3 class="text-lg font-semibold text-gray-900">
-              Mes pièces jointes
+              Pièces jointes du projet
             </h3>
             <button
               type="button"
@@ -834,20 +855,30 @@
             } @else {
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               @for (attachment of userAttachments(); track attachment.id) {
-              <button
-                type="button"
-                (click)="selectUserAttachment(attachment)"
-                class="flex items-start gap-3 p-4 rounded-lg hover:bg-gray-50 text-left transition-all border border-gray-100"
+              <div
+                class="flex items-start gap-3 p-4 rounded-lg hover:bg-gray-50 text-left transition-all border border-gray-100 cursor-pointer"
                 [ngClass]="{
-                  'bg-primary/5': selectedAttachment()?.id === attachment.id
+                  'bg-primary/5': isAttachmentSelected(attachment)
                 }"
+                (click)="selectUserAttachment(attachment)"
+                (keydown.enter)="selectUserAttachment(attachment)"
+                (keydown.space)="selectUserAttachment(attachment)"
+                tabindex="0"
+                role="button"
+                [attr.aria-label]="'Sélectionner ' + attachment.name"
               >
-                <div class="shrink-0">
-                  <hlm-icon
-                    size="lg"
-                    name="lucideFileText"
-                    class="text-primary"
+                <div class="flex items-center gap-3">
+                  <hlm-checkbox
+                    [checked]="isAttachmentSelected(attachment)"
+                    class="rounded-md"
                   />
+                  <div class="shrink-0">
+                    <hlm-icon
+                      size="lg"
+                      name="lucideFileText"
+                      class="text-primary"
+                    />
+                  </div>
                 </div>
                 <div class="flex-1 min-w-0">
                   <div class="flex items-center justify-between gap-2">
@@ -882,7 +913,7 @@
                     Ajouté le {{ attachment.created_at | date : "dd/MM/yyyy" }}
                   </p>
                 </div>
-              </button>
+              </div>
               }
             </div>
             }
@@ -891,6 +922,16 @@
           <div
             class="flex justify-end gap-3 pt-4 mt-4 border-t border-gray-200"
           >
+            <button
+              type="button"
+              (click)="addSelectedAttachmentsToQuote()"
+              class="bg-primary text-white font-medium text-sm rounded-lg px-4 py-2 flex items-center gap-2 hover:bg-primary/90 transition-all"
+              hlmBtn
+              [disabled]="selectedAttachments().length === 0"
+            >
+              <hlm-icon size="sm" name="lucideCheck" />
+              Ajouter les pièces jointes sélectionnées
+            </button>
             <button
               type="button"
               (click)="toggleAttachmentModal()"

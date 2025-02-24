@@ -221,7 +221,6 @@ export class PdfGeneratorService {
     );
 
     const finalY = this.addProductsTable(doc, quote.products, 'quote');
-    console.log('payment_deadline', quote.payment_deadline);
 
     // Totaux et conditions
     this.addTotals(doc, quote, finalY);
@@ -232,6 +231,56 @@ export class PdfGeneratorService {
     ]);
 
     doc.save(`devis_${new Date().getFullYear()}-${quote.id}.pdf`);
+  }
+
+  previewQuotePDF(quote: QuoteEntity): jsPDF {
+    const doc = new jsPDF(this.getOptimizedPdfConfig());
+    const pageHeight = doc.internal.pageSize.getHeight();
+
+    try {
+      this.addHeader(doc);
+      this.addClientInfo(doc, quote.client);
+
+      // Titre et informations du devis
+      let yPosition = 60;
+      doc.setFontSize(18);
+      doc.setTextColor(0);
+      doc.text(
+        `DEVIS N°: ${new Date().getFullYear()}-${quote.id}`,
+        this.PAGE_MARGIN,
+        yPosition
+      );
+
+      doc.setFontSize(10);
+      yPosition += 10;
+      doc.text(
+        `Date: ${this.formatDateBelgium(quote.quote_date)}`,
+        this.PAGE_MARGIN,
+        yPosition
+      );
+      yPosition += 7;
+      doc.text(
+        `Date de service: ${this.formatDateBelgium(quote.service_date)}`,
+        this.PAGE_MARGIN,
+        yPosition
+      );
+
+      const finalY = this.addProductsTable(doc, quote.products, 'quote');
+
+      // Totaux et conditions
+      this.addTotals(doc, quote, finalY);
+
+      this.addFooter(doc, pageHeight, [
+        `Conditions de paiement : ${quote.payment_deadline} jours à compter de la date de facturation`,
+        `Validité du devis : ${this.formatDateBelgium(quote.quote_date)}`,
+        'Nous vous remercions de votre confiance',
+      ]);
+
+      return doc;
+    } catch (error) {
+      console.error('Erreur lors de la génération du PDF:', error);
+      throw error;
+    }
   }
 
   private async generatePaymentQRCode(invoice: InvoiceEntity): Promise<string> {

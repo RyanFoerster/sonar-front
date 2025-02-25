@@ -17,7 +17,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { Location, DatePipe, NgClass } from '@angular/common';
-import { take, tap } from 'rxjs';
+import { firstValueFrom, take, tap } from 'rxjs';
 import { toast } from 'ngx-sonner';
 import { ClientEntity } from '../../../../../shared/entities/client.entity';
 import { ProductEntity } from '../../../../../shared/entities/product.entity';
@@ -73,6 +73,7 @@ import { HlmSelectImports } from '@spartan-ng/ui-select-helm';
 
 import { EuroFormatPipe } from '../../../../../shared/pipes/euro-format.pipe';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { QuoteDto } from '../../../../../shared/dtos/quote.dto';
 
 @Component({
   selector: 'app-new-quote',
@@ -1029,54 +1030,43 @@ export class NewQuoteComponent implements AfterViewInit {
   }
 
   async updateQuote() {
-    if (this.createQuoteForm.valid) {
-      try {
-        // Sauvegarder d'abord tous les produits modifiés
-        for (const product of this.modifiedProducts()) {
-          if (product.id) {
-            await this.productService
-              .saveProduct(product.id.toString(), product)
-              .pipe(take(1))
-              .toPromise();
-          }
-        }
+    this.isUpdating.set(true);
 
-        // Puis mettre à jour le devis
-        const quoteData = {
-          ...this.createQuoteForm.value,
-          products_id: this.products().map((product) => product.id!),
-          client_id: this.client()!.id,
-          isVatIncluded: this.isTvaIncluded(),
-          total: this.total(),
-          tva21: this.tva21(),
-          tva6: this.tva6(),
-          totalHtva: this.totalHtva(),
-          attachment_keys: this.getAllAttachmentKeys(),
-        };
-        this.isUpdating.set(true);
+    if (!this.client() || !this.updatedQuoteId()) {
+      this.isUpdating.set(false);
+      return;
+    }
 
-        const fileToSend = this.file();
+    const quoteDto: QuoteDto = {
+      quote_date: new Date(this.createQuoteForm.get('quote_date')?.value),
+      service_date: new Date(this.createQuoteForm.get('service_date')?.value),
+      payment_deadline: this.createQuoteForm.get('payment_deadline')?.value,
+      validation_deadline: new Date(
+        this.createQuoteForm.get('validation_deadline')?.value
+      ),
+      client_id: this.client()!.id,
+      products_id: this.products().map((product) => product.id!),
+      isVatIncluded: this.isTvaIncluded(),
+      comment: this.createQuoteForm.get('comment')?.value || '',
+      attachment_keys: this.existingAttachments().map((attachment) =>
+        this.extractS3KeyFromUrl(attachment.url)
+      ),
+    };
 
-        this.quoteService
-          .updateQuote(this.updatedQuoteId() || '', quoteData, fileToSend)
-          .pipe(take(1))
-          .subscribe({
-            next: () => {
-              this.modifiedProducts.set([]);
-              this.isUpdating.set(false);
-              this.location.back();
-            },
-            error: (error: Error) => {
-              console.error('Error updating quote:', error);
-              this.isUpdating.set(false);
-              toast.error('Erreur lors de la mise à jour du devis');
-            },
-          });
-      } catch (error: unknown) {
-        console.error('Error saving products:', error);
-        this.isUpdating.set(false);
-        toast.error('Erreur lors de la sauvegarde des produits');
-      }
+    try {
+      await firstValueFrom(
+        this.quoteService.updateQuote(
+          this.updatedQuoteId() || '',
+          quoteDto,
+          this.selectedFiles
+        )
+      );
+      this.isUpdating.set(false);
+      this.goBack();
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du devis:', error);
+      this.isUpdating.set(false);
+      toast.error('Erreur lors de la mise à jour du devis');
     }
   }
 

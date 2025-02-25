@@ -17,7 +17,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { Location, DatePipe, NgClass } from '@angular/common';
-import { take, tap } from 'rxjs';
+import { firstValueFrom, take, tap } from 'rxjs';
 import { toast } from 'ngx-sonner';
 import { ClientEntity } from '../../../../../shared/entities/client.entity';
 import { ProductEntity } from '../../../../../shared/entities/product.entity';
@@ -73,6 +73,7 @@ import { HlmSelectImports } from '@spartan-ng/ui-select-helm';
 
 import { EuroFormatPipe } from '../../../../../shared/pipes/euro-format.pipe';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { QuoteDto } from '../../../../../shared/dtos/quote.dto';
 
 @Component({
   selector: 'app-new-quote',
@@ -228,6 +229,7 @@ export class NewQuoteComponent implements AfterViewInit {
 
   protected file = signal<File[]>([]);
   protected selectedFiles: File[] = [];
+  protected existingAttachments = signal<{ url: string; name: string }[]>([]);
 
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
   isDragging = false;
@@ -315,49 +317,42 @@ export class NewQuoteComponent implements AfterViewInit {
 
     if (this.updatedQuoteId()) {
       this.isLoadingQuote.set(true);
-      this.quoteService
-        .getQuote(this.updatedQuoteId() || '')
-        .pipe(
-          take(1),
-          tap((data) => {
-            this.updatedQuote.set(data);
-            this.client.set(data.client);
-            this.products.set(data.products);
-            this.isTvaIncluded.set(data.isVatIncluded);
+      try {
+        const quote = (await firstValueFrom(
+          this.quoteService.getQuote(this.updatedQuoteId()!)
+        )) as QuoteEntity;
+        this.updatedQuote.set(quote);
 
-            // Gestion du fichier attaché
-            if (data.attachment_url && data.attachment_url.length > 0) {
-              const s3Key = this.extractS3KeyFromUrl(data.attachment_url[0]);
-              console.log('Données du fichier reçues:', {
-                url: data.attachment_url,
-                extracted_key: s3Key,
-              });
+        // Initialiser les pièces jointes existantes
+        if (quote.attachment_url && Array.isArray(quote.attachment_url)) {
+          const attachments = quote.attachment_url.map((url: string) => ({
+            url,
+            name: this.extractFileNameFromUrl(url),
+          }));
+          this.existingAttachments.set(attachments);
+        }
 
-              const existingAttachment: ProjectAttachment = {
-                id: -1, // ID temporaire pour le fichier existant
-                name: this.extractFileNameFromUrl(data.attachment_url[0]),
-                url: data.attachment_url[0],
-                key: s3Key,
-                type: 'application/pdf',
-                created_at: new Date(),
-                description: '',
-              };
-              this.selectedAttachment.set(existingAttachment);
-            }
+        this.client.set(quote.client);
+        this.products.set(quote.products);
+        this.isTvaIncluded.set(quote.isVatIncluded);
 
-            this.createQuoteForm.patchValue({
-              quote_date: data.quote_date,
-              service_date: data.service_date,
-              payment_deadline: data.payment_deadline,
-              validation_deadline: data.validation_deadline,
-              comment: data.comment,
-            });
+        // Formater les dates avant de les assigner au formulaire
+        this.createQuoteForm.patchValue({
+          quote_date: this.formatDate(new Date(quote.quote_date)),
+          service_date: this.formatDate(new Date(quote.service_date)),
+          payment_deadline: quote.payment_deadline,
+          validation_deadline: this.formatDate(
+            new Date(quote.validation_deadline)
+          ),
+          comment: quote.comment,
+        });
 
-            this.calculateTotals();
-            this.isLoadingQuote.set(false);
-          })
-        )
-        .subscribe();
+        this.calculateTotals();
+        this.isLoadingQuote.set(false);
+      } catch (error) {
+        console.error('Erreur lors de la récupération du devis:', error);
+        this.isLoadingQuote.set(false);
+      }
     }
   }
 
@@ -1029,54 +1024,47 @@ export class NewQuoteComponent implements AfterViewInit {
   }
 
   async updateQuote() {
-    if (this.createQuoteForm.valid) {
-      try {
-        // Sauvegarder d'abord tous les produits modifiés
-        for (const product of this.modifiedProducts()) {
-          if (product.id) {
-            await this.productService
-              .saveProduct(product.id.toString(), product)
-              .pipe(take(1))
-              .toPromise();
-          }
-        }
+    this.isUpdating.set(true);
 
-        // Puis mettre à jour le devis
-        const quoteData = {
-          ...this.createQuoteForm.value,
-          products_id: this.products().map((product) => product.id!),
-          client_id: this.client()!.id,
-          isVatIncluded: this.isTvaIncluded(),
-          total: this.total(),
-          tva21: this.tva21(),
-          tva6: this.tva6(),
-          totalHtva: this.totalHtva(),
-          attachment_keys: this.getAllAttachmentKeys(),
-        };
-        this.isUpdating.set(true);
+    if (!this.client() || !this.updatedQuoteId()) {
+      this.isUpdating.set(false);
+      return;
+    }
 
-        const fileToSend = this.file();
+    const quoteDto: QuoteDto = {
+      quote_date: new Date(this.createQuoteForm.get('quote_date')?.value),
+      service_date: new Date(this.createQuoteForm.get('service_date')?.value),
+      payment_deadline: this.createQuoteForm.get('payment_deadline')?.value,
+      validation_deadline: new Date(
+        this.createQuoteForm.get('validation_deadline')?.value
+      ),
+      client_id: this.client()!.id,
+      products_id: this.products().map((product) => product.id!),
+      isVatIncluded: this.isTvaIncluded(),
+      comment: this.createQuoteForm.get('comment')?.value || '',
+      attachment_keys: [
+        ...this.existingAttachments().map((attachment) =>
+          this.extractS3KeyFromUrl(attachment.url)
+        ),
+        ...this.selectedFiles.map(
+          (file) => `quote/${this.updatedQuoteId()}/${file.name}`
+        ),
+      ],
+    };
 
-        this.quoteService
-          .updateQuote(this.updatedQuoteId() || '', quoteData, fileToSend)
-          .pipe(take(1))
-          .subscribe({
-            next: () => {
-              this.modifiedProducts.set([]);
-              this.isUpdating.set(false);
-              this.location.back();
-            },
-            error: (error: Error) => {
-              console.error('Error updating quote:', error);
-              this.isUpdating.set(false);
-              toast.error('Erreur lors de la mise à jour du devis');
-            },
-          });
-      } catch (error: unknown) {
-        console.error('Error saving products:', error);
-        this.isUpdating.set(false);
-        toast.error('Erreur lors de la sauvegarde des produits');
-      }
+    try {
+      await firstValueFrom(
+        this.quoteService.updateQuote(
+          this.updatedQuoteId() || '',
+          quoteDto,
+          this.selectedFiles
+        )
+      );
+      this.isUpdating.set(false);
+      this.goBack();
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du devis:', error);
+      this.isUpdating.set(false);
     }
   }
 
@@ -1380,6 +1368,12 @@ export class NewQuoteComponent implements AfterViewInit {
   isFileAlreadySaved(fileName: string): boolean {
     return this.userAttachments().some(
       (attachment) => attachment.name === fileName
+    );
+  }
+
+  removeExistingAttachment(attachment: { url: string; name: string }) {
+    this.existingAttachments.update((attachments) =>
+      attachments.filter((a) => a.url !== attachment.url)
     );
   }
 }

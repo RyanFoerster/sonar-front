@@ -5,7 +5,7 @@ export interface QuoteDto {
 
   payment_deadline: number;
 
-  validation_deadline: number;
+  validation_deadline: Date;
 
   isVatIncluded?: boolean;
 
@@ -19,7 +19,7 @@ export interface QuoteDto {
 
   comment: string;
 
-  attachment_key?: string[];
+  attachment_keys?: string[];
 
   created_by?: string;
 

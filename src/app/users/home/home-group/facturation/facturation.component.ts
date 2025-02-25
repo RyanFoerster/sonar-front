@@ -7,6 +7,7 @@ import {
   OnDestroy,
   signal,
   OnInit,
+  ChangeDetectionStrategy,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { provideIcons } from '@ng-icons/core';
@@ -36,7 +37,7 @@ import { HlmButtonDirective } from '@spartan-ng/ui-button-helm';
 
 import { HlmIconComponent } from '@spartan-ng/ui-icon-helm';
 import { HlmTableImports } from '@spartan-ng/ui-table-helm';
-import { take, tap } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 import { CompteGroupeEntity } from '../../../../shared/entities/compte-groupe.entity';
 import { InvoiceEntity } from '../../../../shared/entities/invoice.entity';
 import { PrincipalAccountEntity } from '../../../../shared/entities/principal-account.entity';
@@ -61,6 +62,11 @@ import {
   HlmPaginationItemDirective,
 } from '@spartan-ng/ui-pagination-helm';
 
+/* Ajout d'une interface pour le contexte modal */
+interface ModalContext {
+  close: () => void;
+}
+
 @Component({
   selector: 'app-facturation',
   standalone: true,
@@ -80,7 +86,6 @@ import {
     BrnAlertDialogContentDirective,
     BrnAlertDialogTriggerDirective,
     FormsModule,
-    DatePipe,
     NgClass,
     BrnSelectImports,
     HlmSelectImports,
@@ -103,6 +108,7 @@ import {
   ],
   templateUrl: './facturation.component.html',
   styleUrl: './facturation.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FacturationComponent implements OnInit, OnDestroy {
   private readonly services = {
@@ -188,52 +194,35 @@ export class FacturationComponent implements OnInit, OnDestroy {
   }
 
   private async getConnectedUser(): Promise<void> {
-    this.services.users
-      .getInfo()
-      .pipe(
-        take(1),
-        tap((user) => {
-          this.connectedUser.set(user);
-          this.initializeAccount(user);
-        })
-      )
-      .subscribe();
+    const user = await firstValueFrom(this.services.users.getInfo());
+    this.connectedUser.set(user);
+    await this.initializeAccount(user);
   }
 
-  private initializeAccount(user: UserEntity): void {
+  private async initializeAccount(user: UserEntity): Promise<void> {
     this.isLoading.set(true);
     if (user.role === 'ADMIN') {
-      this.initializeAdminAccount();
+      await this.initializeAdminAccount();
     } else {
       this.initializeUserAccount(user);
     }
   }
 
-  private initializeAdminAccount(): void {
+  private async initializeAdminAccount(): Promise<void> {
     this.isLoading.set(true);
     if (this.typeOfProjet() === 'PRINCIPAL') {
-      this.services.principal
-        .getGroupByIdWithRelations(+this.id()!)
-        .pipe(
-          take(1),
-          tap((data) => {
-            this.accountPrincipal = data;
-            this.loadInvoices();
-            this.initializeCreditNotes(data.invoice || []);
-          })
-        )
-        .subscribe();
+      const data = await firstValueFrom(
+        this.services.principal.getGroupByIdWithRelations(+this.id()!)
+      );
+      this.accountPrincipal = data;
+      this.loadInvoices();
+      this.initializeCreditNotes(data.invoice || []);
     } else {
-      this.services.group
-        .getGroupById(+this.id()!)
-        .pipe(
-          take(1),
-          tap((data) => {
-            this.groupAccount.set(data);
-            this.loadInvoices();
-          })
-        )
-        .subscribe();
+      const data = await firstValueFrom(
+        this.services.group.getGroupById(+this.id()!)
+      );
+      this.groupAccount.set(data);
+      this.loadInvoices();
     }
   }
 
@@ -368,72 +357,70 @@ export class FacturationComponent implements OnInit, OnDestroy {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  createInvoice(quote: QuoteEntity, ctx: any): void {
-    this.services.invoice
-      .createInvoice(quote, {
-        account_id: +this.id()!,
-        type: this.typeOfProjet() as 'PRINCIPAL' | 'GROUP',
-      })
-      .pipe(
-        take(1),
-        tap((data) => {
-          quote.invoice = data;
-          ctx.close();
+  async createInvoice(quote: QuoteEntity, ctx: ModalContext): Promise<void> {
+    try {
+      const data = await firstValueFrom(
+        this.services.invoice.createInvoice(quote, {
+          account_id: +this.id()!,
+          type: this.typeOfProjet() as 'PRINCIPAL' | 'GROUP',
         })
-      )
-      .subscribe();
+      );
+      quote.invoice = data;
+      ctx.close();
+    } catch {
+      // Gérer les erreurs si nécessaire
+    }
   }
 
-  checkCreditNote(invoice_id: number): void {
-    this.services.invoice
-      .getCreditNoteByInvoiceId(invoice_id)
-      .pipe(
-        take(1),
-        tap((data: InvoiceEntity) => {
-          this.creditNote.set(data);
-          this.creditNoteList.update((prev) => [...prev, data]);
-          this.isCreditNote.set(!!data);
-        })
-      )
-      .subscribe();
+  async checkCreditNote(invoice_id: number): Promise<void> {
+    try {
+      const data: InvoiceEntity = await firstValueFrom(
+        this.services.invoice.getCreditNoteByInvoiceId(invoice_id)
+      );
+      this.creditNote.set(data);
+      this.creditNoteList.update((prev) => [...prev, data]);
+      this.isCreditNote.set(!!data);
+    } catch (error) {
+      // Gérer les erreurs
+      console.error(error);
+    }
   }
 
-  loadCreditNote(creditNoteId: number): void {
-    this.services.invoice
-      .getCreditNoteByInvoiceId(creditNoteId)
-      .pipe(
-        take(1),
-        tap((data) => {
-          this.creditNote.set(data);
-          this.generateCreditNotePdf(this.creditNote()!);
-        })
-      )
-      .subscribe();
+  async loadCreditNote(creditNoteId: number): Promise<void> {
+    try {
+      const data = await firstValueFrom(
+        this.services.invoice.getCreditNoteByInvoiceId(creditNoteId)
+      );
+      this.creditNote.set(data);
+      this.generateCreditNotePdf(this.creditNote()!);
+    } catch (error) {
+      // Gérer les erreurs
+      console.error(error);
+    }
   }
 
   setReportDate(date: Date): void {
     this.reportDate.set(date);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  reportQuoteDate(quote_id: number, ctx: any): void {
+  async reportQuoteDate(quote_id: number, ctx: ModalContext): Promise<void> {
     if (!this.reportDate()) return;
-
-    this.services.quote
-      .reportQuoteDate(quote_id, new Date(this.reportDate()!))
-      .pipe(
-        take(1),
-        tap((success) => {
-          if (!success) return;
-
-          this.updateQuoteDate(quote_id);
-          ctx.close();
-          this.reportDate.set(this.currentDate);
-          toast('Date du devis reportée');
-        })
-      )
-      .subscribe();
+    try {
+      const success = await firstValueFrom(
+        this.services.quote.reportQuoteDate(
+          quote_id,
+          new Date(this.reportDate())
+        )
+      );
+      if (success) {
+        this.updateQuoteDate(quote_id);
+        ctx.close();
+        this.reportDate.set(this.currentDate);
+        toast('Date du devis reportée');
+      }
+    } catch {
+      // Gérer les erreurs
+    }
   }
 
   private updateQuoteDate(quote_id: number): void {

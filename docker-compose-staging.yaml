@@ -1,0 +1,22 @@
+---
+services:
+  sonar-front-staging:
+    image: dimagin/sonar-front:staging
+    container_name: sonar-front-staging
+    restart: unless-stopped
+    networks:
+      - traefik-network
+    env_file:
+      - .env
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.sonar-front-staging.rule=Host(`${SONAR_STAGING_FRONTEND_HOST}`)
+      - traefik.http.routers.sonar-front-staging.entrypoints=websecure
+      - traefik.http.routers.sonar-front-staging.tls=true
+      - traefik.http.routers.sonar-front-staging.tls.certresolver=cloudflare
+      - traefik.http.routers.sonar-front-staging.service=sonar-front-staging
+      - traefik.http.routers.sonar-front-staging.tls.options=default
+
+networks:
+  traefik-network:
+    external: true

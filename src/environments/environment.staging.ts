@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
-  API_URL: 'https://backend-test.sonarartists.be',
+  API_URL: 'https://staging-backend.sonarartists.be',
   TOKEN_KEY: 'token',
   REFRESH_TOKEN_KEY: 'refresh_token',
   USER_KEY: 'user',

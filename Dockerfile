@@ -1,5 +1,7 @@
 FROM node:23-alpine3.19 AS build
 
+ARG BUILD_ENV=prod
+
 WORKDIR /app
 
 COPY package*.json ./
@@ -8,7 +10,7 @@ RUN npm install
 
 COPY . .
 
-RUN npm run build
+RUN npm run build:${BUILD_ENV}
 
 FROM nginx:1.27-alpine-slim AS prod
 

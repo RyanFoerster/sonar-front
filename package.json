@@ -4,7 +4,8 @@
   "scripts": {
     "ng": "ng",
     "start": "NG_APP_ENV=development ng serve",
-    "build": "ng build --configuration production",
+    "build:prod": "ng build --configuration production",
+    "build:staging": "ng build --configuration staging",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "lint": "ng lint"

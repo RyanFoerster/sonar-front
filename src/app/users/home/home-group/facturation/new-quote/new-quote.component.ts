@@ -229,6 +229,7 @@ export class NewQuoteComponent implements AfterViewInit {
 
   protected file = signal<File[]>([]);
   protected selectedFiles: File[] = [];
+  protected existingAttachments = signal<{ url: string; name: string }[]>([]);
 
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
   isDragging = false;
@@ -316,49 +317,42 @@ export class NewQuoteComponent implements AfterViewInit {
 
     if (this.updatedQuoteId()) {
       this.isLoadingQuote.set(true);
-      this.quoteService
-        .getQuote(this.updatedQuoteId() || '')
-        .pipe(
-          take(1),
-          tap((data) => {
-            this.updatedQuote.set(data);
-            this.client.set(data.client);
-            this.products.set(data.products);
-            this.isTvaIncluded.set(data.isVatIncluded);
+      try {
+        const quote = (await firstValueFrom(
+          this.quoteService.getQuote(this.updatedQuoteId()!)
+        )) as QuoteEntity;
+        this.updatedQuote.set(quote);
 
-            // Gestion du fichier attaché
-            if (data.attachment_url && data.attachment_url.length > 0) {
-              const s3Key = this.extractS3KeyFromUrl(data.attachment_url[0]);
-              console.log('Données du fichier reçues:', {
-                url: data.attachment_url,
-                extracted_key: s3Key,
-              });
+        // Initialiser les pièces jointes existantes
+        if (quote.attachment_url && Array.isArray(quote.attachment_url)) {
+          const attachments = quote.attachment_url.map((url: string) => ({
+            url,
+            name: this.extractFileNameFromUrl(url),
+          }));
+          this.existingAttachments.set(attachments);
+        }
 
-              const existingAttachment: ProjectAttachment = {
-                id: -1, // ID temporaire pour le fichier existant
-                name: this.extractFileNameFromUrl(data.attachment_url[0]),
-                url: data.attachment_url[0],
-                key: s3Key,
-                type: 'application/pdf',
-                created_at: new Date(),
-                description: '',
-              };
-              this.selectedAttachment.set(existingAttachment);
-            }
+        this.client.set(quote.client);
+        this.products.set(quote.products);
+        this.isTvaIncluded.set(quote.isVatIncluded);
 
-            this.createQuoteForm.patchValue({
-              quote_date: data.quote_date,
-              service_date: data.service_date,
-              payment_deadline: data.payment_deadline,
-              validation_deadline: data.validation_deadline,
-              comment: data.comment,
-            });
+        // Formater les dates avant de les assigner au formulaire
+        this.createQuoteForm.patchValue({
+          quote_date: this.formatDate(new Date(quote.quote_date)),
+          service_date: this.formatDate(new Date(quote.service_date)),
+          payment_deadline: quote.payment_deadline,
+          validation_deadline: this.formatDate(
+            new Date(quote.validation_deadline)
+          ),
+          comment: quote.comment,
+        });
 
-            this.calculateTotals();
-            this.isLoadingQuote.set(false);
-          })
-        )
-        .subscribe();
+        this.calculateTotals();
+        this.isLoadingQuote.set(false);
+      } catch (error) {
+        console.error('Erreur lors de la récupération du devis:', error);
+        this.isLoadingQuote.set(false);
+      }
     }
   }
 
@@ -1048,9 +1042,14 @@ export class NewQuoteComponent implements AfterViewInit {
       products_id: this.products().map((product) => product.id!),
       isVatIncluded: this.isTvaIncluded(),
       comment: this.createQuoteForm.get('comment')?.value || '',
-      attachment_keys: this.existingAttachments().map((attachment) =>
-        this.extractS3KeyFromUrl(attachment.url)
-      ),
+      attachment_keys: [
+        ...this.existingAttachments().map((attachment) =>
+          this.extractS3KeyFromUrl(attachment.url)
+        ),
+        ...this.selectedFiles.map(
+          (file) => `quote/${this.updatedQuoteId()}/${file.name}`
+        ),
+      ],
     };
 
     try {
@@ -1066,7 +1065,6 @@ export class NewQuoteComponent implements AfterViewInit {
     } catch (error) {
       console.error('Erreur lors de la mise à jour du devis:', error);
       this.isUpdating.set(false);
-      toast.error('Erreur lors de la mise à jour du devis');
     }
   }
 
@@ -1370,6 +1368,12 @@ export class NewQuoteComponent implements AfterViewInit {
   isFileAlreadySaved(fileName: string): boolean {
     return this.userAttachments().some(
       (attachment) => attachment.name === fileName
+    );
+  }
+
+  removeExistingAttachment(attachment: { url: string; name: string }) {
+    this.existingAttachments.update((attachments) =>
+      attachments.filter((a) => a.url !== attachment.url)
     );
   }
 }

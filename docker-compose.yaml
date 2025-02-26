@@ -1,7 +1,7 @@
 ---
 services:
   sonar-front:
-    image: dimagin/sonar-front:latest
+    image: dimagin/sonar-front:test
     container_name: sonar-front
     restart: unless-stopped
     networks:

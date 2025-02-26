@@ -17,19 +17,17 @@ jobs:
           username: ${{ secrets.SSH_TEST_USERNAME }}
           password: ${{ secrets.SSH_TEST_PASSWORD }}
           script: |
-            echo "Hello, world!" > test.txt
-          # script: |
-          #   cd sonar-front
-          #   curl -o docker-compose.yaml https://raw.githubusercontent.com/${{ github.repository_owner }}/${{ github.event.repository.name }}/main/docker-compose.yaml
+            cd sonar-front
+            curl -o docker-compose.yaml https://raw.githubusercontent.com/${{ github.repository_owner }}/${{ github.event.repository.name }}/main/docker-compose.yaml
 
-      # - name: Run the docker container
-      #   uses: appleboy/ssh-action@master
-      #   with:
-      #     host: ${{ secrets.SSH_TEST_HOST }}
-      #     username: ${{ secrets.SSH_TEST_USERNAME }}
-      #     password: ${{ secrets.SSH_TEST_PASSWORD }}
-      #     script: |
-      #       cd sonar-front
-      #       docker compose down
-      #       docker compose pull
-      #       docker compose up -d --force-recreate
+      - name: Run the docker container
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_TEST_HOST }}
+          username: ${{ secrets.SSH_TEST_USERNAME }}
+          password: ${{ secrets.SSH_TEST_PASSWORD }}
+          script: |
+            cd sonar-front
+            docker compose pull
+            docker compose down
+            docker compose up -d

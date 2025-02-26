@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
-  API_URL: process.env.API_URL,
+  API_URL: 'https://backend.uploadpulse.com',
   TOKEN_KEY: 'token',
   REFRESH_TOKEN_KEY: 'refresh_token',
   USER_KEY: 'user',

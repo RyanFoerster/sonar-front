@@ -22,8 +22,8 @@ jobs:
       - name: Build Docker Image
         id: build-image
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/sonar-front:test .
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/sonar-front:latest .
 
       - name: push the docker image
         id: push-image
-        run: docker push ${{ secrets.DOCKER_USERNAME }}/sonar-front:test
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/sonar-front:latest

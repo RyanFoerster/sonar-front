@@ -6,6 +6,7 @@ import {
   model,
   signal,
   computed,
+  effect,
 } from '@angular/core';
 import { HlmButtonDirective } from '@spartan-ng/ui-button-helm';
 import { VirementSepaService } from '../../shared/services/virement-sepa.service';
@@ -89,12 +90,36 @@ export class SepaValidationComponent implements AfterViewInit {
   protected virementsSepaAccepted = signal<VirementSepaEntity[]>([]);
   protected currentVirementsIndex = signal(0);
   protected rejectedReason = model<string>('');
+  protected currentInvoiceBlob = signal<Blob | null>(null);
 
   protected currentVirement = computed(() => {
-    const virements = this.virementsSepaInPending();
-    const index = this.currentVirementsIndex();
-    return virements[index] || null;
+    if (
+      this.virementsSepaInPending().length > 0 &&
+      this.currentVirementsIndex() < this.virementsSepaInPending().length
+    ) {
+      return this.virementsSepaInPending()[this.currentVirementsIndex()];
+    }
+    return null;
   });
+
+  constructor() {
+    // Effet pour charger automatiquement la facture lorsque l'index change
+    effect(() => {
+      const virement = this.currentVirement();
+      if (virement && virement.id) {
+        this.virementSepaService
+          .downloadInvoice(virement.id)
+          .subscribe((response) => {
+            if (response.body) {
+              const blob = new Blob([response.body], {
+                type: response.headers.get('content-type') || undefined,
+              });
+              this.currentInvoiceBlob.set(blob);
+            }
+          });
+      }
+    });
+  }
 
   ngAfterViewInit() {
     this.virementSepaService
@@ -147,6 +172,25 @@ export class SepaValidationComponent implements AfterViewInit {
     });
   }
 
+  downloadInvoice(virement: VirementSepaEntity) {
+    this.virementSepaService
+      .downloadInvoice(virement.id)
+      .subscribe((response) => {
+        if (response.body) {
+          const blob = new Blob([response.body], {
+            type: response.headers.get('content-type') || undefined,
+          });
+
+          // Stocker le blob pour l'affichage dans le PDF Viewer
+          this.currentInvoiceBlob.set(blob);
+
+          // Ouvrir dans un nouvel onglet comme avant
+          const url = window.URL.createObjectURL(blob);
+          window.open(url, '_blank');
+        }
+      });
+  }
+
   paidVirement(id: number) {
     this.virementSepaService.paidVirement(id).subscribe(() => {
       this.virementsSepaAccepted.update((virements) => {
@@ -161,6 +205,20 @@ export class SepaValidationComponent implements AfterViewInit {
     );
     if (index !== -1) {
       this.currentVirementsIndex.set(index);
+
+      // Charger automatiquement la facture pour l'affichage
+      if (virement.id) {
+        this.virementSepaService
+          .downloadInvoice(virement.id)
+          .subscribe((response) => {
+            if (response.body) {
+              const blob = new Blob([response.body], {
+                type: response.headers.get('content-type') || undefined,
+              });
+              this.currentInvoiceBlob.set(blob);
+            }
+          });
+      }
     }
   }
 

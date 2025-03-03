@@ -772,6 +772,7 @@ export class ProjectAccountComponent implements AfterViewInit {
 
     try {
       const data = await service.getGroupById(+id).toPromise();
+      console.log('data', data);
       if (!data) return;
 
       // Trier les virements par date la plus récente
@@ -780,7 +781,7 @@ export class ProjectAccountComponent implements AfterViewInit {
           new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         );
       });
-
+      console.log('virements', virements);
       const start =
         (this.pagination.virement.currentPage() - 1) * this.itemsPerPage();
       const end = start + this.itemsPerPage();
@@ -799,8 +800,10 @@ export class ProjectAccountComponent implements AfterViewInit {
 
       if (projectType === 'PRINCIPAL') {
         this.state.accountPrincipal.set(updatedData as PrincipalAccountEntity);
+        console.log('principal', this.state.accountPrincipal());
       } else {
         this.state.accountGroup.set(updatedData as CompteGroupeEntity);
+        console.log('group', this.state.accountGroup());
       }
     } catch (error) {
       console.error('Erreur lors de la récupération des virements :', error);

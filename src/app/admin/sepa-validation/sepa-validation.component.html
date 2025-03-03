@@ -100,15 +100,18 @@
                   >
                     <div>
                       <p class="text-sm text-gray-600">
-                        {{ currentVirement().created_at | date : "dd/MM/yy" }}
+                        {{ currentVirement()?.created_at | date : "dd/MM/yy" }}
                       </p>
                       <p class="font-medium text-gray-900">
-                        {{ currentVirement().account_owner }}
+                        {{ currentVirement()?.account_owner }}
                       </p>
                     </div>
                     <div class="flex gap-2">
                       <a
-                        [href]="currentVirement().invoice_url"
+                        (click)="downloadInvoice(currentVirement()!)"
+                        (keydown.enter)="downloadInvoice(currentVirement()!)"
+                        tabindex="0"
+                        role="button"
                         target="_blank"
                         download
                         class="relative h-8 w-8 flex items-center justify-center text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
@@ -130,7 +133,7 @@
                   <div class="bg-gray-50 p-3 rounded-lg">
                     <p class="text-sm font-medium text-gray-500">IBAN</p>
                     <p class="text-sm text-gray-900 break-all">
-                      {{ currentVirement().iban }}
+                      {{ currentVirement()?.iban }}
                     </p>
                   </div>
 
@@ -139,13 +142,13 @@
                     <div class="bg-gray-50 p-3 rounded-lg">
                       <p class="text-sm font-medium text-gray-500">TVAC</p>
                       <p class="text-sm text-gray-900">
-                        {{ currentVirement().amount_total! | euroFormat }}
+                        {{ currentVirement()?.amount_total! | euroFormat }}
                       </p>
                     </div>
                     <div class="bg-gray-50 p-3 rounded-lg">
                       <p class="text-sm font-medium text-gray-500">HTVA</p>
                       <p class="text-sm text-gray-900">
-                        {{ currentVirement().amount_htva! | euroFormat }}
+                        {{ currentVirement()?.amount_htva! | euroFormat }}
                       </p>
                     </div>
                     <div
@@ -153,7 +156,7 @@
                     >
                       <p class="text-sm font-medium text-gray-500">TVA</p>
                       <p class="text-sm text-gray-900">
-                        {{ currentVirement().amount_tva! | euroFormat }}
+                        {{ currentVirement()?.amount_tva! | euroFormat }}
                       </p>
                     </div>
                   </div>
@@ -165,7 +168,7 @@
                         Communication
                       </p>
                       <p class="text-sm text-gray-900 break-all">
-                        {{ currentVirement().communication || "-" }}
+                        {{ currentVirement()?.communication || "-" }}
                       </p>
                     </div>
                     <div class="bg-gray-50 p-3 rounded-lg">
@@ -173,13 +176,13 @@
                         Communication structurée
                       </p>
                       <p class="text-sm text-gray-900">
-                        {{ currentVirement().structured_communication || "-" }}
+                        {{ currentVirement()?.structured_communication || "-" }}
                       </p>
                     </div>
                     <div class="bg-gray-50 p-3 rounded-lg col-span-2">
                       <p class="text-sm font-medium text-gray-500">Projet</p>
                       <p class="text-sm text-gray-900">
-                        {{ currentVirement().projet_username }}
+                        {{ currentVirement()?.projet_username }}
                       </p>
                     </div>
                   </div>
@@ -280,7 +283,8 @@
               >
                 @if (currentVirement()) {
                 <app-pdf-viewer
-                  [pdfUrl]="currentVirement().invoice_url!"
+                  [pdfUrl]="currentVirement()!.invoice_url!"
+                  [pdfBlob]="currentInvoiceBlob() || undefined"
                 ></app-pdf-viewer>
                 }
               </div>
@@ -340,7 +344,10 @@
                 />
               </button>
               <a
-                [href]="virement.invoice_url"
+                (click)="downloadInvoice(virement)"
+                (keydown.enter)="downloadInvoice(virement)"
+                tabindex="0"
+                role="button"
                 target="_blank"
                 download
                 class="relative h-8 w-8 flex items-center justify-center text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"

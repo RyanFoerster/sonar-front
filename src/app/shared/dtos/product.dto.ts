@@ -7,5 +7,9 @@ export interface ProductDto {
 
   quantity: number;
 
+  price_htva?: number;
+
+  tva_amount?: number;
+
   total?: number;
 }

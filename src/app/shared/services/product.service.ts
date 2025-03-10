@@ -17,9 +17,9 @@ export class ProductService {
     );
   }
 
-  update(product_id: string, productDto: ProductDto) {
+  update(product_id: string, productDto: ProductDto, tvaIncluded = false) {
     return this.httpClient.put<ProductEntity>(
-      `${environment.API_URL}/product/update/${product_id}`,
+      `${environment.API_URL}/product/update/${product_id}?tvaIncluded=${tvaIncluded}`,
       { ...productDto, shouldSave: false }
     );
   }

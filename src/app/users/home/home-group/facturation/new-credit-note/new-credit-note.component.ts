@@ -506,7 +506,6 @@ export class NewCreditNoteComponent implements AfterViewInit {
       .pipe(
         take(1),
         tap((data) => {
-          console.log(JSON.stringify(data, null, 2));
           this.isValidBCENumber.set(data ? true : false);
 
           const { entrepriseName, street, addressNumber, postalCode, city } =
@@ -821,8 +820,6 @@ export class NewCreditNoteComponent implements AfterViewInit {
       if (this.isPhysicalPerson()) {
         clientData.name = `${clientData.firstname} ${clientData.lastname}`;
       }
-
-      console.log(clientData);
 
       // this.clientService
       //   .create(clientData)

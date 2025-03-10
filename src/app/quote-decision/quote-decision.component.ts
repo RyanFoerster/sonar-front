@@ -286,8 +286,6 @@ export class QuoteDecisionComponent implements AfterViewInit {
 
     const attachments: { url: string; name: string }[] = [];
 
-    console.log(this.quoteFromDB);
-
     if (
       this.quoteFromDB.attachment_url &&
       this.quoteFromDB.attachment_url.length > 0
@@ -339,8 +337,6 @@ export class QuoteDecisionComponent implements AfterViewInit {
     }
 
     try {
-      console.log('Téléchargement avec la clé S3:', s3Key);
-
       const response = await lastValueFrom(
         this.quoteService.downloadAttachment(s3Key)
       );
@@ -350,10 +346,7 @@ export class QuoteDecisionComponent implements AfterViewInit {
         return;
       }
 
-      console.log('Réponse reçue, taille:', response.size);
-
       const fileName = this.getAttachmentFileName(url);
-      console.log('Nom du fichier:', fileName);
 
       // Créer un lien temporaire pour le téléchargement
       const link = document.createElement('a');

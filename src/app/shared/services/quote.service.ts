@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { QuoteDto } from '../dtos/quote.dto';
 import { environment } from '../../../environments/environment';
 import { QuoteEntity } from '../entities/quote.entity';
-import { tap, map } from 'rxjs/operators';
+import { map } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root',
@@ -16,10 +16,21 @@ export class QuoteService {
 
     // Ajouter les fichiers s'ils existent
     if (files && files.length > 0) {
-      files.forEach((file) => {
+      console.log(`Ajout de ${files.length} fichiers au FormData`);
+      files.forEach((file, index) => {
+        console.log(`Fichier ${index + 1}:`, file.name, file.type, file.size);
         form.append('attachments', file);
       });
+    } else {
+      console.log('Aucun fichier à ajouter au FormData');
     }
+
+    // Vérifier si les fichiers ont été correctement ajoutés
+    console.log('Vérification du FormData:');
+    console.log('Nombre de fichiers:', files.length);
+    // FormData.get() ne retourne que le premier fichier, donc ce log n'est pas très utile
+    const firstAttachment = form.get('attachments');
+    console.log('Premier attachement:', firstAttachment);
 
     // Nettoyer et préparer les données
     const cleanQuoteDto = {
@@ -40,11 +51,16 @@ export class QuoteService {
 
     // Ajouter les fichiers s'ils existent
     if (files && files.length > 0) {
-      files.forEach((file) => {
+      console.log(`Mise à jour: Ajout de ${files.length} fichiers au FormData`);
+      files.forEach((file, index) => {
+        console.log(`Fichier ${index + 1}:`, file.name, file.type, file.size);
         form.append('attachments', file);
       });
+    } else {
+      console.log('Mise à jour: Aucun fichier à ajouter au FormData');
     }
 
+    // Nettoyer et préparer les données
     const cleanQuoteDto = {
       ...quoteDto,
       products_id: Array.isArray(quoteDto.products_id)
@@ -103,7 +119,6 @@ export class QuoteService {
   }
 
   downloadAttachment(attachmentKey: string) {
-    console.log('Service - Téléchargement de la clé:', attachmentKey);
     return this.httpClient
       .get(
         `${environment.API_URL}/quote/attachment/${encodeURIComponent(
@@ -117,19 +132,6 @@ export class QuoteService {
           },
         }
       )
-      .pipe(
-        tap((response) => {
-          console.log('Service - Headers reçus:', response.headers);
-          console.log(
-            'Service - Content-Type:',
-            response.headers.get('Content-Type')
-          );
-          console.log(
-            'Service - Content-Disposition:',
-            response.headers.get('Content-Disposition')
-          );
-        }),
-        map((response) => response.body as Blob)
-      );
+      .pipe(map((response) => response.body as Blob));
   }
 }

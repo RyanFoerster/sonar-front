@@ -703,6 +703,7 @@ export class ProjectAccountComponent implements AfterViewInit {
   }
 
   async fetchTransaction() {
+    this.state.isSpinner.set(true);
     const projectType = this.typeOfProjet();
     if (projectType !== 'PRINCIPAL' && projectType !== 'GROUP') {
       return this.services.router.navigate(['/home']);
@@ -757,6 +758,8 @@ export class ProjectAccountComponent implements AfterViewInit {
 
       this.pagination.sender.totalItems.set(senderTransactions.meta.total);
       this.pagination.sender.totalPages.set(senderTransactions.meta.totalPages);
+
+      this.state.isSpinner.set(false);
 
       return true;
     } catch (error) {

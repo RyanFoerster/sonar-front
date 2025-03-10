@@ -729,11 +729,39 @@ export class NewQuoteComponent implements AfterViewInit {
       vat: formValues.vat ? 0.06 : 0.21,
     };
 
+    // Calcul des montants en fonction de isTvaIncluded
+    let price_htva, tva_amount, total;
+
+    if (this.isTvaIncluded()) {
+      // Si TVA incluse, on recalcule les montants HTVA
+      const priceWithVAT = productToAdd.price * productToAdd.quantity;
+      const vatRate = productToAdd.vat;
+      price_htva = priceWithVAT / (1 + vatRate);
+      tva_amount = priceWithVAT - price_htva;
+      total = priceWithVAT;
+    } else {
+      // Si TVA non incluse, on recalcule les montants avec TVA
+      price_htva = productToAdd.price * productToAdd.quantity;
+      tva_amount = price_htva * productToAdd.vat;
+      total = price_htva + tva_amount;
+    }
+
+    const completeProduct = {
+      ...productToAdd,
+      price_htva,
+      tva_amount,
+      total,
+    };
+
+    console.log('Creating product with TVA included:', this.isTvaIncluded());
+    console.log('Product data:', completeProduct);
+
     this.productService
-      .createProduct(productToAdd)
+      .createProduct(completeProduct)
       .pipe(
         take(1),
         tap((newProduct) => {
+          console.log('Product created:', newProduct);
           const currentProducts = this.products();
           this.products.set([...currentProducts, newProduct]);
           this.calculateTotals();
@@ -799,7 +827,11 @@ export class NewQuoteComponent implements AfterViewInit {
       };
 
       this.productService
-        .update(this.idProductToEdit()?.toString() || '', updatedProduct)
+        .update(
+          this.idProductToEdit()?.toString() || '',
+          updatedProduct,
+          this.isTvaIncluded()
+        )
         .pipe(take(1))
         .subscribe({
           next: (product) => {

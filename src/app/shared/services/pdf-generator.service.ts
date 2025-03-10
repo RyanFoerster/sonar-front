@@ -191,46 +191,218 @@ export class PdfGeneratorService {
 
   generateQuotePDF(quote: QuoteEntity): void {
     const doc = new jsPDF(this.getOptimizedPdfConfig());
+    const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
 
-    this.addHeader(doc);
-    this.addClientInfo(doc, quote.client);
+    // Couleur principale pour le design
+    const mainColor = [200, 192, 77] as [number, number, number]; // #C8C04D en RGB
 
-    // Titre et informations du devis
-    let yPosition = 60;
-    doc.setFontSize(18);
-    doc.setTextColor(0);
+    // Logo en haut à gauche
+    try {
+      const logoUrl = '/assets/images/SONAR.png';
+      const logoSize = 40;
+      doc.addImage(
+        logoUrl,
+        'PNG',
+        this.PAGE_MARGIN,
+        this.PAGE_MARGIN,
+        logoSize,
+        logoSize,
+        undefined,
+        'MEDIUM'
+      );
+    } catch (error: any) {
+      console.warn(`Impossible de charger le logo: ${error.message}`);
+    }
+
+    // Titre "Devis" en haut à droite
+    doc.setFontSize(28);
+    doc.setTextColor(51, 51, 51);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Devis', pageWidth - this.PAGE_MARGIN, 35, { align: 'right' });
+
+    // Date et numéro de devis
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
     doc.text(
-      `DEVIS N°: ${new Date().getFullYear()}-${quote.id}`,
-      this.PAGE_MARGIN,
-      yPosition
+      this.formatDateBelgium(quote.quote_date),
+      pageWidth - this.PAGE_MARGIN,
+      45,
+      { align: 'right' }
     );
+    doc.text(`N°${quote.id}`, pageWidth - this.PAGE_MARGIN, 55, {
+      align: 'right',
+    });
 
+    // Informations de l'émetteur
     doc.setFontSize(10);
-    yPosition += 10;
+    doc.setFont('helvetica', 'bold');
+    doc.text(this.COMPANY_INFO.name, this.PAGE_MARGIN, 70);
+    doc.setFont('helvetica', 'normal');
+    doc.text(this.COMPANY_INFO.address, this.PAGE_MARGIN, 75);
+    doc.text(this.COMPANY_INFO.city, this.PAGE_MARGIN, 80);
+    doc.text(`Email: ${this.COMPANY_INFO.email}`, this.PAGE_MARGIN, 85);
+    doc.text(this.COMPANY_INFO.vat, this.PAGE_MARGIN, 90);
+
+    // Informations du client
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text(quote.client.name!, pageWidth - this.PAGE_MARGIN - 60, 70);
+    doc.setFont('helvetica', 'normal');
+    doc.text(quote.client.street, pageWidth - this.PAGE_MARGIN - 60, 75);
+    doc.text(quote.client.city, pageWidth - this.PAGE_MARGIN - 60, 80);
     doc.text(
-      `Date: ${this.formatDateBelgium(quote.quote_date)}`,
-      this.PAGE_MARGIN,
-      yPosition
+      quote.client.company_vat_number ?? 'TVA: BE 0790.515.752',
+      pageWidth - this.PAGE_MARGIN - 60,
+      85
     );
-    yPosition += 7;
+
+    // Titre du document
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
     doc.text(
-      `Date de service: ${this.formatDateBelgium(quote.service_date)}`,
+      `Devis N°${quote.id} pour ${quote.client.name}`,
       this.PAGE_MARGIN,
-      yPosition
+      105
     );
 
-    const finalY = this.addProductsTable(doc, quote.products, 'quote');
+    // Délai d'exécution
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(
+      `Validité du devis : ${this.formatDateBelgium(
+        quote.validation_deadline
+      )}`,
+      pageWidth - this.PAGE_MARGIN,
+      115,
+      { align: 'right' }
+    );
+    doc.text(
+      `Délais de paiement : ${quote.payment_deadline} jours à compter de la date de prestation`,
+      pageWidth - this.PAGE_MARGIN,
+      120,
+      { align: 'right' }
+    );
 
-    // Totaux et conditions
-    this.addTotals(doc, quote, finalY);
-    this.addFooter(doc, pageHeight, [
-      `Conditions de paiement : ${quote.payment_deadline} jours à compter de la date de facturation`,
-      `Validité du devis : ${this.formatDateBelgium(quote.quote_date)}`,
-      'Nous vous remercions de votre confiance',
-    ]);
+    // Tableau des produits
+    const startY = 125;
+    autoTable(doc, {
+      head: [['Description', 'Quantité(s)', 'Tarif', 'Remise', 'Total']],
+      body: quote.products.map((product) => [
+        product.description,
+        product.quantity.toString(),
+        `${product.price.toFixed(2)}€`,
+        `0,00€`, // Remise fixe à 0 car la propriété discount n'existe pas
+        `${(product.quantity * product.price).toFixed(2)}€`,
+      ]),
+      startY: startY,
+      styles: {
+        fontSize: 9,
+        cellPadding: 5,
+      },
+      headStyles: {
+        fillColor: mainColor,
+        textColor: 255,
+        fontSize: 9,
+        fontStyle: 'bold',
+        halign: 'center', // Alignement par défaut pour les en-têtes
+      },
+      columnStyles: {
+        0: { cellWidth: 'auto', halign: 'left' },
+        1: { cellWidth: 30, halign: 'center' },
+        2: { cellWidth: 30, halign: 'right' },
+        3: { cellWidth: 30, halign: 'right' },
+        4: { cellWidth: 30, halign: 'right' },
+      },
+      // Configuration spécifique pour les en-têtes de colonnes
+      willDrawCell: function (data) {
+        // Si c'est une cellule d'en-tête
+        if (data.row.section === 'head') {
+          // Définir l'alignement des en-têtes pour correspondre aux colonnes
+          if (data.column.index === 0) {
+            data.cell.styles.halign = 'left';
+          } else if (data.column.index === 1) {
+            data.cell.styles.halign = 'center';
+          } else {
+            data.cell.styles.halign = 'right';
+          }
+        }
+      },
+      margin: { left: this.PAGE_MARGIN, right: this.PAGE_MARGIN },
+    });
 
-    doc.save(`devis_${new Date().getFullYear()}-${quote.id}.pdf`);
+    // Position Y après le tableau
+    const finalY = (doc as any).lastAutoTable.finalY + 10;
+
+    // Sous-total et TVA
+    autoTable(doc, {
+      body: [
+        ['Sous-total', `${quote.price_htva?.toFixed(2) || '0.00'}€`],
+        ['TVA 6%', `${quote.total_vat_6.toFixed(2)}€`],
+        ['TVA 21%', `${quote.total_vat_21.toFixed(2)}€`],
+        ['Total', `${quote.total.toFixed(2)}€`],
+      ],
+      startY: finalY,
+      styles: {
+        fontSize: 9,
+        cellPadding: 3,
+      },
+      theme: 'plain',
+      columnStyles: {
+        0: { cellWidth: 40, halign: 'left' },
+        1: { cellWidth: 40, halign: 'right', fontStyle: 'bold' },
+      },
+      margin: { left: pageWidth - 100 },
+    });
+
+    // Message de remerciement
+    // doc.setFontSize(9);
+    // doc.setTextColor(51, 51, 51);
+    // doc.text('Cordialement,', this.PAGE_MARGIN, finalY + 40);
+    // doc.text(
+    //   'Si ce devis vous convient, veuillez nous le retourner signé et précédé de la mention :',
+    //   this.PAGE_MARGIN,
+    //   finalY + 50
+    // );
+
+    // Champs pour signature
+    doc.setFont('helvetica', 'normal');
+    // doc.text('Date :', this.PAGE_MARGIN, finalY + 20);
+    // doc.text('Signature :', this.PAGE_MARGIN, finalY + 35);
+
+    // Pied de page avec informations de l'entreprise
+    const footerY = pageHeight - 30; // Réduit l'espace en bas
+
+    // Calculer les positions horizontales pour éviter les chevauchements
+    const col1X = this.PAGE_MARGIN;
+    const col2X = pageWidth / 3;
+    const col3X = (pageWidth / 3) * 2 - 10; // Ajusté pour éviter de sortir de la page
+
+    // Colonne 1 - Siège social
+    doc.setFont('helvetica', 'bold');
+    doc.text('Siège social', col1X, footerY);
+    doc.setFont('helvetica', 'normal');
+    doc.text(this.COMPANY_INFO.address, col1X, footerY + 5);
+    doc.text(this.COMPANY_INFO.city.split(',')[0], col1X, footerY + 10);
+    doc.text('Belgique', col1X, footerY + 15);
+    doc.text(this.COMPANY_INFO.vat.replace('TVA ', ''), col1X, footerY + 20);
+
+    // Colonne 2 - Coordonnées
+    doc.setFont('helvetica', 'bold');
+    doc.text('Coordonnées', col2X, footerY);
+    doc.setFont('helvetica', 'normal');
+    doc.text(this.COMPANY_INFO.name, col2X, footerY + 5);
+    doc.text(this.COMPANY_INFO.email, col2X, footerY + 10);
+    // Vous pouvez ajouter un site web ici si disponible
+
+    // Colonne 3 - Détails bancaires
+    doc.setFont('helvetica', 'bold');
+    doc.text('Détails bancaires', col3X, footerY);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`IBAN: ${this.COMPANY_INFO.iban}`, col3X, footerY + 5);
+    doc.text(`BIC: ${this.COMPANY_INFO.bic}`, col3X, footerY + 10);
+
+    doc.save(`devis_${quote.id}.pdf`);
   }
 
   previewQuotePDF(quote: QuoteEntity): jsPDF {

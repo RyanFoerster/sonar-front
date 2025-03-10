@@ -14,12 +14,6 @@ export class IndexComponent implements OnInit {
   private authService: AuthService = inject(AuthService);
   private router: Router = inject(Router);
 
-  constructor() {
-    if (this.authService.getUser()) {
-      this.router.navigate(['/home']);
-    }
-  }
-
   ngOnInit() {
     window.addEventListener('message', (event) => {
       if (event.origin === 'https://sonarartists.com') {

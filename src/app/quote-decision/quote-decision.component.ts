@@ -63,6 +63,7 @@ export class QuoteDecisionComponent implements AfterViewInit {
   role: string | null = null;
   connectedUser = signal(this.authService.getUser());
   termsAccepted = false;
+  attachmentsAccepted = false;
   isLoadingPdf = false;
 
   constructor(private route: ActivatedRoute) {

@@ -329,7 +329,7 @@
 >
   <div class="container mx-auto px-4">
     <div class="max-w-4xl mx-auto py-4">
-      <div class="flex flex-col md:flex-row items-start justify-between gap-4">
+      <div class="flex flex-col md:flex-row items-center justify-between gap-4">
         <!-- Pièces jointes -->
         @if(getAttachments().length > 0) {
         <div class="relative group">
@@ -386,25 +386,47 @@
 
         <!-- Actions ou Message de confirmation -->
         @if(canTakeAction()) {
-        <div class="flex items-center gap-4">
-          <!-- Conditions générales -->
-          <div class="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="terms"
-              [(ngModel)]="termsAccepted"
-              class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-            />
-            <label for="terms" class="text-sm text-gray-700 whitespace-nowrap">
-              J'ai lu et j'accepte les
-              <a
-                href="/conditions-generales"
-                target="_blank"
-                class="text-blue-600 hover:text-blue-800 underline"
+        <div class="flex gap-4">
+          <div class="flex flex-col justify-center gap-4">
+            <!-- Conditions générales -->
+            <div class="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="terms"
+                [(ngModel)]="termsAccepted"
+                class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <label
+                for="terms"
+                class="text-sm text-gray-700 whitespace-nowrap"
               >
-                conditions générales
-              </a>
-            </label>
+                J'ai lu et j'accepte les
+                <a
+                  href="/conditions-generales"
+                  target="_blank"
+                  class="text-blue-600 hover:text-blue-800 underline"
+                >
+                  conditions générales
+                </a>
+              </label>
+            </div>
+
+            @if(getAttachments().length > 0) {
+            <div class="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="attachments"
+                [(ngModel)]="attachmentsAccepted"
+                class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <label
+                for="terms"
+                class="text-sm text-gray-700 whitespace-nowrap"
+              >
+                J'ai pris connaissance des pièces jointes
+              </label>
+            </div>
+            }
           </div>
 
           <!-- Boutons d'action -->
@@ -412,7 +434,7 @@
             <button
               (click)="acceptQuote()"
               class="rounded-full bg-emerald-500 hover:bg-emerald-600 transition-colors px-6 py-2 text-white font-medium flex items-center justify-center gap-2"
-              [disabled]="!termsAccepted"
+              [disabled]="!termsAccepted || !attachmentsAccepted"
               hlmBtn
             >
               <hlm-icon name="lucideCheck" size="sm" />
@@ -421,7 +443,7 @@
             <button
               (click)="rejectQuote()"
               class="rounded-full bg-red-500 hover:bg-red-600 transition-colors px-6 py-2 text-white font-medium flex items-center justify-center gap-2"
-              [disabled]="!termsAccepted"
+              [disabled]="!termsAccepted || !attachmentsAccepted"
               hlmBtn
             >
               <hlm-icon name="lucideX" size="sm" />

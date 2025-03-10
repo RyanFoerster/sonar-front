@@ -1,6 +1,6 @@
 import { NgClass } from '@angular/common';
 import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { lucideAlignJustify, lucideX, lucideDownload } from '@ng-icons/lucide';
 import { HlmButtonDirective } from '@spartan-ng/ui-button-helm';
 import { HlmIconComponent, provideIcons } from '@spartan-ng/ui-icon-helm';
@@ -50,6 +50,7 @@ import { PwaService } from '../shared/services/pwa.service';
     BrnMenuTriggerDirective,
     HlmButtonDirective,
     NgClass,
+    RouterLink,
   ],
   templateUrl: './header-mobile.component.html',
   styleUrl: './header-mobile.component.css',

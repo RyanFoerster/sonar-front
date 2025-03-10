@@ -1,5 +1,10 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  FormBuilder,
+  FormsModule,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { tap, catchError, throwError } from 'rxjs';
 import {
   HlmAccordionContentComponent,
@@ -55,6 +60,7 @@ import { lucideLoader } from '@ng-icons/lucide';
     BrnDialogContentDirective,
     BrnDialogTriggerDirective,
     ReactiveFormsModule,
+    FormsModule,
   ],
   providers: [provideIcons({ lucideLoader })],
   templateUrl: './home.component.html',

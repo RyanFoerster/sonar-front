@@ -923,8 +923,10 @@ export class NewQuoteComponent implements AfterViewInit {
         quote.group_account_id = this.id();
       }
 
+      console.log('Fichiers à envoyer:', this.selectedFiles);
+
       this.quoteService
-        .createQuote(quote, this.file())
+        .createQuote(quote, this.selectedFiles)
         .pipe(take(1))
         .subscribe({
           next: () => {
@@ -1001,6 +1003,7 @@ export class NewQuoteComponent implements AfterViewInit {
       return;
     }
     this.selectedFiles.push(file);
+    this.file.update((files) => [...files, file]);
   }
 
   private isValidPdfFile(file: File): boolean {
@@ -1051,6 +1054,8 @@ export class NewQuoteComponent implements AfterViewInit {
         ),
       ],
     };
+
+    console.log('Fichiers à envoyer pour mise à jour:', this.selectedFiles);
 
     try {
       await firstValueFrom(

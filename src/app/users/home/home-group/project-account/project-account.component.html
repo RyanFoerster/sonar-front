@@ -284,7 +284,7 @@
                 class="rounded-full px-4"
                 hlmBtn
                 variant="outline"
-                (click)="ctx.close()"
+                (click)="ctx.close(); state.resetForm(transactionForm)"
                 [disabled]="state.isLoadingTransfer()"
               >
                 Annuler
@@ -617,7 +617,7 @@
                   class="rounded-full px-6 self-center"
                   hlmBtn
                   variant="outline"
-                  (click)="ctx.close(); virementSepaForm.reset()"
+                  (click)="ctx.close(); state.resetForm(virementSepaForm)"
                   [disabled]="state.isLoadingVirement()"
                 >
                   Annuler

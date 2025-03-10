@@ -83,7 +83,6 @@ export class HomeComponent {
   readonly filteredGroupAccounts = computed(() => {
     const accounts = this.groupAccounts();
     const term = this.searchTerm().toLowerCase().trim();
-    console.log(term);
 
     if (!accounts || !term) return accounts;
 

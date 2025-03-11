@@ -32,28 +32,6 @@
     <div class="p-6 bg-gray-50 border-b border-gray-200">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div class="flex items-center gap-2">
-          <span class="text-sm font-medium text-gray-600">Statut Projet:</span>
-          <span
-            class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
-            [ngClass]="{
-              'bg-green-50 text-green-700':
-                quoteFromDB.group_acceptance === 'accepted',
-              'bg-red-50 text-red-700':
-                quoteFromDB.group_acceptance === 'refused',
-              'bg-yellow-50 text-yellow-700':
-                quoteFromDB.group_acceptance === 'pending'
-            }"
-          >
-            {{
-              quoteFromDB.group_acceptance === "accepted"
-                ? "Accepté"
-                : quoteFromDB.group_acceptance === "refused"
-                ? "Refusé"
-                : "En attente"
-            }}
-          </span>
-        </div>
-        <div class="flex items-center gap-2">
           <span class="text-sm font-medium text-gray-600">Statut Client:</span>
           <span
             class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
@@ -75,6 +53,28 @@
             }}
           </span>
         </div>
+        <div class="flex items-center gap-2">
+          <span class="text-sm font-medium text-gray-600">Statut Projet:</span>
+          <span
+            class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
+            [ngClass]="{
+              'bg-green-50 text-green-700':
+                quoteFromDB.group_acceptance === 'accepted',
+              'bg-red-50 text-red-700':
+                quoteFromDB.group_acceptance === 'refused',
+              'bg-yellow-50 text-yellow-700':
+                quoteFromDB.group_acceptance === 'pending'
+            }"
+          >
+            {{
+              quoteFromDB.group_acceptance === "accepted"
+                ? "Accepté"
+                : quoteFromDB.group_acceptance === "refused"
+                ? "Refusé"
+                : "En attente"
+            }}
+          </span>
+        </div>
       </div>
     </div>
 
@@ -88,9 +88,36 @@
     </div>
     } @else if(quoteStatus === 'refused') {
     <div class="p-6 bg-red-50 border-b border-red-200">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2 text-red-700">
+          <hlm-icon name="lucideXCircle" size="sm" />
+          <span>Le devis a été refusé</span>
+        </div>
+        <button
+          (click)="cancelRejection()"
+          class="rounded-full bg-gray-500 hover:bg-gray-600 transition-colors px-4 py-1 text-white text-sm font-medium flex items-center justify-center gap-1"
+          [disabled]="isCancelingRejection"
+          hlmBtn
+        >
+          @if(isCancelingRejection) {
+          <div
+            class="animate-spin rounded-full h-3 w-3 border-t-2 border-b-2 border-white"
+          ></div>
+          } @else {
+          <hlm-icon name="lucideUndo2" size="sm" />
+          }
+          {{ isCancelingRejection ? "En cours..." : "Annuler le refus" }}
+        </button>
+      </div>
+    </div>
+    } @else if(isRefusedByOtherParty()) {
+    <div class="p-6 bg-red-50 border-b border-red-200">
       <div class="flex items-center justify-center gap-2 text-red-700">
         <hlm-icon name="lucideXCircle" size="sm" />
-        <span>Le devis a été refusé</span>
+        <span>
+          @if(role === 'GROUP') { Le client a refusé ce devis } @else { Le
+          groupe a refusé ce devis }
+        </span>
       </div>
     </div>
     }
@@ -434,21 +461,49 @@
             <button
               (click)="acceptQuote()"
               class="rounded-full bg-emerald-500 hover:bg-emerald-600 transition-colors px-6 py-2 text-white font-medium flex items-center justify-center gap-2"
-              [disabled]="!termsAccepted || !attachmentsAccepted"
+              [disabled]="
+                !termsAccepted ||
+                (getAttachments().length > 0 && !attachmentsAccepted) ||
+                isAccepting ||
+                isRejecting
+              "
               hlmBtn
             >
+              @if(isAccepting) {
+              <div
+                class="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"
+              ></div>
+              } @else {
               <hlm-icon name="lucideCheck" size="sm" />
-              Accepter
+              }
+              {{ isAccepting ? "En cours..." : "Accepter" }}
             </button>
             <button
               (click)="rejectQuote()"
               class="rounded-full bg-red-500 hover:bg-red-600 transition-colors px-6 py-2 text-white font-medium flex items-center justify-center gap-2"
-              [disabled]="!termsAccepted || !attachmentsAccepted"
+              [disabled]="!termsAccepted || isAccepting || isRejecting"
               hlmBtn
             >
+              @if(isRejecting) {
+              <div
+                class="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"
+              ></div>
+              } @else {
               <hlm-icon name="lucideX" size="sm" />
-              Refuser
+              }
+              {{ isRejecting ? "En cours..." : "Refuser" }}
             </button>
+          </div>
+        </div>
+        } @else if(isRefusedByOtherParty()) {
+        <!-- Message de refus par l'autre partie -->
+        <div class="flex items-center justify-center flex-grow">
+          <div class="flex items-center gap-2 text-red-600">
+            <hlm-icon name="lucideXCircle" size="sm" />
+            <span class="font-medium">
+              @if(role === 'GROUP') { Le client a refusé ce devis } @else { Le
+              groupe a refusé ce devis }
+            </span>
           </div>
         </div>
         } @else {
@@ -460,9 +515,26 @@
             <span class="font-medium">Vous avez accepté ce devis</span>
           </div>
           } @else if(quoteStatus === 'refused') {
-          <div class="flex items-center gap-2 text-red-600">
-            <hlm-icon name="lucideXCircle" size="sm" />
-            <span class="font-medium">Vous avez refusé ce devis</span>
+          <div class="flex items-center justify-between w-full">
+            <div class="flex items-center gap-2 text-red-600">
+              <hlm-icon name="lucideXCircle" size="sm" />
+              <span class="font-medium">Vous avez refusé ce devis</span>
+            </div>
+            <button
+              (click)="cancelRejection()"
+              class="rounded-full bg-gray-500 hover:bg-gray-600 transition-colors px-6 py-2 text-white font-medium flex items-center justify-center gap-2"
+              [disabled]="isCancelingRejection"
+              hlmBtn
+            >
+              @if(isCancelingRejection) {
+              <div
+                class="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"
+              ></div>
+              } @else {
+              <hlm-icon name="lucideUndo2" size="sm" />
+              }
+              {{ isCancelingRejection ? "En cours..." : "Annuler le refus" }}
+            </button>
           </div>
           }
         </div>

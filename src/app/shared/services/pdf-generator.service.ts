@@ -278,7 +278,7 @@ export class PdfGeneratorService {
       { align: 'right' }
     );
     doc.text(
-      `Délais de paiement : ${quote.payment_deadline} jours à compter de la date de prestation`,
+      `Délais de paiement : ${quote.payment_deadline} jours à compter de la date de prestation / livraison`,
       pageWidth - this.PAGE_MARGIN,
       120,
       { align: 'right' }
@@ -443,7 +443,7 @@ export class PdfGeneratorService {
       this.addTotals(doc, quote, finalY);
 
       this.addFooter(doc, pageHeight, [
-        `Conditions de paiement : ${quote.payment_deadline} jours à compter de la date de facturation`,
+        `Conditions de paiement : ${quote.payment_deadline} jours à compter de la date de prestation / livraison`,
         `Validité du devis : ${this.formatDateBelgium(quote.quote_date)}`,
         'Nous vous remercions de votre confiance',
       ]);

@@ -118,6 +118,20 @@ export class QuoteService {
     );
   }
 
+  cancelRejectionFromGroup(quoteId: string | null) {
+    return this.httpClient.patch<QuoteEntity>(
+      `${environment.API_URL}/quote/${quoteId}/group_rejection_cancel`,
+      {}
+    );
+  }
+
+  cancelRejectionFromClient(quoteId: string | null) {
+    return this.httpClient.patch<QuoteEntity>(
+      `${environment.API_URL}/quote/${quoteId}/order_giver_rejection_cancel`,
+      {}
+    );
+  }
+
   downloadAttachment(attachmentKey: string) {
     return this.httpClient
       .get(

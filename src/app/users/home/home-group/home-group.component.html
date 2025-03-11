@@ -1,23 +1,25 @@
 <div class="flex flex-col justify-center">
   <button
     (click)="goBack()"
-    class="w-fit mx-10 mb-5 rounded-full flex items-center gap-3"
+    class="w-fit mx-4 sm:mx-6 md:mx-10 mb-3 md:mb-5 rounded-full flex items-center gap-2 md:gap-3"
     hlmBtn
   >
     <hlm-icon size="sm" name="lucideCornerDownLeft" />
     Retour
   </button>
   <div
-    class="background-div h-40 max-w-full md:h-[380px] relative mx-10 overflow-hidden rounded-2xl shadow"
+    class="background-div h-32 sm:h-40 md:h-[300px] lg:h-[380px] relative mx-4 sm:mx-6 md:mx-10 overflow-hidden rounded-xl md:rounded-2xl shadow"
   >
     <!-- Effet de flou et overlay -->
 
     <!-- Contenu -->
     <div
-      class="relative z-10 p-16 text-white h-full flex flex-col justify-center"
+      class="relative z-10 p-4 sm:p-8 md:p-12 lg:p-16 text-white h-full flex flex-col justify-center"
     >
-      <div class="flex items-center gap-4">
-        <h1 class="text-4xl md:text-5xl font-bold mb-3">
+      <div class="flex items-center gap-2 md:gap-4">
+        <h1
+          class="text-lg sm:text-xl md:text-3xl lg:text-5xl font-bold mb-1 sm:mb-2 md:mb-3"
+        >
           {{ projet()?.username }}
         </h1>
         @if(canEditName()) {
@@ -26,19 +28,19 @@
             brnDialogTrigger
             hlmBtn
             variant="ghost"
-            class="rounded-full p-2 hover:bg-white/10"
+            class="rounded-full p-1 sm:p-2 hover:bg-white/10"
           >
             <hlm-icon name="lucideEdit" size="sm" />
           </button>
           <hlm-dialog-content
             *brnDialogContent="let ctx"
-            class="sm:max-w-[425px]"
+            class="sm:max-w-[425px] mx-4 sm:mx-auto"
           >
             <hlm-dialog-header>
-              <h3 hlmDialogTitle class="text-lg font-semibold">
+              <h3 hlmDialogTitle class="text-base md:text-lg font-semibold">
                 Modifier le nom du groupe
               </h3>
-              <p hlmDialogDescription class="text-sm text-gray-500">
+              <p hlmDialogDescription class="text-xs sm:text-sm text-gray-500">
                 Entrez le nouveau nom pour ce groupe de projet.
               </p>
             </hlm-dialog-header>
@@ -46,9 +48,9 @@
             <form
               [formGroup]="updateNameForm"
               (ngSubmit)="updateGroupName(ctx)"
-              class="flex flex-col gap-4 py-4"
+              class="flex flex-col gap-3 md:gap-4 py-3 md:py-4"
             >
-              <div class="space-y-2">
+              <div class="space-y-1 sm:space-y-2">
                 <p hlmLabel>Nouveau nom</p>
                 <input
                   hlmInput
@@ -60,16 +62,19 @@
               </div>
 
               @if(state.errorMessage()) {
-              <p class="text-red-500 text-sm">{{ state.errorMessage() }}</p>
+              <p class="text-red-500 text-xs sm:text-sm">
+                {{ state.errorMessage() }}
+              </p>
               }
 
-              <div class="flex justify-end gap-3">
+              <div class="flex justify-end gap-2 sm:gap-3">
                 <button
                   type="button"
                   hlmBtn
                   variant="outline"
                   (click)="ctx.close()"
                   [disabled]="state.isLoadingUpdateName()"
+                  class="text-xs sm:text-sm md:text-base"
                 >
                   Annuler
                 </button>
@@ -79,7 +84,7 @@
                   [disabled]="
                     !updateNameForm.valid || state.isLoadingUpdateName()
                   "
-                  class="relative min-w-[100px]"
+                  class="relative min-w-[80px] sm:min-w-[100px] text-xs sm:text-sm md:text-base"
                 >
                   <span [class.opacity-0]="state.isLoadingUpdateName()"
                     >Enregistrer</span
@@ -88,7 +93,7 @@
                   <div
                     class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
                   >
-                    <hlm-spinner class="h-4 w-4" />
+                    <hlm-spinner class="h-3 w-3 sm:h-4 sm:w-4" />
                   </div>
                   }
                 </button>
@@ -102,50 +107,60 @@
         <button
           brnDialogTrigger
           hlmBtn
-          class="rounded-full flex items-center gap-2"
+          class="rounded-full flex items-center gap-1 sm:gap-2 text-xs sm:text-sm md:text-base mt-2 md:mt-3"
         >
           <hlm-icon name="lucideUsers" size="sm" />
           Voir les membres
         </button>
         <hlm-dialog-content
           *brnDialogContent="let ctx"
-          class="w-full max-w-6xl"
+          class="w-[95%] sm:w-[90%] md:w-full max-w-6xl mx-auto"
         >
           <hlm-dialog-header>
-            <h3 brnDialogTitle hlm class="text-xl font-semibold">
+            <h3 brnDialogTitle hlm class="text-lg md:text-xl font-semibold">
               Membres du projet
             </h3>
-            <p brnDialogDescription hlm class="text-gray-500">
+            <p
+              brnDialogDescription
+              hlm
+              class="text-xs sm:text-sm text-gray-500"
+            >
               Voir les membres du projet
             </p>
           </hlm-dialog-header>
 
           <!-- Container avec scroll -->
-          <div class="max-h-[60vh] overflow-y-auto mt-4 px-1 w-full">
+          <div
+            class="max-h-[50vh] sm:max-h-[60vh] overflow-y-auto mt-3 md:mt-4 px-1 w-full"
+          >
             <!-- Grid responsive des membres -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div
+              class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4"
+            >
               @for (member of members(); track $index) {
               <!-- Carte membre -->
               <div
-                class="p-4 rounded-lg border border-gray-200 bg-white shadow-sm hover:shadow-md transition-shadow"
+                class="p-3 md:p-4 rounded-lg border border-gray-200 bg-white shadow-sm hover:shadow-md transition-shadow"
               >
-                <div class="flex flex-col gap-4">
+                <div class="flex flex-col gap-3 md:gap-4">
                   <!-- Infos principales -->
-                  <div class="flex items-center gap-3 mb-2">
+                  <div class="flex items-center gap-2 md:gap-3 mb-1 md:mb-2">
                     <div
-                      class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 font-medium"
+                      class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 font-medium text-xs sm:text-base"
                     >
                       {{ member.user.firstName[0] }}{{ member.user.name[0] }}
                     </div>
-                    <h4 class="font-medium text-lg truncate">
+                    <h4 class="font-medium text-base sm:text-lg truncate">
                       {{ member.user.firstName }} {{ member.user.name }}
                     </h4>
                   </div>
-                  <div class="flex flex-col text-sm text-gray-600 gap-2">
-                    <div class="flex items-center gap-2">
+                  <div
+                    class="flex flex-col text-xs sm:text-sm text-gray-600 gap-1 sm:gap-2"
+                  >
+                    <div class="flex items-center gap-1 sm:gap-2">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        class="h-4 w-4 flex-shrink-0"
+                        class="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0"
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
@@ -160,10 +175,10 @@
                       <span class="truncate">{{ member.user.email }}</span>
                     </div>
                     @if(member.user.telephone){
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-1 sm:gap-2">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        class="h-4 w-4 flex-shrink-0"
+                        class="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0"
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
@@ -178,10 +193,10 @@
                       <span class="truncate">{{ member.user.telephone }}</span>
                     </div>
                     } @if(member.user.numeroNational) {
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-1 sm:gap-2">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        class="h-4 w-4 flex-shrink-0"
+                        class="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0"
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
@@ -198,10 +213,10 @@
                       }}</span>
                     </div>
                     } @if(member.user.iban){
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-1 sm:gap-2">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        class="h-4 w-4 flex-shrink-0"
+                        class="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0"
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
@@ -223,12 +238,12 @@
             </div>
           </div>
 
-          <hlm-dialog-footer class="mt-6">
+          <hlm-dialog-footer class="mt-4 md:mt-6">
             <button
               hlmBtn
               type="button"
               (click)="ctx.close()"
-              class="w-full sm:w-auto"
+              class="w-full sm:w-auto text-xs sm:text-sm md:text-base"
             >
               Fermer
             </button>
@@ -239,57 +254,47 @@
   </div>
 
   <!-- Navigation buttons -->
-  <div class="grid grid-cols-2 gap-4 mx-10 mt-6">
+  <div
+    class="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 mx-4 sm:mx-6 md:mx-10 mt-4 sm:mt-6"
+  >
     @if (typeOfProjet() === "GROUP") {
     <a
       routerLink="membership"
       [queryParams]="{ typeOfProjet: typeOfProjet() }"
-      class="rounded-full w-full text-[10px] font-semibold h-auto bg-gray-sonar text-black md:flex md:justify-center md:items-center md:gap-2 md:min-w-4/5 md:px-10 md:text-lg hover:bg-gray-200"
+      class="rounded-full w-full text-[10px] xs:text-xs sm:text-sm md:text-base lg:text-lg font-semibold h-auto py-2 sm:py-3 bg-gray-sonar text-black flex justify-center items-center gap-1 sm:gap-2 hover:bg-gray-200"
       hlmBtn
     >
       Gérer les membres
-      <hlm-icon
-        class="hidden md:block md:text-center w-4"
-        name="lucideChevronRight"
-      />
+      <hlm-icon class="w-3 sm:w-4" name="lucideChevronRight" />
     </a>
     } @if ( connectedUser()?.role === "ADMIN" && typeOfProjet() === "GROUP") {
     <a
       routerLink="diary"
       [queryParams]="{ typeOfProjet: typeOfProjet() }"
-      class="rounded-full w-full text-[10px] font-semibold h-auto bg-gray-sonar text-black md:flex md:justify-center md:items-center md:gap-2 md:min-w-4/5 md:px-10 md:text-lg hover:bg-gray-200"
+      class="rounded-full w-full text-[10px] xs:text-xs sm:text-sm md:text-base lg:text-lg font-semibold h-auto py-2 sm:py-3 bg-gray-sonar text-black flex justify-center items-center gap-1 sm:gap-2 hover:bg-gray-200"
       hlmBtn
       >Agenda du projet
-      <hlm-icon
-        class="hidden md:block md:text-center w-4"
-        name="lucideChevronRight"
-      />
+      <hlm-icon class="w-3 sm:w-4" name="lucideChevronRight" />
     </a>
     }
 
     <a
       routerLink="project-account"
       [queryParams]="{ typeOfProjet: typeOfProjet() }"
-      class="rounded-full w-full text-[10px] font-semibold h-auto bg-gray-sonar text-black md:flex md:justify-center md:items-center md:gap-2 md:min-w-4/5 md:px-10 md:text-lg hover:bg-gray-200"
+      class="rounded-full w-full text-[10px] xs:text-xs sm:text-sm md:text-base lg:text-lg font-semibold h-auto py-2 sm:py-3 bg-gray-sonar text-black flex justify-center items-center gap-1 sm:gap-2 hover:bg-gray-200"
       hlmBtn
       >Compte du projet
-      <hlm-icon
-        class="hidden md:block md:text-center w-4"
-        name="lucideChevronRight"
-      />
+      <hlm-icon class="w-3 sm:w-4" name="lucideChevronRight" />
     </a>
 
     @if(connectedUser()?.role === "ADMIN"){
     <a
       routerLink="facturation"
       [queryParams]="{ typeOfProjet: typeOfProjet() }"
-      class="rounded-full w-full text-[10px] font-semibold h-auto bg-gray-sonar text-black md:flex md:justify-center md:items-center md:gap-2 md:min-w-4/5 md:px-10 md:text-lg hover:bg-gray-200"
+      class="rounded-full w-full text-[10px] xs:text-xs sm:text-sm md:text-base lg:text-lg font-semibold h-auto py-2 sm:py-3 bg-gray-sonar text-black flex justify-center items-center gap-1 sm:gap-2 hover:bg-gray-200"
       hlmBtn
       >Facturation
-      <hlm-icon
-        class="hidden md:block md:text-center w-4"
-        name="lucideChevronRight"
-      />
+      <hlm-icon class="w-3 sm:w-4" name="lucideChevronRight" />
     </a>
     }
   </div>

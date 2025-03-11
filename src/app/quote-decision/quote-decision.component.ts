@@ -8,7 +8,7 @@ import {
 import { ActivatedRoute } from '@angular/router';
 import { QuoteService } from '../shared/services/quote.service';
 import { QuoteEntity } from '../shared/entities/quote.entity';
-import { take, tap } from 'rxjs';
+import { take, tap, finalize } from 'rxjs';
 import { AuthService } from '../shared/services/auth.service';
 import { HlmButtonDirective } from '@spartan-ng/ui-button-helm';
 import { HlmIconComponent } from '@spartan-ng/ui-icon-helm';
@@ -23,6 +23,7 @@ import {
   lucideMailQuestion,
   lucideFileText,
   lucideDownload,
+  lucideUndo2,
 } from '@ng-icons/lucide';
 import { lastValueFrom } from 'rxjs';
 import { PdfGeneratorService } from '../shared/services/pdf-generator.service';
@@ -46,6 +47,7 @@ import { PdfGeneratorService } from '../shared/services/pdf-generator.service';
       lucideMailQuestion,
       lucideFileText,
       lucideDownload,
+      lucideUndo2,
     }),
   ],
   templateUrl: './quote-decision.component.html',
@@ -65,6 +67,9 @@ export class QuoteDecisionComponent implements AfterViewInit {
   termsAccepted = false;
   attachmentsAccepted = false;
   isLoadingPdf = false;
+  isAccepting = false;
+  isRejecting = false;
+  isCancelingRejection = false;
 
   constructor(private route: ActivatedRoute) {
     // Récupérer les paramètres de requête (query parameters)
@@ -84,6 +89,12 @@ export class QuoteDecisionComponent implements AfterViewInit {
         tap((data) => {
           this.quoteFromDB = data;
           this.updateQuoteStatus();
+
+          // Initialiser attachmentsAccepted à true s'il n'y a pas de pièces jointes
+          if (!data.attachment_url || data.attachment_url.length === 0) {
+            this.attachmentsAccepted = true;
+          }
+
           return data;
         }),
         tap((data) => {
@@ -186,11 +197,25 @@ export class QuoteDecisionComponent implements AfterViewInit {
     )
       return false;
 
+    // Vérifier si l'autre partie a déjà refusé le devis
+    if (
+      this.role === 'GROUP' &&
+      this.quoteFromDB.order_giver_acceptance === 'refused'
+    )
+      return false;
+    if (
+      this.role === 'CLIENT' &&
+      this.quoteFromDB.group_acceptance === 'refused'
+    )
+      return false;
+
     return true;
   }
 
   acceptQuote() {
     if (!this.canTakeAction() || !this.quoteId) return;
+
+    this.isAccepting = true;
 
     const action$ =
       this.role === 'GROUP'
@@ -207,6 +232,9 @@ export class QuoteDecisionComponent implements AfterViewInit {
           } else if (this.quoteFromDB && this.role === 'CLIENT') {
             this.quoteFromDB.order_giver_acceptance = 'accepted';
           }
+        }),
+        finalize(() => {
+          this.isAccepting = false;
         })
       )
       .subscribe();
@@ -214,6 +242,8 @@ export class QuoteDecisionComponent implements AfterViewInit {
 
   rejectQuote() {
     if (!this.canTakeAction() || !this.quoteId) return;
+
+    this.isRejecting = true;
 
     const action$ =
       this.role === 'GROUP'
@@ -230,6 +260,47 @@ export class QuoteDecisionComponent implements AfterViewInit {
           } else if (this.quoteFromDB && this.role === 'CLIENT') {
             this.quoteFromDB.order_giver_acceptance = 'refused';
           }
+        }),
+        finalize(() => {
+          this.isRejecting = false;
+        })
+      )
+      .subscribe();
+  }
+
+  cancelRejection() {
+    if (!this.quoteId || !this.quoteFromDB) return;
+
+    // Vérifier que le devis est bien refusé par le rôle actuel
+    if (
+      (this.role === 'GROUP' &&
+        this.quoteFromDB.group_acceptance !== 'refused') ||
+      (this.role === 'CLIENT' &&
+        this.quoteFromDB.order_giver_acceptance !== 'refused')
+    ) {
+      return;
+    }
+
+    this.isCancelingRejection = true;
+
+    const action$ =
+      this.role === 'GROUP'
+        ? this.quoteService.cancelRejectionFromGroup(this.quoteId)
+        : this.quoteService.cancelRejectionFromClient(this.quoteId);
+
+    action$
+      .pipe(
+        take(1),
+        tap(() => {
+          this.quoteStatus = 'pending';
+          if (this.quoteFromDB && this.role === 'GROUP') {
+            this.quoteFromDB.group_acceptance = 'pending';
+          } else if (this.quoteFromDB && this.role === 'CLIENT') {
+            this.quoteFromDB.order_giver_acceptance = 'pending';
+          }
+        }),
+        finalize(() => {
+          this.isCancelingRejection = false;
         })
       )
       .subscribe();
@@ -364,5 +435,25 @@ export class QuoteDecisionComponent implements AfterViewInit {
     } catch (error) {
       console.error('Erreur lors du téléchargement:', error);
     }
+  }
+
+  isRefusedByOtherParty(): boolean {
+    if (!this.quoteFromDB || !this.role) return false;
+
+    if (
+      this.role === 'GROUP' &&
+      this.quoteFromDB.order_giver_acceptance === 'refused'
+    ) {
+      return true;
+    }
+
+    if (
+      this.role === 'CLIENT' &&
+      this.quoteFromDB.group_acceptance === 'refused'
+    ) {
+      return true;
+    }
+
+    return false;
   }
 }

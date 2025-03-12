@@ -756,6 +756,11 @@ export class ProjectAccountComponent implements AfterViewInit {
         recipientTransactions.meta.totalPages
       );
 
+      console.log(
+        'senderTransactions',
+        JSON.stringify(senderTransactions, null, 2)
+      );
+
       this.pagination.sender.totalItems.set(senderTransactions.meta.total);
       this.pagination.sender.totalPages.set(senderTransactions.meta.totalPages);
 

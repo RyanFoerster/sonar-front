@@ -497,10 +497,13 @@ export class PdfGeneratorService {
   ): Promise<void> {
     const qrCodeDataUrl = await this.generatePaymentQRCode(invoice);
     if (qrCodeDataUrl) {
-      const qrCodeWidth = 40;
-      const qrCodeHeight = 40;
+      const pageWidth = doc.internal.pageSize.getWidth();
+
+      // Réduction de la taille du QR code
+      const qrCodeWidth = 30; // Réduit de 40 à 30
+      const qrCodeHeight = 30; // Réduit de 40 à 30
       const qrCodeX = this.PAGE_MARGIN;
-      const qrCodeY = yPosition + 50;
+      const qrCodeY = yPosition + 20; // Réduit l'espace vertical
 
       // Optimisation de l'ajout du QR code
       doc.addImage(
@@ -515,23 +518,23 @@ export class PdfGeneratorService {
       );
 
       // Ajout des informations de paiement à côté du QR code
-      doc.setFontSize(9);
+      doc.setFontSize(8); // Réduit de 9 à 8
       doc.setTextColor(0);
       let textY = qrCodeY + 5;
       doc.text('Informations de paiement:', qrCodeX + qrCodeWidth + 10, textY);
-      textY += 8;
+      textY += 6; // Réduit l'espacement vertical de 8 à 6
       doc.text(
         `IBAN: ${this.COMPANY_INFO.iban}`,
         qrCodeX + qrCodeWidth + 10,
         textY
       );
-      textY += 8;
+      textY += 6; // Réduit l'espacement vertical de 8 à 6
       doc.text(
         `BIC: ${this.COMPANY_INFO.bic}`,
         qrCodeX + qrCodeWidth + 10,
         textY
       );
-      textY += 8;
+      textY += 6; // Réduit l'espacement vertical de 8 à 6
       const reference = `facture_${
         invoice.invoice_number
       }_${invoice.client.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
@@ -540,6 +543,56 @@ export class PdfGeneratorService {
         qrCodeX + qrCodeWidth + 10,
         textY
       );
+
+      // Ajout des conditions de paiement en dessous du QR code
+      // Calcul de la position pour éviter le chevauchement avec le pied de page
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const footerStartY = pageHeight - 45; // Position de début du footer
+      const conditionsPaiement =
+        "Toute somme non payée à son échéance porte intérêt de retard de plein droit et sans mise en demeure préalable au taux de 12 % l'an. En cas de non-paiement à l'échéance, les factures sont majorées de plein droit d'une indemnité forfaitaire de 15 % à titre de dommages et intérêts conventionnels avec un minimum de 150 euros et indépendamment des intérêts de retard.";
+
+      // Positionnement des conditions de paiement
+      const conditionsY = qrCodeY + qrCodeHeight + 8; // Réduit l'espace après le QR code
+
+      // Toujours afficher les conditions, mais adapter la taille et la position
+      doc.setFontSize(7); // Taille de police réduite
+      doc.setFont('helvetica', 'bold');
+      doc.text('Conditions de paiement:', qrCodeX, conditionsY);
+
+      doc.setFont('helvetica', 'normal');
+      const maxWidth = pageWidth - 2 * this.PAGE_MARGIN;
+
+      // Calculer l'espace disponible entre les conditions et le footer
+      const availableHeight = footerStartY - conditionsY - 8;
+
+      // Adapter la taille de police en fonction de l'espace disponible
+      if (availableHeight < 30) {
+        // Très peu d'espace disponible, utiliser une police très petite
+        doc.setFontSize(6);
+      } else if (availableHeight < 40) {
+        // Espace limité, utiliser une petite police
+        doc.setFontSize(6.5);
+      }
+
+      // Diviser le texte pour qu'il s'adapte à la largeur disponible
+      const splitText = doc.splitTextToSize(conditionsPaiement, maxWidth);
+
+      // Estimer la hauteur du texte
+      const textHeight = splitText.length * 3; // Approximation de la hauteur (3 points par ligne)
+
+      // Si le texte risque de dépasser le footer, réduire encore la taille
+      if (conditionsY + 6 + textHeight > footerStartY) {
+        // Réduire davantage la taille de police
+        doc.setFontSize(5.5);
+        const splitTextSmaller = doc.splitTextToSize(
+          conditionsPaiement,
+          maxWidth
+        );
+        doc.text(splitTextSmaller, qrCodeX, conditionsY + 6);
+      } else {
+        // Sinon, utiliser la taille déjà définie
+        doc.text(splitText, qrCodeX, conditionsY + 6);
+      }
     }
   }
 
@@ -589,9 +642,14 @@ export class PdfGeneratorService {
       45,
       { align: 'right' }
     );
-    doc.text(`N°${invoice.invoice_number}`, contentRightMargin, 50, {
-      align: 'right',
-    });
+    doc.text(
+      `N°${new Date().getFullYear()}-${invoice.invoice_number}`,
+      contentRightMargin,
+      50,
+      {
+        align: 'right',
+      }
+    );
 
     // Informations de l'émetteur (ajustées pour le nouveau positionnement du logo)
     doc.setFontSize(16);
@@ -667,7 +725,7 @@ export class PdfGeneratorService {
         cellPadding: 5,
       },
       headStyles: {
-        fillColor: [156, 139, 209],
+        fillColor: [200, 192, 77],
         textColor: 255,
         fontSize: 9,
         fontStyle: 'bold',

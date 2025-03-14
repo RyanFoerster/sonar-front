@@ -91,6 +91,11 @@ export class SepaValidationComponent implements AfterViewInit {
   protected currentVirementsIndex = signal(0);
   protected rejectedReason = model<string>('');
   protected currentInvoiceBlob = signal<Blob | null>(null);
+  protected isInitiatingTransfers = signal<boolean>(false);
+  protected transferStatus = signal<{
+    success: boolean;
+    message: string;
+  } | null>(null);
 
   protected currentVirement = computed(() => {
     if (
@@ -239,8 +244,15 @@ export class SepaValidationComponent implements AfterViewInit {
   }
 
   protected initiateSepaTransfers() {
+    // Mettre à jour l'état de chargement
+    this.isInitiatingTransfers.set(true);
+    // Réinitialiser le statut précédent
+    this.transferStatus.set(null);
+
     this.virementSepaService.initiateTransfers().subscribe({
       next: (response) => {
+        this.isInitiatingTransfers.set(false);
+
         if (response.success) {
           this.virementsSepaAccepted.update((virements) => {
             return virements.filter(
@@ -248,20 +260,27 @@ export class SepaValidationComponent implements AfterViewInit {
             );
           });
 
-          alert(
-            `${response.processedTransfers} virements SEPA ont été initiés avec succès.`
-          );
+          this.transferStatus.set({
+            success: true,
+            message: `${response.processedTransfers} virements SEPA ont été initiés avec succès.`,
+          });
         } else {
-          alert(
-            "Une erreur est survenue lors de l'initiation des virements SEPA."
-          );
+          this.transferStatus.set({
+            success: false,
+            message:
+              "Une erreur est survenue lors de l'initiation des virements SEPA.",
+          });
         }
       },
       error: (error) => {
+        this.isInitiatingTransfers.set(false);
         console.error("Erreur lors de l'initiation des virements SEPA:", error);
-        alert(
-          "Une erreur est survenue lors de l'initiation des virements SEPA."
-        );
+
+        this.transferStatus.set({
+          success: false,
+          message:
+            "Une erreur est survenue lors de l'initiation des virements SEPA.",
+        });
       },
     });
   }

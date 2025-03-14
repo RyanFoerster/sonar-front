@@ -691,7 +691,7 @@ export class PdfGeneratorService {
     const documentTitle =
       invoice.type === 'credit_note'
         ? `Note de crédit n°${invoice.invoice_number}`
-        : `Facture n°${invoice.invoice_number}`;
+        : `Facture n° ${new Date().getFullYear()}-${invoice.invoice_number}`;
     doc.text(documentTitle, contentLeftMargin, 95);
 
     // Date limite de paiement (alignée avec le bord gauche du tableau)

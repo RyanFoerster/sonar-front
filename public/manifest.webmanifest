@@ -6,6 +6,7 @@
   "display": "standalone",
   "scope": "./",
   "start_url": "./login",
+  "gcm_sender_id": "103953800507",
   "icons": [
     {
       "src": "icons/icon.webp",
@@ -55,5 +56,16 @@
       "type": "image/webp",
       "purpose": "maskable any"
     }
-  ]
+  ],
+  "shortcuts": [
+    {
+      "name": "Accueil",
+      "short_name": "Accueil",
+      "description": "Aller à l'accueil",
+      "url": "/home",
+      "icons": [{ "src": "icons/icon.webp", "sizes": "192x192" }]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false
 }

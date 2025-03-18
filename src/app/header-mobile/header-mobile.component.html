@@ -74,6 +74,13 @@
         hlmMenuBarItem
         >Liste des factures</a
       >
+      <a
+        routerLink="/push-notifications"
+        (click)="toggleMenu()"
+        class="*:text-black"
+        hlmMenuBarItem
+        >Notifications</a
+      >
       } @if (isPwaInstallable()) {
       <button
         (click)="installPwa()"

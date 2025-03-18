@@ -15,16 +15,19 @@ interface NotificationOptions {
   body: string;
   icon?: string;
   badge?: string;
+  vibrate?: number[];
+  timestamp?: number;
+  tag?: string;
   requireInteraction?: boolean;
   renotify?: boolean;
   silent?: boolean;
-  tag?: string;
+  actions?: { action: string; title: string }[];
   data?: {
     url?: string;
+    id?: string;
     [key: string]: unknown;
   };
-  actions?: { action: string; title: string }[];
-  [key: string]: unknown; // Index signature pour accepter des propriétés supplémentaires
+  [key: string]: unknown;
 }
 
 @Component({

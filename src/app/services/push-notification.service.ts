@@ -1,4 +1,4 @@
-import { Injectable, isDevMode } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { SwPush } from '@angular/service-worker';
 import { HttpClient } from '@angular/common/http';
 import {
@@ -279,82 +279,129 @@ export class PushNotificationService {
         return;
       }
 
-      // Utiliser une approche différente pour obtenir l'abonnement actuel
-      navigator.serviceWorker.ready
-        .then((registration) => {
-          console.log('Service Worker prêt', registration);
-          return registration.pushManager.getSubscription();
+      // Nettoyer d'abord l'état côté serveur
+      this.forceServerUnsubscribe(token)
+        .then(() => {
+          console.log('Désactivation côté serveur réussie');
+
+          // Ensuite nettoyer les abonnements locaux
+          return this.cleanupLocalSubscriptions();
         })
-        .then((subscription) => {
-          if (!subscription) {
-            console.log(
-              "Pas d'abonnement local trouvé, désactivation sur le serveur directement..."
-            );
-
-            // Même sans abonnement local, on doit désactiver côté serveur
-            return this.forceServerUnsubscribe(token)
-              .then(() => {
-                console.log('Désactivation côté serveur réussie');
-                this._isSubscribed.next(false);
-                resolve();
-              })
-              .catch((error) => {
-                console.error(
-                  'Erreur lors de la désactivation côté serveur',
-                  error
-                );
-                reject(error);
-              });
-          }
-
-          console.log('Abonnement local trouvé', subscription.endpoint);
-
-          // Récupérer l'endpoint pour le désabonnement côté serveur
-          const endpoint = subscription.endpoint;
-
-          // Désabonner localement
-          return subscription.unsubscribe().then((success) => {
-            console.log('Désabonnement local réussi:', success);
-            this._isSubscribed.next(false);
-
-            // Puis désabonner côté serveur
-            console.log('Envoi de la requête de désabonnement au serveur...');
-
-            // Appeler le backend pour désactiver l'abonnement
-            this.http
-              .delete(
-                `${
-                  this.apiUrl
-                }/push-notifications/unsubscribe/${encodeURIComponent(
-                  endpoint
-                )}`,
-                {
-                  headers: {
-                    Authorization: `Bearer ${token}`,
-                  },
-                }
-              )
-              .subscribe({
-                next: (response) => {
-                  console.log('Désabonnement du serveur réussi', response);
-                  this._isSubscribed.next(false);
-                  resolve();
-                },
-                error: (error) => {
-                  console.error(
-                    'Erreur lors du désabonnement côté serveur',
-                    error
-                  );
-                  // On considère quand même comme réussi car l'abonnement local a été supprimé
-                  this._isSubscribed.next(false);
-                  resolve();
-                },
-              });
-          });
+        .then(() => {
+          this._isSubscribed.next(false);
+          console.log('Désabonnement complet réussi');
+          resolve();
         })
         .catch((error) => {
-          console.error('Erreur lors du processus de désabonnement', error);
+          console.error('Erreur lors du désabonnement', error);
           reject(error);
+        });
+    });
+  }
+
+  /**
+   * Nettoie tous les abonnements locaux
+   */
+  private cleanupLocalSubscriptions(): Promise<void> {
+    return new Promise<void>((resolve) => {
+      // Vérifier si le service worker est disponible
+      if (!('serviceWorker' in navigator)) {
+        resolve();
+        return;
+      }
+
+      // Récupérer tous les Service Workers enregistrés
+      navigator.serviceWorker
+        .getRegistrations()
+        .then((registrations) => {
+          // Si aucun SW enregistré, rien à faire
+          if (registrations.length === 0) {
+            console.log('Aucun Service Worker enregistré');
+            return;
+          }
+
+          // Récupérer tous les abonnements push et les désabonner
+          const unsubPromises = registrations.map((registration) => {
+            return registration.pushManager
+              .getSubscription()
+              .then((subscription) => {
+                if (subscription) {
+                  console.log(
+                    "Suppression de l'abonnement local:",
+                    subscription.endpoint
+                  );
+                  return subscription.unsubscribe();
+                }
+                return true;
+              });
+          });
+
+          // Exécuter toutes les promesses et ignorer les résultats
+          return Promise.all(unsubPromises).then(() => {
+            console.log('Tous les abonnements locaux ont été nettoyés');
+          });
+        })
+        .then(() => {
+          // Réinitialiser également l'abonnement SwPush si disponible
+          if (this.swPush) {
+            return this.swPush
+              .unsubscribe()
+              .catch((err) => {
+                // Ignorer les erreurs ici, car l'abonnement peut déjà être désactivé
+                console.log(
+                  'SwPush unsubscribe a échoué (peut-être déjà désabonné):',
+                  err
+                );
+              })
+              .then(() => {
+                console.log('Nettoyage SwPush terminé');
+              });
+          }
+          return Promise.resolve(); // Ajout d'un retour pour le cas où this.swPush n'existe pas
+        })
+        .then(() => {
+          // Finaliser le processus
+          resolve();
+        })
+        .catch((error) => {
+          console.error(
+            'Erreur lors du nettoyage des abonnements locaux:',
+            error
+          );
+          // On résout quand même car ce n'est pas critique
+          resolve();
+        });
+    });
+  }
+
+  /**
+   * Force la désactivation de l'abonnement côté serveur sans connaître l'endpoint
+   */
+  forceServerUnsubscribe(token: string): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      this.http
+        .post(
+          `${this.apiUrl}/push-notifications/force-unsubscribe`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        )
+        .subscribe({
+          next: () => {
+            console.log('Désabonnement forcé côté serveur réussi');
+            this._isSubscribed.next(false);
+            resolve();
+          },
+          error: (error) => {
+            console.error(
+              'Erreur lors du désabonnement forcé côté serveur',
+              error
+            );
+            reject(error);
+          },
         });
     });
   }
@@ -438,9 +485,51 @@ export class PushNotificationService {
 
   /**
    * Vérifie si l'utilisateur est actuellement abonné
+   * Renvoie une valeur synchrone
    */
   isCurrentlySubscribed(): boolean {
     return this._isSubscribed.value;
+  }
+
+  /**
+   * Vérifie si l'utilisateur est actuellement abonné
+   * Renvoie une Promise pour utilisation asynchrone
+   */
+  checkSubscriptionStatusAsync(): Promise<boolean> {
+    return new Promise<boolean>((resolve) => {
+      // Vérifier d'abord localement avec SwPush
+      this.swPush.subscription.subscribe((subscription) => {
+        if (subscription) {
+          this._isSubscribed.next(true);
+          resolve(true);
+        } else {
+          // Récupérer le token d'authentification
+          const token = localStorage.getItem(environment.TOKEN_KEY);
+          if (!token) {
+            this._isSubscribed.next(false);
+            resolve(false);
+            return;
+          }
+
+          // Ajouter les headers d'authentification
+          const headers = {
+            Authorization: `Bearer ${token}`,
+          };
+
+          // Vérifier avec le backend
+          this.http
+            .get<{ isSubscribed: boolean }>(
+              `${this.apiUrl}/push-notifications/subscription-status`,
+              { headers }
+            )
+            .pipe(catchError(() => of({ isSubscribed: false })))
+            .subscribe((response) => {
+              this._isSubscribed.next(response.isSubscribed);
+              resolve(response.isSubscribed);
+            });
+        }
+      });
+    });
   }
 
   /**
@@ -482,35 +571,6 @@ export class PushNotificationService {
   }
 
   /**
-   * Force la désactivation de l'abonnement côté serveur sans connaître l'endpoint
-   */
-  forceServerUnsubscribe(token: string): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
-      this.http
-        .post(
-          `${this.apiUrl}/push-notifications/force-unsubscribe`,
-          {},
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        )
-        .subscribe({
-          next: () => {
-            console.log('Désabonnement forcé réussi');
-            this._isSubscribed.next(false);
-            resolve();
-          },
-          error: (error) => {
-            console.error('Erreur lors du désabonnement forcé', error);
-            reject(error);
-          },
-        });
-    });
-  }
-
-  /**
    * Envoie une notification locale de test via le service worker
    * Utile pour tester si les notifications fonctionnent correctement
    */
@@ -523,305 +583,131 @@ export class PushNotificationService {
       options,
     });
 
-    // En mode développement, utiliser la méthode alternative si le service worker n'est pas activé
-    if (
-      isDevMode() &&
-      (!('serviceWorker' in navigator) || !navigator.serviceWorker.controller)
-    ) {
-      console.log(
-        'Service Worker non actif en dev, utilisation de la méthode alternative...'
-      );
-      return this.sendDevModeNotification(title, options);
-    }
+    // Options par défaut pour la notification
+    const defaultOptions: NotificationOptions = {
+      body: 'Ceci est une notification de test via le service',
+      icon: 'assets/icons/SONAR-FAVICON.webp',
+      badge: 'assets/icons/SONAR-FAVICON.webp',
+      vibrate: [200, 100, 200],
+      timestamp: Date.now(),
+      tag: 'test-' + Date.now(),
+      requireInteraction: true,
+      renotify: true,
+      actions: [
+        {
+          action: 'open',
+          title: 'Ouvrir',
+        },
+        {
+          action: 'close',
+          title: 'Fermer',
+        },
+      ],
+      data: {
+        url: window.location.href,
+        id: Date.now().toString(),
+      },
+      silent: false, // S'assurer que la notification n'est pas silencieuse
+    };
+
+    // Fusionner les options
+    const mergedOptions = { ...defaultOptions, ...options };
+    console.log('Options de notification:', mergedOptions);
 
     return new Promise<boolean>((resolve, reject) => {
       if (!this.hasNotificationPermission()) {
-        console.error('Permission de notification non accordée');
-        // Tenter de demander la permission
-        Notification.requestPermission()
+        console.log('Permission non accordée, demande en cours...');
+
+        return Notification.requestPermission()
           .then((permission) => {
             if (permission === 'granted') {
-              // Permission accordée, on réessaie
-              this.sendLocalTestNotification(title, options)
-                .then(resolve)
-                .catch(reject);
-            } else {
-              reject(new Error('Permission de notification non accordée'));
-            }
-          })
-          .catch((error) => {
-            reject(
-              new Error(`Erreur lors de la demande de permission: ${error}`)
-            );
-          });
-        return; // Aucune valeur n'est retournée car nous avons déjà géré resolve/reject
-      }
-
-      if (!('serviceWorker' in navigator)) {
-        console.error('Service Worker non supporté');
-        // Essayer la méthode de développement comme fallback
-        this.sendDevModeNotification(title, options)
-          .then(resolve)
-          .catch(reject);
-        return; // Aucune valeur n'est retournée car nous avons déjà géré resolve/reject
-      }
-
-      // Vérifier si un service worker est contrôleur
-      if (navigator.serviceWorker.controller) {
-        console.log(
-          'Utilisation du service worker contrôleur',
-          navigator.serviceWorker.controller
-        );
-
-        // Options par défaut pour la notification
-        const defaultOptions: NotificationOptions = {
-          body: 'Ceci est une notification de test via le service',
-          icon: 'assets/icons/SONAR-FAVICON.webp',
-          badge: 'assets/icons/SONAR-FAVICON.webp',
-          vibrate: [200, 100, 200],
-          timestamp: Date.now(),
-          tag: 'test-' + Date.now(),
-          requireInteraction: true,
-          renotify: true,
-          actions: [
-            {
-              action: 'open',
-              title: 'Ouvrir',
-            },
-            {
-              action: 'close',
-              title: 'Fermer',
-            },
-          ],
-          data: {
-            url: window.location.href,
-            id: Date.now().toString(),
-          },
-        };
-
-        // Fusionner les options
-        const mergedOptions = { ...defaultOptions, ...options };
-        console.log('Options de notification:', mergedOptions);
-
-        // Essayer différentes méthodes pour envoyer la notification
-        const tryMethods = async () => {
-          try {
-            // Méthode 1: Via postMessage au service worker
-            const controller = navigator.serviceWorker.controller;
-            if (controller) {
-              controller.postMessage({
-                type: 'SHOW_NOTIFICATION',
-                title: title,
-                options: mergedOptions,
-              });
-              console.log(
-                'Message envoyé au service worker pour afficher la notification'
-              );
+              return this.sendLocalTestNotification(title, options);
             } else {
               throw new Error(
-                'Le contrôleur du service worker est devenu null'
+                "Permission de notification refusée par l'utilisateur"
               );
             }
-
-            // Vérifier si la notification est traitée, sinon passer à la méthode suivante
-            setTimeout(async () => {
-              try {
-                // Méthode 2: Via registration.showNotification
-                const registration = await navigator.serviceWorker.ready;
-                console.log(
-                  'Service Worker prêt pour notification:',
-                  registration
-                );
-                await registration.showNotification(title, mergedOptions);
-                console.log(
-                  'Notification affichée via registration.showNotification'
-                );
-                resolve(true);
-              } catch (error) {
-                console.error(
-                  'Erreur avec registration.showNotification:',
-                  error
-                );
-
-                // Méthode 3: Utiliser la méthode de développement comme dernier recours
-                try {
-                  await this.sendDevModeNotification(title, options);
-                  resolve(true);
-                } catch (finalError) {
-                  console.error('Toutes les méthodes ont échoué:', finalError);
-                  reject(finalError);
-                }
-              }
-            }, 1000);
-          } catch (error) {
-            console.warn(
-              "Erreur lors de l'envoi du message au service worker:",
-              error
-            );
-
-            try {
-              // Méthode 2: Via registration.showNotification
-              const registration = await navigator.serviceWorker.ready;
-              await registration.showNotification(title, mergedOptions);
-              console.log(
-                'Notification affichée via registration.showNotification'
-              );
-              resolve(true);
-            } catch (registrationError) {
-              console.error(
-                'Erreur avec registration.showNotification:',
-                registrationError
-              );
-
-              // Méthode 3: Utiliser la méthode de développement comme dernier recours
-              this.sendDevModeNotification(title, options)
-                .then(resolve)
-                .catch(reject);
-            }
-          }
-        };
-
-        tryMethods();
-        return; // Pas de valeur retournée car la Promise sera résolue dans tryMethods
-      } else {
-        console.log(
-          'Pas de service worker contrôleur, attente du service worker...'
-        );
-
-        // Attendre que le service worker soit prêt
-        navigator.serviceWorker.ready
-          .then((registration) => {
-            console.log('Service Worker prêt pour notification:', registration);
-
-            // Options par défaut pour la notification
-            const defaultOptions: NotificationOptions = {
-              body: 'Ceci est une notification de test via le service',
-              icon: 'assets/icons/SONAR-FAVICON.webp',
-              badge: 'assets/icons/SONAR-FAVICON.webp',
-              vibrate: [200, 100, 200],
-              timestamp: Date.now(),
-              tag: 'test-' + Date.now(),
-              requireInteraction: true,
-              renotify: true,
-              actions: [
-                {
-                  action: 'open',
-                  title: 'Ouvrir',
-                },
-                {
-                  action: 'close',
-                  title: 'Fermer',
-                },
-              ],
-              data: {
-                url: window.location.href,
-                id: Date.now().toString(),
-              },
-            };
-
-            // Fusionner les options
-            const mergedOptions = { ...defaultOptions, ...options };
-            console.log('Options de notification:', mergedOptions);
-
-            return registration.showNotification(title, mergedOptions);
           })
-          .then(() => {
-            console.log('Notification affichée avec succès');
-            resolve(true);
-          })
-          .catch((error) => {
-            console.error(
-              "Erreur lors de l'affichage de la notification:",
-              error
-            );
-            // Essayer la méthode de développement comme fallback
-            this.sendDevModeNotification(title, options)
-              .then(resolve)
-              .catch(reject);
-          });
-        // Pas besoin de return ici car c'est le dernier bloc
+          .then(resolve)
+          .catch(reject);
       }
+
+      // Vérifier si le service worker est supporté
+      if (!('serviceWorker' in navigator)) {
+        console.error('Service Worker non supporté');
+        return this.fallbackNotification(title, mergedOptions)
+          .then(resolve)
+          .catch(reject);
+      }
+
+      // Essayer d'afficher la notification via le service worker
+      return navigator.serviceWorker.ready
+        .then((registration) => {
+          console.log('Service Worker prêt pour notification:', registration);
+
+          // Tentative directe avec showNotification (méthode la plus fiable)
+          return registration
+            .showNotification(title, mergedOptions)
+            .then(() => {
+              console.log(
+                'Notification affichée avec succès via showNotification'
+              );
+              return true;
+            })
+            .catch((error) => {
+              console.error('Erreur avec showNotification:', error);
+              return this.fallbackNotification(title, mergedOptions);
+            });
+        })
+        .then(resolve)
+        .catch((error) => {
+          console.error('Erreur avec le service worker:', error);
+          return this.fallbackNotification(title, mergedOptions)
+            .then(resolve)
+            .catch(reject);
+        });
     });
   }
 
   /**
-   * Envoie une notification locale de test en mode développement
-   * Utile pour tester si les notifications fonctionnent correctement
+   * Méthode de secours pour afficher une notification
+   * Quand le service worker n'est pas disponible ou échoue
    */
-  sendDevModeNotification(
+  private fallbackNotification(
     title: string,
-    options: Partial<NotificationOptions> = {}
+    options: NotificationOptions
   ): Promise<boolean> {
-    console.log('Envoi de notification de test en mode développement...');
+    console.log('Tentative de notification par méthode alternative');
 
     return new Promise<boolean>((resolve, reject) => {
-      if (!this.hasNotificationPermission()) {
-        console.error('Permission de notification non accordée');
-        reject(new Error('Permission de notification non accordée'));
-        return;
+      try {
+        // Supprimer les propriétés non supportées par l'API Notification native
+        const nativeOptions = { ...options };
+        delete nativeOptions.actions; // Non supporté par l'API native
+
+        // Créer la notification directement via l'API Notification
+        const notification = new Notification(title, nativeOptions);
+
+        // Gérer le clic sur la notification
+        notification.onclick = () => {
+          console.log('Notification cliquée (méthode alternative)');
+
+          // Redirection si une URL est spécifiée
+          if (nativeOptions.data && nativeOptions.data.url) {
+            window.open(nativeOptions.data.url, '_blank');
+          }
+          notification.close();
+        };
+
+        console.log('Notification affichée avec succès (méthode alternative)');
+        resolve(true);
+      } catch (error) {
+        console.error(
+          "Erreur lors de l'affichage de la notification (méthode alternative):",
+          error
+        );
+        reject(error);
       }
-
-      if (!('serviceWorker' in navigator)) {
-        console.error('Service Worker non supporté');
-        reject(new Error('Service Worker non supporté'));
-        return;
-      }
-
-      navigator.serviceWorker.ready
-        .then((registration) => {
-          console.log('Service Worker prêt pour notification:', registration);
-
-          // Options par défaut pour la notification
-          const defaultOptions: NotificationOptions = {
-            body: 'Ceci est une notification de test en mode développement',
-            icon: 'assets/icons/SONAR-FAVICON.webp',
-            badge: 'assets/icons/SONAR-FAVICON.webp',
-            vibrate: [200, 100, 200],
-            timestamp: Date.now(),
-            tag: 'test-' + Date.now(),
-            requireInteraction: true,
-            renotify: true,
-            actions: [
-              {
-                action: 'open',
-                title: 'Ouvrir',
-              },
-              {
-                action: 'close',
-                title: 'Fermer',
-              },
-            ],
-            data: {
-              url: window.location.href,
-              id: Date.now().toString(),
-            },
-          };
-
-          // Fusionner les options
-          const mergedOptions = { ...defaultOptions, ...options };
-          console.log('Options de notification:', mergedOptions);
-
-          registration
-            .showNotification(title, mergedOptions)
-            .then(() => {
-              console.log('Notification affichée avec succès');
-              resolve(true);
-            })
-            .catch((error) => {
-              console.error(
-                "Erreur lors de l'affichage de la notification:",
-                error
-              );
-              reject(error);
-            });
-        })
-        .catch((error) => {
-          console.error(
-            'Erreur lors de la récupération du Service Worker:',
-            error
-          );
-          reject(error);
-        });
     });
   }
 }

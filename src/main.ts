@@ -12,18 +12,11 @@ if ('serviceWorker' in navigator) {
       .then((registration) => {
         console.log('Service Worker enregistré avec succès:', registration);
 
-        // Configuration pour intercepter les messages et afficher des notifications
-        navigator.serviceWorker.addEventListener('message', (event) => {
-          console.log('Message reçu du Service Worker:', event.data);
-
-          if (event.data && event.data.type === 'SHOW_NOTIFICATION') {
-            console.log(
-              "Demande d'affichage de notification reçue:",
-              event.data
-            );
-            registration.showNotification(event.data.title, event.data.options);
-          }
-        });
+        // Forcer l'activation du service worker si en attente
+        if (registration.waiting) {
+          console.log('Service Worker en attente, activation forcée...');
+          registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+        }
 
         // S'assurer que le service worker est activé
         if (registration.installing) {
@@ -38,17 +31,20 @@ if ('serviceWorker' in navigator) {
               }
             });
           }
-        } else if (registration.waiting) {
-          console.log('Service Worker en attente, activation forcée...');
-          registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-          // L'événissement 'controllerchange' sera déclenché quand le SW prendra le contrôle
-          navigator.serviceWorker.addEventListener('controllerchange', () => {
-            console.log('Nouveau Service Worker a pris le contrôle');
-            window.location.reload();
-          });
-        } else if (registration.active) {
-          console.log('Service Worker déjà actif');
         }
+
+        // Configuration pour intercepter les messages et afficher des notifications
+        navigator.serviceWorker.addEventListener('message', (event) => {
+          console.log('Message reçu du Service Worker:', event.data);
+
+          if (event.data && event.data.type === 'SHOW_NOTIFICATION') {
+            console.log(
+              "Demande d'affichage de notification reçue:",
+              event.data
+            );
+            registration.showNotification(event.data.title, event.data.options);
+          }
+        });
       })
       .catch((error) => {
         console.error(
@@ -56,6 +52,11 @@ if ('serviceWorker' in navigator) {
           error
         );
       });
+  });
+
+  // Gestionnaire pour le changement de contrôleur du Service Worker
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    console.log('Nouveau Service Worker a pris le contrôle');
   });
 }
 

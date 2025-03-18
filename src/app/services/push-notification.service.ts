@@ -511,101 +511,6 @@ export class PushNotificationService {
   }
 
   /**
-   * Envoie une notification locale de test même si le service worker n'est pas disponible
-   * Alternative pour les tests en environnement de développement
-   */
-  sendDevModeNotification(
-    title: string,
-    options: Partial<NotificationOptions> = {}
-  ): Promise<boolean> {
-    console.log('Envoi de notification de test en mode développement...');
-
-    return new Promise((resolve, reject) => {
-      // Vérifier si l'API de notification est supportée
-      if (!('Notification' in window)) {
-        console.error(
-          'Les notifications ne sont pas supportées par ce navigateur.'
-        );
-        reject(
-          new Error(
-            'Les notifications ne sont pas supportées par ce navigateur.'
-          )
-        );
-        return;
-      }
-
-      // Vérifier si la permission est accordée
-      if (Notification.permission !== 'granted') {
-        console.error('Permission de notification non accordée');
-
-        // Demander la permission si pas encore demandée
-        if (Notification.permission !== 'denied') {
-          Notification.requestPermission().then((permission) => {
-            if (permission === 'granted') {
-              // Permission accordée, on réessaie
-              this.sendDevModeNotification(title, options)
-                .then(resolve)
-                .catch(reject);
-            } else {
-              reject(new Error('Permission de notification refusée'));
-            }
-          });
-        } else {
-          reject(new Error('Permission de notification refusée'));
-        }
-        return;
-      }
-
-      // Options par défaut pour la notification
-      const defaultOptions: NotificationOptions = {
-        body: 'Ceci est une notification de test en mode développement',
-        icon: 'assets/icons/SONAR-FAVICON.webp',
-        badge: 'assets/icons/SONAR-FAVICON.webp',
-        vibrate: [200, 100, 200],
-        timestamp: Date.now(),
-        tag: 'dev-test-' + Date.now(),
-        requireInteraction: true,
-        renotify: true,
-        data: {
-          url: window.location.href,
-          id: Date.now().toString(),
-        },
-      };
-
-      // Fusionner les options
-      const mergedOptions = { ...defaultOptions, ...options };
-
-      // Supprimer les actions qui ne sont pas supportées par l'API Notification native
-      delete mergedOptions.actions;
-
-      console.log('Options de notification:', mergedOptions);
-
-      try {
-        // Créer la notification directement via l'API Notification
-        const notification = new Notification(title, mergedOptions);
-
-        // Gérer le clic sur la notification
-        notification.onclick = (event) => {
-          console.log('Notification cliquée', event);
-
-          // Redirection si une URL est spécifiée
-          if (mergedOptions.data && mergedOptions.data.url) {
-            window.open(mergedOptions.data.url, '_blank');
-          }
-
-          notification.close();
-        };
-
-        console.log('Notification affichée avec succès');
-        resolve(true);
-      } catch (error) {
-        console.error("Erreur lors de l'affichage de la notification:", error);
-        reject(error);
-      }
-    });
-  }
-
-  /**
    * Envoie une notification locale de test via le service worker
    * Utile pour tester si les notifications fonctionnent correctement
    */
@@ -613,11 +518,13 @@ export class PushNotificationService {
     title: string,
     options: Partial<NotificationOptions> = {}
   ): Promise<boolean> {
-    console.log('Envoi de notification de test local via service...');
+    console.log('Envoi de notification de test local via service...', {
+      title,
+      options,
+    });
 
     // En mode développement, utiliser la méthode alternative si le service worker n'est pas activé
     if (
-      typeof isDevMode === 'function' &&
       isDevMode() &&
       (!('serviceWorker' in navigator) || !navigator.serviceWorker.controller)
     ) {
@@ -627,7 +534,227 @@ export class PushNotificationService {
       return this.sendDevModeNotification(title, options);
     }
 
-    return new Promise((resolve, reject) => {
+    return new Promise<boolean>((resolve, reject) => {
+      if (!this.hasNotificationPermission()) {
+        console.error('Permission de notification non accordée');
+        // Tenter de demander la permission
+        Notification.requestPermission()
+          .then((permission) => {
+            if (permission === 'granted') {
+              // Permission accordée, on réessaie
+              this.sendLocalTestNotification(title, options)
+                .then(resolve)
+                .catch(reject);
+            } else {
+              reject(new Error('Permission de notification non accordée'));
+            }
+          })
+          .catch((error) => {
+            reject(
+              new Error(`Erreur lors de la demande de permission: ${error}`)
+            );
+          });
+        return; // Aucune valeur n'est retournée car nous avons déjà géré resolve/reject
+      }
+
+      if (!('serviceWorker' in navigator)) {
+        console.error('Service Worker non supporté');
+        // Essayer la méthode de développement comme fallback
+        this.sendDevModeNotification(title, options)
+          .then(resolve)
+          .catch(reject);
+        return; // Aucune valeur n'est retournée car nous avons déjà géré resolve/reject
+      }
+
+      // Vérifier si un service worker est contrôleur
+      if (navigator.serviceWorker.controller) {
+        console.log(
+          'Utilisation du service worker contrôleur',
+          navigator.serviceWorker.controller
+        );
+
+        // Options par défaut pour la notification
+        const defaultOptions: NotificationOptions = {
+          body: 'Ceci est une notification de test via le service',
+          icon: 'assets/icons/SONAR-FAVICON.webp',
+          badge: 'assets/icons/SONAR-FAVICON.webp',
+          vibrate: [200, 100, 200],
+          timestamp: Date.now(),
+          tag: 'test-' + Date.now(),
+          requireInteraction: true,
+          renotify: true,
+          actions: [
+            {
+              action: 'open',
+              title: 'Ouvrir',
+            },
+            {
+              action: 'close',
+              title: 'Fermer',
+            },
+          ],
+          data: {
+            url: window.location.href,
+            id: Date.now().toString(),
+          },
+        };
+
+        // Fusionner les options
+        const mergedOptions = { ...defaultOptions, ...options };
+        console.log('Options de notification:', mergedOptions);
+
+        // Essayer différentes méthodes pour envoyer la notification
+        const tryMethods = async () => {
+          try {
+            // Méthode 1: Via postMessage au service worker
+            const controller = navigator.serviceWorker.controller;
+            if (controller) {
+              controller.postMessage({
+                type: 'SHOW_NOTIFICATION',
+                title: title,
+                options: mergedOptions,
+              });
+              console.log(
+                'Message envoyé au service worker pour afficher la notification'
+              );
+            } else {
+              throw new Error(
+                'Le contrôleur du service worker est devenu null'
+              );
+            }
+
+            // Vérifier si la notification est traitée, sinon passer à la méthode suivante
+            setTimeout(async () => {
+              try {
+                // Méthode 2: Via registration.showNotification
+                const registration = await navigator.serviceWorker.ready;
+                console.log(
+                  'Service Worker prêt pour notification:',
+                  registration
+                );
+                await registration.showNotification(title, mergedOptions);
+                console.log(
+                  'Notification affichée via registration.showNotification'
+                );
+                resolve(true);
+              } catch (error) {
+                console.error(
+                  'Erreur avec registration.showNotification:',
+                  error
+                );
+
+                // Méthode 3: Utiliser la méthode de développement comme dernier recours
+                try {
+                  await this.sendDevModeNotification(title, options);
+                  resolve(true);
+                } catch (finalError) {
+                  console.error('Toutes les méthodes ont échoué:', finalError);
+                  reject(finalError);
+                }
+              }
+            }, 1000);
+          } catch (error) {
+            console.warn(
+              "Erreur lors de l'envoi du message au service worker:",
+              error
+            );
+
+            try {
+              // Méthode 2: Via registration.showNotification
+              const registration = await navigator.serviceWorker.ready;
+              await registration.showNotification(title, mergedOptions);
+              console.log(
+                'Notification affichée via registration.showNotification'
+              );
+              resolve(true);
+            } catch (registrationError) {
+              console.error(
+                'Erreur avec registration.showNotification:',
+                registrationError
+              );
+
+              // Méthode 3: Utiliser la méthode de développement comme dernier recours
+              this.sendDevModeNotification(title, options)
+                .then(resolve)
+                .catch(reject);
+            }
+          }
+        };
+
+        tryMethods();
+        return; // Pas de valeur retournée car la Promise sera résolue dans tryMethods
+      } else {
+        console.log(
+          'Pas de service worker contrôleur, attente du service worker...'
+        );
+
+        // Attendre que le service worker soit prêt
+        navigator.serviceWorker.ready
+          .then((registration) => {
+            console.log('Service Worker prêt pour notification:', registration);
+
+            // Options par défaut pour la notification
+            const defaultOptions: NotificationOptions = {
+              body: 'Ceci est une notification de test via le service',
+              icon: 'assets/icons/SONAR-FAVICON.webp',
+              badge: 'assets/icons/SONAR-FAVICON.webp',
+              vibrate: [200, 100, 200],
+              timestamp: Date.now(),
+              tag: 'test-' + Date.now(),
+              requireInteraction: true,
+              renotify: true,
+              actions: [
+                {
+                  action: 'open',
+                  title: 'Ouvrir',
+                },
+                {
+                  action: 'close',
+                  title: 'Fermer',
+                },
+              ],
+              data: {
+                url: window.location.href,
+                id: Date.now().toString(),
+              },
+            };
+
+            // Fusionner les options
+            const mergedOptions = { ...defaultOptions, ...options };
+            console.log('Options de notification:', mergedOptions);
+
+            return registration.showNotification(title, mergedOptions);
+          })
+          .then(() => {
+            console.log('Notification affichée avec succès');
+            resolve(true);
+          })
+          .catch((error) => {
+            console.error(
+              "Erreur lors de l'affichage de la notification:",
+              error
+            );
+            // Essayer la méthode de développement comme fallback
+            this.sendDevModeNotification(title, options)
+              .then(resolve)
+              .catch(reject);
+          });
+        // Pas besoin de return ici car c'est le dernier bloc
+      }
+    });
+  }
+
+  /**
+   * Envoie une notification locale de test en mode développement
+   * Utile pour tester si les notifications fonctionnent correctement
+   */
+  sendDevModeNotification(
+    title: string,
+    options: Partial<NotificationOptions> = {}
+  ): Promise<boolean> {
+    console.log('Envoi de notification de test en mode développement...');
+
+    return new Promise<boolean>((resolve, reject) => {
       if (!this.hasNotificationPermission()) {
         console.error('Permission de notification non accordée');
         reject(new Error('Permission de notification non accordée'));
@@ -646,7 +773,7 @@ export class PushNotificationService {
 
           // Options par défaut pour la notification
           const defaultOptions: NotificationOptions = {
-            body: 'Ceci est une notification de test via le service',
+            body: 'Ceci est une notification de test en mode développement',
             icon: 'assets/icons/SONAR-FAVICON.webp',
             badge: 'assets/icons/SONAR-FAVICON.webp',
             vibrate: [200, 100, 200],

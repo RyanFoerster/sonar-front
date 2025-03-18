@@ -67,5 +67,27 @@
     }
   ],
   "related_applications": [],
-  "prefer_related_applications": false
+  "prefer_related_applications": false,
+  "permissions": ["notifications"],
+  "notification_actions": [
+    {
+      "action": "open",
+      "title": "Ouvrir",
+      "icon": "icons/icon.webp"
+    },
+    {
+      "action": "close",
+      "title": "Fermer",
+      "icon": "icons/icon.webp"
+    }
+  ],
+  "notification_options": {
+    "tag": "sonar-notifications",
+    "body": "Sonar Artists - Notification",
+    "icon": "icons/icon.webp",
+    "badge": "icons/icon.webp",
+    "vibrate": [200, 100, 200],
+    "renotify": true,
+    "requireInteraction": true
+  }
 }

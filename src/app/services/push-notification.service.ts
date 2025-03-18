@@ -20,6 +20,25 @@ interface PushNotificationData {
   data?: Record<string, unknown>;
 }
 
+// Ajout d'une interface pour les options de notification
+interface NotificationOptions {
+  body: string;
+  icon?: string;
+  badge?: string;
+  vibrate?: number[];
+  timestamp?: number;
+  tag?: string;
+  requireInteraction?: boolean;
+  renotify?: boolean;
+  actions?: { action: string; title: string }[];
+  data?: {
+    url?: string;
+    id?: string;
+    [key: string]: unknown;
+  };
+  [key: string]: unknown;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -497,7 +516,7 @@ export class PushNotificationService {
    */
   sendLocalTestNotification(
     title: string,
-    options: any = {}
+    options: Partial<NotificationOptions> = {}
   ): Promise<boolean> {
     console.log('Envoi de notification de test local via service...');
 
@@ -519,7 +538,7 @@ export class PushNotificationService {
           console.log('Service Worker prêt pour notification:', registration);
 
           // Options par défaut pour la notification
-          const defaultOptions: any = {
+          const defaultOptions: NotificationOptions = {
             body: 'Ceci est une notification de test via le service',
             icon: 'assets/icons/SONAR-FAVICON.webp',
             badge: 'assets/icons/SONAR-FAVICON.webp',

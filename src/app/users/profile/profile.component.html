@@ -226,6 +226,71 @@
         <p class="text-[9px] md:text-sm">{{ connectedUser()?.address }}</p>
       </div>
 
+      <!-- Section Notifications -->
+      <div class="flex items-center mt-4 mb-2">
+        <p class="font-bold text-[9px] md:text-sm w-28 md:w-56">
+          Notifications
+        </p>
+        @if (notificationsSupported()) {
+        <div class="flex items-center gap-2">
+          <!-- Switch personnalisé sans bouton -->
+          <div
+            class="custom-switch cursor-pointer"
+            (click)="toggleNotifications(!notificationsEnabled())"
+            (keydown.enter)="toggleNotifications(!notificationsEnabled())"
+            tabindex="0"
+            role="switch"
+            [attr.aria-checked]="notificationsEnabled()"
+            [attr.aria-label]="
+              notificationsEnabled()
+                ? 'Désactiver les notifications'
+                : 'Activer les notifications'
+            "
+          >
+            <div
+              class="switch-track"
+              [ngClass]="{
+                'switch-track-active': notificationsEnabled(),
+                'switch-track-inactive': !notificationsEnabled()
+              }"
+            >
+              <div
+                class="switch-thumb"
+                [ngClass]="{
+                  'switch-thumb-active': notificationsEnabled(),
+                  'switch-thumb-inactive': !notificationsEnabled()
+                }"
+              ></div>
+            </div>
+          </div>
+
+          <div class="flex items-center">
+            @if (notificationsEnabled()) {
+            <hlm-icon
+              name="lucideBell"
+              class="text-green-600 w-4 h-4 md:w-5 md:h-5"
+            ></hlm-icon>
+            <span class="text-[9px] md:text-sm text-green-600 ml-1"
+              >Activées</span
+            >
+            } @else {
+            <hlm-icon
+              name="lucideBellOff"
+              class="text-red-600 w-4 h-4 md:w-5 md:h-5"
+            ></hlm-icon>
+            <span class="text-[9px] md:text-sm text-red-600 ml-1"
+              >Désactivées</span
+            >
+            }
+          </div>
+        </div>
+        } @else {
+        <p class="text-[9px] md:text-sm text-red-500">
+          Les notifications ne sont pas supportées par votre navigateur
+        </p>
+        }
+      </div>
+
       <div class="flex">
         <p class="font-bold text-[9px] md:text-sm w-28 md:w-56">
           Numéro de téléphone

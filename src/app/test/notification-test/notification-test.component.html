@@ -1,0 +1,85 @@
+<div class="p-4">
+  <h2 class="text-xl font-bold mb-4">Test des Notifications Push</h2>
+
+  <div
+    class="mb-4 p-3 rounded-md"
+    [ngClass]="{
+      'bg-yellow-100':
+        notificationStatus.includes('Vérification') ||
+        notificationStatus.includes('Cliquez') ||
+        notificationStatus.includes('Demande'),
+      'bg-red-100':
+        notificationStatus.includes('bloquées') ||
+        notificationStatus.includes('pas supportées') ||
+        notificationStatus.includes('Échec'),
+      'bg-green-100':
+        notificationStatus.includes('autorisées') ||
+        notificationStatus.includes('réussi') ||
+        notificationStatus.includes('Abonné')
+    }"
+  >
+    <p class="font-medium">Statut: {{ notificationStatus }}</p>
+  </div>
+
+  <div class="mb-4">
+    <h3 class="text-lg font-semibold mb-2">Actions</h3>
+
+    <ng-container *ngIf="!isSubscribed; else unsubscribeTemplate">
+      <button
+        class="bg-blue-500 text-white px-4 py-2 rounded-md mb-2 w-full"
+        (click)="subscribeToNotifications()"
+        [disabled]="
+          !isNotificationSupported || notificationStatus.includes('bloquées')
+        "
+      >
+        S'abonner aux notifications
+      </button>
+    </ng-container>
+
+    <ng-template #unsubscribeTemplate>
+      <button
+        class="bg-red-500 text-white px-4 py-2 rounded-md mb-2 w-full"
+        (click)="unsubscribeFromNotifications()"
+      >
+        Se désabonner des notifications
+      </button>
+    </ng-template>
+
+    <button
+      class="bg-green-500 text-white px-4 py-2 rounded-md mb-2 w-full"
+      (click)="sendTestNotification()"
+      [disabled]="!pushNotificationService.hasNotificationPermission()"
+    >
+      Envoyer une notification de test locale
+    </button>
+
+    <button
+      class="bg-purple-500 text-white px-4 py-2 rounded-md mb-2 w-full"
+      (click)="resetNotificationState()"
+    >
+      Réinitialiser l'état des notifications
+    </button>
+  </div>
+
+  <div class="mt-6 text-sm text-gray-600">
+    <h3 class="text-lg font-semibold mb-2">Instructions</h3>
+    <p class="mb-2">
+      Pour que les notifications push fonctionnent correctement :
+    </p>
+    <ul class="list-disc pl-5 space-y-1">
+      <li>Votre navigateur doit prendre en charge les Service Workers</li>
+      <li>Vous devez avoir accordé la permission pour les notifications</li>
+      <li>L'application doit être servie en HTTPS (ou localhost)</li>
+      <li>
+        L'application doit être compilée en mode production avec le service
+        worker activé
+      </li>
+    </ul>
+  </div>
+
+  <div *ngIf="isSubscribed" class="mt-4 p-3 bg-blue-100 rounded-md">
+    <p class="text-blue-800 font-medium">
+      Vous êtes actuellement abonné aux notifications push.
+    </p>
+  </div>
+</div>

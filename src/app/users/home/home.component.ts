@@ -38,6 +38,8 @@ import { GroupProjectDto } from '../../shared/dtos/group-project.dto';
 import { UserSecondaryAccountEntity } from '../../shared/entities/user-secondary-account.entity';
 import { provideIcons } from '@ng-icons/core';
 import { lucideLoader } from '@ng-icons/lucide';
+import { SwPush } from '@angular/service-worker';
+import { NotificationTestComponent } from '../../test/notification-test/notification-test.component';
 
 @Component({
   selector: 'app-home',
@@ -61,6 +63,7 @@ import { lucideLoader } from '@ng-icons/lucide';
     BrnDialogTriggerDirective,
     ReactiveFormsModule,
     FormsModule,
+    NotificationTestComponent,
   ],
   providers: [provideIcons({ lucideLoader })],
   templateUrl: './home.component.html',
@@ -71,7 +74,7 @@ export class HomeComponent {
   private readonly groupAccountService = inject(CompteGroupeService);
   private readonly comptePrincipalService = inject(ComptePrincipalService);
   private readonly formBuilder = inject(FormBuilder);
-
+  private readonly swPush = inject(SwPush);
   readonly createGroupProjectForm = this.formBuilder.group({
     username: ['', [Validators.required]],
   });

@@ -4,3 +4,51 @@
   background-position: bottom center;
   background-size: cover;
 }
+
+/* Styles pour le switch personnalisé */
+.custom-switch {
+  display: inline-block;
+  outline: none;
+}
+
+.custom-switch:focus {
+  outline: 2px solid rgba(59, 130, 246, 0.5);
+  outline-offset: 2px;
+  border-radius: 12px;
+}
+
+.switch-track {
+  width: 36px;
+  height: 20px;
+  border-radius: 10px;
+  position: relative;
+  transition: background-color 0.2s ease;
+}
+
+.switch-track-active {
+  background-color: #10b981; /* vert */
+}
+
+.switch-track-inactive {
+  background-color: #d1d5db; /* gris */
+}
+
+.switch-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: white;
+  position: absolute;
+  top: 2px;
+  transition: all 0.2s ease;
+}
+
+.switch-thumb-active {
+  transform: translateX(16px);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.switch-thumb-inactive {
+  transform: translateX(2px);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}

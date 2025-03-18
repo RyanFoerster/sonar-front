@@ -132,7 +132,13 @@ export const routes: Routes = [
       ),
     canActivate: [maintenanceGuard],
   },
-
+  {
+    path: 'notification-test',
+    loadComponent: () =>
+      import('./test/notification-test/notification-test.component').then(
+        (m) => m.NotificationTestComponent
+      ),
+  },
   {
     path: '**',
     redirectTo: 'home',

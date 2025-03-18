@@ -27,7 +27,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes, withViewTransitions(), withComponentInputBinding()),
     provideAnimations(),
     provideServiceWorker('ngsw-worker.js', {
-      enabled: true,
+      enabled: !isDevMode(),
       registrationStrategy: 'registerWhenStable:30000',
     }),
   ],

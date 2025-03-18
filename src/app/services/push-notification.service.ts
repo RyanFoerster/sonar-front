@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, isDevMode } from '@angular/core';
 import { SwPush } from '@angular/service-worker';
 import { HttpClient } from '@angular/common/http';
 import {
@@ -511,7 +511,102 @@ export class PushNotificationService {
   }
 
   /**
-   * Envoie une notification locale de test
+   * Envoie une notification locale de test même si le service worker n'est pas disponible
+   * Alternative pour les tests en environnement de développement
+   */
+  sendDevModeNotification(
+    title: string,
+    options: Partial<NotificationOptions> = {}
+  ): Promise<boolean> {
+    console.log('Envoi de notification de test en mode développement...');
+
+    return new Promise((resolve, reject) => {
+      // Vérifier si l'API de notification est supportée
+      if (!('Notification' in window)) {
+        console.error(
+          'Les notifications ne sont pas supportées par ce navigateur.'
+        );
+        reject(
+          new Error(
+            'Les notifications ne sont pas supportées par ce navigateur.'
+          )
+        );
+        return;
+      }
+
+      // Vérifier si la permission est accordée
+      if (Notification.permission !== 'granted') {
+        console.error('Permission de notification non accordée');
+
+        // Demander la permission si pas encore demandée
+        if (Notification.permission !== 'denied') {
+          Notification.requestPermission().then((permission) => {
+            if (permission === 'granted') {
+              // Permission accordée, on réessaie
+              this.sendDevModeNotification(title, options)
+                .then(resolve)
+                .catch(reject);
+            } else {
+              reject(new Error('Permission de notification refusée'));
+            }
+          });
+        } else {
+          reject(new Error('Permission de notification refusée'));
+        }
+        return;
+      }
+
+      // Options par défaut pour la notification
+      const defaultOptions: NotificationOptions = {
+        body: 'Ceci est une notification de test en mode développement',
+        icon: 'assets/icons/SONAR-FAVICON.webp',
+        badge: 'assets/icons/SONAR-FAVICON.webp',
+        vibrate: [200, 100, 200],
+        timestamp: Date.now(),
+        tag: 'dev-test-' + Date.now(),
+        requireInteraction: true,
+        renotify: true,
+        data: {
+          url: window.location.href,
+          id: Date.now().toString(),
+        },
+      };
+
+      // Fusionner les options
+      const mergedOptions = { ...defaultOptions, ...options };
+
+      // Supprimer les actions qui ne sont pas supportées par l'API Notification native
+      delete mergedOptions.actions;
+
+      console.log('Options de notification:', mergedOptions);
+
+      try {
+        // Créer la notification directement via l'API Notification
+        const notification = new Notification(title, mergedOptions);
+
+        // Gérer le clic sur la notification
+        notification.onclick = (event) => {
+          console.log('Notification cliquée', event);
+
+          // Redirection si une URL est spécifiée
+          if (mergedOptions.data && mergedOptions.data.url) {
+            window.open(mergedOptions.data.url, '_blank');
+          }
+
+          notification.close();
+        };
+
+        console.log('Notification affichée avec succès');
+        resolve(true);
+      } catch (error) {
+        console.error("Erreur lors de l'affichage de la notification:", error);
+        reject(error);
+      }
+    });
+  }
+
+  /**
+   * Envoie une notification locale de test via le service worker
    * Utile pour tester si les notifications fonctionnent correctement
    */
   sendLocalTestNotification(
@@ -519,6 +614,18 @@ export class PushNotificationService {
     options: Partial<NotificationOptions> = {}
   ): Promise<boolean> {
     console.log('Envoi de notification de test local via service...');
+
+    // En mode développement, utiliser la méthode alternative si le service worker n'est pas activé
+    if (
+      typeof isDevMode === 'function' &&
+      isDevMode() &&
+      (!('serviceWorker' in navigator) || !navigator.serviceWorker.controller)
+    ) {
+      console.log(
+        'Service Worker non actif en dev, utilisation de la méthode alternative...'
+      );
+      return this.sendDevModeNotification(title, options);
+    }
 
     return new Promise((resolve, reject) => {
       if (!this.hasNotificationPermission()) {

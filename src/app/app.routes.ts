@@ -87,14 +87,6 @@ export const routes: Routes = [
     canActivate: [maintenanceGuard, authGuard, activatedUserGuard, adminGuard],
   },
   {
-    path: 'push-notifications',
-    loadComponent: () =>
-      import('./admin/push-notifications/push-notifications.component').then(
-        (m) => m.PushNotificationsComponent
-      ),
-    canActivate: [maintenanceGuard, authGuard, activatedUserGuard, adminGuard],
-  },
-  {
     path: 'usage-policy',
     loadComponent: () =>
       import('./usage-policy/usage-policy.component').then(
@@ -146,6 +138,14 @@ export const routes: Routes = [
       import('./test/notification-test/notification-test.component').then(
         (m) => m.NotificationTestComponent
       ),
+  },
+  {
+    path: 'notifications',
+    loadComponent: () =>
+      import(
+        './components/notification-manager/notification-manager.component'
+      ).then((m) => m.NotificationManagerComponent),
+    canActivate: [maintenanceGuard, authGuard],
   },
   {
     path: '**',

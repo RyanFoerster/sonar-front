@@ -37,12 +37,5 @@
       }
     }
   ],
-  "navigationUrls": ["/**", "!/**/*.*", "!/**/*__*", "!/**/*__*/**"],
-  "notifications": {
-    "default": {
-      "icon": "/assets/icons/SONAR-FAVICON.webp",
-      "badge": "/assets/icons/SONAR-FAVICON.webp",
-      "vibrate": [200, 100, 200]
-    }
-  }
+  "navigationUrls": ["/**", "!/**/*.*", "!/**/*__*", "!/**/*__*/**"]
 }

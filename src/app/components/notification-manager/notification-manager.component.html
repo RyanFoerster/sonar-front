@@ -1,0 +1,55 @@
+<div class="notification-manager">
+  <div class="card">
+    <h2>Gestion des notifications</h2>
+
+    <div *ngIf="!isSubscribed" class="permission-container">
+      <p>
+        Pour recevoir des notifications, vous devez autoriser les notifications
+        push.
+      </p>
+      <button class="btn btn-primary" (click)="requestPermission()">
+        Autoriser les notifications
+      </button>
+    </div>
+
+    <div *ngIf="isSubscribed" class="token-container">
+      <div class="success-message">
+        <span class="icon">✓</span>
+        <span>Notifications activées</span>
+      </div>
+
+      <div class="actions-section">
+        <button class="btn btn-primary" (click)="testNotification()">
+          Tester l'envoi de notification
+        </button>
+
+        <button class="btn btn-warning" (click)="regenerateToken()">
+          Régénérer le token FCM
+        </button>
+      </div>
+
+      <div class="token-section">
+        <button class="btn btn-secondary" (click)="toggleShowToken()">
+          {{ showToken ? "Masquer le token" : "Afficher le token FCM" }}
+        </button>
+
+        <div *ngIf="showToken" class="token-display">
+          <div class="token-box">
+            <code>{{ fcmToken }}</code>
+          </div>
+          <button class="btn btn-sm btn-copy" (click)="copyTokenToClipboard()">
+            Copier
+          </button>
+        </div>
+      </div>
+
+      <div
+        *ngIf="testResult"
+        class="test-result"
+        [ngClass]="{ success: testResult.success, error: !testResult.success }"
+      >
+        {{ testResult.message }}
+      </div>
+    </div>
+  </div>
+</div>

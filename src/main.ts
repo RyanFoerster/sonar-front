@@ -10,13 +10,23 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker
       .register('ngsw-worker.js')
       .then((registration) => {
-        console.log('Service Worker enregistré avec succès:', registration);
+        console.log(
+          'Service Worker Angular enregistré avec succès:',
+          registration
+        );
 
-        // Forcer l'activation du service worker si en attente
-        if (registration.waiting) {
-          console.log('Service Worker en attente, activation forcée...');
-          registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-        }
+        // Configuration pour intercepter les messages et afficher des notifications
+        // navigator.serviceWorker.addEventListener('message', (event) => {
+        //   console.log('Message reçu du Service Worker:', event.data);
+
+        //   if (event.data && event.data.type === 'SHOW_NOTIFICATION') {
+        //     console.log(
+        //       "Demande d'affichage de notification reçue:",
+        //       event.data
+        //     );
+        //     registration.showNotification(event.data.title, event.data.options);
+        //   }
+        // });
 
         // S'assurer que le service worker est activé
         if (registration.installing) {
@@ -31,130 +41,140 @@ if ('serviceWorker' in navigator) {
               }
             });
           }
+        } else if (registration.waiting) {
+          console.log('Service Worker en attente, activation forcée...');
+          registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+          // L'événement 'controllerchange' sera déclenché quand le SW prendra le contrôle
+          navigator.serviceWorker.addEventListener('controllerchange', () => {
+            console.log('Nouveau Service Worker a pris le contrôle');
+            window.location.reload();
+          });
+        } else if (registration.active) {
+          console.log('Service Worker déjà actif');
         }
-
-        // Configuration pour intercepter les messages et afficher des notifications
-        navigator.serviceWorker.addEventListener('message', (event) => {
-          console.log('Message reçu du Service Worker:', event.data);
-
-          if (event.data && event.data.type === 'SHOW_NOTIFICATION') {
-            console.log(
-              "Demande d'affichage de notification reçue:",
-              event.data
-            );
-            registration.showNotification(event.data.title, event.data.options);
-          }
-        });
       })
       .catch((error) => {
         console.error(
-          "Erreur lors de l'enregistrement du Service Worker:",
+          "Erreur lors de l'enregistrement du Service Worker Angular:",
           error
         );
       });
   });
 
-  // Gestionnaire pour le changement de contrôleur du Service Worker
-  navigator.serviceWorker.addEventListener('controllerchange', () => {
-    console.log('Nouveau Service Worker a pris le contrôle');
+  // Enregistrement du Service Worker Firebase Messaging
+  window.addEventListener('load', () => {
+    navigator.serviceWorker
+      .register('firebase-messaging-sw.js')
+      .then((registration) => {
+        console.log(
+          'Service Worker Firebase Messaging enregistré avec succès:',
+          registration
+        );
+      })
+      .catch((error) => {
+        console.error(
+          "Erreur lors de l'enregistrement du Service Worker Firebase Messaging:",
+          error
+        );
+      });
   });
 }
 
 // Ajouter un gestionnaire global pour les notifications
-if ('serviceWorker' in navigator) {
-  // Gestionnaire pour les messages du service worker
-  navigator.serviceWorker.addEventListener('message', (event) => {
-    console.log('Message reçu du Service Worker (globalement):', event.data);
+// if ('serviceWorker' in navigator) {
+//   // Gestionnaire pour les messages du service worker
+//   navigator.serviceWorker.addEventListener('message', (event) => {
+//     console.log('Message reçu du Service Worker (globalement):', event.data);
 
-    if (event.data && event.data.type === 'SHOW_NOTIFICATION') {
-      console.log(
-        "Demande d'affichage de notification reçue (globalement):",
-        event.data
-      );
+//     if (event.data && event.data.type === 'SHOW_NOTIFICATION') {
+//       console.log(
+//         "Demande d'affichage de notification reçue (globalement):",
+//         event.data
+//       );
 
-      // Si le service worker est activé, utiliser showNotification
-      if (navigator.serviceWorker.controller) {
-        navigator.serviceWorker.ready.then((registration) => {
-          registration.showNotification(event.data.title, event.data.options);
-        });
-      } else {
-        // Fallback pour les navigateurs sans service worker controller
-        if (Notification.permission === 'granted') {
-          const notification = new Notification(
-            event.data.title,
-            event.data.options
-          );
+//       // Si le service worker est activé, utiliser showNotification
+//       if (navigator.serviceWorker.controller) {
+//         navigator.serviceWorker.ready.then((registration) => {
+//           registration.showNotification(event.data.title, event.data.options);
+//         });
+//       } else {
+//         // Fallback pour les navigateurs sans service worker controller
+//         if (Notification.permission === 'granted') {
+//           const notification = new Notification(
+//             event.data.title,
+//             event.data.options
+//           );
 
-          // Gérer le clic sur la notification
-          notification.onclick = function () {
-            if (
-              event.data.options &&
-              event.data.options.data &&
-              event.data.options.data.url
-            ) {
-              window.open(event.data.options.data.url, '_blank');
-            }
-            notification.close();
-          };
-        }
-      }
-    }
-  });
-}
+//           // Gérer le clic sur la notification
+//           notification.onclick = function () {
+//             if (
+//               event.data.options &&
+//               event.data.options.data &&
+//               event.data.options.data.url
+//             ) {
+//               window.open(event.data.options.data.url, '_blank');
+//             }
+//             notification.close();
+//           };
+//         }
+//       }
+//     }
+//   });
+// }
 
-// Gestionnaire pour les clics sur notification
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.ready.then((registration) => {
-    console.log('Service worker prêt à gérer les notifications');
+// // Gestionnaire pour les clics sur notification
+// if ('serviceWorker' in navigator) {
+//   navigator.serviceWorker.ready.then((registration) => {
+//     console.log('Service worker prêt à gérer les notifications');
 
-    // Vérifier si la fonction showNotification existe sur l'objet registration
-    if (typeof registration.showNotification === 'function') {
-      console.log('Notifications supportées par ce service worker');
+//     // Vérifier si la fonction showNotification existe sur l'objet registration
+//     if (typeof registration.showNotification === 'function') {
+//       console.log('Notifications supportées par ce service worker');
 
-      // Le gestionnaire 'self.addEventListener' ne peut être utilisé que dans un service worker
-      // Nous utilisons donc uniquement le gestionnaire via navigator.serviceWorker
+//       // Le gestionnaire 'self.addEventListener' ne peut être utilisé que dans un service worker
+//       // Nous utilisons donc uniquement le gestionnaire via navigator.serviceWorker
 
-      // Gestionnaire de clics
-      navigator.serviceWorker.addEventListener(
-        'notificationclick',
-        (event: Event) => {
-          console.log('Notification cliquée:', event);
+//       // Gestionnaire de clics
+//       navigator.serviceWorker.addEventListener(
+//         'notificationclick',
+//         (event: Event) => {
+//           console.log('Notification cliquée:', event);
 
-          // Vérifier et caster l'événement pour accéder aux propriétés
-          if ('notification' in event) {
-            const notificationEvent = event as unknown as {
-              notification: {
-                data?: { url?: string };
-                close: () => void;
-              };
-              action?: string;
-            };
+//           // Vérifier et caster l'événement pour accéder aux propriétés
+//           if ('notification' in event) {
+//             const notificationEvent = event as unknown as {
+//               notification: {
+//                 data?: { url?: string };
+//                 close: () => void;
+//               };
+//               action?: string;
+//             };
 
-            const notification = notificationEvent.notification;
-            const action = notificationEvent.action;
+//             const notification = notificationEvent.notification;
+//             const action = notificationEvent.action;
 
-            console.log('Action:', action);
-            console.log('Notification:', notification);
+//             console.log('Action:', action);
+//             console.log('Notification:', notification);
 
-            // Fermer la notification
-            notification.close();
+//             // Fermer la notification
+//             notification.close();
 
-            // Gestion des actions
-            if (
-              (action === 'open' || !action) &&
-              notification.data &&
-              notification.data.url
-            ) {
-              console.log('Ouverture de URL:', notification.data.url);
-              // Utiliser window.open car clients.openWindow n'est disponible que dans le context d'un service worker
-              window.open(notification.data.url, '_blank');
-            }
-          }
-        }
-      );
-    }
-  });
-}
+//             // Gestion des actions
+//             if (
+//               (action === 'open' || !action) &&
+//               notification.data &&
+//               notification.data.url
+//             ) {
+//               console.log('Ouverture de URL:', notification.data.url);
+//               // Utiliser window.open car clients.openWindow n'est disponible que dans le context d'un service worker
+//               window.open(notification.data.url, '_blank');
+//             }
+//           }
+//         }
+//       );
+//     }
+//   });
+// }
 
 bootstrapApplication(AppComponent, appConfig).catch((err) =>
   console.error(err)

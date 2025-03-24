@@ -3,9 +3,9 @@
   "version": "0.0.1",
   "scripts": {
     "ng": "ng",
-    "start": "NG_APP_ENV=development ng serve",
-    "build:prod": "ng build --configuration production",
-    "build:staging": "ng build --configuration staging",
+    "start": "NODE_ENV=development ng serve",
+    "build:prod": "NODE_ENV=production node generate-sw.js && ng build --configuration production",
+    "build:staging": "NODE_ENV=staging node generate-sw.js && ng build --configuration staging",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "lint": "ng lint"
@@ -54,7 +54,6 @@
     "@spartan-ng/ui-tooltip-brain": "0.0.1-alpha.356",
     "class-variance-authority": "^0.6.0",
     "clsx": "^2.1.1",
-    "dotenv": "^16.4.5",
     "embla-carousel-angular": "^14.0.0",
     "firebase": "^11.4.0",
     "gsap": "^3.12.5",
@@ -80,6 +79,7 @@
     "@types/qrcode": "^1.5.5",
     "angular-eslint": "18.4.3",
     "autoprefixer": "^10.4.19",
+    "dotenv": "^16.4.7",
     "dotenv-webpack": "^8.1.0",
     "eslint": "^9.15.0",
     "jasmine-core": "~5.1.0",

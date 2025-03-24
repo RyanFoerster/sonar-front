@@ -246,21 +246,34 @@
                 ? 'Désactiver les notifications'
                 : 'Activer les notifications'
             "
+            [class.is-processing]="isProcessingNotificationPermission()"
           >
             <div
               class="switch-track"
               [ngClass]="{
                 'switch-track-active': notificationsEnabled(),
-                'switch-track-inactive': !notificationsEnabled()
+                'switch-track-inactive': !notificationsEnabled(),
+                'opacity-50': isProcessingNotificationPermission()
               }"
             >
               <div
-                class="switch-thumb"
+                class="switch-thumb relative"
                 [ngClass]="{
                   'switch-thumb-active': notificationsEnabled(),
                   'switch-thumb-inactive': !notificationsEnabled()
                 }"
-              ></div>
+              >
+                <!-- Indicateur de chargement -->
+                @if (isProcessingNotificationPermission()) {
+                <div
+                  class="h-3 w-3 absolute top-0 bottom-0 left-0 right-0 m-auto"
+                >
+                  <div
+                    class="animate-spin h-3 w-3 border-2 border-primary rounded-full border-t-transparent"
+                  ></div>
+                </div>
+                }
+              </div>
             </div>
           </div>
 

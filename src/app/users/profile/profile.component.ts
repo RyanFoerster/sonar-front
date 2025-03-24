@@ -62,6 +62,7 @@ export class ProfileComponent {
   protected updateUserForm!: FormGroup;
   protected notificationsEnabled = signal<boolean>(false);
   protected notificationsSupported = signal<boolean>(false);
+  protected isProcessingNotificationPermission = signal<boolean>(false);
 
   private usersService: UsersService = inject(UsersService);
   private authService: AuthService = inject(AuthService);
@@ -127,6 +128,40 @@ export class ProfileComponent {
     );
   }
 
+  ngOnInit(): void {
+    this.authService.getCurrentUser().subscribe((user) => {
+      this.connectedUser.set(user);
+      if (user) {
+        this.updateUserForm = this.formBuilder.group({
+          id: [user.id],
+          email: [user.email, [Validators.required, Validators.email]],
+          name: [user.name, Validators.required],
+          firstName: [user.firstName],
+          telephone: [user.telephone],
+        });
+      }
+    });
+
+    // Vérification de la compatibilité des notifications
+    this.notificationsSupported.set(
+      this.pushNotificationService.areNotificationsSupported()
+    );
+
+    // Vérification de l'état actuel des notifications
+    if (this.notificationsSupported()) {
+      // Utiliser la méthode isCurrentlySubscribed qui vérifie aussi le localStorage
+      this.notificationsEnabled.set(
+        this.pushNotificationService.isCurrentlySubscribed()
+      );
+
+      // S'abonner aux changements de statut des notifications
+      this.pushNotificationService.isSubscribed$.subscribe((isSubscribed) => {
+        this.notificationsEnabled.set(isSubscribed);
+        console.log('État des notifications mis à jour:', isSubscribed);
+      });
+    }
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   updateUser(ctx: any) {
     if (this.updateUserForm.valid) {
@@ -142,21 +177,37 @@ export class ProfileComponent {
   toggleNotifications(event: boolean | Event) {
     console.log('Toggle notifications appelé avec:', event);
 
-    // Option de test simple pour vérifier si le problème est lié à l'UI ou aux appels réseau
-    // Lors du clic, on change simplement l'état local
-    this.notificationsEnabled.set(!this.notificationsEnabled());
-    console.log(
-      'État local des notifications changé à:',
-      this.notificationsEnabled()
-    );
+    // Ne pas changer immédiatement l'état local - attendons le résultat réel
+    const newState = !this.notificationsEnabled();
+    console.log('Nouvel état demandé:', newState);
 
-    // Forcer la détection de changements
-    this.cdr.detectChanges();
+    // Activer l'indicateur de chargement
+    this.isProcessingNotificationPermission.set(true);
 
-    // Appeler le service selon l'état
-    if (this.notificationsEnabled()) {
+    if (newState) {
       console.log("Tentative d'activation des notifications...");
-      this.enableNotifications();
+
+      // Si on est sur mobile, on force une interaction utilisateur directe
+      if ('Notification' in window && Notification.permission === 'default') {
+        console.log(
+          'Demande de permission directe via Notification API avant Firebase'
+        );
+        Notification.requestPermission().then((permission) => {
+          console.log('Permission réponse:', permission);
+          if (permission === 'granted') {
+            this.enableNotifications();
+          } else {
+            // Permission refusée explicitement, mettre à jour l'UI
+            console.log('Permission notification refusée');
+            this.notificationsEnabled.set(false);
+            this.isProcessingNotificationPermission.set(false);
+            this.cdr.detectChanges();
+          }
+        });
+      } else {
+        // Permission déjà accordée ou refusée, passer directement à Firebase
+        this.enableNotifications();
+      }
     } else {
       console.log('Tentative de désactivation des notifications...');
       this.disableNotifications();
@@ -165,20 +216,75 @@ export class ProfileComponent {
 
   private enableNotifications() {
     console.log('Méthode enableNotifications appelée');
+
+    // Pour le débogage, vérifier l'état actuel de la permission
+    console.log('État actuel de la permission:', Notification.permission);
+
     this.pushNotificationService.subscribeToNotifications().subscribe({
       next: (response) => {
         console.log("Réponse de l'abonnement:", response);
-        this.notificationsEnabled.set(true);
-        // Forcer la détection de changements
-        this.cdr.detectChanges();
-        console.log(
-          'Notifications activées avec succès, état:',
-          this.notificationsEnabled()
-        );
+
+        // Vérifier si la réponse indique un succès
+        if (response && (response as { success?: boolean }).success) {
+          this.notificationsEnabled.set(true);
+          console.log('Notifications activées avec succès');
+
+          // Désactiver l'indicateur de chargement
+          this.isProcessingNotificationPermission.set(false);
+
+          // Afficher une notification de confirmation indiquant que la page va être rechargée
+          if (this.pushNotificationService.hasNotificationPermission()) {
+            this.pushNotificationService
+              .sendLocalTestNotification('Notifications activées', {
+                body: "La page va être rechargée pour finaliser l'activation",
+                requireInteraction: false,
+              })
+              .catch((err) => console.error('Erreur notification test:', err))
+              .finally(() => {
+                // Recharger la page après 2 secondes pour appliquer les changements côté serveur
+                setTimeout(() => {
+                  console.log(
+                    "Rechargement de la page pour finaliser l'activation des notifications"
+                  );
+                  window.location.reload();
+                }, 2000);
+              });
+          } else {
+            // Si on ne peut pas envoyer de notification, recharger quand même la page
+            setTimeout(() => {
+              console.log(
+                "Rechargement de la page pour finaliser l'activation des notifications"
+              );
+              window.location.reload();
+            }, 2000);
+          }
+        } else {
+          console.warn(
+            "Réponse d'abonnement reçue mais sans confirmation de succès:",
+            response
+          );
+          // En cas d'échec, vérifier l'état réel via le service
+          this.pushNotificationService.isSubscribed$.subscribe(
+            (isSubscribed) => {
+              this.notificationsEnabled.set(isSubscribed);
+              console.log(
+                "État d'abonnement vérifié via service:",
+                isSubscribed
+              );
+
+              // Désactiver l'indicateur de chargement
+              this.isProcessingNotificationPermission.set(false);
+              // Forcer la détection de changements
+              this.cdr.detectChanges();
+            }
+          );
+        }
       },
       error: (error) => {
         console.error("Erreur lors de l'activation des notifications", error);
         this.notificationsEnabled.set(false);
+        // Désactiver l'indicateur de chargement
+        this.isProcessingNotificationPermission.set(false);
         // Forcer la détection de changements
         this.cdr.detectChanges();
       },
@@ -192,6 +298,8 @@ export class ProfileComponent {
       .then(() => {
         console.log('Désabonnement réussi');
         this.notificationsEnabled.set(false);
+        // Désactiver l'indicateur de chargement
+        this.isProcessingNotificationPermission.set(false);
         // Forcer la détection de changements
         this.cdr.detectChanges();
         console.log(
@@ -204,8 +312,13 @@ export class ProfileComponent {
           'Erreur lors de la désactivation des notifications',
           error
         );
-        // Forcer la détection de changements
-        this.cdr.detectChanges();
+        // Vérifier l'état réel via le service
+        this.pushNotificationService.isSubscribed$.subscribe((isSubscribed) => {
+          this.notificationsEnabled.set(isSubscribed);
+          // Désactiver l'indicateur de chargement
+          this.isProcessingNotificationPermission.set(false);
+          this.cdr.detectChanges();
+        });
       });
   }
 }

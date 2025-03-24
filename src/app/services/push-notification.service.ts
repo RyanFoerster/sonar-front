@@ -1,14 +1,14 @@
 import { Injectable } from '@angular/core';
 import { SwPush } from '@angular/service-worker';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import {
   catchError,
   Observable,
   of,
   tap,
   BehaviorSubject,
-  switchMap,
   from,
+  map,
 } from 'rxjs';
 import { environment } from '../../environments/environment';
 
@@ -45,6 +45,7 @@ interface NotificationOptions {
 export class PushNotificationService {
   private apiUrl = `${environment.API_URL}`;
   private _isSubscribed = new BehaviorSubject<boolean>(false);
+  private readonly NOTIFICATION_PREF_KEY = 'notification_preferences';
 
   // Observable public pour suivre l'état d'abonnement
   public isSubscribed$ = this._isSubscribed.asObservable();
@@ -65,54 +66,179 @@ export class PushNotificationService {
     // S'abonner aux événements de la push
     this.swPush.subscription.subscribe((sub) => {
       this._isSubscribed.next(!!sub);
+      // Enregistrer l'état dans localStorage
+      this.saveNotificationPreference(!!sub);
     });
 
     // Si l'utilisateur a déjà la permission mais pas d'abonnement local
     if (this.hasNotificationPermission() && !this._isSubscribed.value) {
       this.checkServerSubscriptionStatus();
     }
+
+    // Charger les préférences depuis localStorage
+    this.loadNotificationPreferences();
   }
 
   /**
-   * Vérifie si l'utilisateur est déjà abonné aux notifications
+   * Enregistre les préférences de notification dans localStorage
+   */
+  private saveNotificationPreference(isSubscribed: boolean): void {
+    try {
+      const preferences = {
+        isSubscribed: isSubscribed,
+        permission: Notification.permission,
+        lastUpdated: new Date().toISOString(),
+      };
+      localStorage.setItem(
+        this.NOTIFICATION_PREF_KEY,
+        JSON.stringify(preferences)
+      );
+      console.log('Préférences de notification enregistrées:', preferences);
+    } catch (error) {
+      console.error(
+        "Erreur lors de l'enregistrement des préférences de notification:",
+        error
+      );
+    }
+  }
+
+  /**
+   * Charge les préférences de notification depuis localStorage
+   */
+  private loadNotificationPreferences(): void {
+    try {
+      const storedPrefs = localStorage.getItem(this.NOTIFICATION_PREF_KEY);
+      if (storedPrefs) {
+        const prefs = JSON.parse(storedPrefs);
+        console.log('Préférences de notification chargées:', prefs);
+
+        // Si l'utilisateur avait explicitement désactivé les notifications, respecter ce choix
+        // même si la permission est toujours "granted"
+        if (Object.prototype.hasOwnProperty.call(prefs, 'isSubscribed')) {
+          if (prefs.isSubscribed === false) {
+            // L'utilisateur a explicitement désactivé les notifications
+            console.log(
+              "Notifications explicitement désactivées par l'utilisateur, état maintenu"
+            );
+            this._isSubscribed.next(false);
+            return;
+          } else if (
+            prefs.isSubscribed &&
+            Notification.permission === 'granted'
+          ) {
+            // L'utilisateur était abonné et la permission est toujours valide
+            console.log("Restauration de l'état abonné depuis les préférences");
+            this._isSubscribed.next(true);
+            return;
+          }
+        }
+
+        // Si la permission a changé, mettre à jour les préférences
+        if (Notification.permission !== prefs.permission) {
+          console.log(
+            'Permission changée de',
+            prefs.permission,
+            'à',
+            Notification.permission
+          );
+          this.saveNotificationPreference(
+            Notification.permission === 'granted'
+          );
+          this._isSubscribed.next(Notification.permission === 'granted');
+        }
+      }
+    } catch (error) {
+      console.error(
+        'Erreur lors du chargement des préférences de notification:',
+        error
+      );
+    }
+  }
+
+  /**
+   * Vérifie l'état d'abonnement actuel aux notifications
    */
   private checkSubscriptionStatus(): void {
-    // Vérifier d'abord localement avec SwPush
-    this.swPush.subscription.subscribe((subscription) => {
-      if (subscription) {
-        this._isSubscribed.next(true);
-      } else {
-        // Si aucun abonnement local, vérifier avec le backend
-        this.checkServerSubscriptionStatus();
+    // Forcer la vérification des abonnements au service worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        console.log(`${registrations.length} service worker(s) enregistré(s)`);
+        for (const registration of registrations) {
+          console.log('Service worker scope:', registration.scope);
+        }
+      });
+    }
+
+    // Vérifier d'abord dans le localStorage
+    try {
+      const storedPrefs = localStorage.getItem(this.NOTIFICATION_PREF_KEY);
+      if (storedPrefs) {
+        const prefs = JSON.parse(storedPrefs);
+        console.log('Vérification des préférences stockées:', prefs);
+
+        // Si l'utilisateur avait explicitement désactivé les notifications, respecter ce choix
+        if (
+          Object.prototype.hasOwnProperty.call(prefs, 'isSubscribed') &&
+          prefs.isSubscribed === false
+        ) {
+          console.log(
+            'Désactivation explicite des notifications détectée, état maintenu'
+          );
+          this._isSubscribed.next(false);
+          return;
+        }
+
+        // Vérifier si la permission du navigateur correspond à celle stockée
+        const currentPermission = Notification.permission;
+        if (prefs.isSubscribed && currentPermission === 'granted') {
+          this._isSubscribed.next(true);
+          console.log("État d'abonnement restauré depuis localStorage: abonné");
+          return;
+        } else if (currentPermission !== prefs.permission) {
+          // La permission a changé depuis la dernière visite
+          console.log(
+            'La permission de notification a changé depuis la dernière visite',
+            'de',
+            prefs.permission,
+            'à',
+            currentPermission
+          );
+          this.saveNotificationPreference(currentPermission === 'granted');
+        }
       }
-    });
+    } catch (error) {
+      console.error(
+        'Erreur lors de la vérification des préférences stockées:',
+        error
+      );
+    }
+
+    // Si aucune préférence n'est stockée ou si la permission a changé
+    // et que l'utilisateur n'a pas explicitement désactivé les notifications
+    if (Notification.permission === 'granted') {
+      // L'utilisateur a déjà accordé la permission
+      // Mais nous ne l'activons pas automatiquement sans action explicite de l'utilisateur
+      this.swPush.subscription.subscribe((subscription) => {
+        // Mettre à jour l'état en fonction de l'abonnement existant
+        const isActive = !!subscription;
+        this._isSubscribed.next(isActive);
+        this.saveNotificationPreference(isActive);
+        console.log('État déterminé par abonnement existant:', isActive);
+      });
+    } else {
+      // L'utilisateur n'a pas encore accordé la permission
+      this._isSubscribed.next(false);
+      this.saveNotificationPreference(false);
+    }
   }
 
   /**
-   * Vérifie avec le serveur si l'utilisateur est déjà abonné
+   * Vérifie l'état d'abonnement sur le serveur (fonction obsolète mais gardée pour compatibilité)
    */
   private checkServerSubscriptionStatus(): void {
-    // Récupérer le token d'authentification
-    const token = localStorage.getItem(environment.TOKEN_KEY);
-    if (!token) {
-      this._isSubscribed.next(false);
-      return;
-    }
-
-    // Ajouter les headers d'authentification
-    const headers = {
-      Authorization: `Bearer ${token}`,
-    };
-
-    this.http
-      .get<{ isSubscribed: boolean }>(
-        `${this.apiUrl}/push-notifications/subscription-status`,
-        { headers }
-      )
-      .pipe(catchError(() => of({ isSubscribed: false })))
-      .subscribe((response) => {
-        this._isSubscribed.next(response.isSubscribed);
-      });
+    // Dans la version locale, nous utilisons simplement l'état du localStorage
+    console.log("Vérification de l'état d'abonnement (local uniquement)");
+    // Pas d'appel au serveur nécessaire
   }
 
   /**
@@ -143,220 +269,267 @@ export class PushNotificationService {
   subscribeToNotifications(): Observable<unknown> {
     console.log("Début du processus d'abonnement aux notifications...");
 
-    // Vérifier d'abord si on est déjà abonné côté serveur
-    const token = localStorage.getItem(environment.TOKEN_KEY);
-    if (!token) {
-      console.error("Aucun token d'authentification. Veuillez vous connecter.");
-      return of(null);
+    // Nettoyer tout abonnement existant pour éviter les conflits
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready.then((registration) => {
+        registration.pushManager.getSubscription().then((subscription) => {
+          if (subscription) {
+            console.log('Ancienne souscription détectée, nettoyage...');
+            subscription.unsubscribe().then((success) => {
+              console.log(
+                'Nettoyage de la souscription:',
+                success ? 'réussi' : 'échoué'
+              );
+            });
+          }
+        });
+      });
     }
 
-    console.log("Token d'authentification trouvé");
+    // Vérifier si on est sur mobile pour adapter le comportement
+    const isMobile = this.detectMobileDevice();
+    console.log(
+      `subscribeToNotifications: appareil mobile détecté = ${isMobile}`
+    );
 
-    const headers = {
-      Authorization: `Bearer ${token}`,
-    };
+    // Récupérer l'ID utilisateur et le token d'authentification
+    const token = localStorage.getItem(environment.TOKEN_KEY);
+    let userId: number | null = null;
+    try {
+      const userData = localStorage.getItem(environment.USER_KEY);
+      if (userData) {
+        const user = JSON.parse(userData);
+        userId = user.id;
+        console.log(`ID utilisateur récupéré: ${userId}`);
+      }
+    } catch (error) {
+      console.error(
+        'Erreur lors de la récupération des données utilisateur:',
+        error
+      );
+    }
 
-    console.log("Vérification du statut d'abonnement sur le serveur...");
-
-    return this.http
-      .get<{ isSubscribed: boolean }>(
-        `${this.apiUrl}/push-notifications/subscription-status`,
-        { headers }
-      )
-      .pipe(
-        catchError((error) => {
-          console.error(
-            "Erreur lors de la vérification du statut d'abonnement",
-            error
-          );
-          return of({ isSubscribed: false });
-        }),
-        tap((response) => {
-          console.log("Réponse du statut d'abonnement:", response);
-          if (response.isSubscribed) {
-            console.log('Utilisateur déjà abonné sur le serveur');
+    // Version locale sans appel backend
+    if ('Notification' in window) {
+      return from(Notification.requestPermission()).pipe(
+        map((permission) => {
+          console.log('Permission de notification:', permission);
+          if (permission === 'granted') {
+            // Mise à jour de l'état local et notification de succès
             this._isSubscribed.next(true);
+            // Enregistrer la préférence dans localStorage
+            this.saveNotificationPreference(true);
+
+            // Si nous avons un userId et un token, réactiver les notifications côté serveur
+            if (userId && token) {
+              console.log(
+                `Réactivation des notifications pour l'utilisateur ${userId}`
+              );
+
+              // Générer un identifiant de préférence spécial (pas un vrai token FCM)
+              const deviceIdentifier = `web_pref_active_${Date.now()}_${Math.random()
+                .toString(36)
+                .substring(2, 15)}`;
+              console.log(
+                'Identifiant de préférence généré:',
+                deviceIdentifier
+              );
+
+              const headers = new HttpHeaders().set(
+                'Authorization',
+                `Bearer ${token}`
+              );
+
+              // Appeler l'endpoint force-subscribe
+              this.http
+                .post(
+                  `${this.apiUrl}/notifications/force-subscribe/${userId}`,
+                  { token: deviceIdentifier },
+                  { headers }
+                )
+                .subscribe({
+                  next: (response) => {
+                    console.log(
+                      'Notifications réactivées avec succès sur le serveur:',
+                      response
+                    );
+
+                    // Afficher une notification de confirmation
+                    this.sendLocalTestNotification('Notifications activées', {
+                      body: 'Vous recevrez désormais des notifications de SonarArtists',
+                      requireInteraction: false,
+                    }).catch((err) =>
+                      console.error('Erreur notification test:', err)
+                    );
+                  },
+                  error: (error) => {
+                    console.error(
+                      'Erreur lors de la réactivation des notifications sur le serveur:',
+                      error
+                    );
+                  },
+                });
+            }
+
+            return { success: true };
+          } else {
+            this._isSubscribed.next(false);
+            // Enregistrer la préférence dans localStorage
+            this.saveNotificationPreference(false);
+            return {
+              success: false,
+              error:
+                permission === 'denied'
+                  ? "Notifications refusées par l'utilisateur"
+                  : 'Permission de notification non accordée',
+            };
           }
         }),
-        // Si déjà abonné, on s'arrête là, sinon on continue
-        switchMap((response) => {
-          if (response.isSubscribed) {
-            console.log('Utilisateur déjà abonné, retour');
-            return of({ success: true, message: 'Déjà abonné' });
-          }
-
-          console.log(
-            'Utilisateur non abonné, récupération de la clé VAPID...'
-          );
-
-          // Sinon, on procède à l'abonnement en obtenant la clé VAPID
-          return this.getVapidPublicKey().pipe(
-            switchMap((keyResponse) => {
-              console.log('Clé VAPID reçue:', keyResponse);
-
-              if (!keyResponse || !keyResponse.publicKey) {
-                console.error('Clé publique VAPID non disponible');
-                throw new Error('Clé publique VAPID non disponible');
-              }
-
-              const serverPublicKey =
-                typeof keyResponse.publicKey === 'string'
-                  ? keyResponse.publicKey.trim()
-                  : String(keyResponse.publicKey);
-
-              console.log("Clé utilisée pour l'abonnement:", serverPublicKey);
-
-              // Cette partie est une Promise, on la convertit en Observable
-              console.log("Demande d'abonnement au service SwPush...");
-
-              return from(
-                this.swPush
-                  .requestSubscription({
-                    serverPublicKey: serverPublicKey,
-                  })
-                  .then((subscription) => {
-                    console.log(
-                      'Abonnement aux notifications réussi',
-                      subscription
-                    );
-                    this._isSubscribed.next(true);
-                    return subscription;
-                  })
-                  .catch((err) => {
-                    console.error('Erreur dans la promesse SwPush:', err);
-                    throw err;
-                  })
-              ).pipe(
-                // Enregistrer l'abonnement sur le serveur
-                tap(() =>
-                  console.log("Sauvegarde de l'abonnement sur le serveur...")
-                ),
-                switchMap((subscription) =>
-                  this.saveSubscription(subscription)
-                ),
-                catchError((error) => {
-                  console.error(
-                    "Erreur lors de l'abonnement aux notifications",
-                    error
-                  );
-                  return of({ success: false, error: error.message });
-                })
-              );
-            }),
-            catchError((error) => {
-              console.error(
-                'Erreur lors de la récupération de la clé VAPID',
-                error
-              );
-              return of({ success: false, error: error.message });
-            })
-          );
+        catchError((error) => {
+          console.error('Erreur lors de la demande de permission', error);
+          this._isSubscribed.next(false);
+          // Enregistrer l'échec dans localStorage
+          this.saveNotificationPreference(false);
+          return of({ success: false, error: error.message });
         })
       );
+    } else {
+      console.warn('Notifications non supportées par ce navigateur');
+      this._isSubscribed.next(false);
+      // Enregistrer l'état non supporté dans localStorage
+      this.saveNotificationPreference(false);
+      return of({ success: false, error: 'Notifications non supportées' });
+    }
   }
 
   /**
-   * Désabonne l'utilisateur des notifications push
+   * Désactive les notifications
    */
   unsubscribeFromNotifications(): Promise<void> {
-    console.log('Début du processus de désabonnement...');
+    console.log('Méthode disableNotifications appelée');
 
-    return new Promise<void>((resolve, reject) => {
-      // D'abord vérifier si le service worker est enregistré
-      if (!('serviceWorker' in navigator)) {
-        console.error("Le service worker n'est pas supporté");
-        reject(new Error("Le service worker n'est pas supporté"));
-        return;
+    // Version locale sans appel backend
+    this._isSubscribed.next(false);
+    // Enregistrer la préférence dans localStorage
+    this.saveNotificationPreference(false);
+
+    // Récupérer le token d'authentification pour la désactivation côté serveur
+    const token = localStorage.getItem(environment.TOKEN_KEY);
+
+    // Récupérer l'ID de l'utilisateur depuis le token ou le localStorage
+    let userId: number | null = null;
+    try {
+      const userData = localStorage.getItem(environment.USER_KEY);
+      if (userData) {
+        const user = JSON.parse(userData);
+        userId = user.id;
+        console.log(`ID utilisateur récupéré: ${userId}`);
+      } else {
+        console.log('Aucune donnée utilisateur trouvée dans localStorage');
       }
+    } catch (error) {
+      console.error(
+        'Erreur lors de la récupération des données utilisateur:',
+        error
+      );
+    }
 
-      console.log("Vérification de l'abonnement actuel...");
+    // Tentative de désabonnement du service worker si possible
+    return navigator.serviceWorker.ready
+      .then((registration) => {
+        return registration.pushManager.getSubscription();
+      })
+      .then((subscription) => {
+        if (subscription) {
+          console.log('Désabonnement de la souscription push existante');
+          return subscription.unsubscribe();
+        }
+        return true;
+      })
+      .then(() => {
+        console.log('Désabonnement local réussi');
 
-      // Récupérer le token d'authentification
-      const token = localStorage.getItem(environment.TOKEN_KEY);
-      if (!token) {
-        console.error("Aucun token d'authentification trouvé");
-        reject(new Error('Vous devez être connecté pour vous désabonner'));
-        return;
-      }
+        // Désabonnement sur le serveur
+        if (token) {
+          console.log('Tentative de désabonnement côté serveur');
 
-      // Utiliser une approche différente pour obtenir l'abonnement actuel
-      navigator.serviceWorker.ready
-        .then((registration) => {
-          console.log('Service Worker prêt', registration);
-          return registration.pushManager.getSubscription();
-        })
-        .then((subscription) => {
-          if (!subscription) {
-            console.log(
-              "Pas d'abonnement local trouvé, désactivation sur le serveur directement..."
+          // Si nous avons un userId, utiliser l'endpoint userId spécifique
+          if (userId) {
+            console.log(`Désabonnement forcé pour l'utilisateur ${userId}`);
+            const headers = new HttpHeaders().set(
+              'Authorization',
+              `Bearer ${token}`
             );
 
-            // Même sans abonnement local, on doit désactiver côté serveur
+            return new Promise<void>((resolve) => {
+              this.http
+                .post(
+                  `${this.apiUrl}/notifications/force-unsubscribe/${userId}`,
+                  {},
+                  { headers }
+                )
+                .subscribe({
+                  next: () => {
+                    console.log(
+                      `Désabonnement forcé réussi pour l'utilisateur ${userId}`
+                    );
+                    resolve();
+                  },
+                  error: (error) => {
+                    console.error(
+                      `Erreur lors du désabonnement forcé pour l'utilisateur ${userId}`,
+                      error
+                    );
+                    // Continuer malgré l'erreur
+                    resolve();
+                  },
+                });
+            });
+          } else {
+            // Méthode alternative générique
             return this.forceServerUnsubscribe(token)
               .then(() => {
-                console.log('Désactivation côté serveur réussie');
-                this._isSubscribed.next(false);
-                resolve();
+                console.log('Désabonnement serveur réussi');
+                return;
               })
               .catch((error) => {
-                console.error(
-                  'Erreur lors de la désactivation côté serveur',
-                  error
-                );
-                reject(error);
+                console.error('Erreur lors du désabonnement serveur', error);
+                // Continuer malgré l'erreur serveur
+                return;
               });
           }
-
-          console.log('Abonnement local trouvé', subscription.endpoint);
-
-          // Récupérer l'endpoint pour le désabonnement côté serveur
-          const endpoint = subscription.endpoint;
-
-          // Désabonner localement
-          return subscription.unsubscribe().then((success) => {
-            console.log('Désabonnement local réussi:', success);
-            this._isSubscribed.next(false);
-
-            // Puis désabonner côté serveur
-            console.log('Envoi de la requête de désabonnement au serveur...');
-
-            // Appeler le backend pour désactiver l'abonnement
-            this.http
-              .delete(
-                `${
-                  this.apiUrl
-                }/push-notifications/unsubscribe/${encodeURIComponent(
-                  endpoint
-                )}`,
-                {
-                  headers: {
-                    Authorization: `Bearer ${token}`,
-                  },
-                }
-              )
-              .subscribe({
-                next: (response) => {
-                  console.log('Désabonnement du serveur réussi', response);
-                  this._isSubscribed.next(false);
-                  resolve();
-                },
-                error: (error) => {
-                  console.error(
-                    'Erreur lors du désabonnement côté serveur',
-                    error
-                  );
-                  // On considère quand même comme réussi car l'abonnement local a été supprimé
-                  this._isSubscribed.next(false);
-                  resolve();
-                },
+        }
+        return Promise.resolve();
+      })
+      .then(() => {
+        console.log('Désabonnement complet réussi');
+        // Force le rechargement du service worker pour éviter les problèmes de persistance d'état
+        if ('serviceWorker' in navigator) {
+          console.log('Tentative de réinitialisation du service worker');
+          return navigator.serviceWorker
+            .getRegistrations()
+            .then((registrations) => {
+              const updatePromises = registrations.map((registration) => {
+                return registration.update();
               });
-          });
-        })
-        .catch((error) => {
-          console.error('Erreur lors du processus de désabonnement', error);
-          reject(error);
-        });
-    });
+              return Promise.all(updatePromises);
+            })
+            .then(() => {
+              console.log('Mise à jour des service workers terminée');
+              return;
+            });
+        }
+        return Promise.resolve();
+      })
+      .catch((error) => {
+        console.error('Erreur lors du désabonnement', error);
+        return Promise.reject(error);
+      })
+      .finally(() => {
+        // Assure que l'état est bien désactivé quoi qu'il arrive
+        this._isSubscribed.next(false);
+        this.saveNotificationPreference(false);
+      });
   }
 
   /**
@@ -423,6 +596,13 @@ export class PushNotificationService {
   }
 
   /**
+   * Vérifie si les notifications sont supportées par le navigateur
+   */
+  areNotificationsSupported(): boolean {
+    return 'Notification' in window;
+  }
+
+  /**
    * Vérifie si l'utilisateur a déjà autorisé les notifications
    */
   hasNotificationPermission(): boolean {
@@ -438,9 +618,116 @@ export class PushNotificationService {
 
   /**
    * Vérifie si l'utilisateur est actuellement abonné
+   * Vérifie d'abord le localStorage, puis l'état actuel
    */
   isCurrentlySubscribed(): boolean {
+    try {
+      const storedPrefs = localStorage.getItem(this.NOTIFICATION_PREF_KEY);
+      if (storedPrefs) {
+        const prefs = JSON.parse(storedPrefs);
+
+        // Si l'utilisateur a explicitement désactivé les notifications
+        if (
+          Object.prototype.hasOwnProperty.call(prefs, 'isSubscribed') &&
+          prefs.isSubscribed === false
+        ) {
+          console.log(
+            'Notifications explicitement désactivées selon préférences stockées'
+          );
+          return false;
+        }
+
+        // Vérifier si les préférences stockées correspondent à l'état actuel de la permission
+        if (prefs.isSubscribed && Notification.permission === 'granted') {
+          return true;
+        }
+      }
+    } catch (error) {
+      console.error(
+        'Erreur lors de la vérification des préférences stockées:',
+        error
+      );
+    }
+
+    // Si aucune préférence n'est stockée ou en cas d'erreur, utiliser l'état actuel
     return this._isSubscribed.value;
+  }
+
+  /**
+   * Réinitialise complètement l'état des notifications
+   * Utile en cas de problème avec l'état persistant des notifications
+   */
+  resetNotificationState(): Promise<void> {
+    console.log("Réinitialisation complète de l'état des notifications");
+
+    // Supprimer les préférences stockées
+    localStorage.removeItem(this.NOTIFICATION_PREF_KEY);
+
+    // Réinitialiser l'état interne
+    this._isSubscribed.next(false);
+
+    // Désabonner du service worker si possible
+    if ('serviceWorker' in navigator) {
+      return new Promise<void>((resolve, reject) => {
+        navigator.serviceWorker.ready
+          .then((registration) => {
+            return registration.pushManager.getSubscription();
+          })
+          .then((subscription) => {
+            if (subscription) {
+              console.log('Suppression de la souscription push');
+              return subscription.unsubscribe();
+            }
+            return true;
+          })
+          .then(() => {
+            console.log('Réinitialisation terminée');
+            // Mettre à jour tous les service workers
+            if ('serviceWorker' in navigator) {
+              navigator.serviceWorker
+                .getRegistrations()
+                .then((registrations) => {
+                  console.log(
+                    `Mise à jour de ${registrations.length} service workers`
+                  );
+
+                  // Créer des promesses pour chaque mise à jour
+                  const promises = registrations.map((registration) => {
+                    console.log(
+                      `Mise à jour du service worker: ${registration.scope}`
+                    );
+                    return registration.update();
+                  });
+
+                  // Attendre que toutes les mises à jour soient terminées
+                  Promise.all(promises)
+                    .then(() => {
+                      console.log(
+                        'Toutes les mises à jour des service workers sont terminées'
+                      );
+                      resolve();
+                    })
+                    .catch((error) => {
+                      console.warn(
+                        'Certaines mises à jour de service workers ont échoué',
+                        error
+                      );
+                      // On résout quand même car ce n'est pas critique
+                      resolve();
+                    });
+                });
+            } else {
+              resolve();
+            }
+          })
+          .catch((error) => {
+            console.error('Erreur lors de la réinitialisation', error);
+            reject(error);
+          });
+      });
+    }
+
+    return Promise.resolve();
   }
 
   /**
@@ -589,5 +876,120 @@ export class PushNotificationService {
           reject(error);
         });
     });
+  }
+
+  /**
+   * Vérifie et affiche l'état actuel du service worker et des notifications
+   * Utile pour le débogage des problèmes de notifications
+   */
+  async checkServiceWorkerAndNotificationStatus(): Promise<unknown> {
+    console.group('État complet du Service Worker et des notifications');
+
+    // 1. Préférences stockées
+    try {
+      const storedPrefs = localStorage.getItem(this.NOTIFICATION_PREF_KEY);
+      if (storedPrefs) {
+        const prefs = JSON.parse(storedPrefs);
+        console.log('1. Préférences stockées:', prefs);
+      } else {
+        console.log('1. Aucune préférence de notification stockée');
+      }
+    } catch (error) {
+      console.error('1. Erreur lors de la lecture des préférences:', error);
+    }
+
+    // 2. État des permissions
+    console.log(
+      '2. Permission actuelle du navigateur:',
+      Notification.permission
+    );
+
+    // 3. État de la variable interne
+    console.log('3. État interne _isSubscribed:', this._isSubscribed.value);
+
+    // 4. Service workers enregistrés
+    if ('serviceWorker' in navigator) {
+      try {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        console.log(
+          `4. Service workers enregistrés (${registrations.length}):`
+        );
+        for (const registration of registrations) {
+          console.log('   - Scope:', registration.scope);
+          console.log('   - État:', registration.active ? 'actif' : 'inactif');
+          console.log(
+            '   - Mise à jour en attente:',
+            registration.waiting ? 'oui' : 'non'
+          );
+        }
+
+        // 5. Abonnements push actifs
+        const promises = registrations.map(async (registration) => {
+          const subscription = await registration.pushManager.getSubscription();
+          return { scope: registration.scope, subscription };
+        });
+
+        const subscriptions = await Promise.all(promises);
+        console.log(
+          '5. Abonnements push:',
+          subscriptions.filter((s) => s.subscription).length
+        );
+        subscriptions.forEach((s) => {
+          if (s.subscription) {
+            console.log(`   - Scope: ${s.scope}`);
+            console.log(`   - Endpoint: ${s.subscription.endpoint}`);
+          }
+        });
+      } catch (error) {
+        console.error(
+          'Erreur lors de la vérification des service workers:',
+          error
+        );
+      }
+    } else {
+      console.log('4 & 5. Service Worker non supporté par ce navigateur');
+    }
+
+    console.groupEnd();
+
+    // Retourner un résumé de l'état
+    return {
+      browserPermission: Notification.permission,
+      isSubscribedInternal: this._isSubscribed.value,
+      hasStoredPreferences: !!localStorage.getItem(this.NOTIFICATION_PREF_KEY),
+      browserSupportsNotifications: this.areNotificationsSupported(),
+      browserSupportsServiceWorker: 'serviceWorker' in navigator,
+    };
+  }
+
+  /**
+   * Détecte si l'appareil est un mobile
+   */
+  private detectMobileDevice(): boolean {
+    // Utilisation de window.navigator avec opérateur de chaînage optionnel
+    const userAgent =
+      navigator.userAgent ||
+      navigator.vendor ||
+      (window as unknown as { opera?: string }).opera ||
+      '';
+
+    // Détection par user agent
+    const mobileRegex =
+      /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i;
+    const isMobileByUA = mobileRegex.test(userAgent.toLowerCase());
+
+    // Vérification alternative par taille d'écran
+    const isMobileByScreen = window.innerWidth <= 768;
+
+    console.log(
+      'Push Notification Service - Détection mobile par User Agent:',
+      isMobileByUA
+    );
+    console.log(
+      "Push Notification Service - Détection mobile par taille d'écran:",
+      isMobileByScreen
+    );
+
+    return isMobileByUA || isMobileByScreen;
   }
 }

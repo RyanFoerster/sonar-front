@@ -57,13 +57,18 @@ export class AppComponent implements OnInit {
     this.authService.getAuthState().subscribe((isAuthenticated: boolean) => {
       if (isAuthenticated) {
         // Si l'utilisateur est connecté, lui demander la permission pour les notifications
-        this.promptNotificationPermission();
+        // Initialiser immédiatement pour que ça fonctionne dès la connexion
+        if ('Notification' in window && Notification.permission === 'granted') {
+          this.initializeFirebaseMessaging();
+        } else {
+          this.promptNotificationPermission();
+        }
       }
     });
   }
 
   private promptNotificationPermission(): void {
-    // Demander la permission après un court délai pour éviter de perturber l'expérience utilisateur immédiatement
+    // Demander la permission avec un délai réduit pour une meilleure réactivité
     setTimeout(() => {
       if ('Notification' in window && Notification.permission === 'default') {
         Notification.requestPermission().then((permission) => {
@@ -72,7 +77,7 @@ export class AppComponent implements OnInit {
           }
         });
       }
-    }, 5000); // 5 secondes de délai
+    }, 1000); // Délai réduit à 1 seconde pour une initialisation plus rapide
   }
 
   private initializeFirebaseMessaging(): void {

@@ -28,9 +28,17 @@ export class FirebaseMessagingService {
   private notificationSubject = new BehaviorSubject<NotificationPayload | null>(
     null
   );
+  private isMobileDevice = false;
 
   constructor(private http: HttpClient) {
     console.log('FirebaseMessagingService: Initialisation du service');
+
+    // Détecter si l'utilisateur est sur un appareil mobile
+    this.isMobileDevice = this.detectMobileDevice();
+    console.log(
+      `FirebaseMessagingService: Appareil mobile détecté: ${this.isMobileDevice}`
+    );
+
     console.log(
       'FirebaseMessagingService: Config Firebase:',
       JSON.stringify({
@@ -43,6 +51,29 @@ export class FirebaseMessagingService {
     );
 
     this.initializeFirebaseApp();
+  }
+
+  /**
+   * Détecte si l'appareil est un mobile
+   */
+  private detectMobileDevice(): boolean {
+    const userAgent =
+      navigator.userAgent ||
+      navigator.vendor ||
+      (window as unknown as { opera: string }).opera;
+
+    // Détection par user agent
+    const mobileRegex =
+      /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i;
+    const isMobileByUA = mobileRegex.test(userAgent.toLowerCase());
+
+    // Vérification alternative par taille d'écran
+    const isMobileByScreen = window.innerWidth <= 768;
+
+    console.log('Détection mobile par User Agent:', isMobileByUA);
+    console.log("Détection mobile par taille d'écran:", isMobileByScreen);
+
+    return isMobileByUA || isMobileByScreen;
   }
 
   /**
@@ -98,45 +129,92 @@ export class FirebaseMessagingService {
       return this.fcmTokenSubject.asObservable();
     }
 
-    if (Notification.permission === 'granted') {
-      // Permission déjà accordée, récupérer directement le token
+    // Traitement spécial pour les appareils mobiles
+    if (this.isMobileDevice) {
       console.log(
-        'FirebaseMessagingService: Permission déjà accordée, récupération du token'
+        'FirebaseMessagingService: Traitement spécial pour appareil mobile'
       );
-      this.getToken();
-    } else if (Notification.permission === 'default') {
-      // Demander la permission
-      console.log(
-        'FirebaseMessagingService: Demande de permission au navigateur'
-      );
-      Notification.requestPermission()
-        .then((permission) => {
-          console.log(
-            'FirebaseMessagingService: Réponse permission:',
-            permission
-          );
-          if (permission === 'granted') {
-            this.getToken();
-          } else {
+
+      // Sur mobile, il faut parfois forcer l'affichage du dialogue de permission
+      if (Notification.permission !== 'granted') {
+        console.log(
+          'FirebaseMessagingService: Forçage du dialogue de permission sur mobile'
+        );
+
+        // Sur iOS particulièrement, il faut une interaction utilisateur
+        const forceMobilePermissionRequest = () => {
+          Notification.requestPermission()
+            .then((permission) => {
+              console.log(
+                'FirebaseMessagingService: Réponse permission mobile:',
+                permission
+              );
+              if (permission === 'granted') {
+                this.getToken();
+              } else {
+                console.log(
+                  'FirebaseMessagingService: Permission refusée sur mobile'
+                );
+                this.fcmTokenSubject.next(null);
+              }
+            })
+            .catch((error) => {
+              console.error(
+                'FirebaseMessagingService: Erreur permission mobile:',
+                error
+              );
+              this.fcmTokenSubject.next(null);
+            });
+        };
+
+        // Appeler directement puisque cette méthode est déjà appelée par un clic
+        forceMobilePermissionRequest();
+      } else {
+        // Permission déjà accordée
+        this.getToken();
+      }
+    } else {
+      // Comportement normal pour desktop
+      if (Notification.permission === 'granted') {
+        // Permission déjà accordée, récupérer directement le token
+        console.log(
+          'FirebaseMessagingService: Permission déjà accordée, récupération du token'
+        );
+        this.getToken();
+      } else if (Notification.permission === 'default') {
+        // Demander la permission
+        console.log(
+          'FirebaseMessagingService: Demande de permission au navigateur'
+        );
+        Notification.requestPermission()
+          .then((permission) => {
             console.log(
-              'FirebaseMessagingService: Permission de notification refusée'
+              'FirebaseMessagingService: Réponse permission:',
+              permission
+            );
+            if (permission === 'granted') {
+              this.getToken();
+            } else {
+              console.log(
+                'FirebaseMessagingService: Permission de notification refusée'
+              );
+              this.fcmTokenSubject.next(null);
+            }
+          })
+          .catch((error) => {
+            console.error(
+              'FirebaseMessagingService: Erreur lors de la demande de permission:',
+              error
             );
             this.fcmTokenSubject.next(null);
-          }
-        })
-        .catch((error) => {
-          console.error(
-            'FirebaseMessagingService: Erreur lors de la demande de permission:',
-            error
-          );
-          this.fcmTokenSubject.next(null);
-        });
-    } else {
-      // Permission déjà refusée
-      console.log(
-        'FirebaseMessagingService: Permission de notification déjà refusée'
-      );
-      this.fcmTokenSubject.next(null);
+          });
+      } else {
+        // Permission déjà refusée
+        console.log(
+          'FirebaseMessagingService: Permission de notification déjà refusée'
+        );
+        this.fcmTokenSubject.next(null);
+      }
     }
 
     return this.fcmTokenSubject.asObservable();
@@ -159,29 +237,52 @@ export class FirebaseMessagingService {
       environment.firebase?.vapidKey ? 'configurée' : 'MANQUANTE'
     );
 
-    getToken(this.messaging, { vapidKey: environment.firebase?.vapidKey })
-      .then((token) => {
-        if (token) {
+    // Obtenir d'abord l'enregistrement du service worker
+    if ('serviceWorker' in navigator && this.messaging) {
+      const messaging = this.messaging;
+      navigator.serviceWorker.ready
+        .then((registration) => {
           console.log(
-            'FirebaseMessagingService: Token FCM récupéré avec succès'
+            'FirebaseMessagingService: Service Worker prêt:',
+            registration
           );
-          console.log('FirebaseMessagingService: Token = ', token);
-          this.fcmTokenSubject.next(token);
-          this.saveTokenToServer(token);
-        } else {
-          console.log(
-            'FirebaseMessagingService: Aucun token de registration disponible'
+
+          // Options avec le service worker actif
+          const tokenOptions = {
+            vapidKey: environment.firebase?.vapidKey,
+            serviceWorkerRegistration: registration,
+          };
+
+          return getToken(messaging, tokenOptions);
+        })
+        .then((token) => {
+          if (token) {
+            console.log(
+              'FirebaseMessagingService: Token FCM récupéré avec succès'
+            );
+            console.log('FirebaseMessagingService: Token = ', token);
+            this.fcmTokenSubject.next(token);
+            this.saveTokenToServer(token);
+          } else {
+            console.log(
+              'FirebaseMessagingService: Aucun token de registration disponible'
+            );
+            this.fcmTokenSubject.next(null);
+          }
+        })
+        .catch((error) => {
+          console.error(
+            'FirebaseMessagingService: Erreur lors de la récupération du token:',
+            error
           );
           this.fcmTokenSubject.next(null);
-        }
-      })
-      .catch((error) => {
-        console.error(
-          'FirebaseMessagingService: Erreur lors de la récupération du token:',
-          error
-        );
-        this.fcmTokenSubject.next(null);
-      });
+        });
+    } else {
+      console.error(
+        'FirebaseMessagingService: Service Worker non supporté par ce navigateur'
+      );
+      this.fcmTokenSubject.next(null);
+    }
   }
 
   /**

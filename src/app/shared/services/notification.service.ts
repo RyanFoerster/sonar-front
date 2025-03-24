@@ -70,7 +70,7 @@ export class NotificationService {
       return new Observable(); // Retourne un Observable vide si non authentifié
     }
     return this.httpClient
-      .get<Notification[]>(`${environment.API_URL}/notifications`)
+      .get<Notification[]>(`${environment.API_URL}/alert-notifications`)
       .pipe(tap((notifications) => this.notifications.set(notifications)));
   }
 
@@ -82,7 +82,7 @@ export class NotificationService {
 
   createGroupInvitation(toUserId: number, groupId: number): Observable<any> {
     return this.httpClient
-      .post(`${environment.API_URL}/notifications/group-invitation`, {
+      .post(`${environment.API_URL}/alert-notifications/group-invitation`, {
         toUserId,
         groupId,
         type: 'GROUP_INVITATION',
@@ -96,9 +96,12 @@ export class NotificationService {
     accept: boolean
   ): Observable<any> {
     return this.httpClient
-      .patch(`${environment.API_URL}/notifications/${notificationId}/respond`, {
-        accept,
-      })
+      .patch(
+        `${environment.API_URL}/alert-notifications/${notificationId}/respond`,
+        {
+          accept,
+        }
+      )
       .pipe(
         tap(() => this.loadNotifications()),
         delay(500),
@@ -112,7 +115,10 @@ export class NotificationService {
 
   markAsRead(notificationId: number): Observable<any> {
     return this.httpClient
-      .patch(`${environment.API_URL}/notifications/${notificationId}/read`, {})
+      .patch(
+        `${environment.API_URL}/alert-notifications/${notificationId}/read`,
+        {}
+      )
       .pipe(tap(() => this.loadNotifications()));
   }
 }

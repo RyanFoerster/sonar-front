@@ -38,6 +38,9 @@ yarn-error.log
 testem.log
 /typings
 
+# Fichiers générés
+**/firebase-messaging-sw.js
+
 # System files
 .DS_Store
 Thumbs.db

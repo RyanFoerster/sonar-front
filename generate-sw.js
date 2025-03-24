@@ -63,9 +63,9 @@ messaging.onBackgroundMessage((payload) => {
   const notificationTitle = payload.notification.title || "Notification";
   const notificationOptions = {
     body: payload.notification.body || "",
-    icon: "/assets/icons/icon-128x128.png",
+    icon: "/icons/icon-192x192.png",
     data: payload.data,
-    badge: "/assets/icons/icon-96x96.png",
+    badge: "/icons/icon-96x96.png",
     vibrate: [200, 100, 200], // Vibration pour les appareils mobiles
     actions: [{ action: "open", title: "Voir" }],
     requireInteraction: true,

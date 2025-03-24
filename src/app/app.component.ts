@@ -36,6 +36,17 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // Vérifier si les notifications sont désactivées explicitement dans le localStorage
+    const notificationsDisabled = this.areNotificationsDisabledInLocalStorage();
+
+    // Ne pas initialiser les notifications si elles ont été explicitement désactivées
+    if (notificationsDisabled) {
+      console.log(
+        'Notifications explicitement désactivées dans localStorage, initialisation ignorée'
+      );
+      return;
+    }
+
     // Vérifier si les notifications sont déjà autorisées par le navigateur
     if (
       'Notification' in window &&
@@ -52,10 +63,48 @@ export class AppComponent implements OnInit {
     }
   }
 
+  // Vérifie si les notifications ont été explicitement désactivées par l'utilisateur
+  private areNotificationsDisabledInLocalStorage(): boolean {
+    try {
+      const NOTIFICATION_PREF_KEY = 'notification_preferences';
+      const storedPrefs = localStorage.getItem(NOTIFICATION_PREF_KEY);
+
+      if (storedPrefs) {
+        const prefs = JSON.parse(storedPrefs);
+
+        // Si l'utilisateur a explicitement désactivé les notifications
+        if (
+          Object.prototype.hasOwnProperty.call(prefs, 'isSubscribed') &&
+          prefs.isSubscribed === false
+        ) {
+          console.log(
+            'Notifications explicitement désactivées selon préférences stockées'
+          );
+          return true;
+        }
+      }
+      return false;
+    } catch (error) {
+      console.error(
+        'Erreur lors de la vérification des préférences stockées:',
+        error
+      );
+      return false;
+    }
+  }
+
   private setupAuthListener(): void {
     // S'abonner aux changements d'état d'authentification
     this.authService.getAuthState().subscribe((isAuthenticated: boolean) => {
       if (isAuthenticated) {
+        // Vérifier si les notifications sont désactivées explicitement avant de continuer
+        if (this.areNotificationsDisabledInLocalStorage()) {
+          console.log(
+            'Notifications explicitement désactivées, demande de permission ignorée'
+          );
+          return;
+        }
+
         // Si l'utilisateur est connecté, lui demander la permission pour les notifications
         // Initialiser immédiatement pour que ça fonctionne dès la connexion
         if ('Notification' in window && Notification.permission === 'granted') {
@@ -68,6 +117,14 @@ export class AppComponent implements OnInit {
   }
 
   private promptNotificationPermission(): void {
+    // Vérifier une dernière fois si les notifications sont désactivées
+    if (this.areNotificationsDisabledInLocalStorage()) {
+      console.log(
+        'Notifications explicitement désactivées, demande de permission annulée'
+      );
+      return;
+    }
+
     // Demander la permission avec un délai réduit pour une meilleure réactivité
     setTimeout(() => {
       if ('Notification' in window && Notification.permission === 'default') {
@@ -81,6 +138,14 @@ export class AppComponent implements OnInit {
   }
 
   private initializeFirebaseMessaging(): void {
+    // Vérifier une dernière fois si les notifications sont désactivées
+    if (this.areNotificationsDisabledInLocalStorage()) {
+      console.log(
+        'Notifications explicitement désactivées, initialisation Firebase annulée'
+      );
+      return;
+    }
+
     // Demander le token FCM et l'enregistrer
     this.firebaseMessagingService.requestPermission().subscribe((token) => {
       if (token) {

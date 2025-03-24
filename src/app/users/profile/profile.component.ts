@@ -226,13 +226,30 @@ export class ProfileComponent {
 
         // Vérifier si la réponse indique un succès
         if (response && (response as { success?: boolean }).success) {
-          this.notificationsEnabled.set(true);
+          // On ne met pas immédiatement à jour l'interface utilisateur
+          // On attend la confirmation du serveur
           console.log('Notifications activées avec succès');
 
-          // Désactiver l'indicateur de chargement
-          this.isProcessingNotificationPermission.set(false);
+          // Utiliser un timeout pour laisser le temps au serveur de traiter la demande
+          setTimeout(() => {
+            // Vérifier l'état réel côté serveur après un délai
+            this.pushNotificationService.isSubscribed$.subscribe(
+              (isSubscribed) => {
+                this.notificationsEnabled.set(isSubscribed);
+                console.log(
+                  'État des notifications vérifié après activation:',
+                  isSubscribed
+                );
 
-          // Afficher une notification de confirmation indiquant que la page va être rechargée
+                // Désactiver l'indicateur de chargement
+                this.isProcessingNotificationPermission.set(false);
+                // Forcer la détection de changements
+                this.cdr.detectChanges();
+              }
+            );
+          }, 1000); // Délai d'une seconde pour laisser le temps au serveur
+
+          // Afficher une notification de confirmation
           if (this.pushNotificationService.hasNotificationPermission()) {
             this.pushNotificationService
               .sendLocalTestNotification('Notifications activées', {
@@ -297,11 +314,26 @@ export class ProfileComponent {
       .unsubscribeFromNotifications()
       .then(() => {
         console.log('Désabonnement réussi');
-        this.notificationsEnabled.set(false);
-        // Désactiver l'indicateur de chargement
-        this.isProcessingNotificationPermission.set(false);
-        // Forcer la détection de changements
-        this.cdr.detectChanges();
+
+        // Utiliser un timeout pour laisser le temps au serveur de traiter la demande
+        setTimeout(() => {
+          // Vérifier l'état réel côté serveur après un délai
+          this.pushNotificationService.isSubscribed$.subscribe(
+            (isSubscribed) => {
+              this.notificationsEnabled.set(isSubscribed);
+              console.log(
+                'État des notifications vérifié après désactivation:',
+                isSubscribed
+              );
+
+              // Désactiver l'indicateur de chargement
+              this.isProcessingNotificationPermission.set(false);
+              // Forcer la détection de changements
+              this.cdr.detectChanges();
+            }
+          );
+        }, 1000); // Délai d'une seconde pour laisser le temps au serveur
+
         console.log(
           'Notifications désactivées avec succès, état:',
           this.notificationsEnabled()

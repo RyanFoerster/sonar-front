@@ -169,6 +169,22 @@ export class PushNotificationService {
       });
     }
 
+    // Récupérer l'ID utilisateur et le token pour vérifier côté serveur
+    const token = localStorage.getItem(environment.TOKEN_KEY);
+    let userId: number | null = null;
+    try {
+      const userData = localStorage.getItem(environment.USER_KEY);
+      if (userData) {
+        const user = JSON.parse(userData);
+        userId = user.id;
+      }
+    } catch (error) {
+      console.error(
+        'Erreur lors de la récupération des données utilisateur:',
+        error
+      );
+    }
+
     // Vérifier d'abord dans le localStorage
     try {
       const storedPrefs = localStorage.getItem(this.NOTIFICATION_PREF_KEY);
@@ -185,12 +201,71 @@ export class PushNotificationService {
             'Désactivation explicite des notifications détectée, état maintenu'
           );
           this._isSubscribed.next(false);
+
+          // Si nous avons un userId et un token, confirmer aussi côté serveur
+          if (userId && token) {
+            const headers = new HttpHeaders().set(
+              'Authorization',
+              `Bearer ${token}`
+            );
+            this.http
+              .post(
+                `${this.apiUrl}/notifications/force-unsubscribe/${userId}`,
+                {},
+                { headers }
+              )
+              .subscribe({
+                next: () => console.log('État désactivé confirmé côté serveur'),
+                error: (err) =>
+                  console.error('Erreur confirmation côté serveur:', err),
+              });
+          }
           return;
         }
 
         // Vérifier si la permission du navigateur correspond à celle stockée
         const currentPermission = Notification.permission;
-        if (prefs.isSubscribed && currentPermission === 'granted') {
+
+        // Si l'utilisateur a un userId et un token, vérifier l'état réel côté serveur
+        if (userId && token && currentPermission === 'granted') {
+          const headers = new HttpHeaders().set(
+            'Authorization',
+            `Bearer ${token}`
+          );
+          this.http
+            .get<{ isSubscribed: boolean }>(
+              `${this.apiUrl}/notifications/subscription-status/${userId}`,
+              { headers }
+            )
+            .subscribe({
+              next: (response) => {
+                // Synchroniser l'état local avec l'état serveur
+                this._isSubscribed.next(response.isSubscribed);
+                this.saveNotificationPreference(response.isSubscribed);
+                console.log(
+                  "État d'abonnement synchronisé avec le serveur:",
+                  response.isSubscribed
+                );
+              },
+              error: (err) => {
+                console.error(
+                  'Erreur lors de la vérification côté serveur:',
+                  err
+                );
+                // En cas d'erreur, utiliser l'état stocké localement comme fallback
+                if (prefs.isSubscribed && currentPermission === 'granted') {
+                  this._isSubscribed.next(true);
+                  console.log(
+                    "État d'abonnement restauré depuis localStorage: abonné"
+                  );
+                } else {
+                  this._isSubscribed.next(false);
+                  this.saveNotificationPreference(false);
+                }
+              },
+            });
+          return;
+        } else if (prefs.isSubscribed && currentPermission === 'granted') {
           this._isSubscribed.next(true);
           console.log("État d'abonnement restauré depuis localStorage: abonné");
           return;
@@ -233,12 +308,55 @@ export class PushNotificationService {
   }
 
   /**
-   * Vérifie l'état d'abonnement sur le serveur (fonction obsolète mais gardée pour compatibilité)
+   * Vérifie l'état d'abonnement sur le serveur
    */
   private checkServerSubscriptionStatus(): void {
-    // Dans la version locale, nous utilisons simplement l'état du localStorage
-    console.log("Vérification de l'état d'abonnement (local uniquement)");
-    // Pas d'appel au serveur nécessaire
+    // Récupérer l'ID utilisateur et le token
+    const token = localStorage.getItem(environment.TOKEN_KEY);
+    let userId: number | null = null;
+
+    try {
+      const userData = localStorage.getItem(environment.USER_KEY);
+      if (userData) {
+        const user = JSON.parse(userData);
+        userId = user.id;
+      }
+    } catch (error) {
+      console.error(
+        'Erreur lors de la récupération des données utilisateur:',
+        error
+      );
+    }
+
+    // Si nous avons un ID utilisateur et un token, vérifier l'état côté serveur
+    if (userId && token) {
+      const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+
+      this.http
+        .get<{ isSubscribed: boolean }>(
+          `${this.apiUrl}/notifications/subscription-status/${userId}`,
+          { headers }
+        )
+        .subscribe({
+          next: (response) => {
+            // Mettre à jour l'état local pour correspondre à l'état du serveur
+            this._isSubscribed.next(response.isSubscribed);
+            this.saveNotificationPreference(response.isSubscribed);
+            console.log(
+              "État d'abonnement vérifié côté serveur:",
+              response.isSubscribed
+            );
+          },
+          error: (err) => {
+            console.error('Erreur lors de la vérification côté serveur:', err);
+            // En cas d'erreur, on ne change pas l'état actuel
+          },
+        });
+    } else {
+      console.log(
+        "Impossible de vérifier l'état sur le serveur, informations d'authentification manquantes"
+      );
+    }
   }
 
   /**
@@ -621,6 +739,16 @@ export class PushNotificationService {
    * Vérifie d'abord le localStorage, puis l'état actuel
    */
   isCurrentlySubscribed(): boolean {
+    // Pour éviter les redondances en cas d'appels multiples rapprochés
+    const localValue = this._isSubscribed.value;
+
+    // Si une vérification est en cours ou a été faite récemment, on utilise la valeur en mémoire
+    if (localValue !== undefined) {
+      // Lancer une vérification en arrière-plan pour une synchronisation future
+      this.refreshSubscriptionStatus();
+      return localValue;
+    }
+
     try {
       const storedPrefs = localStorage.getItem(this.NOTIFICATION_PREF_KEY);
       if (storedPrefs) {
@@ -639,6 +767,8 @@ export class PushNotificationService {
 
         // Vérifier si les préférences stockées correspondent à l'état actuel de la permission
         if (prefs.isSubscribed && Notification.permission === 'granted') {
+          // Lancer une vérification en arrière-plan pour une synchronisation future
+          this.refreshSubscriptionStatus();
           return true;
         }
       }
@@ -650,7 +780,62 @@ export class PushNotificationService {
     }
 
     // Si aucune préférence n'est stockée ou en cas d'erreur, utiliser l'état actuel
+    // et déclencher une vérification en arrière-plan
+    this.refreshSubscriptionStatus();
     return this._isSubscribed.value;
+  }
+
+  /**
+   * Rafraîchit l'état d'abonnement côté serveur sans bloquer l'UI
+   * Cette méthode est appelée en arrière-plan par isCurrentlySubscribed
+   */
+  private refreshSubscriptionStatus(): void {
+    // Récupérer l'ID utilisateur et le token
+    const token = localStorage.getItem(environment.TOKEN_KEY);
+    let userId: number | null = null;
+
+    try {
+      const userData = localStorage.getItem(environment.USER_KEY);
+      if (userData) {
+        const user = JSON.parse(userData);
+        userId = user.id;
+      }
+    } catch (error) {
+      console.error(
+        'Erreur lors de la récupération des données utilisateur:',
+        error
+      );
+    }
+
+    // Si nous avons un ID utilisateur et un token, vérifier l'état côté serveur
+    if (userId && token && Notification.permission === 'granted') {
+      const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+
+      this.http
+        .get<{ isSubscribed: boolean }>(
+          `${this.apiUrl}/notifications/subscription-status/${userId}`,
+          { headers }
+        )
+        .subscribe({
+          next: (response) => {
+            // Si l'état du serveur est différent de notre état local, mettre à jour
+            if (response.isSubscribed !== this._isSubscribed.value) {
+              console.log(
+                "État d'abonnement mis à jour depuis le serveur:",
+                response.isSubscribed
+              );
+              this._isSubscribed.next(response.isSubscribed);
+              this.saveNotificationPreference(response.isSubscribed);
+            }
+          },
+          error: (err) => {
+            console.error(
+              'Erreur lors de la vérification en arrière-plan:',
+              err
+            );
+          },
+        });
+    }
   }
 
   /**

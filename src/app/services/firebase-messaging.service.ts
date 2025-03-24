@@ -121,6 +121,16 @@ export class FirebaseMessagingService {
       'FirebaseMessagingService: Demande de permission pour les notifications...'
     );
 
+    // Vérifier si les notifications sont explicitement désactivées dans localStorage
+    const notificationsDisabled = this.areNotificationsDisabledInLocalStorage();
+    if (notificationsDisabled) {
+      console.log(
+        'FirebaseMessagingService: Notifications explicitement désactivées dans localStorage, abandon'
+      );
+      this.fcmTokenSubject.next(null);
+      return this.fcmTokenSubject.asObservable();
+    }
+
     if (!this.messaging) {
       console.error(
         'FirebaseMessagingService: Firebase messaging non initialisé'
@@ -286,10 +296,50 @@ export class FirebaseMessagingService {
   }
 
   /**
+   * Vérifie si les notifications ont été explicitement désactivées dans localStorage
+   */
+  private areNotificationsDisabledInLocalStorage(): boolean {
+    try {
+      const NOTIFICATION_PREF_KEY = 'notification_preferences';
+      const storedPrefs = localStorage.getItem(NOTIFICATION_PREF_KEY);
+
+      if (storedPrefs) {
+        const prefs = JSON.parse(storedPrefs);
+
+        // Si l'utilisateur a explicitement désactivé les notifications
+        if (
+          Object.prototype.hasOwnProperty.call(prefs, 'isSubscribed') &&
+          prefs.isSubscribed === false
+        ) {
+          console.log(
+            'FirebaseMessagingService: Notifications explicitement désactivées selon préférences stockées'
+          );
+          return true;
+        }
+      }
+      return false;
+    } catch (error) {
+      console.error(
+        'FirebaseMessagingService: Erreur lors de la vérification des préférences stockées:',
+        error
+      );
+      return false;
+    }
+  }
+
+  /**
    * Enregistre le token FCM sur le serveur
    * @param token Le token FCM à sauvegarder
    */
   private saveTokenToServer(token: string): void {
+    // Vérifie si les notifications sont désactivées avant d'enregistrer sur le serveur
+    if (this.areNotificationsDisabledInLocalStorage()) {
+      console.log(
+        'FirebaseMessagingService: Notifications désactivées, token non enregistré sur le serveur'
+      );
+      return;
+    }
+
     // Adapter à votre API
     this.http
       .post(`${environment.API_URL}/notifications/register-device`, { token })

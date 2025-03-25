@@ -328,4 +328,124 @@
       </div>
     </div>
   </div>
+
+  <!-- Nouvelle section pour les invitations de groupe -->
+  <div
+    class="bg-gray-sonar flex flex-col mx-10 md:w-3/5 rounded-3xl overflow-hidden"
+  >
+    <div class="flex justify-between px-5 py-4 border-b border-gray-200">
+      <div class="flex items-center">
+        <hlm-icon
+          name="lucideUsers"
+          class="w-5 h-5 text-primary mr-2"
+        ></hlm-icon>
+        <p class="text-xl font-bold">Invitations de groupe</p>
+      </div>
+      <div *ngIf="pendingInvitations().length > 0" class="flex items-center">
+        <span class="bg-primary text-white rounded-full px-2 py-0.5 text-xs">
+          {{ pendingInvitations().length }}
+        </span>
+      </div>
+    </div>
+
+    <div class="p-2 md:p-4">
+      <!-- Loading state -->
+      <div *ngIf="isLoadingInvitations()" class="flex justify-center py-6">
+        <div
+          class="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"
+        ></div>
+      </div>
+
+      <!-- No invitations state -->
+      <div
+        *ngIf="!isLoadingInvitations() && pendingInvitations().length === 0"
+        class="flex flex-col items-center justify-center py-8 text-center"
+      >
+        <hlm-icon
+          name="lucideInbox"
+          class="w-12 h-12 text-gray-400 mb-3"
+        ></hlm-icon>
+        <p class="text-sm text-gray-500">
+          Vous n'avez aucune invitation de groupe en attente
+        </p>
+      </div>
+
+      <!-- List of invitations -->
+      <div
+        *ngIf="!isLoadingInvitations() && pendingInvitations().length > 0"
+        class="space-y-3"
+      >
+        <div
+          *ngFor="let invitation of pendingInvitations()"
+          class="bg-white rounded-xl p-4 shadow-sm"
+        >
+          <div class="flex justify-between items-start">
+            <div class="flex-1">
+              <div class="flex items-center mb-1">
+                <div
+                  class="w-10 h-10 rounded-full flex items-center justify-center bg-primary text-white font-bold text-sm mr-3"
+                >
+                  {{
+                    invitation.group.username
+                      ? invitation.group.username.substring(0, 2).toUpperCase()
+                      : "GP"
+                  }}
+                </div>
+                <div>
+                  <h3 class="font-medium">
+                    {{ invitation.group.username || "Groupe" }}
+                  </h3>
+                  <p class="text-xs text-gray-500">
+                    Invitation reçue {{ getRelativeTime(invitation.createdAt) }}
+                  </p>
+                </div>
+              </div>
+              <p
+                *ngIf="invitation.message"
+                class="text-sm text-gray-600 mt-2 ml-13 italic"
+              >
+                "{{ invitation.message }}"
+              </p>
+            </div>
+          </div>
+          <div class="flex justify-end gap-2 mt-3">
+            <button
+              (click)="respondToInvitation(invitation.id, false)"
+              class="py-1.5 px-4 rounded-full text-xs border border-red-500 text-red-500 hover:bg-red-50 transition-colors relative"
+              [disabled]="isProcessingInvitation(invitation.id)"
+            >
+              <span [class.opacity-0]="isProcessingInvitation(invitation.id)"
+                >Refuser</span
+              >
+              <div
+                *ngIf="isProcessingInvitation(invitation.id)"
+                class="absolute inset-0 flex items-center justify-center"
+              >
+                <div
+                  class="animate-spin h-3 w-3 border-2 border-red-500 rounded-full border-t-transparent"
+                ></div>
+              </div>
+            </button>
+            <button
+              (click)="respondToInvitation(invitation.id, true)"
+              class="py-1.5 px-4 rounded-full text-xs bg-primary text-white hover:bg-primary-dark transition-colors relative"
+              [disabled]="isProcessingInvitation(invitation.id)"
+            >
+              <span [class.opacity-0]="isProcessingInvitation(invitation.id)"
+                >Accepter</span
+              >
+              <div
+                *ngIf="isProcessingInvitation(invitation.id)"
+                class="absolute inset-0 flex items-center justify-center"
+              >
+                <div
+                  class="animate-spin h-3 w-3 border-2 border-white rounded-full border-t-transparent"
+                ></div>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>

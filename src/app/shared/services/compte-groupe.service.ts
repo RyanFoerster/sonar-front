@@ -6,6 +6,13 @@ import { GroupProjectDto } from '../dtos/group-project.dto';
 import { UserEntity } from '../entities/user.entity';
 import { Observable } from 'rxjs';
 import { AuthService } from './auth.service';
+import { UserSecondaryAccountEntity } from '../entities/user-secondary-account.entity';
+
+interface GroupInvitationDto {
+  secondary_account_id: number;
+  invitedUserId: number;
+  message?: string;
+}
 
 @Injectable({
   providedIn: 'root',
@@ -71,6 +78,22 @@ export class CompteGroupeService {
   getById(id: number): Observable<CompteGroupeEntity> {
     return this.httpClient.get<CompteGroupeEntity>(
       `${environment.API_URL}/compte-groupe/${id}`,
+      { headers: this.getHeaders() }
+    );
+  }
+
+  /**
+   * Invite un utilisateur à rejoindre un groupe
+   * @param invitation Données de l'invitation
+   * @returns Observable avec les détails de l'invitation
+   */
+  inviteUserToGroup(
+    invitation: GroupInvitationDto
+  ): Observable<UserSecondaryAccountEntity> {
+    // Utiliser l'endpoint d'invitation au lieu de la création directe
+    return this.httpClient.post<UserSecondaryAccountEntity>(
+      `${environment.API_URL}/groupe-invitation/invite`,
+      invitation,
       { headers: this.getHeaders() }
     );
   }

@@ -6,12 +6,20 @@ import { SignInDto } from '../dtos/sign-in.dto';
 import { LoggedUser } from '../entities/logged-user.entity';
 import { UserEntity } from '../entities/user.entity';
 import { UpdateUserDto } from '../dtos/update-user.dto';
+import { NotificationService } from '../../services/notification.service';
+import { FirebaseMessagingService } from '../../services/firebase-messaging.service';
+import { tap } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
 })
 export class UsersService {
   httpClient: HttpClient = inject(HttpClient);
+
+  constructor(
+    private notificationService: NotificationService,
+    private firebaseMessagingService: FirebaseMessagingService
+  ) {}
 
   signUp(createuserDto: CreateUserDto) {
     return this.httpClient.post<boolean>(
@@ -29,10 +37,17 @@ export class UsersService {
   }
 
   signIn(credentials: SignInDto) {
-    return this.httpClient.post<LoggedUser>(
-      `${environment.API_URL}/auth/login`,
-      credentials
-    );
+    return this.httpClient
+      .post<LoggedUser>(`${environment.API_URL}/auth/login`, credentials)
+      .pipe(
+        tap(() => {
+          // Utiliser un seul point d'initialisation dans l'application
+          // Le service de notification sera initialisé via AuthService.getAuthState()
+          console.log(
+            "Connexion réussie, les services de notification seront initialisés par le listener d'authentification"
+          );
+        })
+      );
   }
 
   getInfo() {

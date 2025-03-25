@@ -50,9 +50,11 @@ export default [
     canActivate: [authGuard],
   },
   {
-    path: ':id/diary',
+    path: ':id/agenda',
     loadComponent: () =>
-      import('./diary/diary.component').then((m) => m.DiaryComponent),
+      import('../../../components/agenda/agenda.component').then(
+        (m) => m.AgendaComponent
+      ),
     canActivate: [authGuard],
   },
 ] as Routes;

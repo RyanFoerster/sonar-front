@@ -29,26 +29,27 @@ export class FirebaseMessagingService {
     null
   );
   private isMobileDevice = false;
+  private isInitializingToken = false;
 
   constructor(private http: HttpClient) {
-    console.log('FirebaseMessagingService: Initialisation du service');
+    // console.log('FirebaseMessagingService: Initialisation du service');
 
     // Détecter si l'utilisateur est sur un appareil mobile
     this.isMobileDevice = this.detectMobileDevice();
-    console.log(
-      `FirebaseMessagingService: Appareil mobile détecté: ${this.isMobileDevice}`
-    );
+    // console.log(
+    //   `FirebaseMessagingService: Appareil mobile détecté: ${this.isMobileDevice}`
+    // );
 
-    console.log(
-      'FirebaseMessagingService: Config Firebase:',
-      JSON.stringify({
-        apiKey: environment.firebase?.apiKey,
-        projectId: environment.firebase?.projectId,
-        messagingSenderId: environment.firebase?.messagingSenderId,
-        appId: environment.firebase?.appId,
-        vapidKeyConfigured: !!environment.firebase?.vapidKey,
-      })
-    );
+    // console.log(
+    //   'FirebaseMessagingService: Config Firebase:',
+    //   JSON.stringify({
+    //     apiKey: environment.firebase?.apiKey,
+    //     projectId: environment.firebase?.projectId,
+    //     messagingSenderId: environment.firebase?.messagingSenderId,
+    //     appId: environment.firebase?.appId,
+    //     vapidKeyConfigured: !!environment.firebase?.vapidKey,
+    //   })
+    // );
 
     this.initializeFirebaseApp();
   }
@@ -70,8 +71,8 @@ export class FirebaseMessagingService {
     // Vérification alternative par taille d'écran
     const isMobileByScreen = window.innerWidth <= 768;
 
-    console.log('Détection mobile par User Agent:', isMobileByUA);
-    console.log("Détection mobile par taille d'écran:", isMobileByScreen);
+    // console.log('Détection mobile par User Agent:', isMobileByUA);
+    // console.log("Détection mobile par taille d'écran:", isMobileByScreen);
 
     return isMobileByUA || isMobileByScreen;
   }
@@ -89,15 +90,15 @@ export class FirebaseMessagingService {
       }
 
       const app = initializeApp(environment.firebase);
-      console.log(
-        'FirebaseMessagingService: App Firebase initialisée avec succès'
-      );
+      // console.log(
+      //   'FirebaseMessagingService: App Firebase initialisée avec succès'
+      // );
 
       try {
         this.messaging = getMessaging(app);
-        console.log(
-          'FirebaseMessagingService: Messaging Firebase initialisé avec succès'
-        );
+        // console.log(
+        //   'FirebaseMessagingService: Messaging Firebase initialisé avec succès'
+        // );
       } catch (error) {
         console.error(
           "FirebaseMessagingService: Erreur lors de l'initialisation de Firebase Messaging:",
@@ -117,54 +118,68 @@ export class FirebaseMessagingService {
    * @returns Observable avec le token ou null si refusé
    */
   requestPermission(): Observable<string | null> {
-    console.log(
-      'FirebaseMessagingService: Demande de permission pour les notifications...'
-    );
+    // Éviter les demandes multiples simultanées
+    if (this.isInitializingToken) {
+      console.log(
+        'Une demande de token FCM est déjà en cours, opération ignorée'
+      );
+      return this.fcmTokenSubject.asObservable();
+    }
+
+    this.isInitializingToken = true;
 
     // Vérifier si les notifications sont explicitement désactivées dans localStorage
     const notificationsDisabled = this.areNotificationsDisabledInLocalStorage();
     if (notificationsDisabled) {
       console.log(
-        'FirebaseMessagingService: Notifications explicitement désactivées dans localStorage, abandon'
+        'Notifications explicitement désactivées dans localStorage, abandon'
       );
       this.fcmTokenSubject.next(null);
+      this.isInitializingToken = false;
       return this.fcmTokenSubject.asObservable();
     }
 
     if (!this.messaging) {
-      console.error(
-        'FirebaseMessagingService: Firebase messaging non initialisé'
-      );
+      console.error('Firebase messaging non initialisé');
       this.fcmTokenSubject.next(null);
+      this.isInitializingToken = false;
+      return this.fcmTokenSubject.asObservable();
+    }
+
+    // Si un token existe déjà dans le sujet, ne pas en demander un nouveau
+    const currentToken = this.fcmTokenSubject.getValue();
+    if (currentToken) {
+      console.log('Un token FCM existe déjà, réutilisation du token existant');
+      this.isInitializingToken = false;
       return this.fcmTokenSubject.asObservable();
     }
 
     // Traitement spécial pour les appareils mobiles
     if (this.isMobileDevice) {
-      console.log(
-        'FirebaseMessagingService: Traitement spécial pour appareil mobile'
-      );
+      // console.log(
+      //   'FirebaseMessagingService: Traitement spécial pour appareil mobile'
+      // );
 
       // Sur mobile, il faut parfois forcer l'affichage du dialogue de permission
       if (Notification.permission !== 'granted') {
-        console.log(
-          'FirebaseMessagingService: Forçage du dialogue de permission sur mobile'
-        );
+        // console.log(
+        //   'FirebaseMessagingService: Forçage du dialogue de permission sur mobile'
+        // );
 
         // Sur iOS particulièrement, il faut une interaction utilisateur
         const forceMobilePermissionRequest = () => {
           Notification.requestPermission()
             .then((permission) => {
-              console.log(
-                'FirebaseMessagingService: Réponse permission mobile:',
-                permission
-              );
+              // console.log(
+              //   'FirebaseMessagingService: Réponse permission mobile:',
+              //   permission
+              // );
               if (permission === 'granted') {
                 this.getToken();
               } else {
-                console.log(
-                  'FirebaseMessagingService: Permission refusée sur mobile'
-                );
+                // console.log(
+                //   'FirebaseMessagingService: Permission refusée sur mobile'
+                // );
                 this.fcmTokenSubject.next(null);
               }
             })
@@ -187,27 +202,27 @@ export class FirebaseMessagingService {
       // Comportement normal pour desktop
       if (Notification.permission === 'granted') {
         // Permission déjà accordée, récupérer directement le token
-        console.log(
-          'FirebaseMessagingService: Permission déjà accordée, récupération du token'
-        );
+        // console.log(
+        //   'FirebaseMessagingService: Permission déjà accordée, récupération du token'
+        // );
         this.getToken();
       } else if (Notification.permission === 'default') {
         // Demander la permission
-        console.log(
-          'FirebaseMessagingService: Demande de permission au navigateur'
-        );
+        // console.log(
+        //   'FirebaseMessagingService: Demande de permission au navigateur'
+        // );
         Notification.requestPermission()
           .then((permission) => {
-            console.log(
-              'FirebaseMessagingService: Réponse permission:',
-              permission
-            );
+            // console.log(
+            //   'FirebaseMessagingService: Réponse permission:',
+            //   permission
+            // );
             if (permission === 'granted') {
               this.getToken();
             } else {
-              console.log(
-                'FirebaseMessagingService: Permission de notification refusée'
-              );
+              // console.log(
+              //   'FirebaseMessagingService: Permission de notification refusée'
+              // );
               this.fcmTokenSubject.next(null);
             }
           })
@@ -220,9 +235,9 @@ export class FirebaseMessagingService {
           });
       } else {
         // Permission déjà refusée
-        console.log(
-          'FirebaseMessagingService: Permission de notification déjà refusée'
-        );
+        // console.log(
+        //   'FirebaseMessagingService: Permission de notification déjà refusée'
+        // );
         this.fcmTokenSubject.next(null);
       }
     }
@@ -235,27 +250,26 @@ export class FirebaseMessagingService {
    */
   private getToken(): void {
     if (!this.messaging) {
-      console.error(
-        'FirebaseMessagingService: Firebase messaging non initialisé pour getToken'
-      );
+      console.error('Firebase messaging non initialisé pour getToken');
       this.fcmTokenSubject.next(null);
+      this.isInitializingToken = false;
       return;
     }
 
-    console.log(
-      'FirebaseMessagingService: Tentative de récupération du token avec vapidKey',
-      environment.firebase?.vapidKey ? 'configurée' : 'MANQUANTE'
-    );
+    // console.log(
+    //   'FirebaseMessagingService: Tentative de récupération du token avec vapidKey',
+    //   environment.firebase?.vapidKey ? 'configurée' : 'MANQUANTE'
+    // );
 
     // Obtenir d'abord l'enregistrement du service worker
     if ('serviceWorker' in navigator && this.messaging) {
       const messaging = this.messaging;
       navigator.serviceWorker.ready
         .then((registration) => {
-          console.log(
-            'FirebaseMessagingService: Service Worker prêt:',
-            registration
-          );
+          // console.log(
+          //   'FirebaseMessagingService: Service Worker prêt:',
+          //   registration
+          // );
 
           // Options avec le service worker actif
           const tokenOptions = {
@@ -267,18 +281,19 @@ export class FirebaseMessagingService {
         })
         .then((token) => {
           if (token) {
-            console.log(
-              'FirebaseMessagingService: Token FCM récupéré avec succès'
-            );
-            console.log('FirebaseMessagingService: Token = ', token);
+            // console.log(
+            //   'FirebaseMessagingService: Token FCM récupéré avec succès'
+            // );
+            // console.log('FirebaseMessagingService: Token = ', token);
             this.fcmTokenSubject.next(token);
             this.saveTokenToServer(token);
           } else {
-            console.log(
-              'FirebaseMessagingService: Aucun token de registration disponible'
-            );
+            // console.log(
+            //   'FirebaseMessagingService: Aucun token de registration disponible'
+            // );
             this.fcmTokenSubject.next(null);
           }
+          this.isInitializingToken = false;
         })
         .catch((error) => {
           console.error(
@@ -286,12 +301,14 @@ export class FirebaseMessagingService {
             error
           );
           this.fcmTokenSubject.next(null);
+          this.isInitializingToken = false;
         });
     } else {
       console.error(
         'FirebaseMessagingService: Service Worker non supporté par ce navigateur'
       );
       this.fcmTokenSubject.next(null);
+      this.isInitializingToken = false;
     }
   }
 
@@ -311,9 +328,9 @@ export class FirebaseMessagingService {
           Object.prototype.hasOwnProperty.call(prefs, 'isSubscribed') &&
           prefs.isSubscribed === false
         ) {
-          console.log(
-            'FirebaseMessagingService: Notifications explicitement désactivées selon préférences stockées'
-          );
+          // console.log(
+          //   'FirebaseMessagingService: Notifications explicitement désactivées selon préférences stockées'
+          // );
           return true;
         }
       }
@@ -334,9 +351,9 @@ export class FirebaseMessagingService {
   private saveTokenToServer(token: string): void {
     // Vérifie si les notifications sont désactivées avant d'enregistrer sur le serveur
     if (this.areNotificationsDisabledInLocalStorage()) {
-      console.log(
-        'FirebaseMessagingService: Notifications désactivées, token non enregistré sur le serveur'
-      );
+      // console.log(
+      //   'FirebaseMessagingService: Notifications désactivées, token non enregistré sur le serveur'
+      // );
       return;
     }
 
@@ -344,8 +361,6 @@ export class FirebaseMessagingService {
     this.http
       .post(`${environment.API_URL}/notifications/register-device`, { token })
       .subscribe({
-        next: (response) =>
-          console.log('Token enregistré sur le serveur:', response),
         error: (error) =>
           console.error("Erreur lors de l'enregistrement du token:", error),
       });
@@ -358,7 +373,7 @@ export class FirebaseMessagingService {
   receiveMessages(): Observable<NotificationPayload | null> {
     if (this.messaging) {
       onMessage(this.messaging, (payload: NotificationPayload) => {
-        console.log('Message reçu au premier plan:', payload);
+        // console.log('Message reçu au premier plan:', payload);
         this.showNotification(payload);
         this.notificationSubject.next(payload);
       });
@@ -385,9 +400,9 @@ export class FirebaseMessagingService {
       try {
         // Essayer d'abord d'utiliser le service worker si disponible
         if (navigator.serviceWorker && navigator.serviceWorker.controller) {
-          console.log(
-            'Utilisation de ServiceWorkerRegistration.showNotification'
-          );
+          // console.log(
+          //   'Utilisation de ServiceWorkerRegistration.showNotification'
+          // );
           navigator.serviceWorker.ready.then((registration) => {
             // Avec le service worker, on peut utiliser les actions
             // Le type NotificationOptions de typescript ne contient pas actions, mais il est supporté
@@ -404,9 +419,9 @@ export class FirebaseMessagingService {
           });
         } else {
           // Fallback vers l'API Notification standard (sans actions)
-          console.log(
-            "Fallback vers l'API Notification standard (sans actions)"
-          );
+          // console.log(
+          //   "Fallback vers l'API Notification standard (sans actions)"
+          // );
           const notification = new Notification(
             notificationTitle,
             notificationOptions
@@ -449,8 +464,8 @@ export class FirebaseMessagingService {
    * Efface le token FCM actuel et force une réinitialisation
    * @returns Promise qui se résout lorsque le token est effacé
    */
-  clearToken(): Promise<boolean> {
-    console.log('FirebaseMessagingService: Effacement du token FCM actuel');
+  async clearToken(): Promise<boolean> {
+    // console.log('FirebaseMessagingService: Effacement du token FCM actuel');
 
     if (!this.messaging) {
       console.error(
@@ -463,19 +478,43 @@ export class FirebaseMessagingService {
     this.fcmTokenSubject.next(null);
 
     // Si nous avons un messaging, on peut utiliser deleteToken
-    return deleteToken(this.messaging)
-      .then(() => {
-        console.log('FirebaseMessagingService: Token FCM supprimé avec succès');
-        return true;
-      })
-      .catch((error) => {
-        console.error(
-          'FirebaseMessagingService: Erreur lors de la suppression du token:',
-          error
-        );
-        // Même en cas d'erreur, on considère l'opération comme réussie
-        // car le token peut déjà être absent
-        return true;
-      });
+    try {
+      await deleteToken(this.messaging);
+      // console.log('FirebaseMessagingService: Token FCM supprimé avec succès');
+      return true;
+    } catch (error) {
+      console.error(
+        'FirebaseMessagingService: Erreur lors de la suppression du token:',
+        error
+      );
+      return true;
+    }
+  }
+
+  /**
+   * Déconnecte et réinitialise Firebase Messaging
+   */
+  disconnectMessaging(): void {
+    console.log('Déconnexion de Firebase Messaging...');
+
+    // Effacer le token et réinitialiser les états
+    if (this.messaging) {
+      this.clearToken()
+        .then(() => {
+          console.log('Token FCM effacé avec succès');
+        })
+        .catch((error) => {
+          console.error(
+            'Erreur lors de la déconnexion de Firebase Messaging:',
+            error
+          );
+        });
+    }
+
+    // Réinitialiser les sujets
+    this.fcmTokenSubject.next(null);
+    this.notificationSubject.next(null);
+
+    console.log('Firebase Messaging déconnecté');
   }
 }

@@ -1,0 +1,1573 @@
+<!-- Structure principale avec gestion mobile -->
+<div
+  class="flex flex-col md:flex-row w-full h-screen overflow-hidden border rounded-lg"
+>
+  <!-- Barre latérale avec gestion de la visibilité sur mobile -->
+  <div
+    class="w-full md:w-96 bg-gray-50 border-b md:border-r border-gray-200 overflow-y-auto"
+    [class.h-full]="!selectedEvent || window.innerWidth >= 768"
+    [class.h-auto]="selectedEvent && window.innerWidth < 768"
+  >
+    <div class="p-4 md:p-5">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-semibold">Listes des événements</h2>
+        <!-- Bouton retour sur mobile quand un événement est sélectionné -->
+        <button
+          *ngIf="selectedEvent && window.innerWidth < 768"
+          class="md:hidden p-2 rounded-lg hover:bg-gray-100"
+          (click)="selectedEvent = null"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Bouton de création d'événement -->
+      <button
+        class="w-full bg-black hover:bg-gray-800 text-white font-medium py-2.5 px-4 rounded-lg transition"
+        (click)="openCreateModal()"
+      >
+        Créer un nouvel événement
+      </button>
+
+      <!-- Section des filtres avec nouvelle organisation -->
+      <div class="mt-6 space-y-4">
+        <!-- Barre de recherche -->
+        <div class="relative">
+          <input
+            type="text"
+            [(ngModel)]="searchQuery"
+            (ngModelChange)="applyFilters()"
+            placeholder="Rechercher par nom ou lieu..."
+            class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+          />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
+          </svg>
+        </div>
+
+        <!-- Filtre par date -->
+        <div>
+          <select
+            [(ngModel)]="dateFilter"
+            (ngModelChange)="applyFilters()"
+            class="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white appearance-none cursor-pointer"
+          >
+            <option value="all">Toutes les dates</option>
+            <option value="today">Aujourd'hui</option>
+            <option value="tomorrow">Demain</option>
+            <option value="week">Cette semaine</option>
+            <option value="month">Ce mois</option>
+            <option value="past">Événements passés</option>
+          </select>
+        </div>
+
+        <!-- Filtres de statut avec nouvelle présentation -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <button
+            class="flex items-center justify-center px-4 py-2 rounded-lg border transition-all duration-200 ease-in-out"
+            [class.bg-blue-50]="statusFilter === 'all'"
+            [class.text-blue-700]="statusFilter === 'all'"
+            [class.border-blue-200]="statusFilter === 'all'"
+            [class.hover:bg-blue-50]="statusFilter !== 'all'"
+            [class.hover:border-blue-200]="statusFilter !== 'all'"
+            [class.bg-white]="statusFilter !== 'all'"
+            [class.border-gray-200]="statusFilter !== 'all'"
+            (click)="statusFilter = 'all'; applyFilters()"
+          >
+            <span class="text-sm font-medium">Tout</span>
+          </button>
+          <button
+            class="flex items-center justify-center px-4 py-2 rounded-lg border transition-all duration-200 ease-in-out"
+            [class.bg-green-50]="statusFilter === 'CONFIRMED'"
+            [class.text-green-700]="statusFilter === 'CONFIRMED'"
+            [class.border-green-200]="statusFilter === 'CONFIRMED'"
+            [class.hover:bg-green-50]="statusFilter !== 'CONFIRMED'"
+            [class.hover:border-green-200]="statusFilter !== 'CONFIRMED'"
+            [class.bg-white]="statusFilter !== 'CONFIRMED'"
+            [class.border-gray-200]="statusFilter !== 'CONFIRMED'"
+            (click)="statusFilter = 'CONFIRMED'; applyFilters()"
+          >
+            <span class="text-sm font-medium">Confirmés</span>
+          </button>
+          <button
+            class="flex items-center justify-center px-4 py-2 rounded-lg border transition-all duration-200 ease-in-out"
+            [class.bg-yellow-50]="statusFilter === 'PENDING'"
+            [class.text-yellow-700]="statusFilter === 'PENDING'"
+            [class.border-yellow-200]="statusFilter === 'PENDING'"
+            [class.hover:bg-yellow-50]="statusFilter !== 'PENDING'"
+            [class.hover:border-yellow-200]="statusFilter !== 'PENDING'"
+            [class.bg-white]="statusFilter !== 'PENDING'"
+            [class.border-gray-200]="statusFilter !== 'PENDING'"
+            (click)="statusFilter = 'PENDING'; applyFilters()"
+          >
+            <span class="text-sm font-medium">En attente</span>
+          </button>
+          <button
+            class="flex items-center justify-center px-4 py-2 rounded-lg border transition-all duration-200 ease-in-out"
+            [class.bg-red-50]="statusFilter === 'CANCELLED'"
+            [class.text-red-700]="statusFilter === 'CANCELLED'"
+            [class.border-red-200]="statusFilter === 'CANCELLED'"
+            [class.hover:bg-red-50]="statusFilter !== 'CANCELLED'"
+            [class.hover:border-red-200]="statusFilter !== 'CANCELLED'"
+            [class.bg-white]="statusFilter !== 'CANCELLED'"
+            [class.border-gray-200]="statusFilter !== 'CANCELLED'"
+            (click)="statusFilter = 'CANCELLED'; applyFilters()"
+          >
+            <span class="text-sm font-medium">Annulés</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Séparateur -->
+      <div class="my-6 border-t border-gray-200"></div>
+    </div>
+
+    <!-- Liste des événements -->
+    <div
+      class="px-4 md:px-5 pb-5 overflow-y-auto"
+      [class.hidden]="selectedEvent && window.innerWidth < 768"
+    >
+      <div *ngIf="loading" class="flex justify-center items-center py-6">
+        <div
+          class="w-8 h-8 border-2 border-gray-200 border-t-indigo-600 rounded-full animate-spin"
+        ></div>
+      </div>
+
+      <div
+        *ngIf="!loading && filteredEvents.length === 0"
+        class="py-6 px-4 text-center bg-gray-50 rounded-lg text-gray-500 text-sm"
+      >
+        Aucun événement trouvé
+      </div>
+
+      <div
+        *ngFor="let event of filteredEvents"
+        class="mb-3 p-4 bg-white border border-gray-200 rounded-lg cursor-pointer hover:border-gray-300 hover:shadow-sm transition"
+        (click)="openViewModal(event)"
+        (keydown.enter)="openViewModal(event)"
+        (keydown.space)="openViewModal(event); $event.preventDefault()"
+        tabindex="0"
+        role="button"
+        [attr.aria-label]="'Voir les détails de l\'événement: ' + event.title"
+      >
+        <div class="flex justify-between items-center mb-2">
+          <h3 class="text-base font-semibold text-gray-900">
+            {{ event.title }}
+          </h3>
+          <span
+            class="text-xs px-2 py-1 rounded-full"
+            [class.bg-green-50]="event.status === EventStatus.CONFIRMED"
+            [class.text-green-700]="event.status === EventStatus.CONFIRMED"
+            [class.bg-yellow-50]="event.status === EventStatus.PENDING"
+            [class.text-yellow-700]="event.status === EventStatus.PENDING"
+            [class.bg-red-50]="event.status === EventStatus.CANCELLED"
+            [class.text-red-700]="event.status === EventStatus.CANCELLED"
+          >
+            {{ getStatusLabel(event.status) }}
+          </span>
+        </div>
+
+        <div class="text-sm text-gray-600 mb-2">
+          {{ formatDate(event.startDateTime) }}
+        </div>
+
+        <div class="flex justify-between items-center text-xs text-gray-500">
+          <div *ngIf="event.location" class="flex items-center gap-1">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              fill="currentColor"
+              viewBox="0 0 16 16"
+            >
+              <path
+                d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10zm0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"
+              />
+            </svg>
+            {{ event.location }}
+          </div>
+
+          <div
+            class="flex items-center gap-1"
+            *ngIf="event.organizers && event.organizers.length > 0"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              fill="currentColor"
+              viewBox="0 0 16 16"
+            >
+              <path
+                d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3Zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
+              />
+            </svg>
+            {{ event.organizers.length }} organisateur{{
+              event.organizers.length > 1 ? "s" : ""
+            }}
+          </div>
+        </div>
+
+        <!-- Raison d'annulation si applicable -->
+        <div
+          *ngIf="
+            event.status === EventStatus.CANCELLED && event.cancellationReason
+          "
+          class="mt-2 pt-2 text-xs text-red-700 border-t border-gray-100"
+        >
+          <strong>Raison :</strong> {{ event.cancellationReason }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contenu principal avec gestion de la visibilité sur mobile -->
+  <div
+    class="flex-1 overflow-y-auto"
+    *ngIf="selectedEvent"
+    [class.hidden]="!selectedEvent && window.innerWidth < 768"
+  >
+    <!-- Hero section avec hauteur adaptative -->
+    <div
+      class="h-40 md:h-60 bg-black bg-[url('https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80')] bg-cover bg-center relative"
+    >
+      <div
+        class="absolute inset-0 bg-gradient-to-b from-black/20 to-black/70 flex flex-col justify-end p-4 md:p-6"
+      >
+        <h1 class="text-xl md:text-3xl font-bold mb-2 !text-white">
+          {{ selectedEvent.title }}
+        </h1>
+        <div
+          class="flex flex-wrap items-center gap-2 md:gap-4 text-white/90 text-sm"
+        >
+          <span>{{ formatDate(selectedEvent.startDateTime) }}</span>
+          <span *ngIf="selectedEvent.location">{{
+            selectedEvent.location
+          }}</span>
+          <span
+            class="text-xs px-2 py-1 rounded-full"
+            [class.bg-green-100]="
+              selectedEvent.status === EventStatus.CONFIRMED
+            "
+            [class.text-green-800]="
+              selectedEvent.status === EventStatus.CONFIRMED
+            "
+            [class.bg-yellow-100]="selectedEvent.status === EventStatus.PENDING"
+            [class.text-yellow-800]="
+              selectedEvent.status === EventStatus.PENDING
+            "
+            [class.bg-red-100]="selectedEvent.status === EventStatus.CANCELLED"
+            [class.text-red-800]="
+              selectedEvent.status === EventStatus.CANCELLED
+            "
+          >
+            {{ getStatusLabel(selectedEvent.status) }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Boutons d'action avec scroll horizontal sur mobile -->
+    <div
+      class="flex gap-2 p-4 md:px-6 md:py-4 border-b border-gray-200 overflow-x-auto"
+    >
+      <button
+        *ngIf="selectedEvent.status === EventStatus.PENDING"
+        class="px-4 py-2 text-sm font-medium rounded-md bg-indigo-600 hover:bg-indigo-700 text-white transition"
+        (click)="updateEventStatus(selectedEvent, EventStatus.CONFIRMED)"
+      >
+        Accepter
+      </button>
+      <button
+        *ngIf="selectedEvent.status === EventStatus.PENDING"
+        class="px-4 py-2 text-sm font-medium rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 transition"
+        (click)="updateEventStatus(selectedEvent, EventStatus.CANCELLED)"
+      >
+        Refuser
+      </button>
+      <button
+        class="px-4 py-2 text-sm font-medium rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 transition"
+        (click)="openInviteParticipantsModal()"
+      >
+        Invitation(s)
+      </button>
+      <button
+        class="px-4 py-2 text-sm font-medium rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 transition"
+        (click)="openDuplicateModal(selectedEvent)"
+      >
+        Dupliquer
+      </button>
+      <button
+        class="px-4 py-2 text-sm font-medium rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 transition"
+        (click)="openEditModal(selectedEvent)"
+      >
+        Modifier
+      </button>
+      <button
+        class="px-4 py-2 text-sm font-medium rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 transition"
+        (click)="sendReminders(selectedEvent.id)"
+      >
+        Envoyer un rappel
+      </button>
+      <button
+        class="px-4 py-2 text-sm font-medium rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 transition"
+        (click)="deleteEvent()"
+      >
+        Mémo
+      </button>
+    </div>
+
+    <!-- Contenu de l'événement avec layout adaptatif -->
+    <div class="p-4 md:p-6 grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+      <!-- Détails de l'événement (2 colonnes sur grand écran) -->
+      <div class="lg:col-span-2 space-y-6 overflow-y-auto pr-2">
+        <!-- Description -->
+        <div *ngIf="selectedEvent.description" class="mb-6">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">Description</h3>
+          <p class="text-gray-700">{{ selectedEvent.description }}</p>
+        </div>
+
+        <!-- Fil de discussion -->
+        <div class="border border-gray-200 rounded-lg overflow-hidden">
+          <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
+            <h3 class="font-medium text-gray-900">Fil de discussion</h3>
+          </div>
+          <div class="p-4 h-80 overflow-y-auto">
+            <p class="text-gray-500 text-center text-sm">
+              Aucun message pour le moment
+            </p>
+          </div>
+          <div
+            class="px-4 py-3 border-t border-gray-200 flex items-center gap-2"
+          >
+            <input
+              type="text"
+              placeholder="Écrivez ici..."
+              class="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            />
+            <button
+              class="bg-indigo-600 hover:bg-indigo-700 text-white p-2 rounded-md"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                fill="currentColor"
+                viewBox="0 0 16 16"
+              >
+                <path
+                  d="M15.964.686a.5.5 0 0 0-.65-.65L.767 5.855a.5.5 0 0 0-.287.515h.01l.867 5.876a.5.5 0 0 0 .5.5l4.084-.059a.5.5 0 0 0 .484-.29H6.4l1.6 2.693a.5.5 0 0 0 .8.13l7.15-6.804a.5.5 0 0 0 .14-.6l-.624-1.25Z"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Barre latérale de l'événement (1 colonne) -->
+      <div class="space-y-6 overflow-y-auto">
+        <!-- Détails -->
+        <div>
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">Détails</h3>
+
+          <div class="space-y-4">
+            <div class="flex">
+              <div class="text-gray-500 mr-3 mt-0.5">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  fill="currentColor"
+                  viewBox="0 0 16 16"
+                >
+                  <path
+                    d="M11 6.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1zm-3 0a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1zm-5 3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1zm3 0a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1z"
+                  />
+                  <path
+                    d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <div class="text-xs text-gray-500 mb-1">Date de début</div>
+                <div class="text-gray-900">
+                  {{ formatDate(selectedEvent.startDateTime) }}
+                </div>
+              </div>
+            </div>
+
+            <div class="flex">
+              <div class="text-gray-500 mr-3 mt-0.5">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  fill="currentColor"
+                  viewBox="0 0 16 16"
+                >
+                  <path
+                    d="M11 6.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1zm-3 0a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1zm-5 3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1zm3 0a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1z"
+                  />
+                  <path
+                    d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <div class="text-xs text-gray-500 mb-1">Date de fin</div>
+                <div class="text-gray-900">
+                  {{ formatDate(selectedEvent.endDateTime) }}
+                </div>
+              </div>
+            </div>
+
+            <div class="flex">
+              <div class="text-gray-500 mr-3 mt-0.5">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  fill="currentColor"
+                  viewBox="0 0 16 16"
+                >
+                  <path
+                    d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"
+                  />
+                  <path
+                    d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <div class="text-xs text-gray-500 mb-1">
+                  Heure de rendez-vous
+                </div>
+                <div class="text-gray-900">
+                  {{ formatDate(selectedEvent.meetupDateTime) }}
+                </div>
+              </div>
+            </div>
+
+            <div class="flex" *ngIf="selectedEvent.location">
+              <div class="text-gray-500 mr-3 mt-0.5">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  fill="currentColor"
+                  viewBox="0 0 16 16"
+                >
+                  <path
+                    d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10zm0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <div class="text-xs text-gray-500 mb-1">Lieu</div>
+                <div class="text-gray-900">{{ selectedEvent.location }}</div>
+              </div>
+            </div>
+
+            <div
+              class="flex"
+              *ngIf="
+                selectedEvent.status === EventStatus.CANCELLED &&
+                selectedEvent.cancellationReason
+              "
+            >
+              <div class="text-gray-500 mr-3 mt-0.5">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  fill="currentColor"
+                  viewBox="0 0 16 16"
+                >
+                  <path
+                    d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"
+                  />
+                  <path
+                    d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <div class="text-xs text-gray-500 mb-1">
+                  Raison d'annulation
+                </div>
+                <div class="text-gray-900">
+                  {{ selectedEvent.cancellationReason }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Organisateurs -->
+        <div
+          *ngIf="eventOrganizers && eventOrganizers.length > 0"
+          class="border border-gray-200 rounded-lg overflow-hidden"
+        >
+          <div
+            class="bg-gray-50 px-4 py-3 border-b border-gray-200 flex justify-between items-center"
+          >
+            <h3 class="font-medium text-gray-900">
+              {{
+                eventOrganizers.length > 1 ? "Organisateurs" : "Organisateur"
+              }}
+            </h3>
+          </div>
+          <div class="max-h-64 overflow-y-auto">
+            <div
+              *ngIf="loadingOrganizers"
+              class="flex justify-center items-center py-4"
+            >
+              <div
+                class="w-6 h-6 border-2 border-gray-200 border-t-indigo-600 rounded-full animate-spin"
+              ></div>
+            </div>
+            <div
+              *ngIf="!loadingOrganizers && eventOrganizers.length === 0"
+              class="py-4 px-4 text-center text-gray-500 text-sm"
+            >
+              Aucun organisateur spécifié
+            </div>
+            <div
+              *ngFor="let organizer of eventOrganizers"
+              class="flex items-center px-4 py-3 border-b border-gray-200 last:border-b-0"
+            >
+              <div
+                class="flex items-center justify-center w-8 h-8 bg-gray-100 rounded-full mr-3 text-sm text-gray-700"
+              >
+                {{ getInitials(organizer) }}
+              </div>
+              <div class="flex-1">
+                <div class="text-sm font-medium text-gray-900">
+                  {{ organizer.firstName }} {{ organizer.name }}
+                </div>
+                <div class="text-xs text-gray-500">{{ organizer.email }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Participants -->
+        <div class="border border-gray-200 rounded-lg overflow-hidden">
+          <div
+            class="bg-gray-50 px-4 py-3 border-b border-gray-200 flex justify-between items-center"
+          >
+            <h3 class="font-medium text-gray-900">Participation(s)</h3>
+            <button
+              class="text-xs px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition"
+              (click)="openInviteParticipantsModal()"
+            >
+              Liste des participants
+            </button>
+          </div>
+          <div class="max-h-64 overflow-y-auto">
+            <div
+              *ngIf="loadingParticipants"
+              class="flex justify-center items-center py-4"
+            >
+              <div
+                class="w-6 h-6 border-2 border-gray-200 border-t-indigo-600 rounded-full animate-spin mr-2"
+              ></div>
+            </div>
+            <div
+              *ngIf="!loadingParticipants && eventParticipants.length === 0"
+              class="py-4 px-4 text-center text-gray-500 text-sm"
+            >
+              Aucun participant pour le moment
+            </div>
+            <div
+              *ngFor="let participant of eventParticipants"
+              class="flex items-center px-4 py-3 border-b border-gray-200 last:border-b-0"
+            >
+              <div
+                class="flex items-center justify-center w-8 h-8 bg-gray-100 rounded-full mr-3 text-sm text-gray-700"
+              >
+                {{ getInitials(participant) }}
+              </div>
+              <div class="flex-1">
+                <div class="text-sm font-medium text-gray-900">
+                  {{
+                    participant.name ||
+                      (participant.isExternal
+                        ? participant.personId
+                        : "Anonyme")
+                  }}
+                </div>
+                <div *ngIf="participant.email" class="text-xs text-gray-500">
+                  {{ participant.email }}
+                </div>
+              </div>
+              <span
+                class="text-xs px-2 py-0.5 rounded-full"
+                [class.bg-green-50]="participant.status === 'ACCEPTED'"
+                [class.text-green-700]="participant.status === 'ACCEPTED'"
+                [class.bg-red-50]="participant.status === 'DECLINED'"
+                [class.text-red-700]="participant.status === 'DECLINED'"
+                [class.bg-yellow-50]="participant.status === 'PENDING'"
+                [class.text-yellow-700]="participant.status === 'PENDING'"
+              >
+                {{ getParticipantStatusLabel(participant.status) }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Message si aucun événement n'est sélectionné -->
+  <div
+    class="flex-1 flex items-center justify-center bg-gray-50"
+    *ngIf="!selectedEvent"
+  >
+    <div class="text-center max-w-lg px-6">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-16 w-16 text-gray-300 mx-auto mb-4"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.5"
+          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+        />
+      </svg>
+      <h2 class="text-xl font-semibold text-gray-900 mb-2">
+        Sélectionnez un événement pour afficher ses détails
+      </h2>
+      <p class="text-gray-500">
+        Vous pouvez créer un nouvel événement en cliquant sur le bouton dans la
+        barre latérale
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- Reste inchangé: toutes les modales -->
+<!-- Modal de création d'événement -->
+<div class="modal-overlay" *ngIf="showCreateEventModal">
+  <div class="modal-container">
+    <div class="modal-header">
+      <h2>Créer un nouvel événement</h2>
+      <button class="close-btn" (click)="closeModal('create')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form [formGroup]="createEventForm" (ngSubmit)="submitCreateEvent()">
+        <div class="space-y-5">
+          <div class="form-group">
+            <label for="title" class="text-sm font-medium mb-1 block"
+              >Titre *</label
+            >
+            <input
+              type="text"
+              id="title"
+              formControlName="title"
+              class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="description" class="text-sm font-medium mb-1 block"
+              >Description</label
+            >
+            <textarea
+              id="description"
+              formControlName="description"
+              rows="3"
+              class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="location" class="text-sm font-medium mb-1 block"
+              >Lieu</label
+            >
+            <input
+              type="text"
+              id="location"
+              formControlName="location"
+              class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="form-group">
+              <label for="startDateTime" class="text-sm font-medium mb-1 block"
+                >Date et heure de début *</label
+              >
+              <input
+                type="datetime-local"
+                id="startDateTime"
+                formControlName="startDateTime"
+                class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="endDateTime" class="text-sm font-medium mb-1 block"
+                >Date et heure de fin *</label
+              >
+              <input
+                type="datetime-local"
+                id="endDateTime"
+                formControlName="endDateTime"
+                class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="meetupDateTime" class="text-sm font-medium mb-1 block"
+              >Date et heure de rendez-vous *</label
+            >
+            <input
+              type="datetime-local"
+              id="meetupDateTime"
+              formControlName="meetupDateTime"
+              class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+          </div>
+
+          <!-- Sélection des organisateurs -->
+          <div class="form-group">
+            <label for="organizers" class="text-sm font-medium mb-1 block"
+              >Organisateurs *</label
+            >
+            <div
+              class="bg-white rounded-lg border border-gray-300 overflow-hidden"
+            >
+              <div
+                *ngIf="loadingGroupMembers"
+                class="p-4 flex justify-center items-center"
+              >
+                <div
+                  class="w-6 h-6 border-2 border-t-blue-500 border-gray-200 rounded-full animate-spin mr-2"
+                ></div>
+                <p class="text-sm text-gray-600">Chargement des membres...</p>
+              </div>
+              <div
+                *ngIf="!loadingGroupMembers && groupMembers.length === 0"
+                class="p-4 text-center text-gray-500"
+              >
+                Aucun membre disponible
+              </div>
+              <div
+                *ngIf="!loadingGroupMembers && groupMembers.length > 0"
+                class="max-h-60 overflow-y-auto"
+              >
+                <div
+                  *ngFor="let member of groupMembers"
+                  class="p-3 border-b border-gray-100 last:border-b-0 flex items-center hover:bg-gray-50 transition-colors cursor-pointer"
+                  [class.bg-blue-50]="isOrganizerSelected(member.id)"
+                  (click)="toggleOrganizerSelection(member)"
+                  (keydown.enter)="toggleOrganizerSelection(member)"
+                  (keydown.space)="
+                    toggleOrganizerSelection(member); $event.preventDefault()
+                  "
+                  tabindex="0"
+                  role="checkbox"
+                  [attr.aria-checked]="isOrganizerSelected(member.id)"
+                >
+                  <div
+                    class="flex-shrink-0 w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-700 font-medium mr-3"
+                  >
+                    {{ getInitials(member) }}
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-gray-900 truncate">
+                      {{ member.firstName }} {{ member.name }}
+                    </p>
+                    <p class="text-xs text-gray-500 truncate">
+                      {{ member.email }}
+                    </p>
+                  </div>
+                  <div class="flex-shrink-0 ml-2">
+                    <div
+                      class="w-6 h-6 border rounded-md flex items-center justify-center"
+                      [class.bg-blue-500]="isOrganizerSelected(member.id)"
+                      [class.border-blue-500]="isOrganizerSelected(member.id)"
+                      [class.border-gray-300]="!isOrganizerSelected(member.id)"
+                    >
+                      <svg
+                        *ngIf="isOrganizerSelected(member.id)"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="3"
+                        stroke="white"
+                        class="w-4 h-4"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M4.5 12.75l6 6 9-13.5"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+            <button
+              type="button"
+              class="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-colors"
+              (click)="closeModal('create')"
+            >
+              Annuler
+            </button>
+            <button
+              type="submit"
+              class="px-4 py-2 rounded-lg bg-black text-white hover:bg-gray-800 transition-colors"
+              [disabled]="
+                !createEventForm.valid ||
+                selectedOrganizers.length === 0 ||
+                loading
+              "
+            >
+              <span *ngIf="!loading">Créer l'événement</span>
+              <span *ngIf="loading" class="flex items-center justify-center">
+                <div
+                  class="w-5 h-5 border-2 border-t-white border-white/30 rounded-full animate-spin mr-2"
+                ></div>
+                Création...
+              </span>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal d'édition d'événement -->
+<div class="modal-overlay" *ngIf="showEditEventModal">
+  <div class="modal-container">
+    <div class="modal-header">
+      <h2>Modifier l'événement</h2>
+      <button class="close-btn" (click)="closeModal('edit')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form [formGroup]="editEventForm" (ngSubmit)="submitEditEvent()">
+        <div class="space-y-5">
+          <div class="form-group">
+            <label for="edit-title" class="text-sm font-medium mb-1 block"
+              >Titre *</label
+            >
+            <input
+              type="text"
+              id="edit-title"
+              formControlName="title"
+              class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="edit-description" class="text-sm font-medium mb-1 block"
+              >Description</label
+            >
+            <textarea
+              id="edit-description"
+              formControlName="description"
+              rows="3"
+              class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="edit-location" class="text-sm font-medium mb-1 block"
+              >Lieu</label
+            >
+            <input
+              type="text"
+              id="edit-location"
+              formControlName="location"
+              class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="form-group">
+              <label
+                for="edit-startDateTime"
+                class="text-sm font-medium mb-1 block"
+                >Date et heure de début *</label
+              >
+              <input
+                type="datetime-local"
+                id="edit-startDateTime"
+                formControlName="startDateTime"
+                class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label
+                for="edit-endDateTime"
+                class="text-sm font-medium mb-1 block"
+                >Date et heure de fin *</label
+              >
+              <input
+                type="datetime-local"
+                id="edit-endDateTime"
+                formControlName="endDateTime"
+                class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label
+              for="edit-meetupDateTime"
+              class="text-sm font-medium mb-1 block"
+              >Date et heure de rendez-vous *</label
+            >
+            <input
+              type="datetime-local"
+              id="edit-meetupDateTime"
+              formControlName="meetupDateTime"
+              class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="edit-status" class="text-sm font-medium mb-1 block"
+              >Statut</label
+            >
+            <select
+              id="edit-status"
+              formControlName="status"
+              class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option [value]="EventStatus.PENDING">En attente</option>
+              <option [value]="EventStatus.CONFIRMED">Confirmé</option>
+              <option [value]="EventStatus.CANCELLED">Annulé</option>
+            </select>
+          </div>
+
+          <!-- Sélection des organisateurs -->
+          <div class="form-group">
+            <label for="edit-organizers" class="text-sm font-medium mb-1 block"
+              >Organisateurs *</label
+            >
+            <div
+              class="bg-white rounded-lg border border-gray-300 overflow-hidden"
+            >
+              <div
+                *ngIf="loadingGroupMembers"
+                class="p-4 flex justify-center items-center"
+              >
+                <div
+                  class="w-6 h-6 border-2 border-t-blue-500 border-gray-200 rounded-full animate-spin mr-2"
+                ></div>
+                <p class="text-sm text-gray-600">Chargement des membres...</p>
+              </div>
+              <div
+                *ngIf="!loadingGroupMembers && groupMembers.length === 0"
+                class="p-4 text-center text-gray-500"
+              >
+                Aucun membre disponible
+              </div>
+              <div
+                *ngIf="!loadingGroupMembers && groupMembers.length > 0"
+                class="max-h-60 overflow-y-auto"
+              >
+                <div
+                  *ngFor="let member of groupMembers"
+                  class="p-3 border-b border-gray-100 last:border-b-0 flex items-center hover:bg-gray-50 transition-colors cursor-pointer"
+                  [class.bg-blue-50]="isOrganizerSelected(member.id)"
+                  (click)="toggleOrganizerSelection(member)"
+                  (keydown.enter)="toggleOrganizerSelection(member)"
+                  (keydown.space)="
+                    toggleOrganizerSelection(member); $event.preventDefault()
+                  "
+                  tabindex="0"
+                  role="checkbox"
+                  [attr.aria-checked]="isOrganizerSelected(member.id)"
+                >
+                  <div
+                    class="flex-shrink-0 w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-700 font-medium mr-3"
+                  >
+                    {{ getInitials(member) }}
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-gray-900 truncate">
+                      {{ member.firstName }} {{ member.name }}
+                    </p>
+                    <p class="text-xs text-gray-500 truncate">
+                      {{ member.email }}
+                    </p>
+                  </div>
+                  <div class="flex-shrink-0 ml-2">
+                    <div
+                      class="w-6 h-6 border rounded-md flex items-center justify-center"
+                      [class.bg-blue-500]="isOrganizerSelected(member.id)"
+                      [class.border-blue-500]="isOrganizerSelected(member.id)"
+                      [class.border-gray-300]="!isOrganizerSelected(member.id)"
+                    >
+                      <svg
+                        *ngIf="isOrganizerSelected(member.id)"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="3"
+                        stroke="white"
+                        class="w-4 h-4"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M4.5 12.75l6 6 9-13.5"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+            <button
+              type="button"
+              class="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-colors"
+              (click)="closeModal('edit')"
+            >
+              Annuler
+            </button>
+            <button
+              type="submit"
+              class="px-4 py-2 rounded-lg bg-black text-white hover:bg-gray-800 transition-colors"
+              [disabled]="
+                !editEventForm.valid ||
+                selectedOrganizers.length === 0 ||
+                loading
+              "
+            >
+              <span *ngIf="!loading">Enregistrer les modifications</span>
+              <span *ngIf="loading" class="flex items-center justify-center">
+                <div
+                  class="w-5 h-5 border-2 border-t-white border-white/30 rounded-full animate-spin mr-2"
+                ></div>
+                Enregistrement...
+              </span>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de duplication d'événement -->
+<div class="modal-overlay" *ngIf="showDuplicateEventModal">
+  <div class="modal-container">
+    <div class="modal-header">
+      <h2>Dupliquer l'événement</h2>
+      <button class="close-btn" (click)="closeModal('duplicate')">
+        &times;
+      </button>
+    </div>
+    <div class="modal-body">
+      <form
+        [formGroup]="duplicateEventForm"
+        (ngSubmit)="submitDuplicateEvent()"
+      >
+        <div class="space-y-5">
+          <p class="mb-4 p-4 bg-blue-50 text-blue-700 rounded-lg text-sm">
+            Vous êtes sur le point de dupliquer l'événement
+            <span class="font-medium">"{{ selectedEvent?.title }}"</span>.
+            Veuillez sélectionner les nouvelles dates.
+          </p>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="form-group">
+              <label
+                for="duplicate-startDateTime"
+                class="text-sm font-medium mb-1 block"
+                >Date et heure de début *</label
+              >
+              <input
+                type="datetime-local"
+                id="duplicate-startDateTime"
+                formControlName="startDateTime"
+                class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label
+                for="duplicate-endDateTime"
+                class="text-sm font-medium mb-1 block"
+                >Date et heure de fin *</label
+              >
+              <input
+                type="datetime-local"
+                id="duplicate-endDateTime"
+                formControlName="endDateTime"
+                class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label
+              for="duplicate-meetupDateTime"
+              class="text-sm font-medium mb-1 block"
+              >Date et heure de rendez-vous *</label
+            >
+            <input
+              type="datetime-local"
+              id="duplicate-meetupDateTime"
+              formControlName="meetupDateTime"
+              class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+          </div>
+
+          <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+            <button
+              type="button"
+              class="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-colors"
+              (click)="closeModal('duplicate')"
+            >
+              Annuler
+            </button>
+            <button
+              type="submit"
+              class="px-4 py-2 rounded-lg bg-black text-white hover:bg-gray-800 transition-colors"
+              [disabled]="!duplicateEventForm.valid || loading"
+            >
+              <span *ngIf="!loading">Dupliquer l'événement</span>
+              <span *ngIf="loading" class="flex items-center justify-center">
+                <div
+                  class="w-5 h-5 border-2 border-t-white border-white/30 rounded-full animate-spin mr-2"
+                ></div>
+                Duplication...
+              </span>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal d'invitation des participants -->
+<div class="modal-overlay" *ngIf="showInviteParticipantsModal">
+  <div class="modal-container">
+    <div class="modal-header">
+      <h2>Inviter des participants</h2>
+      <button class="close-btn" (click)="closeInviteModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="space-y-6">
+        <p class="p-4 bg-blue-50 text-blue-700 rounded-lg text-sm">
+          Inviter des participants à l'événement
+          <span class="font-medium">"{{ selectedEvent?.title }}"</span>
+        </p>
+
+        <!-- Section des membres du groupe -->
+        <div class="border border-gray-200 rounded-lg overflow-hidden">
+          <div class="bg-gray-50 border-b border-gray-200 p-3">
+            <h3 class="font-medium text-gray-900">Membres du groupe</h3>
+          </div>
+          <div class="p-4">
+            <div
+              *ngIf="loadingGroupMembers"
+              class="flex justify-center items-center py-4"
+            >
+              <div
+                class="w-6 h-6 border-2 border-t-blue-500 border-gray-200 rounded-full animate-spin mr-2"
+              ></div>
+              <p class="text-sm text-gray-600">Chargement des membres...</p>
+            </div>
+            <div
+              *ngIf="!loadingGroupMembers && groupMembers.length === 0"
+              class="py-4 text-center text-gray-500"
+            >
+              Aucun membre disponible
+            </div>
+            <div
+              *ngIf="!loadingGroupMembers && groupMembers.length > 0"
+              class="max-h-60 overflow-y-auto"
+            >
+              <div
+                *ngFor="let member of groupMembers"
+                class="p-3 mb-2 border border-gray-100 rounded-lg last:mb-0 flex items-center hover:bg-gray-50 transition-colors cursor-pointer"
+                [class.bg-blue-50]="isUserSelected(member.id)"
+                (click)="toggleMemberSelection(member)"
+                (keydown.enter)="toggleMemberSelection(member)"
+                (keydown.space)="
+                  toggleMemberSelection(member); $event.preventDefault()
+                "
+                tabindex="0"
+                role="checkbox"
+                [attr.aria-checked]="isUserSelected(member.id)"
+              >
+                <div
+                  class="flex-shrink-0 w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-700 font-medium mr-3"
+                >
+                  {{ getInitials(member) }}
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-medium text-gray-900 truncate">
+                    {{ member.firstName }} {{ member.name }}
+                  </p>
+                  <p class="text-xs text-gray-500 truncate">
+                    {{ member.email }}
+                  </p>
+                </div>
+                <div class="flex-shrink-0 ml-2">
+                  <div
+                    class="w-6 h-6 border rounded-md flex items-center justify-center"
+                    [class.bg-blue-500]="isUserSelected(member.id)"
+                    [class.border-blue-500]="isUserSelected(member.id)"
+                    [class.border-gray-300]="!isUserSelected(member.id)"
+                  >
+                    <svg
+                      *ngIf="isUserSelected(member.id)"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke-width="3"
+                      stroke="white"
+                      class="w-4 h-4"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M4.5 12.75l6 6 9-13.5"
+                      />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section des participants externes -->
+        <div class="border border-gray-200 rounded-lg overflow-hidden">
+          <div class="bg-gray-50 border-b border-gray-200 p-3">
+            <h3 class="font-medium text-gray-900">Participants externes</h3>
+          </div>
+          <div class="p-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div class="md:col-span-1">
+                <label
+                  for="external-email"
+                  class="text-sm font-medium mb-1 block"
+                  >Email *</label
+                >
+                <input
+                  type="email"
+                  id="external-email"
+                  [(ngModel)]="newExternalEmail"
+                  class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                />
+              </div>
+              <div class="md:col-span-1">
+                <label
+                  for="external-name"
+                  class="text-sm font-medium mb-1 block"
+                  >Nom (optionnel)</label
+                >
+                <input
+                  type="text"
+                  id="external-name"
+                  [(ngModel)]="newExternalName"
+                  class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              <div class="md:col-span-1 flex items-end">
+                <button
+                  type="button"
+                  class="w-full px-4 py-2 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors flex items-center justify-center gap-2"
+                  (click)="addExternalParticipant()"
+                  [disabled]="!newExternalEmail"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="2"
+                    stroke="currentColor"
+                    class="w-5 h-5"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M12 4.5v15m7.5-7.5h-15"
+                    />
+                  </svg>
+                  Ajouter
+                </button>
+              </div>
+            </div>
+
+            <!-- Liste des participants externes ajoutés -->
+            <div *ngIf="externalParticipants.length > 0" class="mt-4">
+              <h4 class="text-sm font-medium text-gray-700 mb-2">
+                Participants externes ajoutés
+              </h4>
+              <div class="space-y-2">
+                <div
+                  *ngFor="let person of externalParticipants; let i = index"
+                  class="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                >
+                  <div class="flex items-center">
+                    <div
+                      class="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-700 font-medium mr-3"
+                    >
+                      {{
+                        person.name
+                          ? getInitials({ name: person.name })
+                          : person.email.substring(0, 2).toUpperCase()
+                      }}
+                    </div>
+                    <div>
+                      <div class="text-sm font-medium">
+                        {{ person.name || "Sans nom" }}
+                      </div>
+                      <div class="text-xs text-gray-500">
+                        {{ person.email }}
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    class="p-1.5 rounded-full text-gray-500 hover:bg-gray-200 transition-colors"
+                    (click)="removeExternalParticipant(i)"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke-width="2"
+                      stroke="currentColor"
+                      class="w-5 h-5"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+          <button
+            type="button"
+            class="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-colors"
+            (click)="closeInviteModal()"
+          >
+            Annuler
+          </button>
+          <button
+            type="button"
+            class="px-4 py-2 rounded-lg bg-black text-white hover:bg-gray-800 transition-colors"
+            (click)="submitInvitations()"
+            [disabled]="
+              (selectedGroupMembers.length === 0 &&
+                externalParticipants.length === 0) ||
+              loading
+            "
+          >
+            <span *ngIf="!loading">Envoyer les invitations</span>
+            <span *ngIf="loading" class="flex items-center justify-center">
+              <div
+                class="w-5 h-5 border-2 border-t-white border-white/30 rounded-full animate-spin mr-2"
+              ></div>
+              Envoi...
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Dialogue de confirmation d'annulation -->
+<div class="modal-overlay" *ngIf="showCancellationDialog">
+  <div class="modal-container modal-small">
+    <div class="modal-header">
+      <h2>Annuler l'événement</h2>
+      <button class="close-btn" (click)="closeCancellationDialog()">
+        &times;
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="space-y-5">
+        <div class="p-4 bg-red-50 text-red-700 rounded-lg">
+          <p class="text-sm font-medium">
+            Êtes-vous sûr de vouloir annuler l'événement
+            <span class="font-semibold">"{{ selectedEvent?.title }}"</span> ?
+          </p>
+          <p class="text-sm mt-2">
+            Cette action enverra une notification à tous les participants.
+          </p>
+        </div>
+
+        <div class="form-group">
+          <label
+            for="cancellation-reason"
+            class="text-sm font-medium mb-1 block"
+            >Raison de l'annulation *</label
+          >
+          <textarea
+            id="cancellation-reason"
+            [(ngModel)]="cancellationReason"
+            rows="3"
+            class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            required
+          ></textarea>
+          <div
+            *ngIf="error && error.includes('raison')"
+            class="mt-1 text-sm text-red-600"
+          >
+            {{ error }}
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+          <button
+            type="button"
+            class="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-colors"
+            (click)="closeCancellationDialog()"
+          >
+            Retour
+          </button>
+          <button
+            type="button"
+            class="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors"
+            (click)="confirmCancellation()"
+            [disabled]="!cancellationReason.trim() || loading"
+          >
+            <span *ngIf="!loading">Confirmer l'annulation</span>
+            <span *ngIf="loading" class="flex items-center justify-center">
+              <div
+                class="w-5 h-5 border-2 border-t-white border-white/30 rounded-full animate-spin mr-2"
+              ></div>
+              Annulation...
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Dialogue de confirmation de suppression -->
+<div class="modal-overlay" *ngIf="showDeleteConfirmationDialog">
+  <div class="modal-container modal-small">
+    <div class="modal-header">
+      <h2>Supprimer l'événement</h2>
+      <button class="close-btn" (click)="closeDeleteConfirmationDialog()">
+        &times;
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="space-y-5">
+        <div class="p-4 bg-red-50 text-red-700 rounded-lg">
+          <p class="text-sm font-medium">
+            Êtes-vous sûr de vouloir supprimer définitivement l'événement
+            <span class="font-semibold">"{{ selectedEvent?.title }}"</span> ?
+          </p>
+          <p class="text-sm font-semibold mt-2">
+            Cette action est irréversible.
+          </p>
+        </div>
+
+        <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+          <button
+            type="button"
+            class="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-colors"
+            (click)="closeDeleteConfirmationDialog()"
+          >
+            Annuler
+          </button>
+          <button
+            type="button"
+            class="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors"
+            (click)="confirmDeleteEvent()"
+            [disabled]="loading"
+          >
+            <span *ngIf="!loading">Confirmer la suppression</span>
+            <span *ngIf="loading" class="flex items-center justify-center">
+              <div
+                class="w-5 h-5 border-2 border-t-white border-white/30 rounded-full animate-spin mr-2"
+              ></div>
+              Suppression...
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Success notification -->
+<div
+  *ngIf="successMessage"
+  class="fixed bottom-4 right-4 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded shadow-md animate-fade-in-up"
+>
+  {{ successMessage }}
+</div>
+
+<!-- Error notification -->
+<div
+  *ngIf="error"
+  class="fixed bottom-4 right-4 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded shadow-md animate-fade-in-up"
+>
+  {{ error }}
+</div>

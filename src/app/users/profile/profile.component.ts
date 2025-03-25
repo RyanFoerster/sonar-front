@@ -4,8 +4,15 @@ import {
   inject,
   signal,
   ChangeDetectorRef,
+  OnInit,
 } from '@angular/core';
-import { lucideEdit, lucideBell, lucideBellOff } from '@ng-icons/lucide';
+import {
+  lucideEdit,
+  lucideBell,
+  lucideBellOff,
+  lucideUsers,
+  lucideInbox,
+} from '@ng-icons/lucide';
 import { HlmAspectRatioDirective } from '@spartan-ng/ui-aspectratio-helm';
 import { HlmButtonDirective } from '@spartan-ng/ui-button-helm';
 import { HlmIconComponent, provideIcons } from '@spartan-ng/ui-icon-helm';
@@ -30,9 +37,28 @@ import {
   Validators,
 } from '@angular/forms';
 import { UpdateUserDto } from '../../shared/dtos/update-user.dto';
-import { NgOptimizedImage, NgClass } from '@angular/common';
+import {
+  NgOptimizedImage,
+  NgClass,
+  CommonModule,
+  DatePipe,
+} from '@angular/common';
 import { AuthService } from '../../shared/services/auth.service';
 import { PushNotificationService } from '../../services/push-notification.service';
+import { GroupeInvitationService } from '../../shared/services/groupe-invitation.service';
+import { GroupeInvitation } from '../../shared/entities/groupe-invitation.entity';
+import { HlmLabelDirective } from '@spartan-ng/ui-label-helm';
+import { finalize } from 'rxjs';
+import { NotificationService } from '../../services/notification.service';
+import { HttpErrorResponse } from '@angular/common/http';
+
+// Constants pour les types de notification
+const TOAST_TYPES = {
+  SUCCESS: 'success' as const,
+  ERROR: 'error' as const,
+  INFO: 'info' as const,
+  WARNING: 'warning' as const,
+};
 
 @Component({
   selector: 'app-profile',
@@ -52,17 +78,34 @@ import { PushNotificationService } from '../../services/push-notification.servic
     ReactiveFormsModule,
     NgOptimizedImage,
     NgClass,
+    CommonModule,
+    HlmLabelDirective,
+    DatePipe,
   ],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.css',
-  providers: [provideIcons({ lucideEdit, lucideBell, lucideBellOff })],
+  providers: [
+    provideIcons({
+      lucideEdit,
+      lucideBell,
+      lucideBellOff,
+      lucideUsers,
+      lucideInbox,
+    }),
+  ],
 })
-export class ProfileComponent {
+export class ProfileComponent implements OnInit {
   protected connectedUser = signal<UserEntity | null>(null);
   protected updateUserForm!: FormGroup;
   protected notificationsEnabled = signal<boolean>(false);
   protected notificationsSupported = signal<boolean>(false);
   protected isProcessingNotificationPermission = signal<boolean>(false);
+
+  // Invitations de groupe
+  protected pendingInvitations = signal<GroupeInvitation[]>([]);
+  protected isLoadingInvitations = signal<boolean>(false);
+  protected isProcessingResponse = signal<boolean>(false);
+  private processingInvitationIds = signal<Set<number>>(new Set());
 
   private usersService: UsersService = inject(UsersService);
   private authService: AuthService = inject(AuthService);
@@ -71,6 +114,8 @@ export class ProfileComponent {
     PushNotificationService
   );
   private cdr: ChangeDetectorRef = inject(ChangeDetectorRef);
+  private groupeInvitationService = inject(GroupeInvitationService);
+  private notificationService = inject(NotificationService);
 
   constructor() {
     this.updateUserForm = this.formBuilder.group({
@@ -160,6 +205,9 @@ export class ProfileComponent {
         console.log('État des notifications mis à jour:', isSubscribed);
       });
     }
+
+    // Charger les invitations de groupe en attente
+    this.loadPendingInvitations();
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -352,5 +400,125 @@ export class ProfileComponent {
           this.cdr.detectChanges();
         });
       });
+  }
+
+  /**
+   * Charge les invitations de groupe en attente pour l'utilisateur
+   */
+  private loadPendingInvitations(): void {
+    this.isLoadingInvitations.set(true);
+
+    this.groupeInvitationService
+      .getPendingInvitations({ excludeRelations: true })
+      .pipe(finalize(() => this.isLoadingInvitations.set(false)))
+      .subscribe({
+        next: (invitations) => {
+          this.pendingInvitations.set(invitations);
+        },
+        error: (error: HttpErrorResponse) => {
+          console.error(
+            'Erreur lors du chargement des invitations:',
+            error.message
+          );
+          this.notificationService.showToast(
+            'error',
+            'Erreur lors du chargement des invitations:',
+            error.message
+          );
+        },
+      });
+  }
+
+  /**
+   * Vérifie si une invitation spécifique est en cours de traitement
+   * @param invitationId ID de l'invitation
+   * @returns true si l'invitation est en cours de traitement
+   */
+  protected isProcessingInvitation(invitationId: number): boolean {
+    return this.processingInvitationIds().has(invitationId);
+  }
+
+  /**
+   * Répond à une invitation de groupe (accepter ou refuser)
+   * @param invitationId ID de l'invitation
+   * @param accept true pour accepter, false pour refuser
+   */
+  protected respondToInvitation(invitationId: number, accept: boolean): void {
+    // Ajouter l'ID de l'invitation à la liste des invitations en cours de traitement
+    const currentProcessingIds = new Set(this.processingInvitationIds());
+    currentProcessingIds.add(invitationId);
+    this.processingInvitationIds.set(currentProcessingIds);
+
+    this.groupeInvitationService
+      .respondToInvitation(invitationId, accept, { excludeRelations: true })
+      .subscribe({
+        next: () => {
+          // Afficher un message de succès
+          this.notificationService.showToast(
+            accept ? 'success' : 'info',
+            accept ? 'Invitation acceptée' : 'Invitation refusée',
+            accept
+              ? 'Vous avez rejoint le groupe avec succès'
+              : "Vous avez refusé l'invitation au groupe"
+          );
+
+          // Rafraîchir la liste des invitations
+          this.loadPendingInvitations();
+
+          // Retirer l'ID de l'invitation de la liste des invitations en cours de traitement
+          const updatedProcessingIds = new Set(this.processingInvitationIds());
+          updatedProcessingIds.delete(invitationId);
+          this.processingInvitationIds.set(updatedProcessingIds);
+        },
+        error: (error: HttpErrorResponse) => {
+          console.error(
+            "Erreur lors de la réponse à l'invitation:",
+            error.message
+          );
+          this.notificationService.showToast(
+            'error',
+            "Erreur lors de la réponse à l'invitation:",
+            error.message
+          );
+
+          // Retirer l'ID de l'invitation de la liste des invitations en cours de traitement
+          const updatedProcessingIds = new Set(this.processingInvitationIds());
+          updatedProcessingIds.delete(invitationId);
+          this.processingInvitationIds.set(updatedProcessingIds);
+        },
+      });
+  }
+
+  /**
+   * Calcule le temps relatif depuis une date (ex: "il y a 2 jours")
+   * @param date La date à comparer
+   * @returns Une chaîne formatée indiquant le temps écoulé
+   */
+  protected getRelativeTime(date: Date | string): string {
+    const now = new Date();
+    const invitationDate = new Date(date);
+    const diffInMs = now.getTime() - invitationDate.getTime();
+
+    const diffInSecs = Math.floor(diffInMs / 1000);
+    const diffInMins = Math.floor(diffInSecs / 60);
+    const diffInHours = Math.floor(diffInMins / 60);
+    const diffInDays = Math.floor(diffInHours / 24);
+
+    if (diffInSecs < 60) {
+      return 'il y a quelques secondes';
+    } else if (diffInMins < 60) {
+      return `il y a ${diffInMins} minute${diffInMins > 1 ? 's' : ''}`;
+    } else if (diffInHours < 24) {
+      return `il y a ${diffInHours} heure${diffInHours > 1 ? 's' : ''}`;
+    } else if (diffInDays < 30) {
+      return `il y a ${diffInDays} jour${diffInDays > 1 ? 's' : ''}`;
+    } else {
+      const options: Intl.DateTimeFormatOptions = {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      };
+      return `le ${invitationDate.toLocaleDateString('fr-FR', options)}`;
+    }
   }
 }

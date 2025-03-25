@@ -20,7 +20,7 @@ import {
   lucideSearch,
   lucideUserPlus,
 } from '@ng-icons/lucide';
-import { finalize, tap, switchMap, EMPTY, forkJoin, catchError } from 'rxjs';
+import { finalize, tap, EMPTY, catchError } from 'rxjs';
 import { Observable } from 'rxjs';
 
 // Spartan UI imports
@@ -52,7 +52,6 @@ import { UserSecondaryAccountEntity } from '../../../../shared/entities/user-sec
 import { CompteGroupeService } from '../../../../shared/services/compte-groupe.service';
 import { UserSecondaryAccountService } from '../../../../shared/services/user-secondary-account.service';
 import { UsersService } from '../../../../shared/services/users.service';
-import { NotificationService } from '../../../../shared/services/notification.service';
 
 // Types et Enums
 export type RoleType =
@@ -119,7 +118,6 @@ export class MembershipComponent implements AfterViewInit, OnDestroy {
   private readonly usersService: UsersService = inject(UsersService);
   private readonly userSecondaryAccountService: UserSecondaryAccountService =
     inject(UserSecondaryAccountService);
-  private readonly notificationService = inject(NotificationService);
 
   public state = signal<'closed' | 'open'>('closed');
   protected usersFromDB = signal<UserEntity[]>([]);
@@ -373,26 +371,25 @@ export class MembershipComponent implements AfterViewInit, OnDestroy {
     this.isSpinner.set(true);
     this.errorMessage.set(undefined);
 
-    // Créer d'abord une invitation
-    this.notificationService
-      .createGroupInvitation(this.currentUser()!.id, +this.id()!)
-      .pipe(
-        switchMap(() => {
-          // Une fois l'invitation créée, on peut fermer le dialog
-          ctx.close();
-          this.currentUser.set(undefined);
-          return this.refreshMembers();
-        }),
-        finalize(() => {
-          this.isSpinner.set(false);
-        })
-      )
-      .subscribe({
-        error: (err) => {
-          this.errorMessage.set(err.error.message);
-          this.isSpinner.set(false);
-        },
-      });
+    // Créer une invitation pour l'utilisateur
+    const invitation = {
+      secondary_account_id: +this.id()!,
+      invitedUserId: this.currentUser()!.id,
+    };
+
+    this.groupAccountService.inviteUserToGroup(invitation).subscribe({
+      next: () => {
+        this.isSpinner.set(false);
+        ctx.close();
+        // Rafraîchir la liste des membres
+        this.refreshMembers().subscribe();
+      },
+      error: (error: any) => {
+        console.error("Erreur lors de l'invitation de l'utilisateur:", error);
+        this.errorMessage.set("Erreur lors de l'invitation de l'utilisateur");
+        this.isSpinner.set(false);
+      },
+    });
   }
 
   goBack() {
@@ -495,29 +492,32 @@ export class MembershipComponent implements AfterViewInit, OnDestroy {
     this.isSpinner.set(true);
     this.errorMessage.set(undefined);
 
-    // Créer une invitation pour chaque utilisateur sélectionné
-    const invitations = this.selectedUsers().map((user) =>
-      this.notificationService.createGroupInvitation(user.id, +this.id()!)
-    );
+    // Utiliser forkJoin pour envoyer toutes les invitations
+    const invitationObservables = this.selectedUsers().map((user) => {
+      const invitation = {
+        secondary_account_id: +this.id()!,
+        invitedUserId: user.id,
+      };
+      return this.groupAccountService.inviteUserToGroup(invitation);
+    });
 
-    // Attendre que toutes les invitations soient créées
-    forkJoin(invitations)
-      .pipe(
-        switchMap(() => {
+    // Utiliser forkJoin pour traiter toutes les invitations simultanément
+    import('rxjs').then(({ forkJoin }) => {
+      forkJoin(invitationObservables).subscribe({
+        next: () => {
+          this.isSpinner.set(false);
           ctx.close();
           this.selectedUsers.set([]);
-          return this.refreshMembers();
-        }),
-        finalize(() => {
-          this.isSpinner.set(false);
-        })
-      )
-      .subscribe({
-        error: (err) => {
-          this.errorMessage.set(err.error.message);
+          // Rafraîchir la liste des membres
+          this.refreshMembers().subscribe();
+        },
+        error: (error: any) => {
+          console.error("Erreur lors de l'invitation des utilisateurs:", error);
+          this.errorMessage.set("Erreur lors de l'invitation des utilisateurs");
           this.isSpinner.set(false);
         },
       });
+    });
   }
 
   protected getSortedUsers(): UserEntity[] {

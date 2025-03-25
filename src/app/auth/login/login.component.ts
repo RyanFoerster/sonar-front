@@ -16,6 +16,8 @@ import { CommonModule } from '@angular/common';
 import { NO_ERRORS_SCHEMA } from '@angular/core';
 import { provideIcons } from '@ng-icons/core';
 import { lucideEye, lucideEyeOff } from '@ng-icons/lucide';
+import { NotificationService } from '../../services/notification.service';
+import { FirebaseMessagingService } from '../../services/firebase-messaging.service';
 
 import { HlmIconComponent } from '@spartan-ng/ui-icon-helm';
 
@@ -45,11 +47,15 @@ export class LoginComponent {
   router: Router = inject(Router);
   usersService: UsersService = inject(UsersService);
   authService: AuthService = inject(AuthService);
+  notificationService: NotificationService = inject(NotificationService);
+  firebaseMessagingService: FirebaseMessagingService = inject(
+    FirebaseMessagingService
+  );
 
   loginForm!: FormGroup;
-  errorMessage: string = '';
-  isLoading: boolean = false;
-  showPassword: boolean = false;
+  errorMessage = '';
+  isLoading = false;
+  showPassword = false;
 
   constructor() {
     this.loginForm = this.formBuilder.group({
@@ -78,13 +84,84 @@ export class LoginComponent {
         .pipe(
           tap((data) => {
             this.isLoading = false;
+
+            // 1. Mettre à jour l'authentification
             this.authService.setUser(data.user);
             this.authService.setTokens(data.access_token, data.refresh_token);
-            if (data.user.isActive) {
-              this.router.navigate(['/home']);
-            } else {
-              this.router.navigate(['/rendez-vous']);
+
+            // 2. Initialiser les services de notification explicitement ici
+            console.log(
+              'Initialisation forcée des services de notification avant navigation'
+            );
+
+            // Initialiser WebSocket
+            this.notificationService.loadUserData(); // S'assurer que userId est à jour
+            this.notificationService.initSocket();
+
+            // Observer l'état de connexion du WebSocket
+            const waitForSocketConnection = new Promise<void>((resolve) => {
+              const subscription =
+                this.notificationService.socketState$.subscribe(
+                  (isConnected) => {
+                    if (isConnected) {
+                      console.log(
+                        'WebSocket connecté avec succès, prêt pour la navigation'
+                      );
+                      subscription.unsubscribe();
+                      resolve();
+                    }
+                  }
+                );
+
+              // Timeout de sécurité pour ne pas bloquer indéfiniment
+              setTimeout(() => {
+                subscription.unsubscribe();
+                console.log(
+                  'Timeout de connexion WebSocket atteint, navigation forcée'
+                );
+                resolve();
+              }, 2000);
+            });
+
+            // Initialiser les notifications FCM si les permissions sont déjà accordées
+            let fcmPromise = Promise.resolve();
+            if (
+              'Notification' in window &&
+              Notification.permission === 'granted'
+            ) {
+              fcmPromise = new Promise<void>((resolve) => {
+                this.firebaseMessagingService.requestPermission().subscribe({
+                  next: (token) => {
+                    if (token) {
+                      console.log(
+                        'Token FCM récupéré avec succès avant navigation'
+                      );
+                    }
+                    resolve();
+                  },
+                  error: () => resolve(),
+                  complete: () => resolve(),
+                });
+
+                // Timeout de sécurité
+                setTimeout(() => {
+                  console.log('Timeout FCM atteint, navigation forcée');
+                  resolve();
+                }, 2000);
+              });
             }
+
+            // 3. Attendre que les initialisations soient terminées avant de naviguer
+            Promise.all([waitForSocketConnection, fcmPromise]).then(() => {
+              console.log(
+                "Services de notification initialisés, navigation vers la page d'accueil"
+              );
+              if (data.user.isActive) {
+                this.router.navigate(['/home']);
+              } else {
+                this.router.navigate(['/rendez-vous']);
+              }
+            });
           }),
           catchError((error) => {
             this.isLoading = false;

@@ -1,0 +1,986 @@
+import { CommonModule } from '@angular/common';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import {
+  Event,
+  EventStatus,
+  CreateEventRequest,
+  UpdateEventRequest,
+  InvitationStatus,
+  InvitedPerson,
+} from '../../shared/models/event.model';
+import { EventService } from '../../services/event.service';
+import {
+  FormBuilder,
+  FormGroup,
+  FormsModule,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
+import { UserEntity } from '../../shared/entities/user.entity';
+import { CompteGroupeService } from '../../shared/services/compte-groupe.service';
+import { UsersService } from '../../shared/services/users.service';
+
+@Component({
+  selector: 'app-agenda',
+  standalone: true,
+  imports: [CommonModule, RouterModule, FormsModule, ReactiveFormsModule],
+  templateUrl: './agenda.component.html',
+  styleUrls: ['./agenda.component.css'],
+})
+export class AgendaComponent implements OnInit, OnDestroy {
+  events: Event[] = [];
+  filteredEvents: Event[] = [];
+  groupId = 0;
+  loading = false;
+  error: string | null = null;
+  statusFilter = 'all';
+  searchQuery = '';
+  dateFilter = 'all';
+
+  // Pour accéder à l'enum dans le template
+  EventStatus = EventStatus;
+  InvitationStatus = InvitationStatus;
+
+  // État des popups
+  showCreateEventModal = false;
+  showViewEventModal = false;
+  showEditEventModal = false;
+  showDuplicateEventModal = false;
+  showInviteParticipantsModal = false;
+
+  // Données de l'événement sélectionné
+  selectedEvent: Event | null = null;
+
+  // Raison d'annulation
+  cancellationReason = '';
+  showCancellationDialog = false;
+
+  // Confirmation de suppression
+  showDeleteConfirmationDialog = false;
+
+  // Gestion des participants
+  eventParticipants: InvitedPerson[] = [];
+  loadingParticipants = false;
+
+  // Gestion des organisateurs
+  eventOrganizers: UserEntity[] = [];
+  loadingOrganizers = false;
+
+  // Gestion des membres du groupe
+  groupMembers: UserEntity[] = [];
+  loadingGroupMembers = false;
+  selectedGroupMembers: UserEntity[] = [];
+  selectedOrganizers: UserEntity[] = [];
+
+  // Participants externes
+  externalParticipants: { email: string; name?: string }[] = [];
+  newExternalEmail = '';
+  newExternalName = '';
+
+  // Formulaires
+  createEventForm: FormGroup;
+  editEventForm: FormGroup;
+  duplicateEventForm: FormGroup;
+
+  // Message de succès
+  successMessage: string | null = null;
+
+  // Ajout de la propriété window
+  window = window;
+
+  constructor(
+    private eventService: EventService,
+    private compteGroupeService: CompteGroupeService,
+    private usersService: UsersService,
+    private route: ActivatedRoute,
+    private router: Router,
+    private fb: FormBuilder
+  ) {
+    // Initialiser les formulaires
+    this.createEventForm = this.fb.group({
+      title: ['', Validators.required],
+      description: [''],
+      location: [''],
+      startDateTime: ['', Validators.required],
+      endDateTime: ['', Validators.required],
+      meetupDateTime: ['', Validators.required],
+      status: [EventStatus.PENDING],
+      organizers: [[], Validators.required],
+    });
+
+    this.editEventForm = this.fb.group({
+      title: ['', Validators.required],
+      description: [''],
+      location: [''],
+      startDateTime: ['', Validators.required],
+      endDateTime: ['', Validators.required],
+      meetupDateTime: ['', Validators.required],
+      status: [EventStatus.PENDING],
+      organizers: [[], Validators.required],
+    });
+
+    this.duplicateEventForm = this.fb.group({
+      startDateTime: ['', Validators.required],
+      endDateTime: ['', Validators.required],
+      meetupDateTime: ['', Validators.required],
+    });
+  }
+
+  ngOnInit(): void {
+    this.route.params.subscribe((params) => {
+      if (params['id']) {
+        this.groupId = +params['id'];
+        this.loadEvents();
+        this.loadGroupMembers();
+      }
+    });
+
+    // Ajouter un écouteur de redimensionnement pour mettre à jour la vue
+    window.addEventListener('resize', this.onResize.bind(this));
+  }
+
+  ngOnDestroy(): void {
+    // Nettoyer l'écouteur lors de la destruction du composant
+    window.removeEventListener('resize', this.onResize.bind(this));
+  }
+
+  // Méthode pour gérer le redimensionnement
+  private onResize(): void {
+    // Forcer la détection des changements si nécessaire
+    // Note: Cette ligne peut être nécessaire selon votre configuration Angular
+    // this.changeDetectorRef.detectChanges();
+  }
+
+  loadEvents() {
+    this.loading = true;
+    this.eventService.getEventsByGroup(this.groupId).subscribe({
+      next: (events) => {
+        this.events = events;
+        this.applyFilters();
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('Erreur lors du chargement des événements:', err);
+        this.error = 'Impossible de charger les événements';
+        this.loading = false;
+      },
+    });
+  }
+
+  loadGroupMembers() {
+    this.loadingGroupMembers = true;
+    this.compteGroupeService.getAllMembers(this.groupId).subscribe({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      next: (members: any[]) => {
+        // Extrait les utilisateurs des membres du groupe
+        this.groupMembers = members.map((member) => {
+          if (member && member.user) {
+            return member.user as UserEntity;
+          }
+          return {} as UserEntity;
+        });
+        this.loadingGroupMembers = false;
+      },
+      error: (err) => {
+        console.error('Erreur lors du chargement des membres du groupe:', err);
+        this.loadingGroupMembers = false;
+      },
+    });
+  }
+
+  loadEventParticipants(eventId: string) {
+    if (!eventId) return;
+
+    this.loadingParticipants = true;
+    this.eventService.getParticipants(this.groupId, eventId).subscribe({
+      next: (participants) => {
+        this.eventParticipants = participants;
+        this.loadingParticipants = false;
+      },
+      error: (err) => {
+        console.error('Erreur lors du chargement des participants:', err);
+        this.loadingParticipants = false;
+      },
+    });
+  }
+
+  loadEventOrganizers(event: Event) {
+    if (!event || !event.organizers || event.organizers.length === 0) {
+      this.eventOrganizers = [];
+      return;
+    }
+
+    this.loadingOrganizers = true;
+    this.eventOrganizers = [];
+
+    // Faire une seule requête pour obtenir tous les utilisateurs
+    this.usersService.findAllUsersWithoutRelations().subscribe({
+      next: (users) => {
+        // Filtrer les utilisateurs qui sont organisateurs de l'événement
+        this.eventOrganizers = users.filter((user) =>
+          event.organizers.includes(user.id as number)
+        );
+        this.loadingOrganizers = false;
+      },
+      error: (err) => {
+        console.error('Erreur lors du chargement des organisateurs:', err);
+        this.loadingOrganizers = false;
+      },
+    });
+  }
+
+  applyFilters() {
+    let filtered = [...this.events];
+
+    // Filtrer par statut
+    if (this.statusFilter !== 'all') {
+      filtered = filtered.filter((event) => event.status === this.statusFilter);
+    }
+
+    // Filtrer par recherche (titre ou lieu)
+    if (this.searchQuery.trim()) {
+      const term = this.searchQuery.toLowerCase().trim();
+      filtered = filtered.filter(
+        (event) =>
+          event.title.toLowerCase().includes(term) ||
+          (event.location && event.location.toLowerCase().includes(term))
+      );
+    }
+
+    // Filtrer par date
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const nextWeek = new Date(today);
+    nextWeek.setDate(nextWeek.getDate() + 7);
+    const nextMonth = new Date(today);
+    nextMonth.setMonth(nextMonth.getMonth() + 1);
+
+    switch (this.dateFilter) {
+      case 'today':
+        filtered = filtered.filter((event) => {
+          const eventDate = new Date(event.startDateTime);
+          return eventDate >= today && eventDate < tomorrow;
+        });
+        break;
+      case 'tomorrow':
+        filtered = filtered.filter((event) => {
+          const eventDate = new Date(event.startDateTime);
+          const nextDay = new Date(tomorrow);
+          nextDay.setDate(tomorrow.getDate() + 1);
+          return eventDate >= tomorrow && eventDate < nextDay;
+        });
+        break;
+      case 'week':
+        filtered = filtered.filter((event) => {
+          const eventDate = new Date(event.startDateTime);
+          return eventDate >= today && eventDate < nextWeek;
+        });
+        break;
+      case 'month':
+        filtered = filtered.filter((event) => {
+          const eventDate = new Date(event.startDateTime);
+          return eventDate >= today && eventDate < nextMonth;
+        });
+        break;
+      case 'past':
+        filtered = filtered.filter((event) => {
+          const eventDate = new Date(event.startDateTime);
+          return eventDate < today;
+        });
+        break;
+    }
+
+    // Trier par date (les plus récents d'abord)
+    filtered.sort((a, b) => {
+      const dateA = new Date(a.startDateTime).getTime();
+      const dateB = new Date(b.startDateTime).getTime();
+      return dateB - dateA;
+    });
+
+    this.filteredEvents = filtered;
+  }
+
+  // Méthodes pour ouvrir les popups
+  openCreateModal() {
+    this.showCreateEventModal = true;
+    this.resetForms();
+    this.selectedOrganizers = [];
+  }
+
+  openViewModal(event: Event) {
+    this.selectedEvent = event;
+    // Dans la nouvelle interface, on affiche l'événement dans la colonne principale
+    // mais on ne montre plus le modal de visualisation
+    if (event.id) {
+      this.loadEventParticipants(event.id);
+      this.loadEventOrganizers(event);
+    }
+  }
+
+  openEditModal(event: Event) {
+    this.selectedEvent = event;
+    this.selectedOrganizers = [];
+
+    // Charger les organisateurs actuels
+    if (event.organizers && event.organizers.length > 0) {
+      this.loadingOrganizers = true;
+      this.usersService.findAllUsersWithoutRelations().subscribe({
+        next: (users) => {
+          // Filtrer les utilisateurs qui sont organisateurs de l'événement
+          this.selectedOrganizers = users.filter((user) =>
+            event.organizers.includes(user.id as number)
+          );
+          this.loadingOrganizers = false;
+          this.populateEditForm(event);
+        },
+        error: (err) => {
+          console.error('Erreur lors du chargement des organisateurs:', err);
+          this.loadingOrganizers = false;
+          this.populateEditForm(event);
+        },
+      });
+    } else {
+      this.populateEditForm(event);
+    }
+
+    this.showEditEventModal = true;
+  }
+
+  openDuplicateModal(event: Event) {
+    this.selectedEvent = event;
+    this.populateDuplicateForm(event);
+    this.showDuplicateEventModal = true;
+  }
+
+  openInviteParticipantsModal() {
+    this.showInviteParticipantsModal = true;
+    this.selectedGroupMembers = [];
+    this.externalParticipants = [];
+    this.newExternalEmail = '';
+    this.newExternalName = '';
+  }
+
+  // Méthode générique pour fermer une modale spécifique
+  closeModal(modalType: string) {
+    switch (modalType) {
+      case 'create':
+        this.showCreateEventModal = false;
+        this.resetForms();
+        this.selectedOrganizers = [];
+        break;
+      case 'edit':
+        this.showEditEventModal = false;
+        this.resetForms();
+        this.selectedOrganizers = [];
+        break;
+      case 'duplicate':
+        this.showDuplicateEventModal = false;
+        this.resetForms();
+        break;
+      case 'invite':
+        this.showInviteParticipantsModal = false;
+        this.selectedGroupMembers = [];
+        this.externalParticipants = [];
+        break;
+      case 'cancel':
+        this.showCancellationDialog = false;
+        this.cancellationReason = '';
+        break;
+      case 'delete':
+        this.showDeleteConfirmationDialog = false;
+        break;
+    }
+  }
+
+  // Méthodes pour fermer les popups
+  closeAllModals() {
+    this.showCreateEventModal = false;
+    this.showViewEventModal = false;
+    this.showEditEventModal = false;
+    this.showDuplicateEventModal = false;
+    this.showInviteParticipantsModal = false;
+    this.showCancellationDialog = false;
+    this.showDeleteConfirmationDialog = false;
+    this.resetForms();
+    this.selectedOrganizers = [];
+  }
+
+  closeInviteModal() {
+    this.closeModal('invite');
+  }
+
+  closeCancellationDialog() {
+    this.closeModal('cancel');
+  }
+
+  closeDeleteConfirmationDialog() {
+    this.closeModal('delete');
+  }
+
+  // Méthodes pour les formulaires
+  resetForms() {
+    this.createEventForm.reset({
+      status: EventStatus.PENDING,
+      organizers: [],
+    });
+    this.editEventForm.reset();
+    this.duplicateEventForm.reset();
+    this.selectedOrganizers = [];
+  }
+
+  populateEditForm(event: Event) {
+    // Formatter les dates pour l'input datetime-local
+    const formatDateForInput = (dateStr: string | Date) => {
+      const date = new Date(dateStr);
+      return date.toISOString().slice(0, 16); // Format YYYY-MM-DDTHH:MM
+    };
+
+    this.editEventForm.patchValue({
+      title: event.title,
+      description: event.description || '',
+      location: event.location || '',
+      startDateTime: formatDateForInput(event.startDateTime),
+      endDateTime: formatDateForInput(event.endDateTime),
+      meetupDateTime: formatDateForInput(event.meetupDateTime),
+      status: event.status,
+      organizers: this.selectedOrganizers.map((org) => org.id) || [],
+    });
+  }
+
+  populateDuplicateForm(event: Event) {
+    // Suggérer des dates une semaine plus tard pour la duplication
+    const addWeek = (dateStr: string | Date) => {
+      const date = new Date(dateStr);
+      date.setDate(date.getDate() + 7);
+      return date.toISOString().slice(0, 16); // Format YYYY-MM-DDTHH:MM
+    };
+
+    this.duplicateEventForm.patchValue({
+      startDateTime: addWeek(event.startDateTime),
+      endDateTime: addWeek(event.endDateTime),
+      meetupDateTime: addWeek(event.meetupDateTime),
+    });
+  }
+
+  // Gestion des participants
+  getInitials(person: {
+    firstName?: string;
+    name?: string;
+    email?: string;
+  }): string {
+    if (person.firstName && person.name) {
+      return `${person.firstName[0]}${person.name[0]}`.toUpperCase();
+    } else if (person.name) {
+      return person.name.substring(0, 2).toUpperCase();
+    } else if (person.email) {
+      return person.email.substring(0, 2).toUpperCase();
+    }
+    return '??';
+  }
+
+  getParticipantStatusLabel(status: InvitationStatus): string {
+    switch (status) {
+      case InvitationStatus.ACCEPTED:
+        return 'Accepté';
+      case InvitationStatus.DECLINED:
+        return 'Refusé';
+      case InvitationStatus.PENDING:
+      default:
+        return 'En attente';
+    }
+  }
+
+  // Gestion des invitations
+  toggleMemberSelection(member: UserEntity) {
+    const index = this.selectedGroupMembers.findIndex(
+      (m) => m.id === member.id
+    );
+    if (index > -1) {
+      this.selectedGroupMembers.splice(index, 1);
+    } else {
+      this.selectedGroupMembers.push(member);
+    }
+  }
+
+  isUserSelected(userId: number | string): boolean {
+    return this.selectedGroupMembers.some((member) => member.id === userId);
+  }
+
+  addExternalParticipant() {
+    if (!this.newExternalEmail) return;
+
+    this.externalParticipants.push({
+      email: this.newExternalEmail,
+      name: this.newExternalName || undefined,
+    });
+
+    this.newExternalEmail = '';
+    this.newExternalName = '';
+  }
+
+  removeExternalParticipant(index: number) {
+    this.externalParticipants.splice(index, 1);
+  }
+
+  submitInvitations() {
+    if (!this.selectedEvent || !this.selectedEvent.id) return;
+
+    this.loading = true;
+
+    const invitedPeople: InvitedPerson[] = [
+      // Membres du groupe
+      ...this.selectedGroupMembers.map((member) => ({
+        personId: member.id,
+        status: InvitationStatus.PENDING,
+        isExternal: false,
+      })),
+
+      // Participants externes
+      ...this.externalParticipants.map((person) => ({
+        personId: person.email,
+        status: InvitationStatus.PENDING,
+        isExternal: true,
+        email: person.email,
+        name: person.name,
+      })),
+    ];
+
+    const updatedEvent: UpdateEventRequest = {
+      invitedPeople: invitedPeople,
+    };
+
+    this.eventService
+      .updateEvent(this.groupId, this.selectedEvent.id, updatedEvent)
+      .subscribe({
+        next: (event) => {
+          // Mettre à jour l'événement dans la liste
+          const index = this.events.findIndex(
+            (e) => e.id === this.selectedEvent?.id
+          );
+          if (index !== -1) {
+            this.events[index] = event;
+          }
+
+          // Recharger les participants
+          if (this.selectedEvent && this.selectedEvent.id) {
+            this.loadEventParticipants(this.selectedEvent.id);
+          }
+
+          this.closeInviteModal();
+          this.loading = false;
+          this.showSuccessMessage('Invitations envoyées avec succès');
+        },
+        error: (err) => {
+          console.error("Erreur lors de l'envoi des invitations:", err);
+          this.error = "Impossible d'envoyer les invitations";
+          this.loading = false;
+        },
+      });
+  }
+
+  removeParticipant(participant: InvitedPerson) {
+    if (!this.selectedEvent || !this.selectedEvent.id) return;
+
+    // Méthode simplifiée - dans une implémentation réelle, vous auriez besoin d'un endpoint API spécifique
+    const updatedParticipants = this.eventParticipants.filter(
+      (p) => p.personId !== participant.personId
+    );
+
+    const updatedEvent: UpdateEventRequest = {
+      invitedPeople: updatedParticipants,
+    };
+
+    this.loading = true;
+    this.eventService
+      .updateEvent(this.groupId, this.selectedEvent.id, updatedEvent)
+      .subscribe({
+        next: (event) => {
+          // Mettre à jour l'événement dans la liste
+          const index = this.events.findIndex(
+            (e) => e.id === this.selectedEvent?.id
+          );
+          if (index !== -1) {
+            this.events[index] = event;
+          }
+
+          // Mettre à jour la liste des participants
+          this.eventParticipants = updatedParticipants;
+
+          this.loading = false;
+          this.showSuccessMessage('Participant retiré avec succès');
+        },
+        error: (err) => {
+          console.error('Erreur lors de la suppression du participant:', err);
+          this.error = 'Impossible de supprimer le participant';
+          this.loading = false;
+        },
+      });
+  }
+
+  // Mise à jour du statut d'un événement
+  updateEventStatus(event: Event, status: EventStatus) {
+    if (!event.id) return;
+
+    // Si le statut est CANCELLED, demander une raison d'annulation
+    if (status === EventStatus.CANCELLED) {
+      this.selectedEvent = event;
+      this.showCancellationDialog = true;
+      return;
+    }
+
+    this.loading = true;
+
+    const updatedEvent: UpdateEventRequest = {
+      status: status,
+    };
+
+    this.eventService
+      .updateEvent(this.groupId, event.id, updatedEvent)
+      .subscribe({
+        next: (updatedEvent) => {
+          // Mettre à jour l'événement dans la liste
+          const index = this.events.findIndex((e) => e.id === event.id);
+          if (index !== -1) {
+            this.events[index] = updatedEvent;
+
+            // Appliquer les filtres pour mettre à jour l'affichage
+            this.applyFilters();
+          }
+
+          // Mettre à jour l'événement sélectionné
+          if (this.selectedEvent && this.selectedEvent.id === event.id) {
+            this.selectedEvent = updatedEvent;
+          }
+
+          // Si la vue détaillée est ouverte, on la ferme
+          this.showViewEventModal = false;
+          this.showCancellationDialog = false;
+          this.cancellationReason = '';
+          this.loading = false;
+          this.showSuccessMessage(
+            `Statut de l'événement mis à jour: ${this.getStatusLabel(status)}`
+          );
+        },
+        error: (err) => {
+          console.error('Erreur lors de la mise à jour du statut:', err);
+          this.error = 'Impossible de mettre à jour le statut';
+          this.loading = false;
+        },
+      });
+  }
+
+  // Confirmer l'annulation avec une raison
+  confirmCancellation() {
+    if (!this.selectedEvent || !this.selectedEvent.id) return;
+
+    if (!this.cancellationReason.trim()) {
+      this.error = "Une raison d'annulation est requise";
+      return;
+    }
+
+    this.loading = true;
+
+    const updatedEvent: UpdateEventRequest = {
+      status: EventStatus.CANCELLED,
+      cancellationReason: this.cancellationReason,
+    };
+
+    this.eventService
+      .updateEvent(this.groupId, this.selectedEvent.id, updatedEvent)
+      .subscribe({
+        next: (updatedEvent) => {
+          // Mettre à jour l'événement dans la liste
+          const index = this.events.findIndex(
+            (e) => e.id === this.selectedEvent?.id
+          );
+          if (index !== -1) {
+            this.events[index] = updatedEvent;
+
+            // Appliquer les filtres pour mettre à jour l'affichage
+            this.applyFilters();
+          }
+
+          // Mettre à jour l'événement sélectionné
+          this.selectedEvent = updatedEvent;
+
+          // Si la vue détaillée est ouverte, on la ferme
+          this.showViewEventModal = false;
+          this.showCancellationDialog = false;
+          this.cancellationReason = '';
+          this.loading = false;
+          this.showSuccessMessage(`Événement annulé avec succès`);
+        },
+        error: (err) => {
+          console.error("Erreur lors de l'annulation de l'événement:", err);
+          this.error = "Impossible d'annuler l'événement";
+          this.loading = false;
+        },
+      });
+  }
+
+  // Actions sur les événements
+  submitCreateEvent() {
+    if (this.createEventForm.valid) {
+      this.loading = true;
+      const formValue = this.createEventForm.value;
+
+      // S'assurer que les organisateurs sont correctement définis
+      if (this.selectedOrganizers.length > 0) {
+        formValue.organizers = this.selectedOrganizers.map((org) => org.id);
+      }
+
+      const newEvent: CreateEventRequest = formValue;
+
+      this.eventService.createEvent(this.groupId, newEvent).subscribe({
+        next: (createdEvent) => {
+          this.events = [...this.events, createdEvent];
+          this.selectedEvent = createdEvent;
+          this.applyFilters();
+          this.closeModal('create');
+          this.loading = false;
+          this.showSuccessMessage('Événement créé avec succès');
+        },
+        error: (err) => {
+          console.error("Erreur lors de la création de l'événement:", err);
+          this.error = "Impossible de créer l'événement";
+          this.loading = false;
+        },
+      });
+    }
+  }
+
+  submitEditEvent() {
+    if (this.editEventForm.valid && this.selectedEvent?.id) {
+      this.loading = true;
+      const formValue = this.editEventForm.value;
+
+      // S'assurer que les organisateurs sont correctement définis
+      if (this.selectedOrganizers.length > 0) {
+        formValue.organizers = this.selectedOrganizers.map((org) => org.id);
+      }
+
+      const updatedEvent: UpdateEventRequest = formValue;
+
+      this.eventService
+        .updateEvent(this.groupId, this.selectedEvent.id, updatedEvent)
+        .subscribe({
+          next: (event) => {
+            // Mettre à jour l'événement dans la liste et maintenir la sélection
+            const index = this.events.findIndex(
+              (e) => e.id === this.selectedEvent?.id
+            );
+            if (index !== -1) {
+              this.events = [
+                ...this.events.slice(0, index),
+                event,
+                ...this.events.slice(index + 1),
+              ];
+              this.selectedEvent = event;
+            }
+
+            this.applyFilters();
+            this.closeEditModal();
+            this.loading = false;
+
+            // Créer un message détaillé des modifications
+            const changes: string[] = [];
+            if (event.title !== this.selectedEvent?.title)
+              changes.push('le titre');
+            if (event.description !== this.selectedEvent?.description)
+              changes.push('la description');
+            if (event.location !== this.selectedEvent?.location)
+              changes.push('le lieu');
+            if (event.startDateTime !== this.selectedEvent?.startDateTime)
+              changes.push('la date de début');
+            if (event.endDateTime !== this.selectedEvent?.endDateTime)
+              changes.push('la date de fin');
+            if (event.meetupDateTime !== this.selectedEvent?.meetupDateTime)
+              changes.push('la date de rendez-vous');
+            if (event.status !== this.selectedEvent?.status)
+              changes.push('le statut');
+            if (
+              JSON.stringify(event.organizers) !==
+              JSON.stringify(this.selectedEvent?.organizers)
+            )
+              changes.push('les organisateurs');
+
+            const changeMessage =
+              changes.length > 0
+                ? `Modifications apportées : ${changes.join(', ')}`
+                : 'Événement mis à jour avec succès';
+
+            this.showSuccessMessage(changeMessage);
+          },
+          error: (err) => {
+            console.error(
+              "Erreur lors de la modification de l'événement:",
+              err
+            );
+            this.error = "Impossible de modifier l'événement";
+            this.loading = false;
+          },
+        });
+    }
+  }
+
+  closeEditModal() {
+    this.showEditEventModal = false;
+    // Ne pas réinitialiser selectedEvent ici
+    this.editEventForm.reset();
+    this.selectedOrganizers = [];
+  }
+
+  submitDuplicateEvent() {
+    if (this.duplicateEventForm.valid && this.selectedEvent?.id) {
+      this.loading = true;
+      const duplicateData = this.duplicateEventForm.value;
+
+      this.eventService
+        .duplicateEvent(this.groupId, this.selectedEvent.id, duplicateData)
+        .subscribe({
+          next: (newEvent) => {
+            this.events.push(newEvent);
+            this.applyFilters();
+            this.closeAllModals();
+            this.loading = false;
+            this.showSuccessMessage('Événement dupliqué avec succès');
+          },
+          error: (err) => {
+            console.error("Erreur lors de la duplication de l'événement:", err);
+            this.error = "Impossible de dupliquer l'événement";
+            this.loading = false;
+          },
+        });
+    }
+  }
+
+  sendReminders(eventId: string | undefined): void {
+    if (!eventId) return;
+
+    this.loading = true;
+    // Créer l'objet de demande de rappel (par exemple, envoyer à tous les participants)
+    const reminderRequest = {
+      eventId: eventId,
+      recipientIds: [], // Vide pour le moment, vous pourriez permettre la sélection des destinataires
+    };
+
+    this.eventService
+      .sendReminders(this.groupId, eventId, reminderRequest)
+      .subscribe({
+        next: () => {
+          this.loading = false;
+          this.showSuccessMessage('Rappels envoyés avec succès');
+        },
+        error: (error) => {
+          this.loading = false;
+          this.error = `Erreur lors de l'envoi des rappels: ${
+            error.message || 'Veuillez réessayer plus tard'
+          }`;
+        },
+      });
+  }
+
+  showSuccessMessage(message: string) {
+    this.successMessage = message;
+    setTimeout(() => {
+      this.successMessage = null;
+    }, 3000);
+  }
+
+  getStatusClass(status: EventStatus): string {
+    switch (status) {
+      case EventStatus.CONFIRMED:
+        return 'status-confirmed';
+      case EventStatus.CANCELLED:
+        return 'status-cancelled';
+      case EventStatus.PENDING:
+      default:
+        return 'status-pending';
+    }
+  }
+
+  getStatusLabel(status: EventStatus): string {
+    switch (status) {
+      case EventStatus.CONFIRMED:
+        return 'Confirmé';
+      case EventStatus.CANCELLED:
+        return 'Annulé';
+      case EventStatus.PENDING:
+      default:
+        return 'En attente';
+    }
+  }
+
+  // Format date pour l'affichage
+  formatDate(date: string | Date): string {
+    return new Date(date).toLocaleDateString('fr-FR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
+
+  // Suppression d'un événement
+  deleteEvent() {
+    if (!this.selectedEvent || !this.selectedEvent.id) return;
+
+    this.showDeleteConfirmationDialog = true;
+  }
+
+  // Confirmer la suppression d'un événement
+  confirmDeleteEvent() {
+    if (!this.selectedEvent || !this.selectedEvent.id) return;
+
+    this.loading = true;
+
+    this.eventService
+      .deleteEvent(this.groupId, this.selectedEvent.id)
+      .subscribe({
+        next: () => {
+          // Supprimer l'événement de la liste
+          this.events = this.events.filter(
+            (e) => e.id !== this.selectedEvent?.id
+          );
+
+          // Appliquer les filtres pour mettre à jour l'affichage
+          this.applyFilters();
+
+          // Fermer les modales
+          this.closeAllModals();
+          this.showDeleteConfirmationDialog = false;
+
+          this.loading = false;
+          this.showSuccessMessage('Événement supprimé avec succès');
+        },
+        error: (err) => {
+          console.error("Erreur lors de la suppression de l'événement:", err);
+          this.error = "Impossible de supprimer l'événement";
+          this.loading = false;
+        },
+      });
+  }
+
+  // Méthodes pour la gestion des organisateurs
+  toggleOrganizerSelection(member: UserEntity) {
+    const index = this.selectedOrganizers.findIndex((m) => m.id === member.id);
+    if (index > -1) {
+      this.selectedOrganizers.splice(index, 1);
+    } else {
+      this.selectedOrganizers.push(member);
+    }
+
+    // Mettre à jour la valeur du formulaire
+    this.createEventForm.patchValue({
+      organizers: this.selectedOrganizers.map((org) => org.id),
+    });
+  }
+
+  isOrganizerSelected(userId: number | string): boolean {
+    return this.selectedOrganizers.some((member) => member.id === userId);
+  }
+}

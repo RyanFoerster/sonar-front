@@ -4,6 +4,8 @@ import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, tap, catchError, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { UserEntity } from '../entities/user.entity';
+import { NotificationService } from '../../services/notification.service';
+import { FirebaseMessagingService } from '../../services/firebase-messaging.service';
 
 @Injectable({
   providedIn: 'root',
@@ -12,6 +14,8 @@ export class AuthService {
   private readonly httpClient = inject(HttpClient);
   private readonly router = inject(Router);
   private readonly LOCAL_VERSION_KEY = 'app_version';
+  private readonly notificationService = inject(NotificationService);
+  private readonly firebaseMessagingService = inject(FirebaseMessagingService);
 
   private readonly authState = new BehaviorSubject<boolean>(false);
   private readonly currentUser = new BehaviorSubject<UserEntity | null>(null);
@@ -39,8 +43,21 @@ export class AuthService {
   }
 
   logout(): void {
-    this.clearAuth();
-    this.router.navigate(['/login']);
+    // Déconnecter les services de notification avant de nettoyer l'authentification
+    console.log('Déconnexion des services de notification...');
+
+    // Déconnecter le WebSocket
+    this.notificationService.disconnectSocket();
+
+    // Déconnecter Firebase Messaging
+    this.firebaseMessagingService.disconnectMessaging();
+
+    // Attendre un court instant pour permettre aux déconnexions de se terminer
+    setTimeout(() => {
+      // Nettoyer l'authentification et rediriger
+      this.clearAuth();
+      this.router.navigate(['/login']);
+    }, 500);
   }
 
   refreshToken(): Observable<{ access_token: string; refresh_token: string }> {

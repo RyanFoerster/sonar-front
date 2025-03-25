@@ -1,55 +1,146 @@
-<div class="notification-manager">
-  <div class="card">
-    <h2>Gestion des notifications</h2>
+<div class="notification-container">
+  <!-- Bouton de notification avec badge -->
+  <button class="notification-button" (click)="toggleNotificationPanel()">
+    <hlm-icon name="lucideBell" size="24"></hlm-icon>
+    <span class="notification-badge" *ngIf="unreadCount > 0">{{
+      unreadCount
+    }}</span>
+  </button>
 
-    <div *ngIf="!isSubscribed" class="permission-container">
-      <p>
-        Pour recevoir des notifications, vous devez autoriser les notifications
-        push.
-      </p>
-      <button class="btn btn-primary" (click)="requestPermission()">
-        Autoriser les notifications
+  <!-- Panneau de notifications -->
+  <div class="notification-panel" [class.open]="isOpen">
+    <div class="notification-header">
+      <h3>Notifications</h3>
+      <div class="notification-actions !flex-row">
+        <button
+          class="action-button"
+          title="Activer/désactiver le son"
+          (click)="toggleNotificationSound($event)"
+        >
+          <hlm-icon
+            [name]="notificationSound ? 'lucideBellRing' : 'lucideBell'"
+            size="18"
+          ></hlm-icon>
+        </button>
+        <button
+          class="action-button"
+          title="Tout marquer comme lu"
+          (click)="markAllAsRead($event)"
+          [disabled]="unreadCount === 0"
+        >
+          <hlm-icon name="lucideCheckCheck" size="18"></hlm-icon>
+        </button>
+        <button
+          class="action-button close-button"
+          title="Fermer"
+          (click)="toggleNotificationPanel()"
+        >
+          <hlm-icon name="lucideX" size="18"></hlm-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="notification-filters">
+      <button
+        class="filter-button"
+        [class.active]="currentFilter === 'all'"
+        (click)="applyFilter('all')"
+      >
+        Toutes
+      </button>
+      <button
+        class="filter-button"
+        [class.active]="currentFilter === 'unread'"
+        (click)="applyFilter('unread')"
+      >
+        Non lues
+      </button>
+      <button
+        class="filter-button"
+        [class.active]="currentFilter === 'read'"
+        (click)="applyFilter('read')"
+      >
+        Lues
       </button>
     </div>
 
-    <div *ngIf="isSubscribed" class="token-container">
-      <div class="success-message">
-        <span class="icon">✓</span>
-        <span>Notifications activées</span>
+    <!-- Liste des notifications -->
+    <div class="notification-list" #notificationList>
+      <div *ngIf="notifications.length === 0 && !isLoading" class="empty-state">
+        <p>Aucune notification</p>
       </div>
 
-      <div class="actions-section">
-        <button class="btn btn-primary" (click)="testNotification()">
-          Tester l'envoi de notification
-        </button>
-
-        <button class="btn btn-warning" (click)="regenerateToken()">
-          Régénérer le token FCM
-        </button>
-      </div>
-
-      <div class="token-section">
-        <button class="btn btn-secondary" (click)="toggleShowToken()">
-          {{ showToken ? "Masquer le token" : "Afficher le token FCM" }}
-        </button>
-
-        <div *ngIf="showToken" class="token-display">
-          <div class="token-box">
-            <code>{{ fcmToken }}</code>
+      <div
+        *ngFor="let notification of notifications"
+        class="notification-item"
+        [class.unread]="!notification.isRead"
+        [class.transaction]="notification.type === 'transaction'"
+      >
+        <div
+          class="notification-content"
+          (click)="toggleReadStatus(notification, $event)"
+          tabindex="0"
+          (keydown.enter)="toggleReadStatus(notification, $event)"
+          (keydown.space)="toggleReadStatus(notification, $event)"
+        >
+          <div class="notification-type" [attr.data-type]="notification.type">
+            {{ notification.type }}
           </div>
-          <button class="btn btn-sm btn-copy" (click)="copyTokenToClipboard()">
-            Copier
+          <div class="notification-info">
+            <h4 class="notification-title">{{ notification.title }}</h4>
+            <p class="notification-message">{{ notification.message }}</p>
+            <!-- Informations supplémentaires pour les transactions -->
+            <div
+              *ngIf="notification.type === 'transaction' && notification.data"
+              class="transaction-details"
+            >
+              <p
+                *ngIf="notification.data['communication']"
+                class="transaction-communication"
+              >
+                Communication: {{ notification.data["communication"] }}
+              </p>
+            </div>
+            <span class="notification-time">{{
+              getRelativeTime(notification.createdAt)
+            }}</span>
+          </div>
+        </div>
+        <div class="notification-actions">
+          <button
+            class="action-button"
+            title="Marquer comme lu/non lu"
+            (click)="toggleReadStatus(notification, $event)"
+          >
+            <hlm-icon
+              name="lucideCheck"
+              size="16"
+              [class.checked]="notification.isRead"
+            ></hlm-icon>
+          </button>
+          <button
+            class="action-button"
+            title="Supprimer"
+            (click)="deleteNotification(notification, $event)"
+          >
+            <hlm-icon name="lucideTrash2" size="16"></hlm-icon>
           </button>
         </div>
       </div>
 
-      <div
-        *ngIf="testResult"
-        class="test-result"
-        [ngClass]="{ success: testResult.success, error: !testResult.success }"
-      >
-        {{ testResult.message }}
+      <!-- Indicateur de chargement -->
+      <div *ngIf="isLoading" class="loading-indicator">
+        <div class="spinner"></div>
+        <span>Chargement...</span>
       </div>
+
+      <!-- Déclencheur pour charger plus de notifications -->
+      <div
+        #loadMoreTrigger
+        class="load-more-trigger"
+        *ngIf="currentPage < totalPages"
+      ></div>
     </div>
   </div>
 </div>

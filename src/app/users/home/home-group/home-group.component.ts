@@ -12,6 +12,7 @@ import {
   lucideCornerDownLeft,
   lucideEdit,
   lucideUsers,
+  lucideCalendar,
 } from '@ng-icons/lucide';
 import { HlmButtonDirective } from '@spartan-ng/ui-button-helm';
 import { HlmIconComponent, provideIcons } from '@spartan-ng/ui-icon-helm';
@@ -77,6 +78,7 @@ import {
       lucideCornerDownLeft,
       lucideChevronDown,
       lucideUsers,
+      lucideCalendar,
     }),
   ],
 })

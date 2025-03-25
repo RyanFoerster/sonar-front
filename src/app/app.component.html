@@ -2,7 +2,9 @@
 <div class="flex flex-col justify-between h-screen">
   <div class="flex flex-col gap-2">
     <app-header />
-    <router-outlet class="hidden" />
+    <div class="min-h-[calc(100vh-160px)]">
+      <router-outlet class="hidden" />
+    </div>
   </div>
   <app-footer />
 </div>
@@ -22,3 +24,6 @@
   }
 </div>
 }
+
+<!-- Ajout du composant de toast pour les notifications -->
+<app-notification-toast [displayDuration]="7000"></app-notification-toast>

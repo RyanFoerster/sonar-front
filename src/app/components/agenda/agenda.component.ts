@@ -368,6 +368,8 @@ export class AgendaComponent implements OnInit, OnDestroy {
     this.showCreateEventModal = true;
     this.resetForms();
     this.selectedOrganizers = [];
+    // Réinitialiser les participants pour ne pas interférer avec la création d'un nouvel événement
+    this.eventParticipants = [];
   }
 
   openViewModal(event: Event) {
@@ -379,12 +381,12 @@ export class AgendaComponent implements OnInit, OnDestroy {
       this.loadEventOrganizers(event);
 
       // Ajouter l'ID de l'événement dans les paramètres de l'URL sans recharger la page
-      this.router.navigate([], {
-        relativeTo: this.route,
-        queryParams: { selectedEventId: event.id },
-        queryParamsHandling: 'merge', // Conserver les autres paramètres d'URL
-        replaceUrl: true, // Remplacer l'URL actuelle au lieu d'ajouter une entrée dans l'historique
-      });
+      // this.router.navigate([], {
+      //   relativeTo: this.route,
+      //   queryParams: { selectedEventId: event.id },
+      //   queryParamsHandling: 'merge', // Conserver les autres paramètres d'URL
+      //   replaceUrl: true, // Remplacer l'URL actuelle au lieu d'ajouter une entrée dans l'historique
+      // });
     }
   }
 
@@ -1213,6 +1215,11 @@ export class AgendaComponent implements OnInit, OnDestroy {
    * @returns true si le membre est déjà invité, false sinon
    */
   isAlreadyInvited(memberId: number | string): boolean {
+    // Si on est dans le contexte de création d'un nouvel événement, personne n'est considéré comme déjà invité
+    if (this.showCreateEventModal) {
+      return false;
+    }
+
     if (!this.eventParticipants || this.eventParticipants.length === 0) {
       return false;
     }
@@ -1231,6 +1238,11 @@ export class AgendaComponent implements OnInit, OnDestroy {
    * @returns true si l'email est déjà invité, false sinon
    */
   isEmailAlreadyInvited(email: string): boolean {
+    // Si on est dans le contexte de création d'un nouvel événement, aucun email n'est considéré comme déjà invité
+    if (this.showCreateEventModal) {
+      return false;
+    }
+
     if (
       !this.eventParticipants ||
       this.eventParticipants.length === 0 ||

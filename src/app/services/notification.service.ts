@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, Subject, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { io, Socket } from 'socket.io-client';
+import { Router } from '@angular/router';
 
 export interface Notification {
   id: number;
@@ -49,7 +50,7 @@ export class NotificationService {
   // Audio pour les notifications
   private notificationSound: HTMLAudioElement | null = null;
 
-  constructor(private http: HttpClient) {
+  constructor(private http: HttpClient, private router: Router) {
     // Charger le son de notification
     this.initNotificationSound();
 
@@ -512,5 +513,40 @@ export class NotificationService {
       this.isSocketInitializing = false;
       this.socketStateSubject.next(false);
     }, 300);
+  }
+
+  /**
+   * Gère le clic sur une notification
+   */
+  handleNotificationClick(notification: Notification): void {
+    // Marquer la notification comme lue si elle ne l'est pas déjà
+    if (!notification.isRead) {
+      this.markAsRead(notification.id).subscribe();
+    }
+
+    // Traiter les actions spécifiques selon le type de notification
+    if (
+      notification.type === 'transaction' &&
+      notification.data?.['transactionId']
+    ) {
+      // Naviguer vers les détails de la transaction
+      this.router.navigate([
+        '/transactions',
+        notification.data['transactionId'],
+      ]);
+    } else if (
+      notification.type === 'event_invitation' &&
+      notification.data?.['eventId']
+    ) {
+      // Naviguer vers la page de profil avec l'onglet des invitations d'événement actif
+      this.router.navigate(['/profile'], {
+        queryParams: {
+          tab: 'event',
+          eventTab: 'pending',
+          highlight: notification.data['eventId'],
+        },
+      });
+    }
+    // Ajouter d'autres types de notification selon les besoins
   }
 }

@@ -381,4 +381,35 @@ export class NotificationManagerComponent implements OnInit, OnDestroy {
   hasData(notification: Notification): boolean {
     return !!notification.data && Object.keys(notification.data).length > 0;
   }
+
+  /**
+   * Gère le clic sur une notification
+   */
+  handleNotificationClick(notification: Notification, event: Event): void {
+    event.stopPropagation();
+
+    // Marquer la notification comme lue
+    if (!notification.isRead) {
+      this.toggleReadStatus(notification, event);
+    }
+
+    // Déléguer la navigation au service de notifications
+    this.notificationService.handleNotificationClick(notification);
+  }
+
+  /**
+   * Retourne un libellé lisible pour le type de notification
+   */
+  getNotificationTypeLabel(type: string): string {
+    switch (type) {
+      case 'transaction':
+        return 'Transaction';
+      case 'event_invitation':
+        return 'Événement';
+      case 'group_invitation':
+        return 'Groupe';
+      default:
+        return type.charAt(0).toUpperCase() + type.slice(1).replace('_', ' ');
+    }
+  }
 }

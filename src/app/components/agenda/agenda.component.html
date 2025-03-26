@@ -15,7 +15,7 @@
         <button
           *ngIf="selectedEvent && window.innerWidth < 768"
           class="md:hidden p-2 rounded-lg hover:bg-gray-100"
-          (click)="selectedEvent = null"
+          (click)="closeSelectedEvent()"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -295,20 +295,53 @@
     <div
       class="flex gap-2 p-4 md:px-6 md:py-4 border-b border-gray-200 overflow-x-auto"
     >
-      <button
-        *ngIf="selectedEvent.status === EventStatus.PENDING"
-        class="px-4 py-2 text-sm font-medium rounded-md bg-indigo-600 hover:bg-indigo-700 text-white transition"
-        (click)="updateEventStatus(selectedEvent, EventStatus.CONFIRMED)"
+      <!-- Boutons pour les organisateurs -->
+      <ng-container
+        *ngIf="
+          isCurrentUserOrganizer() &&
+          selectedEvent?.status === EventStatus.PENDING
+        "
       >
-        Accepter
-      </button>
-      <button
-        *ngIf="selectedEvent.status === EventStatus.PENDING"
-        class="px-4 py-2 text-sm font-medium rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 transition"
-        (click)="updateEventStatus(selectedEvent, EventStatus.CANCELLED)"
+        <button
+          class="px-4 py-2 text-sm font-medium rounded-md bg-green-600 hover:bg-green-700 text-white transition"
+          (click)="updateEventStatus(selectedEvent, EventStatus.CONFIRMED)"
+        >
+          Confirmer
+        </button>
+        <button
+          class="px-4 py-2 text-sm font-medium rounded-md bg-red-600 hover:bg-red-700 text-white transition"
+          (click)="updateEventStatus(selectedEvent, EventStatus.CANCELLED)"
+        >
+          Annuler
+        </button>
+      </ng-container>
+
+      <!-- Boutons pour les invités -->
+      <ng-container
+        *ngIf="
+          isCurrentUserInvited() &&
+          getCurrentUserInvitationStatus() === InvitationStatus.PENDING
+        "
       >
-        Refuser
-      </button>
+        <button
+          class="px-4 py-2 text-sm font-medium rounded-md bg-green-600 hover:bg-green-700 text-white transition"
+          (click)="
+            respondToInvitation(selectedEvent, InvitationStatus.ACCEPTED)
+          "
+        >
+          Accepter
+        </button>
+        <button
+          class="px-4 py-2 text-sm font-medium rounded-md bg-red-600 hover:bg-red-700 text-white transition"
+          (click)="
+            respondToInvitation(selectedEvent, InvitationStatus.DECLINED)
+          "
+        >
+          Refuser
+        </button>
+      </ng-container>
+
+      <!-- Boutons existants qui sont toujours visibles -->
       <button
         class="px-4 py-2 text-sm font-medium rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 transition"
         (click)="openInviteParticipantsModal()"
@@ -585,7 +618,7 @@
               class="text-xs px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition"
               (click)="openInviteParticipantsModal()"
             >
-              Liste des participants
+              Inviter des participants
             </button>
           </div>
           <div class="max-h-64 overflow-y-auto">
@@ -594,7 +627,7 @@
               class="flex justify-center items-center py-4"
             >
               <div
-                class="w-6 h-6 border-2 border-gray-200 border-t-indigo-600 rounded-full animate-spin mr-2"
+                class="w-6 h-6 border-2 border-t-blue-500 border-gray-200 rounded-full animate-spin mr-2"
               ></div>
             </div>
             <div
@@ -636,6 +669,26 @@
               >
                 {{ getParticipantStatusLabel(participant.status) }}
               </span>
+              <button
+                *ngIf="participant.status === 'PENDING'"
+                class="ml-2 text-xs text-red-600 hover:text-red-800 flex items-center"
+                title="Annuler l'invitation"
+                (click)="
+                  cancelInvitation(participant); $event.stopPropagation()
+                "
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  fill="currentColor"
+                  viewBox="0 0 16 16"
+                >
+                  <path
+                    d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"
+                  />
+                </svg>
+              </button>
             </div>
           </div>
         </div>
@@ -792,16 +845,28 @@
               >
                 <div
                   *ngFor="let member of groupMembers"
-                  class="p-3 border-b border-gray-100 last:border-b-0 flex items-center hover:bg-gray-50 transition-colors cursor-pointer"
-                  [class.bg-blue-50]="isOrganizerSelected(member.id)"
-                  (click)="toggleOrganizerSelection(member)"
-                  (keydown.enter)="toggleOrganizerSelection(member)"
+                  class="p-3 mb-2 border border-gray-100 rounded-lg last:mb-0 flex items-center transition-colors"
+                  [class.bg-blue-50]="isUserSelected(member.id)"
+                  [class.bg-gray-100]="isAlreadyInvited(member.id)"
+                  [class.cursor-pointer]="!isAlreadyInvited(member.id)"
+                  [class.opacity-70]="isAlreadyInvited(member.id)"
+                  (click)="
+                    !isAlreadyInvited(member.id) &&
+                      toggleMemberSelection(member)
+                  "
+                  (keydown.enter)="
+                    !isAlreadyInvited(member.id) &&
+                      toggleMemberSelection(member)
+                  "
                   (keydown.space)="
-                    toggleOrganizerSelection(member); $event.preventDefault()
+                    !isAlreadyInvited(member.id) &&
+                      toggleMemberSelection(member);
+                    $event.preventDefault()
                   "
                   tabindex="0"
                   role="checkbox"
-                  [attr.aria-checked]="isOrganizerSelected(member.id)"
+                  [attr.aria-checked]="isUserSelected(member.id)"
+                  [attr.aria-disabled]="isAlreadyInvited(member.id)"
                 >
                   <div
                     class="flex-shrink-0 w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-700 font-medium mr-3"
@@ -818,13 +883,31 @@
                   </div>
                   <div class="flex-shrink-0 ml-2">
                     <div
-                      class="w-6 h-6 border rounded-md flex items-center justify-center"
-                      [class.bg-blue-500]="isOrganizerSelected(member.id)"
-                      [class.border-blue-500]="isOrganizerSelected(member.id)"
-                      [class.border-gray-300]="!isOrganizerSelected(member.id)"
+                      *ngIf="isAlreadyInvited(member.id)"
+                      class="flex items-center text-xs text-green-600"
                     >
                       <svg
-                        *ngIf="isOrganizerSelected(member.id)"
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        fill="currentColor"
+                        viewBox="0 0 16 16"
+                      >
+                        <path
+                          d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0zM4.5 7.5a.5.5 0 0 0 0 1h5.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H4.5z"
+                        />
+                      </svg>
+                      <span class="ml-1">Déjà invité</span>
+                    </div>
+                    <div
+                      *ngIf="!isAlreadyInvited(member.id)"
+                      class="w-6 h-6 border rounded-md flex items-center justify-center"
+                      [class.bg-blue-500]="isUserSelected(member.id)"
+                      [class.border-blue-500]="isUserSelected(member.id)"
+                      [class.border-gray-300]="!isUserSelected(member.id)"
+                    >
+                      <svg
+                        *ngIf="isUserSelected(member.id)"
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
                         viewBox="0 0 24 24"
@@ -1263,6 +1346,24 @@
                 </div>
                 <div class="flex-shrink-0 ml-2">
                   <div
+                    *ngIf="isAlreadyInvited(member.id)"
+                    class="flex items-center text-xs text-green-600"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      fill="currentColor"
+                      viewBox="0 0 16 16"
+                    >
+                      <path
+                        d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0zM4.5 7.5a.5.5 0 0 0 0 1h5.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H4.5z"
+                      />
+                    </svg>
+                    <span class="ml-1">Déjà invité</span>
+                  </div>
+                  <div
+                    *ngIf="!isAlreadyInvited(member.id)"
                     class="w-6 h-6 border rounded-md flex items-center justify-center"
                     [class.bg-blue-500]="isUserSelected(member.id)"
                     [class.border-blue-500]="isUserSelected(member.id)"
@@ -1548,6 +1649,62 @@
                 class="w-5 h-5 border-2 border-t-white border-white/30 rounded-full animate-spin mr-2"
               ></div>
               Suppression...
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Dialogue de confirmation d'annulation d'invitation -->
+<div class="modal-overlay" *ngIf="showCancelInvitationDialog">
+  <div class="modal-container modal-small">
+    <div class="modal-header">
+      <h2>Annuler l'invitation</h2>
+      <button class="close-btn" (click)="closeModal('cancelInvitation')">
+        &times;
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="space-y-5">
+        <div class="p-4 bg-yellow-50 text-yellow-700 rounded-lg">
+          <p class="text-sm font-medium">
+            Êtes-vous sûr de vouloir annuler l'invitation de
+            <span class="font-semibold">{{
+              selectedParticipant?.name ||
+                selectedParticipant?.email ||
+                "ce participant"
+            }}</span>
+            à l'événement
+            <span class="font-semibold">"{{ selectedEvent?.title }}"</span> ?
+          </p>
+          <p class="text-sm mt-2">
+            Cette action supprimera définitivement l'invitation et la personne
+            ne sera plus invitée à l'événement.
+          </p>
+        </div>
+
+        <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+          <button
+            type="button"
+            class="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-colors"
+            (click)="closeModal('cancelInvitation')"
+          >
+            Annuler
+          </button>
+          <button
+            type="button"
+            class="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors"
+            (click)="confirmCancelInvitation()"
+            [disabled]="loading"
+          >
+            <span *ngIf="!loading">Confirmer l'annulation</span>
+            <span *ngIf="loading" class="flex items-center justify-center">
+              <div
+                class="w-5 h-5 border-2 border-t-white border-white/30 rounded-full animate-spin mr-2"
+              ></div>
+              Annulation...
             </span>
           </button>
         </div>

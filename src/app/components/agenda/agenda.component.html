@@ -846,26 +846,26 @@
                 <div
                   *ngFor="let member of groupMembers"
                   class="p-3 mb-2 border border-gray-100 rounded-lg last:mb-0 flex items-center transition-colors"
-                  [class.bg-blue-50]="isUserSelected(member.id)"
+                  [class.bg-blue-50]="isOrganizerSelected(member.id)"
                   [class.bg-gray-100]="isAlreadyInvited(member.id)"
                   [class.cursor-pointer]="!isAlreadyInvited(member.id)"
                   [class.opacity-70]="isAlreadyInvited(member.id)"
                   (click)="
                     !isAlreadyInvited(member.id) &&
-                      toggleMemberSelection(member)
+                      toggleOrganizerSelection(member)
                   "
                   (keydown.enter)="
                     !isAlreadyInvited(member.id) &&
-                      toggleMemberSelection(member)
+                      toggleOrganizerSelection(member)
                   "
                   (keydown.space)="
                     !isAlreadyInvited(member.id) &&
-                      toggleMemberSelection(member);
+                      toggleOrganizerSelection(member);
                     $event.preventDefault()
                   "
                   tabindex="0"
                   role="checkbox"
-                  [attr.aria-checked]="isUserSelected(member.id)"
+                  [attr.aria-checked]="isOrganizerSelected(member.id)"
                   [attr.aria-disabled]="isAlreadyInvited(member.id)"
                 >
                   <div
@@ -902,12 +902,12 @@
                     <div
                       *ngIf="!isAlreadyInvited(member.id)"
                       class="w-6 h-6 border rounded-md flex items-center justify-center"
-                      [class.bg-blue-500]="isUserSelected(member.id)"
-                      [class.border-blue-500]="isUserSelected(member.id)"
-                      [class.border-gray-300]="!isUserSelected(member.id)"
+                      [class.bg-blue-500]="isOrganizerSelected(member.id)"
+                      [class.border-blue-500]="isOrganizerSelected(member.id)"
+                      [class.border-gray-300]="!isOrganizerSelected(member.id)"
                     >
                       <svg
-                        *ngIf="isUserSelected(member.id)"
+                        *ngIf="isOrganizerSelected(member.id)"
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
                         viewBox="0 0 24 24"
@@ -936,9 +936,15 @@
             >
               Annuler
             </button>
+
             <button
               type="submit"
               class="px-4 py-2 rounded-lg bg-black text-white hover:bg-gray-800 transition-colors"
+              [class.opacity-50]="
+                !createEventForm.valid ||
+                selectedOrganizers.length === 0 ||
+                loading
+              "
               [disabled]="
                 !createEventForm.valid ||
                 selectedOrganizers.length === 0 ||

@@ -82,3 +82,21 @@
 .is-processing {
   animation: pulse 1.5s infinite ease-in-out;
 }
+
+/* Style pour la mise en surbrillance d'un événement */
+.highlight-event {
+  animation: pulse 1.5s ease-in-out 2;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.5);
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(79, 70, 229, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(79, 70, 229, 0);
+  }
+}

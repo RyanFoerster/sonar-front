@@ -491,3 +491,26 @@ h2 {
   margin: 0;
   font-style: italic;
 }
+
+/* Style pour les notifications d'événements */
+.notification-item.event {
+  border-left: 3px solid #4f46e5; /* Couleur primaire pour les événements */
+}
+
+.notification-item.event .notification-type[data-type="event_invitation"] {
+  background-color: #ede9fe;
+  color: #4f46e5;
+}
+
+.event-details {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background-color: #f5f3ff;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+}
+
+.event-title {
+  font-weight: 500;
+  color: #4338ca;
+}

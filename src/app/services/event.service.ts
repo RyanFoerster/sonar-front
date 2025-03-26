@@ -27,6 +27,15 @@ export class EventService {
   }
 
   /**
+   * Récupère tous les événements d'un utilisateur (où il est invité ou organisateur)
+   */
+  getUserEvents(userId: number): Observable<Event[]> {
+    return this.http.get<Event[]>(
+      `${this.apiUrl}/groups/user/${userId}/events`
+    );
+  }
+
+  /**
    * Récupère un événement par son ID
    */
   getEventById(groupId: number, eventId: string): Observable<Event> {
@@ -109,16 +118,19 @@ export class EventService {
   }
 
   /**
-   * Répond à une invitation (pour les invités externes)
+   * Répond à une invitation
+   *
+   * Note: Cette méthode ne fonctionne pas correctement car l'URL ne correspond pas
+   * à la route définie dans le backend. Utilisez HttpClient directement avec
+   * l'URL ${apiUrl}/groups/events/${eventId}/response?personId=${personId} à la place.
    */
   respondToInvitation(
     eventId: string,
     personId: string,
-    token: string,
     status: string
   ): Observable<Event> {
     return this.http.post<Event>(
-      `${this.apiUrl}/groups/events/${eventId}/response?personId=${personId}&token=${token}`,
+      `${this.apiUrl}/groups/events/${eventId}/response?personId=${personId}`,
       { status }
     );
   }

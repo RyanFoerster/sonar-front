@@ -76,16 +76,17 @@
         class="notification-item"
         [class.unread]="!notification.isRead"
         [class.transaction]="notification.type === 'transaction'"
+        [class.event]="notification.type === 'event_invitation'"
       >
         <div
           class="notification-content"
-          (click)="toggleReadStatus(notification, $event)"
+          (click)="handleNotificationClick(notification, $event)"
           tabindex="0"
-          (keydown.enter)="toggleReadStatus(notification, $event)"
-          (keydown.space)="toggleReadStatus(notification, $event)"
+          (keydown.enter)="handleNotificationClick(notification, $event)"
+          (keydown.space)="handleNotificationClick(notification, $event)"
         >
           <div class="notification-type" [attr.data-type]="notification.type">
-            {{ notification.type }}
+            {{ getNotificationTypeLabel(notification.type) }}
           </div>
           <div class="notification-info">
             <h4 class="notification-title">{{ notification.title }}</h4>
@@ -100,6 +101,17 @@
                 class="transaction-communication"
               >
                 Communication: {{ notification.data["communication"] }}
+              </p>
+            </div>
+            <!-- Informations supplémentaires pour les invitations d'événements -->
+            <div
+              *ngIf="
+                notification.type === 'event_invitation' && notification.data
+              "
+              class="event-details"
+            >
+              <p class="event-title">
+                Événement: {{ notification.data["eventTitle"] }}
               </p>
             </div>
             <span class="notification-time">{{

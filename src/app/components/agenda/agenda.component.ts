@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import {
   Event,
@@ -20,6 +20,7 @@ import {
 import { UserEntity } from '../../shared/entities/user.entity';
 import { CompteGroupeService } from '../../shared/services/compte-groupe.service';
 import { UsersService } from '../../shared/services/users.service';
+import { AuthService } from '../../shared/services/auth.service';
 
 @Component({
   selector: 'app-agenda',
@@ -48,9 +49,11 @@ export class AgendaComponent implements OnInit, OnDestroy {
   showEditEventModal = false;
   showDuplicateEventModal = false;
   showInviteParticipantsModal = false;
+  showCancelInvitationDialog = false;
 
   // Données de l'événement sélectionné
   selectedEvent: Event | null = null;
+  selectedParticipant: InvitedPerson | null = null;
 
   // Raison d'annulation
   cancellationReason = '';
@@ -88,6 +91,9 @@ export class AgendaComponent implements OnInit, OnDestroy {
 
   // Ajout de la propriété window
   window = window;
+
+  // Utilisation d'inject pour AuthService au lieu de l'injecter via le constructeur
+  private authService = inject(AuthService);
 
   constructor(
     private eventService: EventService,
@@ -128,10 +134,64 @@ export class AgendaComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    let selectedEventIdFromUrl: string | null = null;
+
+    // D'abord vérifier les paramètres d'URL pour voir s'il y a un événement sélectionné
+    this.route.queryParams.subscribe((queryParams) => {
+      selectedEventIdFromUrl = queryParams['selectedEventId'] || null;
+    });
+
+    // Ensuite charger les données du groupe et des événements
     this.route.params.subscribe((params) => {
       if (params['id']) {
         this.groupId = +params['id'];
-        this.loadEvents();
+
+        // Charger les événements et traiter l'événement sélectionné après le chargement
+        this.eventService.getEventsByGroup(this.groupId).subscribe({
+          next: (events) => {
+            this.events = events;
+            this.applyFilters();
+            this.loading = false;
+
+            // Vérifier si un événement doit être sélectionné d'après l'URL
+            if (selectedEventIdFromUrl) {
+              const selectedEvent = events.find(
+                (e) => e.id === selectedEventIdFromUrl
+              );
+              if (selectedEvent && selectedEvent.id) {
+                // Sélectionner l'événement sans naviguer à nouveau
+                this.selectedEvent = selectedEvent;
+                this.loadEventParticipants(selectedEvent.id);
+                this.loadEventOrganizers(selectedEvent);
+
+                // Faire défiler jusqu'à l'événement et le mettre en évidence
+                setTimeout(() => {
+                  const eventElement = document.querySelector(
+                    `[data-event-id="${selectedEventIdFromUrl}"]`
+                  );
+                  if (eventElement) {
+                    eventElement.scrollIntoView({
+                      behavior: 'smooth',
+                      block: 'center',
+                    });
+                    eventElement.classList.add('highlight-event');
+                    setTimeout(
+                      () => eventElement.classList.remove('highlight-event'),
+                      3000
+                    );
+                  }
+                }, 500);
+              }
+            }
+          },
+          error: (err) => {
+            console.error('Erreur lors du chargement des événements:', err);
+            this.error = 'Impossible de charger les événements';
+            this.loading = false;
+          },
+        });
+
+        // Charger les membres du groupe séparément
         this.loadGroupMembers();
       }
     });
@@ -317,6 +377,14 @@ export class AgendaComponent implements OnInit, OnDestroy {
     if (event.id) {
       this.loadEventParticipants(event.id);
       this.loadEventOrganizers(event);
+
+      // Ajouter l'ID de l'événement dans les paramètres de l'URL sans recharger la page
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: { selectedEventId: event.id },
+        queryParamsHandling: 'merge', // Conserver les autres paramètres d'URL
+        replaceUrl: true, // Remplacer l'URL actuelle au lieu d'ajouter une entrée dans l'historique
+      });
     }
   }
 
@@ -361,6 +429,15 @@ export class AgendaComponent implements OnInit, OnDestroy {
     this.externalParticipants = [];
     this.newExternalEmail = '';
     this.newExternalName = '';
+
+    // S'assurer que nous avons bien chargé les participants de l'événement
+    if (
+      this.selectedEvent &&
+      this.selectedEvent.id &&
+      (!this.eventParticipants || this.eventParticipants.length === 0)
+    ) {
+      this.loadEventParticipants(this.selectedEvent.id);
+    }
   }
 
   // Méthode générique pour fermer une modale spécifique
@@ -392,6 +469,10 @@ export class AgendaComponent implements OnInit, OnDestroy {
       case 'delete':
         this.showDeleteConfirmationDialog = false;
         break;
+      case 'cancelInvitation':
+        this.showCancelInvitationDialog = false;
+        this.selectedParticipant = null;
+        break;
     }
   }
 
@@ -406,6 +487,17 @@ export class AgendaComponent implements OnInit, OnDestroy {
     this.showDeleteConfirmationDialog = false;
     this.resetForms();
     this.selectedOrganizers = [];
+
+    // Si un événement était sélectionné, supprimer le paramètre de l'URL
+    if (this.selectedEvent) {
+      this.selectedEvent = null;
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: { selectedEventId: null },
+        queryParamsHandling: 'merge',
+        replaceUrl: true,
+      });
+    }
   }
 
   closeInviteModal() {
@@ -512,6 +604,23 @@ export class AgendaComponent implements OnInit, OnDestroy {
   addExternalParticipant() {
     if (!this.newExternalEmail) return;
 
+    // Vérifier si l'email est déjà dans la liste des participants
+    if (this.isEmailAlreadyInvited(this.newExternalEmail)) {
+      this.error = "Cette adresse e-mail est déjà invitée à l'événement";
+      return;
+    }
+
+    // Vérifier si l'email est déjà dans la liste des participants externes temporaires
+    if (
+      this.externalParticipants.some(
+        (p) => p.email.toLowerCase() === this.newExternalEmail.toLowerCase()
+      )
+    ) {
+      this.error =
+        "Cette adresse e-mail est déjà dans votre liste d'invitations";
+      return;
+    }
+
     this.externalParticipants.push({
       email: this.newExternalEmail,
       name: this.newExternalName || undefined,
@@ -519,6 +628,7 @@ export class AgendaComponent implements OnInit, OnDestroy {
 
     this.newExternalEmail = '';
     this.newExternalName = '';
+    this.error = null; // Effacer les erreurs précédentes
   }
 
   removeExternalParticipant(index: number) {
@@ -528,18 +638,47 @@ export class AgendaComponent implements OnInit, OnDestroy {
   submitInvitations() {
     if (!this.selectedEvent || !this.selectedEvent.id) return;
 
+    // Filtrer les membres du groupe qui ne sont pas déjà invités
+    const filteredMembers = this.selectedGroupMembers.filter(
+      (member) => !this.isAlreadyInvited(member.id)
+    );
+
+    // Filtrer les emails externes qui ne sont pas déjà invités
+    const filteredExternals = this.externalParticipants.filter(
+      (person) => !this.isEmailAlreadyInvited(person.email)
+    );
+
+    // Si tous les participants sont déjà invités, afficher un message et fermer la modale
+    if (filteredMembers.length === 0 && filteredExternals.length === 0) {
+      if (
+        this.selectedGroupMembers.length > 0 ||
+        this.externalParticipants.length > 0
+      ) {
+        this.error = 'Tous les participants sélectionnés sont déjà invités';
+        return;
+      } else {
+        this.error = 'Veuillez sélectionner au moins un participant';
+        return;
+      }
+    }
+
     this.loading = true;
 
-    const invitedPeople: InvitedPerson[] = [
+    // Collecter les invitations existantes en excluant celles que nous allons mettre à jour
+    const existingInvitations = this.eventParticipants || [];
+
+    const newInvitations: InvitedPerson[] = [
       // Membres du groupe
-      ...this.selectedGroupMembers.map((member) => ({
+      ...filteredMembers.map((member) => ({
         personId: member.id,
         status: InvitationStatus.PENDING,
         isExternal: false,
+        email: member.email,
+        name: member.name,
       })),
 
       // Participants externes
-      ...this.externalParticipants.map((person) => ({
+      ...filteredExternals.map((person) => ({
         personId: person.email,
         status: InvitationStatus.PENDING,
         isExternal: true,
@@ -548,8 +687,11 @@ export class AgendaComponent implements OnInit, OnDestroy {
       })),
     ];
 
+    // Combiner les nouvelles invitations avec les invitations existantes
+    const allInvitations = [...existingInvitations, ...newInvitations];
+
     const updatedEvent: UpdateEventRequest = {
-      invitedPeople: invitedPeople,
+      invitedPeople: allInvitations,
     };
 
     this.eventService
@@ -571,7 +713,9 @@ export class AgendaComponent implements OnInit, OnDestroy {
 
           this.closeInviteModal();
           this.loading = false;
-          this.showSuccessMessage('Invitations envoyées avec succès');
+          this.showSuccessMessage(
+            `${newInvitations.length} invitation(s) envoyée(s) avec succès`
+          );
         },
         error: (err) => {
           console.error("Erreur lors de l'envoi des invitations:", err);
@@ -616,6 +760,77 @@ export class AgendaComponent implements OnInit, OnDestroy {
           console.error('Erreur lors de la suppression du participant:', err);
           this.error = 'Impossible de supprimer le participant';
           this.loading = false;
+        },
+      });
+  }
+
+  /**
+   * Annule l'invitation d'un participant en attente
+   * @param participant Le participant dont l'invitation doit être annulée
+   */
+  cancelInvitation(participant: InvitedPerson) {
+    if (!this.selectedEvent || !this.selectedEvent.id) return;
+
+    // Vérifier que le participant est bien en attente
+    if (participant.status !== InvitationStatus.PENDING) {
+      this.error = 'Seules les invitations en attente peuvent être annulées';
+      return;
+    }
+
+    // Stocker le participant sélectionné et ouvrir le dialogue de confirmation
+    this.selectedParticipant = participant;
+    this.showCancelInvitationDialog = true;
+  }
+
+  /**
+   * Confirme l'annulation de l'invitation après confirmation par l'utilisateur
+   */
+  confirmCancelInvitation() {
+    if (
+      !this.selectedEvent ||
+      !this.selectedEvent.id ||
+      !this.selectedParticipant
+    )
+      return;
+
+    // Utiliser la même logique que removeParticipant mais avec un message différent
+    const updatedParticipants = this.eventParticipants.filter(
+      (p) => p.personId !== this.selectedParticipant?.personId
+    );
+
+    const updatedEvent: UpdateEventRequest = {
+      invitedPeople: updatedParticipants,
+    };
+
+    this.loading = true;
+    this.eventService
+      .updateEvent(this.groupId, this.selectedEvent.id, updatedEvent)
+      .subscribe({
+        next: (event) => {
+          // Mettre à jour l'événement dans la liste
+          const index = this.events.findIndex(
+            (e) => e.id === this.selectedEvent?.id
+          );
+          if (index !== -1) {
+            this.events[index] = event;
+          }
+
+          // Mettre à jour la liste des participants
+          this.eventParticipants = updatedParticipants;
+
+          // Fermer le dialogue de confirmation
+          this.closeModal('cancelInvitation');
+
+          this.loading = false;
+          this.showSuccessMessage('Invitation annulée avec succès');
+        },
+        error: (err) => {
+          console.error("Erreur lors de l'annulation de l'invitation:", err);
+          this.error = "Impossible d'annuler l'invitation";
+          this.loading = false;
+
+          // Fermer quand même le dialogue en cas d'erreur
+          this.closeModal('cancelInvitation');
         },
       });
   }
@@ -950,6 +1165,14 @@ export class AgendaComponent implements OnInit, OnDestroy {
           // Appliquer les filtres pour mettre à jour l'affichage
           this.applyFilters();
 
+          // Supprimer le paramètre d'URL
+          this.router.navigate([], {
+            relativeTo: this.route,
+            queryParams: { selectedEventId: null },
+            queryParamsHandling: 'merge',
+            replaceUrl: true,
+          });
+
           // Fermer les modales
           this.closeAllModals();
           this.showDeleteConfirmationDialog = false;
@@ -982,5 +1205,180 @@ export class AgendaComponent implements OnInit, OnDestroy {
 
   isOrganizerSelected(userId: number | string): boolean {
     return this.selectedOrganizers.some((member) => member.id === userId);
+  }
+
+  /**
+   * Vérifie si un membre est déjà invité à l'événement
+   * @param memberId L'identifiant du membre à vérifier
+   * @returns true si le membre est déjà invité, false sinon
+   */
+  isAlreadyInvited(memberId: number | string): boolean {
+    if (!this.eventParticipants || this.eventParticipants.length === 0) {
+      return false;
+    }
+
+    return this.eventParticipants.some(
+      (p) =>
+        p.personId === memberId ||
+        (p.email &&
+          this.groupMembers.find((m) => m.id === memberId)?.email === p.email)
+    );
+  }
+
+  /**
+   * Vérifie si un email externe est déjà invité
+   * @param email L'email à vérifier
+   * @returns true si l'email est déjà invité, false sinon
+   */
+  isEmailAlreadyInvited(email: string): boolean {
+    if (
+      !this.eventParticipants ||
+      this.eventParticipants.length === 0 ||
+      !email
+    ) {
+      return false;
+    }
+
+    return this.eventParticipants.some(
+      (p) =>
+        p.email?.toLowerCase() === email.toLowerCase() ||
+        p.personId?.toString().toLowerCase() === email.toLowerCase()
+    );
+  }
+
+  /**
+   * Ferme la vue détaillée d'un événement et met à jour l'URL
+   */
+  closeSelectedEvent() {
+    this.selectedEvent = null;
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { selectedEventId: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
+
+  /**
+   * Vérifie si l'utilisateur connecté est organisateur de l'événement
+   * @returns true si l'utilisateur est organisateur, false sinon
+   */
+  isCurrentUserOrganizer(): boolean {
+    if (
+      !this.selectedEvent ||
+      !this.selectedEvent.organizers ||
+      this.selectedEvent.organizers.length === 0
+    ) {
+      return false;
+    }
+
+    const currentUser = this.authService.getUser();
+    if (!currentUser || !currentUser.id) {
+      return false;
+    }
+
+    return this.selectedEvent.organizers.includes(currentUser.id as number);
+  }
+
+  /**
+   * Vérifie si l'utilisateur connecté est invité à l'événement
+   * @returns true si l'utilisateur est invité, false sinon
+   */
+  isCurrentUserInvited(): boolean {
+    if (
+      !this.selectedEvent ||
+      !this.selectedEvent.invitedPeople ||
+      this.selectedEvent.invitedPeople.length === 0
+    ) {
+      return false;
+    }
+
+    const currentUser = this.authService.getUser();
+    if (!currentUser || !currentUser.id) {
+      return false;
+    }
+
+    return this.selectedEvent.invitedPeople.some(
+      (person) =>
+        person.personId === currentUser.id ||
+        person.personId === currentUser.id.toString() ||
+        person.email === currentUser.email
+    );
+  }
+
+  /**
+   * Récupère le statut d'invitation de l'utilisateur connecté
+   * @returns le statut d'invitation ou null si l'utilisateur n'est pas invité
+   */
+  getCurrentUserInvitationStatus(): InvitationStatus | null {
+    if (
+      !this.selectedEvent ||
+      !this.selectedEvent.invitedPeople ||
+      this.selectedEvent.invitedPeople.length === 0
+    ) {
+      return null;
+    }
+
+    const currentUser = this.authService.getUser();
+    if (!currentUser || !currentUser.id) {
+      return null;
+    }
+
+    const invitation = this.selectedEvent.invitedPeople.find(
+      (person) =>
+        person.personId === currentUser.id ||
+        person.personId === currentUser.id.toString() ||
+        person.email === currentUser.email
+    );
+
+    return invitation ? invitation.status : null;
+  }
+
+  /**
+   * Répond à une invitation à un événement
+   * @param event L'événement auquel répondre
+   * @param status Le statut de la réponse (ACCEPTED ou DECLINED)
+   */
+  respondToInvitation(event: Event, status: InvitationStatus): void {
+    if (!event.id) return;
+
+    const currentUser = this.authService.getUser();
+    if (!currentUser || !currentUser.id) return;
+
+    this.loading = true;
+    const userId = currentUser.id.toString(); // Conversion en chaîne de caractères
+
+    // Utiliser le service d'événement pour envoyer la réponse
+    this.eventService.respondToInvitation(event.id, userId, status).subscribe({
+      next: (updatedEvent) => {
+        // Mettre à jour l'événement dans la liste
+        const index = this.events.findIndex((e) => e.id === event.id);
+        if (index !== -1) {
+          this.events[index] = updatedEvent;
+        }
+
+        // Mettre à jour l'événement sélectionné
+        if (this.selectedEvent && this.selectedEvent.id === event.id) {
+          this.selectedEvent = updatedEvent;
+        }
+
+        // Recharger les participants
+        if (event.id) {
+          this.loadEventParticipants(event.id);
+        }
+
+        this.loading = false;
+        this.showSuccessMessage(
+          status === InvitationStatus.ACCEPTED
+            ? "Vous avez accepté l'invitation"
+            : "Vous avez refusé l'invitation"
+        );
+      },
+      error: (err) => {
+        console.error("Erreur lors de la réponse à l'invitation:", err);
+        this.error = "Impossible de répondre à l'invitation";
+        this.loading = false;
+      },
+    });
   }
 }

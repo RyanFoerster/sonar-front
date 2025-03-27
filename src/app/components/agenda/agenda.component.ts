@@ -186,7 +186,7 @@ export class AgendaComponent implements OnInit, OnDestroy {
           },
           error: (err) => {
             console.error('Erreur lors du chargement des événements:', err);
-            this.error = 'Impossible de charger les événements';
+            this.showErrorMessage('Impossible de charger les événements');
             this.loading = false;
           },
         });
@@ -222,7 +222,7 @@ export class AgendaComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         console.error('Erreur lors du chargement des événements:', err);
-        this.error = 'Impossible de charger les événements';
+        this.showErrorMessage('Impossible de charger les événements');
         this.loading = false;
       },
     });
@@ -608,7 +608,9 @@ export class AgendaComponent implements OnInit, OnDestroy {
 
     // Vérifier si l'email est déjà dans la liste des participants
     if (this.isEmailAlreadyInvited(this.newExternalEmail)) {
-      this.error = "Cette adresse e-mail est déjà invitée à l'événement";
+      this.showErrorMessage(
+        "Cette adresse e-mail est déjà invitée à l'événement"
+      );
       return;
     }
 
@@ -618,8 +620,9 @@ export class AgendaComponent implements OnInit, OnDestroy {
         (p) => p.email.toLowerCase() === this.newExternalEmail.toLowerCase()
       )
     ) {
-      this.error =
-        "Cette adresse e-mail est déjà dans votre liste d'invitations";
+      this.showErrorMessage(
+        "Cette adresse e-mail est déjà dans votre liste d'invitations"
+      );
       return;
     }
 
@@ -656,10 +659,12 @@ export class AgendaComponent implements OnInit, OnDestroy {
         this.selectedGroupMembers.length > 0 ||
         this.externalParticipants.length > 0
       ) {
-        this.error = 'Tous les participants sélectionnés sont déjà invités';
+        this.showErrorMessage(
+          'Tous les participants sélectionnés sont déjà invités'
+        );
         return;
       } else {
-        this.error = 'Veuillez sélectionner au moins un participant';
+        this.showErrorMessage('Veuillez sélectionner au moins un participant');
         return;
       }
     }
@@ -721,7 +726,7 @@ export class AgendaComponent implements OnInit, OnDestroy {
         },
         error: (err) => {
           console.error("Erreur lors de l'envoi des invitations:", err);
-          this.error = "Impossible d'envoyer les invitations";
+          this.showErrorMessage("Impossible d'envoyer les invitations");
           this.loading = false;
         },
       });
@@ -760,7 +765,7 @@ export class AgendaComponent implements OnInit, OnDestroy {
         },
         error: (err) => {
           console.error('Erreur lors de la suppression du participant:', err);
-          this.error = 'Impossible de supprimer le participant';
+          this.showErrorMessage('Impossible de supprimer le participant');
           this.loading = false;
         },
       });
@@ -775,7 +780,9 @@ export class AgendaComponent implements OnInit, OnDestroy {
 
     // Vérifier que le participant est bien en attente
     if (participant.status !== InvitationStatus.PENDING) {
-      this.error = 'Seules les invitations en attente peuvent être annulées';
+      this.showErrorMessage(
+        'Seules les invitations en attente peuvent être annulées'
+      );
       return;
     }
 
@@ -808,13 +815,13 @@ export class AgendaComponent implements OnInit, OnDestroy {
     this.eventService
       .updateEvent(this.groupId, this.selectedEvent.id, updatedEvent)
       .subscribe({
-        next: (event) => {
+        next: (updatedEvent) => {
           // Mettre à jour l'événement dans la liste
           const index = this.events.findIndex(
             (e) => e.id === this.selectedEvent?.id
           );
           if (index !== -1) {
-            this.events[index] = event;
+            this.events[index] = updatedEvent;
           }
 
           // Mettre à jour la liste des participants
@@ -828,7 +835,7 @@ export class AgendaComponent implements OnInit, OnDestroy {
         },
         error: (err) => {
           console.error("Erreur lors de l'annulation de l'invitation:", err);
-          this.error = "Impossible d'annuler l'invitation";
+          this.showErrorMessage("Impossible d'annuler l'invitation");
           this.loading = false;
 
           // Fermer quand même le dialogue en cas d'erreur
@@ -883,7 +890,7 @@ export class AgendaComponent implements OnInit, OnDestroy {
         },
         error: (err) => {
           console.error('Erreur lors de la mise à jour du statut:', err);
-          this.error = 'Impossible de mettre à jour le statut';
+          this.showErrorMessage('Impossible de mettre à jour le statut');
           this.loading = false;
         },
       });
@@ -894,7 +901,7 @@ export class AgendaComponent implements OnInit, OnDestroy {
     if (!this.selectedEvent || !this.selectedEvent.id) return;
 
     if (!this.cancellationReason.trim()) {
-      this.error = "Une raison d'annulation est requise";
+      this.showErrorMessage("Une raison d'annulation est requise");
       return;
     }
 
@@ -932,7 +939,7 @@ export class AgendaComponent implements OnInit, OnDestroy {
         },
         error: (err) => {
           console.error("Erreur lors de l'annulation de l'événement:", err);
-          this.error = "Impossible d'annuler l'événement";
+          this.showErrorMessage("Impossible d'annuler l'événement");
           this.loading = false;
         },
       });
@@ -962,7 +969,7 @@ export class AgendaComponent implements OnInit, OnDestroy {
         },
         error: (err) => {
           console.error("Erreur lors de la création de l'événement:", err);
-          this.error = "Impossible de créer l'événement";
+          this.showErrorMessage("Impossible de créer l'événement");
           this.loading = false;
         },
       });
@@ -1036,7 +1043,7 @@ export class AgendaComponent implements OnInit, OnDestroy {
               "Erreur lors de la modification de l'événement:",
               err
             );
-            this.error = "Impossible de modifier l'événement";
+            this.showErrorMessage("Impossible de modifier l'événement");
             this.loading = false;
           },
         });
@@ -1067,7 +1074,7 @@ export class AgendaComponent implements OnInit, OnDestroy {
           },
           error: (err) => {
             console.error("Erreur lors de la duplication de l'événement:", err);
-            this.error = "Impossible de dupliquer l'événement";
+            this.showErrorMessage("Impossible de dupliquer l'événement");
             this.loading = false;
           },
         });
@@ -1093,9 +1100,11 @@ export class AgendaComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           this.loading = false;
-          this.error = `Erreur lors de l'envoi des rappels: ${
-            error.message || 'Veuillez réessayer plus tard'
-          }`;
+          this.showErrorMessage(
+            `Erreur lors de l'envoi des rappels: ${
+              error.message || 'Veuillez réessayer plus tard'
+            }`
+          );
         },
       });
   }
@@ -1105,6 +1114,24 @@ export class AgendaComponent implements OnInit, OnDestroy {
     setTimeout(() => {
       this.successMessage = null;
     }, 3000);
+  }
+
+  /**
+   * Affiche un message d'erreur qui disparaît automatiquement après 5 secondes
+   * @param message Le message d'erreur à afficher
+   */
+  showErrorMessage(message: string) {
+    this.error = message;
+    setTimeout(() => {
+      this.error = null;
+    }, 5000);
+  }
+
+  /**
+   * Ferme manuellement le message d'erreur
+   */
+  closeErrorMessage() {
+    this.error = null;
   }
 
   getStatusClass(status: EventStatus): string {
@@ -1184,7 +1211,7 @@ export class AgendaComponent implements OnInit, OnDestroy {
         },
         error: (err) => {
           console.error("Erreur lors de la suppression de l'événement:", err);
-          this.error = "Impossible de supprimer l'événement";
+          this.showErrorMessage("Impossible de supprimer l'événement");
           this.loading = false;
         },
       });
@@ -1273,13 +1300,16 @@ export class AgendaComponent implements OnInit, OnDestroy {
 
   /**
    * Vérifie si l'utilisateur connecté est organisateur de l'événement
+   * @param event L'événement à vérifier (par défaut, utilise l'événement sélectionné)
    * @returns true si l'utilisateur est organisateur, false sinon
    */
-  isCurrentUserOrganizer(): boolean {
+  isCurrentUserOrganizer(event?: Event): boolean {
+    const eventToCheck = event || this.selectedEvent;
+
     if (
-      !this.selectedEvent ||
-      !this.selectedEvent.organizers ||
-      this.selectedEvent.organizers.length === 0
+      !eventToCheck ||
+      !eventToCheck.organizers ||
+      eventToCheck.organizers.length === 0
     ) {
       return false;
     }
@@ -1289,7 +1319,7 @@ export class AgendaComponent implements OnInit, OnDestroy {
       return false;
     }
 
-    return this.selectedEvent.organizers.includes(currentUser.id as number);
+    return eventToCheck.organizers.includes(currentUser.id as number);
   }
 
   /**
@@ -1388,9 +1418,62 @@ export class AgendaComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         console.error("Erreur lors de la réponse à l'invitation:", err);
-        this.error = "Impossible de répondre à l'invitation";
+        this.showErrorMessage("Impossible de répondre à l'invitation");
         this.loading = false;
       },
     });
+  }
+
+  /**
+   * Vérifie si l'utilisateur actuel a des droits d'administrateur sur l'agenda du groupe
+   * @returns true si l'utilisateur a des droits d'administrateur, false sinon
+   */
+  hasAdminRightsForAgenda(): boolean {
+    const currentUser = this.authService.getUser();
+    if (!currentUser || !currentUser.id || !currentUser.userSecondaryAccounts) {
+      return false;
+    }
+
+    // Filtrer les comptes secondaires pour trouver celui associé au groupe actuel
+    const secondaryAccountForCurrentGroup =
+      currentUser.userSecondaryAccounts.find(
+        (account) =>
+          account.group_account && account.group_account.id === this.groupId
+      );
+
+    // Vérifier si l'utilisateur a le rôle ADMIN pour l'agenda dans ce groupe
+    return secondaryAccountForCurrentGroup?.role_agenda === 'ADMIN';
+  }
+
+  /**
+   * Vérifie si l'utilisateur actuel a des droits de gestion pour un événement spécifique
+   * (soit il est administrateur de l'agenda, soit il est organisateur de cet événement)
+   * @param event L'événement à vérifier
+   * @returns true si l'utilisateur a des droits de gestion, false sinon
+   */
+  hasManagementRightsForEvent(event?: Event): boolean {
+    // Si l'utilisateur est admin de l'agenda, il a toujours des droits de gestion
+    if (this.hasAdminRightsForAgenda()) {
+      return true;
+    }
+
+    // Si l'utilisateur est organisateur de cet événement spécifique, il a des droits de gestion
+    return this.isCurrentUserOrganizer(event);
+  }
+
+  /**
+   * Vérifie si l'utilisateur actuel est organisateur d'au moins un événement dans la liste
+   * @returns true si l'utilisateur est organisateur d'au moins un événement, false sinon
+   */
+  isOrganizerOfAnyEvent(): boolean {
+    const currentUser = this.authService.getUser();
+    if (!currentUser || !currentUser.id) {
+      return false;
+    }
+
+    // Vérifier pour chaque événement si l'utilisateur est organisateur
+    return this.events.some(
+      (event) => event.organizers && event.organizers.includes(currentUser.id)
+    );
   }
 }

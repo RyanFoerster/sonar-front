@@ -33,7 +33,6 @@
               hlmInput
               type="date"
               [min]="notPastDate()"
-              [value]="currentDate | date : 'yyyy-MM-dd'"
               (change)="updateValidationDeadline($event)"
             />
             @if (createQuoteForm.get('quote_date')?.invalid &&
@@ -817,6 +816,8 @@
         </div>
       </div>
 
+      
+
       <!-- Modal pour les pièces jointes -->
       @if (showAttachmentModal()) {
       <div
@@ -946,8 +947,18 @@
       </div>
       }
 
+      <div class="flex flex-col justify-end gap-2">
+      <!--Checkbox pour savoir si l'utilisateur veut une double validation ou non (cochée par défaut)-->
+      <div class="flex items-center justify-end gap-2">
+        <hlm-checkbox
+          [checked]="isDoubleValidation()"
+          (checkedChange)="toggleDoubleValidation()"
+        />
+        Double validation
+      </div>
+
       <!-- Submit Button -->
-      <div class="flex justify-end pt-4 md:pt-6">
+      <div class="flex justify-end ">
         @if (isLoadingQuote()) {
         <button
           class="bg-gray-700 text-gray-100 font-medium text-sm rounded-lg px-4 py-2 md:px-6 md:py-2.5 flex items-center gap-2 hover:bg-gray-200 transition-all w-full md:w-auto"
@@ -983,6 +994,8 @@
         </button>
         }}
       </div>
+    </div>
+      
       <hlm-toaster />
     </form>
     } @else {

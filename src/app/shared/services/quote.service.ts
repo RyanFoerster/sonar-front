@@ -11,7 +11,7 @@ import { map } from 'rxjs/operators';
 export class QuoteService {
   httpClient: HttpClient = inject(HttpClient);
 
-  createQuote(quoteDto: QuoteDto, files: File[]) {
+  createQuote(quoteDto: QuoteDto, files: File[], isDoubleValidation: boolean) {
     const form = new FormData();
 
     // Ajouter les fichiers s'ils existent
@@ -43,10 +43,14 @@ export class QuoteService {
     // Convertir les données du DTO en JSON string
     form.append('data', JSON.stringify(cleanQuoteDto));
 
-    return this.httpClient.post<boolean>(`${environment.API_URL}/quote`, form);
+    return this.httpClient.post<boolean>(`${environment.API_URL}/quote`, form, {
+      params: {
+        isDoubleValidation,
+      },
+    });
   }
 
-  updateQuote(quoteId: string | null, quoteDto: QuoteDto, files: File[]) {
+  updateQuote(quoteId: string | null, quoteDto: QuoteDto, files: File[], isDoubleValidation: boolean) {
     const form = new FormData();
 
     // Ajouter les fichiers s'ils existent
@@ -73,7 +77,12 @@ export class QuoteService {
 
     return this.httpClient.post<QuoteEntity>(
       `${environment.API_URL}/quote/${quoteId}/update`,
-      form
+      form,
+      {
+        params: {
+          isDoubleValidation,
+        },
+      }
     );
   }
 

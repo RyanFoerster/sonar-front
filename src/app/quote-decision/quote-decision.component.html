@@ -130,15 +130,6 @@
           <!-- Colonne de gauche -->
           <div class="space-y-4">
             <div>
-              <h3 class="text-sm font-semibold text-gray-600 mb-2">
-                Nom du projet
-              </h3>
-              <p class="text-base">
-                {{ quoteFromDB.created_by_project_name || "Non renseigné" }}
-              </p>
-            </div>
-
-            <div>
               <h3 class="text-sm font-semibold text-gray-600 mb-2">Client</h3>
               <div class="space-y-1">
                 <p class="text-base">{{ quoteFromDB.client.name }}</p>
@@ -160,6 +151,14 @@
 
           <!-- Colonne de droite -->
           <div class="space-y-4">
+            <div>
+              <h3 class="text-sm font-semibold text-gray-600 mb-2">
+                Nom du projet
+              </h3>
+              <p class="text-base">
+                {{ quoteFromDB.created_by_project_name || "Non renseigné" }}
+              </p>
+            </div>
             <div>
               <h3 class="text-sm font-semibold text-gray-600 mb-2">
                 Sonar Artists

@@ -212,6 +212,7 @@ export class NewQuoteComponent implements AfterViewInit {
   protected isPhysicalPerson = signal(false);
   protected isTvaIncluded = signal(false);
   protected isLoadingQuote = signal(false);
+  protected isDoubleValidation = signal(true);
 
   protected createQuoteForm!: FormGroup;
   protected createClientForm!: FormGroup;
@@ -248,7 +249,10 @@ export class NewQuoteComponent implements AfterViewInit {
       });
 
     this.createQuoteForm = this.formBuilder.group({
-      quote_date: ['', Validators.required],
+      quote_date: [
+        this.datePipe.transform(this.currentDate, 'yyyy-MM-dd'),
+        Validators.required,
+      ],
       service_date: ['', Validators.required],
       payment_deadline: [
         10,
@@ -376,6 +380,11 @@ export class NewQuoteComponent implements AfterViewInit {
   async getConnectedUser() {
     this.connectedUser.set(this.authService.getUser());
   }
+
+  toggleDoubleValidation() {
+    this.isDoubleValidation.set(!this.isDoubleValidation());
+  }
+
 
   toggleClientForm(isNewClient: boolean) {
     if (isNewClient) {
@@ -958,7 +967,7 @@ export class NewQuoteComponent implements AfterViewInit {
       console.log('Fichiers à envoyer:', this.selectedFiles);
 
       this.quoteService
-        .createQuote(quote, this.selectedFiles)
+        .createQuote(quote, this.selectedFiles, this.isDoubleValidation())
         .pipe(take(1))
         .subscribe({
           next: () => {
@@ -1094,7 +1103,8 @@ export class NewQuoteComponent implements AfterViewInit {
         this.quoteService.updateQuote(
           this.updatedQuoteId() || '',
           quoteDto,
-          this.selectedFiles
+          this.selectedFiles,
+          this.isDoubleValidation()
         )
       );
       this.isUpdating.set(false);

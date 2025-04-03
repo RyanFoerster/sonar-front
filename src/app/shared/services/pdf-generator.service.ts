@@ -18,7 +18,7 @@ export class PdfGeneratorService {
     city: '4460 Grâce-Hollogne, Belgique',
     email: 'info@sonarartists.be',
     vat: 'TVA BE0700273583',
-    iban: 'BE0700273583', // À remplacer par l'IBAN réel
+    iban: ' BE56 1030 5642 6988', // À remplacer par l'IBAN réel
     bic: 'GEBABEBB', // À remplacer par le BIC réel
   };
 

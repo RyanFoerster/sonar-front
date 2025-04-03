@@ -50,6 +50,7 @@ import { InvoiceService } from '../../../../shared/services/invoice.service';
 import { QuoteService } from '../../../../shared/services/quote.service';
 import { UsersService } from '../../../../shared/services/users.service';
 import { PdfGeneratorService } from '../../../../shared/services/pdf-generator.service';
+import { HlmToasterComponent } from '@spartan-ng/ui-sonner-helm';
 import { toast } from 'ngx-sonner';
 import { FormsModule } from '@angular/forms';
 import { CompteGroupeService } from '../../../../shared/services/compte-groupe.service';
@@ -92,6 +93,7 @@ interface ModalContext {
     HlmPaginationDirective,
     HlmPaginationContentDirective,
     HlmPaginationItemDirective,
+    HlmToasterComponent,
   ],
   providers: [
     provideIcons({
@@ -367,8 +369,29 @@ export class FacturationComponent implements OnInit, OnDestroy {
       );
       quote.invoice = data;
       ctx.close();
-    } catch {
-      // Gérer les erreurs si nécessaire
+
+      // Rafraîchir entièrement les données au lieu de simplement mettre à jour l'affichage
+      if (this.typeOfProjet() === 'PRINCIPAL' && this.accountPrincipal) {
+        const updatedAccount = await firstValueFrom(
+          this.services.principal.getGroupByIdWithRelations(+this.id()!)
+        );
+        this.accountPrincipal = updatedAccount;
+      } else if (this.groupAccount()) {
+        const updatedGroup = await firstValueFrom(
+          this.services.group.getGroupById(+this.id()!)
+        );
+        this.groupAccount.set(updatedGroup);
+      }
+
+      // Mettre à jour les factures et l'affichage
+      this.loadInvoices();
+      toast('Facture créée avec succès');
+    } catch (error) {
+      toast('Erreur lors de la création de la facture', {
+        description: "Veuillez réessayer ou contacter l'assistance.",
+        style: { backgroundColor: 'rgb(239, 68, 68)' },
+      });
+      console.error(error);
     }
   }
 

@@ -334,7 +334,7 @@ export class PdfGeneratorService {
     // Position Y après le tableau
     const finalY = (doc as any).lastAutoTable.finalY + 10;
 
-    // Sous-total et TVA
+    // Tableau des totaux avec alignement amélioré
     autoTable(doc, {
       body: [
         ['Sous-total', `${quote.price_htva?.toFixed(2) || '0.00'}€`],
@@ -343,64 +343,60 @@ export class PdfGeneratorService {
         ['Total', `${quote.total.toFixed(2)}€`],
       ],
       startY: finalY,
+      margin: { left: pageWidth - 90 },
       styles: {
         fontSize: 9,
-        cellPadding: 3,
+        cellPadding: 2,
       },
       theme: 'plain',
       columnStyles: {
-        0: { cellWidth: 40, halign: 'left' },
+        0: { cellWidth: 40, halign: 'right' },
         1: { cellWidth: 40, halign: 'right', fontStyle: 'bold' },
       },
-      margin: { left: pageWidth - 100 },
     });
 
-    // Message de remerciement
-    // doc.setFontSize(9);
-    // doc.setTextColor(51, 51, 51);
-    // doc.text('Cordialement,', this.PAGE_MARGIN, finalY + 40);
-    // doc.text(
-    //   'Si ce devis vous convient, veuillez nous le retourner signé et précédé de la mention :',
-    //   this.PAGE_MARGIN,
-    //   finalY + 50
-    // );
+    // Ajout des commentaires si présents
+    if (quote.comment) {
+      const commentStartY = (doc as any).lastAutoTable.finalY + 20;
+      let currentY = commentStartY;
 
-    // Champs pour signature
-    doc.setFont('helvetica', 'normal');
-    // doc.text('Date :', this.PAGE_MARGIN, finalY + 20);
-    // doc.text('Signature :', this.PAGE_MARGIN, finalY + 35);
+      // Largeur disponible pour le texte
+      const maxWidth = pageWidth - 2 * this.PAGE_MARGIN;
 
-    // Pied de page avec informations de l'entreprise
-    const footerY = pageHeight - 30; // Réduit l'espace en bas
+      // Division du texte en lignes
+      const commentLines = doc.splitTextToSize(quote.comment, maxWidth);
 
-    // Calculer les positions horizontales pour éviter les chevauchements
-    const col1X = this.PAGE_MARGIN;
-    const col2X = pageWidth / 3;
-    const col3X = (pageWidth / 3) * 2 - 10; // Ajusté pour éviter de sortir de la page
+      // Calcul de l'espace disponible avant le footer
+      const footerHeight = 45;
+      const availableHeight = pageHeight - currentY - footerHeight;
 
-    // Colonne 1 - Siège social
-    doc.setFont('helvetica', 'bold');
-    doc.text('Siège social', col1X, footerY);
-    doc.setFont('helvetica', 'normal');
-    doc.text(this.COMPANY_INFO.address, col1X, footerY + 5);
-    doc.text(this.COMPANY_INFO.city.split(',')[0], col1X, footerY + 10);
-    doc.text('Belgique', col1X, footerY + 15);
-    doc.text(this.COMPANY_INFO.vat.replace('TVA ', ''), col1X, footerY + 20);
+      // Si le commentaire ne tient pas sur la page courante, on crée une nouvelle page
+      if (commentLines.length * 5 > availableHeight) {
+        doc.addPage();
+        currentY = this.PAGE_MARGIN + 20;
+      }
 
-    // Colonne 2 - Coordonnées
-    doc.setFont('helvetica', 'bold');
-    doc.text('Coordonnées', col2X, footerY);
-    doc.setFont('helvetica', 'normal');
-    doc.text(this.COMPANY_INFO.name, col2X, footerY + 5);
-    doc.text(this.COMPANY_INFO.email, col2X, footerY + 10);
-    // Vous pouvez ajouter un site web ici si disponible
+      // Titre des commentaires
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Commentaires:', this.PAGE_MARGIN, currentY);
+      doc.setFont('helvetica', 'normal');
 
-    // Colonne 3 - Détails bancaires
-    doc.setFont('helvetica', 'bold');
-    doc.text('Détails bancaires', col3X, footerY);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`IBAN: ${this.COMPANY_INFO.iban}`, col3X, footerY + 5);
-    doc.text(`BIC: ${this.COMPANY_INFO.bic}`, col3X, footerY + 10);
+      // Afficher tout le texte
+      commentLines.forEach((line: string, index: number) => {
+        const lineY = currentY + 7 + index * 5;
+        // Si on dépasse la limite de la page, on en crée une nouvelle
+        if (lineY > pageHeight - footerHeight) {
+          doc.addPage();
+          currentY = this.PAGE_MARGIN - index * 5;
+          this.addFooter(doc, pageHeight, []);
+        }
+        doc.text(line, this.PAGE_MARGIN, lineY);
+      });
+    }
+
+    // Ajouter le footer sur la dernière page
+    this.addFooter(doc, pageHeight, []);
 
     doc.save(`devis_${quote.id}.pdf`);
   }
@@ -901,19 +897,49 @@ export class PdfGeneratorService {
     pageHeight: number,
     conditions: string[]
   ): void {
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
-    conditions.forEach((condition, index) => {
-      doc.text(condition, this.PAGE_MARGIN, pageHeight - 40 + index * 5);
-    });
+    const footerY = pageHeight - 30;
 
+    // Ajouter les conditions si présentes
+    if (conditions.length > 0) {
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+      conditions.forEach((condition, index) => {
+        doc.text(condition, this.PAGE_MARGIN, pageHeight - 40 + index * 5);
+      });
+    }
+
+    // Colonne 1 - Siège social
     doc.setFontSize(8);
-    doc.setTextColor(100);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Siège social', this.PAGE_MARGIN, footerY);
+    doc.setFont('helvetica', 'normal');
+    doc.text(this.COMPANY_INFO.address, this.PAGE_MARGIN, footerY + 5);
     doc.text(
-      this.COMPANY_INFO.vat,
-      doc.internal.pageSize.getWidth() / 2,
-      pageHeight - 10,
-      { align: 'center' }
+      this.COMPANY_INFO.city.split(',')[0],
+      this.PAGE_MARGIN,
+      footerY + 10
     );
+    doc.text('Belgique', this.PAGE_MARGIN, footerY + 15);
+    doc.text(
+      this.COMPANY_INFO.vat.replace('TVA ', ''),
+      this.PAGE_MARGIN,
+      footerY + 20
+    );
+
+    // Colonne 2 - Coordonnées
+    const col2X = doc.internal.pageSize.getWidth() / 3;
+    doc.setFont('helvetica', 'bold');
+    doc.text('Coordonnées', col2X, footerY);
+    doc.setFont('helvetica', 'normal');
+    doc.text(this.COMPANY_INFO.name, col2X, footerY + 5);
+    doc.text(this.COMPANY_INFO.email, col2X, footerY + 10);
+
+    // Colonne 3 - Détails bancaires
+    const col3X = (doc.internal.pageSize.getWidth() / 3) * 2;
+    doc.setFont('helvetica', 'bold');
+    doc.text('Détails bancaires', col3X, footerY);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`IBAN: ${this.COMPANY_INFO.iban}`, col3X, footerY + 5);
+    doc.text(`BIC: ${this.COMPANY_INFO.bic}`, col3X, footerY + 10);
   }
 }

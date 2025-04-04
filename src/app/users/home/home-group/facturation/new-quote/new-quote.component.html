@@ -46,22 +46,41 @@
         </div>
 
         <div class="space-y-2">
-          <p class="font-medium text-gray-900 text-sm" hlmLabel>
-            Date de prestation
-            <input
-              formControlName="service_date"
-              class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
-              hlmInput
-              type="date"
-            />
-            @if (createQuoteForm.get('service_date')?.invalid &&
-            createQuoteForm.get('service_date')?.touched) {
-            <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
-              <hlm-icon size="xs" name="lucideAlertCircle" />
-              La date de prestation est requise
+          <p
+            class="font-medium text-gray-900 text-sm flex items-center gap-2"
+            hlmLabel
+          >
+            Dernier jour de prestation / livraison
+            <span class="relative group">
+              <hlm-icon
+                size="xs"
+                name="lucideAlertCircle"
+                class="text-gray-400 cursor-help"
+              />
+              <span
+                class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 p-2 bg-gray-800 text-white text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10"
+              >
+                La facture sera automatiquement générée le jour suivant le
+                dernier jour de prestation / livraison. Vous avez aussi la
+                possibilité de la générer plus tôt en appuyant sur le bouton «
+                Générer la facture » une fois le devis accepté par toutes les
+                parties.
+              </span>
             </span>
-            }
           </p>
+          <input
+            formControlName="service_date"
+            class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+            hlmInput
+            type="date"
+          />
+          @if (createQuoteForm.get('service_date')?.invalid &&
+          createQuoteForm.get('service_date')?.touched) {
+          <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
+            <hlm-icon size="xs" name="lucideAlertCircle" />
+            La date de prestation est requise
+          </span>
+          }
         </div>
       </div>
 
@@ -375,7 +394,7 @@
 
                 <p class="flex items-center gap-2 cursor-pointer group">
                   <hlm-checkbox
-                    (checkedChange)="toggleArtisticPerformance()"
+                    (click)="toggleArtisticPerformance()"
                     formControlName="vat"
                     class="rounded-md group-hover:border-primary transition-colors"
                   />
@@ -586,7 +605,7 @@
 
               <p class="flex items-center gap-2 cursor-pointer group">
                 <hlm-checkbox
-                  (checkedChange)="toggleArtisticPerformance()"
+                  (click)="toggleArtisticPerformance()"
                   formControlName="vat"
                   class="rounded-md group-hover:border-primary transition-colors"
                 />
@@ -630,7 +649,7 @@
             <p class="flex items-center gap-2 text-sm text-gray-700">
               <hlm-checkbox
                 [checked]="isTvaIncluded()"
-                (checkedChange)="toggleTvaIncluded()"
+                (click)="toggleTvaIncluded()"
                 [disabled]="products().length === 0"
                 class="rounded-md"
               />
@@ -816,8 +835,6 @@
         </div>
       </div>
 
-      
-
       <!-- Modal pour les pièces jointes -->
       @if (showAttachmentModal()) {
       <div
@@ -948,54 +965,70 @@
       }
 
       <div class="flex flex-col justify-end gap-2">
-      <!--Checkbox pour savoir si l'utilisateur veut une double validation ou non (cochée par défaut)-->
-      <div class="flex items-center justify-end gap-2">
-        <hlm-checkbox
-          [checked]="isDoubleValidation()"
-          (checkedChange)="toggleDoubleValidation()"
-        />
-        Double validation
+        <!-- Interrupteur pour la double validation -->
+        <div class="flex items-center justify-end gap-3">
+          <span class="text-sm font-medium text-gray-700"
+            >Double validation</span
+          >
+          <button
+            type="button"
+            role="switch"
+            [attr.aria-checked]="isDoubleValidation()"
+            (click)="toggleDoubleValidation($event)"
+            class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+            [ngClass]="isDoubleValidation() ? 'bg-primary' : 'bg-gray-200'"
+          >
+            <span class="sr-only">Utiliser la double validation</span>
+            <span
+              aria-hidden="true"
+              class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+              [ngClass]="
+                isDoubleValidation() ? 'translate-x-5' : 'translate-x-0'
+              "
+            ></span>
+          </button>
+        </div>
+        <!-- Fin Interrupteur -->
+
+        <!-- Submit Button -->
+        <div class="flex justify-end">
+          @if (isLoadingQuote()) {
+          <button
+            class="bg-gray-700 text-gray-100 font-medium text-sm rounded-lg px-4 py-2 md:px-6 md:py-2.5 flex items-center gap-2 hover:bg-gray-200 transition-all w-full md:w-auto"
+            hlmBtn
+            type="submit"
+            disabled
+          >
+            <hlm-icon class="animate-spin" size="sm" name="lucideLoader" />
+            Génération du devis...
+          </button>
+          } @else { @if (!isUpdating()) {
+          <button
+            class="bg-primary text-white font-medium text-sm rounded-lg px-4 py-2 md:px-6 md:py-2.5 flex items-center gap-2 hover:bg-primary/90 transition-all w-full md:w-auto"
+            hlmBtn
+            type="submit"
+          >
+            <hlm-icon size="sm" name="lucideFileDown" />
+            {{ updatedQuoteId() ? "Modifier le devis" : "Générer le devis" }}
+          </button>
+          } @else {
+          <button
+            class="bg-gray-700 text-white font-medium text-sm rounded-lg px-4 py-2 md:px-6 md:py-2.5 flex items-center gap-2 hover:bg-gray-200 transition-all w-full md:w-auto"
+            hlmBtn
+            type="submit"
+            disabled
+          >
+            <hlm-icon class="animate-spin" size="sm" name="lucideLoader" />
+            {{
+              updatedQuoteId()
+                ? "Modification du devis..."
+                : "Génération du devis..."
+            }}
+          </button>
+          }}
+        </div>
       </div>
 
-      <!-- Submit Button -->
-      <div class="flex justify-end ">
-        @if (isLoadingQuote()) {
-        <button
-          class="bg-gray-700 text-gray-100 font-medium text-sm rounded-lg px-4 py-2 md:px-6 md:py-2.5 flex items-center gap-2 hover:bg-gray-200 transition-all w-full md:w-auto"
-          hlmBtn
-          type="submit"
-          disabled
-        >
-          <hlm-icon class="animate-spin" size="sm" name="lucideLoader" />
-          Génération du devis...
-        </button>
-        } @else { @if (!isUpdating()) {
-        <button
-          class="bg-primary text-white font-medium text-sm rounded-lg px-4 py-2 md:px-6 md:py-2.5 flex items-center gap-2 hover:bg-primary/90 transition-all w-full md:w-auto"
-          hlmBtn
-          type="submit"
-        >
-          <hlm-icon size="sm" name="lucideFileDown" />
-          {{ updatedQuoteId() ? "Modifier le devis" : "Générer le devis" }}
-        </button>
-        } @else {
-        <button
-          class="bg-gray-700 text-white font-medium text-sm rounded-lg px-4 py-2 md:px-6 md:py-2.5 flex items-center gap-2 hover:bg-gray-200 transition-all w-full md:w-auto"
-          hlmBtn
-          type="submit"
-          disabled
-        >
-          <hlm-icon class="animate-spin" size="sm" name="lucideLoader" />
-          {{
-            updatedQuoteId()
-              ? "Modification du devis..."
-              : "Génération du devis..."
-          }}
-        </button>
-        }}
-      </div>
-    </div>
-      
       <hlm-toaster />
     </form>
     } @else {
@@ -1305,3 +1338,44 @@
     }
   </div>
 </div>
+
+<!-- Double Validation Warning Modal -->
+@if (showDoubleValidationWarningModal()) {
+<div
+  class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+>
+  <div
+    class="bg-white rounded-xl p-6 max-w-md w-full mx-auto shadow-xl space-y-4"
+  >
+    <div class="flex items-center gap-3">
+      <hlm-icon size="lg" name="lucideAlertTriangle" class="text-amber-500" />
+      <h3 class="text-lg font-semibold text-gray-900">Attention</h3>
+    </div>
+    <p class="text-sm text-gray-600">
+      Décocher la double validation vaut pour signature pour votre projet (mais
+      pas pour le client). La double validation permet de consulter son équipe
+      avant de valider la prestation / livraison de votre côté.
+    </p>
+    <div class="flex justify-end gap-3 pt-4 border-t border-gray-200">
+      <button
+        type="button"
+        (click)="cancelDoubleValidationChange()"
+        class="bg-gray-100 text-gray-700 font-medium text-sm rounded-lg px-4 py-2 hover:bg-gray-200 transition-all"
+        hlmBtn
+      >
+        Annuler
+      </button>
+      <button
+        type="button"
+        (click)="confirmDoubleValidationChange()"
+        class="bg-amber-500 text-white font-medium text-sm rounded-lg px-4 py-2 flex items-center gap-2 hover:bg-amber-600 transition-all"
+        hlmBtn
+      >
+        <hlm-icon size="sm" name="lucideCheck" />
+        Confirmer
+      </button>
+    </div>
+  </div>
+</div>
+}
+<!-- End Double Validation Warning Modal -->

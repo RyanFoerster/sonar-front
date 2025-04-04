@@ -76,6 +76,17 @@
           </span>
         </div>
       </div>
+      @if(quoteFromDB.group_acceptance === 'pending') {
+      <div class="mt-2 p-2 bg-yellow-50 rounded-md border border-yellow-200">
+        <div class="flex items-center gap-2 text-yellow-700">
+          <hlm-icon name="lucideInfo" size="sm" />
+          <p class="text-sm">
+            Ce devis doit être validé par le responsable de projet pour être
+            valide
+          </p>
+        </div>
+      </div>
+      }
     </div>
 
     <!-- Message de statut -->
@@ -316,7 +327,7 @@
               {{ quoteFromDB.validation_deadline | date : "dd/MM/yyyy" }}
             </p>
             @if(quoteFromDB.comment) {
-            <p>{{ quoteFromDB.comment }}</p>
+            <p class="break-words">{{ quoteFromDB.comment }}</p>
             }
           </div>
         </div>
@@ -480,7 +491,7 @@
             <button
               (click)="rejectQuote()"
               class="rounded-full bg-red-500 hover:bg-red-600 transition-colors px-6 py-2 text-white font-medium flex items-center justify-center gap-2"
-              [disabled]="!termsAccepted || isAccepting || isRejecting"
+              [disabled]="isAccepting || isRejecting"
               hlmBtn
             >
               @if(isRejecting) {

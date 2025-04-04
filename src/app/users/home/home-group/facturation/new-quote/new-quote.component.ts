@@ -7,6 +7,7 @@ import {
   signal,
   computed,
   input,
+  ChangeDetectorRef,
 } from '@angular/core';
 import {
   FormBuilder,
@@ -144,6 +145,7 @@ export class NewQuoteComponent implements AfterViewInit {
   private userAttachmentService: ProjectAttachmentService = inject(
     ProjectAttachmentService
   );
+  private changeDetectorRef: ChangeDetectorRef = inject(ChangeDetectorRef);
 
   protected client = signal<ClientEntity | null>(null);
   protected connectedUser = signal<UserEntity | null>(null);
@@ -213,6 +215,7 @@ export class NewQuoteComponent implements AfterViewInit {
   protected isTvaIncluded = signal(false);
   protected isLoadingQuote = signal(false);
   protected isDoubleValidation = signal(true);
+  protected showDoubleValidationWarningModal = signal(false);
 
   protected createQuoteForm!: FormGroup;
   protected createClientForm!: FormGroup;
@@ -258,7 +261,13 @@ export class NewQuoteComponent implements AfterViewInit {
         10,
         [Validators.required, Validators.min(10), Validators.max(30)],
       ],
-      validation_deadline: ['', Validators.required],
+      validation_deadline: [
+        this.datePipe.transform(
+          new Date(new Date().getTime() + 10 * 24 * 60 * 60 * 1000),
+          'yyyy-MM-dd'
+        ),
+        Validators.required,
+      ],
       client_id: ['', Validators.required],
       products: [[]],
       vat_included: [false],
@@ -381,10 +390,35 @@ export class NewQuoteComponent implements AfterViewInit {
     this.connectedUser.set(this.authService.getUser());
   }
 
-  toggleDoubleValidation() {
-    this.isDoubleValidation.set(!this.isDoubleValidation());
+  toggleDoubleValidation(event: MouseEvent) {
+    const currentState = this.isDoubleValidation();
+    console.log(`Click event on checkbox. Current state: ${currentState}`);
+
+    if (currentState) {
+      // Currently checked, attempt to uncheck
+      console.log('Preventing default uncheck, showing modal.');
+      event.preventDefault(); // Empêche le changement visuel immédiat
+      this.showDoubleValidationWarningModal.set(true);
+    } else {
+      // Currently unchecked, attempt to check
+      console.log('Allowing check, setting state to true.');
+      this.isDoubleValidation.set(true);
+      // Laisser le comportement par défaut cocher la case
+    }
   }
 
+  confirmDoubleValidationChange() {
+    console.log('Confirming uncheck.');
+    this.isDoubleValidation.set(false);
+    this.showDoubleValidationWarningModal.set(false);
+  }
+
+  cancelDoubleValidationChange() {
+    console.log('Cancelling uncheck. State remains true.');
+    this.showDoubleValidationWarningModal.set(false);
+    // Pas besoin de changer l'état ou de forcer la détection,
+    // car le décochage initial a été empêché par preventDefault.
+  }
 
   toggleClientForm(isNewClient: boolean) {
     if (isNewClient) {

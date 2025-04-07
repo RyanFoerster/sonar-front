@@ -112,13 +112,35 @@ self.addEventListener("notificationclick", (event) => {
 // Événement d'installation du service worker
 self.addEventListener("install", (event) => {
   console.log("[firebase-messaging-sw.js] Service Worker installé");
+  // Forcer l'activation immédiate
   self.skipWaiting();
 });
 
 // Événement d'activation du service worker
 self.addEventListener("activate", (event) => {
   console.log("[firebase-messaging-sw.js] Service Worker activé");
+  // Réclamer tous les clients immédiatement
   event.waitUntil(clients.claim());
+  
+  // Nettoyer les anciens caches
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (cacheName.startsWith('ngsw:')) {
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
+  );
+});
+
+// Gestion des mises à jour
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
 });
 `;
 

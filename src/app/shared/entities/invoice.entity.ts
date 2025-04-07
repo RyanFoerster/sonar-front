@@ -13,6 +13,7 @@ export interface InvoiceEntity {
   payment_deadline: Date;
   status: string;
   type: string;
+  comment: string;
   linkedInvoiceId: number;
   creditNoteAmount: number;
   client: ClientEntity;

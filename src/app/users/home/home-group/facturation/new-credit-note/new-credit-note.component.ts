@@ -61,6 +61,8 @@ import { throwError } from 'rxjs';
 import { EuroFormatPipe } from '../../../../../shared/pipes/euro-format.pipe';
 import { UsersService } from '../../../../../shared/services/users.service';
 import { InvoiceEntity } from '../../../../../shared/entities/invoice.entity';
+import { PdfGeneratorService } from '../../../../../shared/services/pdf-generator.service';
+import { Router, ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-new-credit-note',
@@ -107,17 +109,21 @@ import { InvoiceEntity } from '../../../../../shared/entities/invoice.entity';
 })
 export class NewCreditNoteComponent implements AfterViewInit {
   private formBuilder: FormBuilder = inject(FormBuilder);
-  private clientService: ClientService = inject(ClientService);
-  private usersService: UsersService = inject(UsersService);
-  private productService: ProductService = inject(ProductService);
-  private invoiceService: InvoiceService = inject(InvoiceService);
-  private location: Location = inject(Location);
-  private authService: AuthService = inject(AuthService);
+  private productService = inject(ProductService);
+  private invoiceService = inject(InvoiceService);
+  private clientService = inject(ClientService);
+  private usersService = inject(UsersService);
+  private location = inject(Location);
+  private authService = inject(AuthService);
   private datePipe: DatePipe = inject(DatePipe);
+  private pdfGeneratorService = inject(PdfGeneratorService);
+  private router = inject(Router);
+  private activatedRoute = inject(ActivatedRoute);
 
   protected client = signal<ClientEntity | null>(null);
-  protected connectedUser = signal<UserEntity | null>(null);
   protected products = signal<ProductEntity[]>([]);
+  protected modifiedProducts = signal<ProductEntity[]>([]);
+  protected connectedUser = signal<UserEntity | null>(null);
   protected totalHtva = signal(0);
   protected tva21 = signal(0);
   protected tva6 = signal(0);
@@ -455,38 +461,58 @@ export class NewCreditNoteComponent implements AfterViewInit {
 
   checkTvaIncluded() {
     if (this.isTvaIncluded()) {
-      this.totalHtva.set(
-        this.products().reduce((a, b) => a + b.price_htva!, 0) -
-          this.tva21() -
-          this.tva6()
-      );
-      this.total.set(this.totalHtva() + this.tva21() + this.tva6());
-      this.products().forEach((product) => {
-        const priceHTVA = product.price_htva!;
-        product.total = priceHTVA;
-        product.price_htva = priceHTVA - product.tva_amount!;
+      // Si TVA incluse, on recalcule les montants HTVA
+      this.products.update((products) => {
+        return products.map((product) => {
+          const priceWithVAT = product.price * product.quantity;
+          const vatRate = product.vat;
+          const priceHTVA = priceWithVAT / (1 + vatRate);
+          const tvaAmount = priceWithVAT - priceHTVA;
+
+          return {
+            ...product,
+            price_htva: priceHTVA,
+            tva_amount: tvaAmount,
+            total: priceWithVAT,
+          };
+        });
       });
-      for (const product of this.products()) {
-        this.productService
-          .update(product.id!.toString(), product)
-          .pipe(take(1))
-          .subscribe();
-      }
     } else {
-      this.totalHtva.set(
-        this.products().reduce((a, b) => a + b.price_htva! + b.tva_amount!, 0)
-      );
-      this.total.set(this.totalHtva() + this.tva21() + this.tva6());
-      this.products().forEach((product) => {
-        const priceTOTAL = product.total!;
-        product.total = priceTOTAL + product.tva_amount!;
-        product.price_htva = priceTOTAL;
+      // Si TVA non incluse, on recalcule les montants avec TVA
+      this.products.update((products) => {
+        return products.map((product) => {
+          const priceHTVA = product.price * product.quantity;
+          const tvaAmount = priceHTVA * product.vat;
+          const total = priceHTVA + tvaAmount;
+
+          return {
+            ...product,
+            price_htva: priceHTVA,
+            tva_amount: tvaAmount,
+            total: total,
+          };
+        });
       });
-      for (const product of this.products()) {
-        this.productService
-          .update(product.id!.toString(), product)
-          .pipe(take(1))
-          .subscribe();
+    }
+
+    // Recalculer les totaux
+    this.calculateTotals();
+
+    // Mettre à jour les produits modifiés
+    for (const product of this.products()) {
+      const existingIndex = this.modifiedProducts().findIndex(
+        (p: ProductEntity) => p.id === product.id
+      );
+      if (existingIndex !== -1) {
+        this.modifiedProducts.update((products: ProductEntity[]) => {
+          products[existingIndex] = product;
+          return [...products];
+        });
+      } else {
+        this.modifiedProducts.update((products: ProductEntity[]) => [
+          ...products,
+          product,
+        ]);
       }
     }
   }
@@ -680,18 +706,26 @@ export class NewCreditNoteComponent implements AfterViewInit {
 
   setTva21(products: ProductEntity[]) {
     const products_tva_21 = products.filter((product) => product.vat === 0.21);
-    const baseAmount = this.isTvaIncluded()
-      ? products_tva_21.reduce((a, b) => a + b.price * b.quantity!, 0)
-      : products_tva_21.reduce((a, b) => a + b.price_htva!, 0);
-    return baseAmount * 0.21;
+    if (this.isTvaIncluded()) {
+      // Si TVA incluse, calculer directement à partir des montants tva_amount
+      return products_tva_21.reduce((a, b) => a + b.tva_amount!, 0);
+    } else {
+      // Si TVA non incluse, calculer comme avant
+      const baseAmount = products_tva_21.reduce((a, b) => a + b.price_htva!, 0);
+      return baseAmount * 0.21;
+    }
   }
 
   setTva6(products: ProductEntity[]) {
     const products_tva_6 = products.filter((product) => product.vat === 0.06);
-    const baseAmount = this.isTvaIncluded()
-      ? products_tva_6.reduce((a, b) => a + b.price * b.quantity!, 0)
-      : products_tva_6.reduce((a, b) => a + b.price_htva!, 0);
-    return baseAmount * 0.06;
+    if (this.isTvaIncluded()) {
+      // Si TVA incluse, calculer directement à partir des montants tva_amount
+      return products_tva_6.reduce((a, b) => a + b.tva_amount!, 0);
+    } else {
+      // Si TVA non incluse, calculer comme avant
+      const baseAmount = products_tva_6.reduce((a, b) => a + b.price_htva!, 0);
+      return baseAmount * 0.06;
+    }
   }
 
   createCreditNote() {

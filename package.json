@@ -4,8 +4,8 @@
   "scripts": {
     "ng": "ng",
     "start": "NODE_ENV=development ng serve",
-    "build:prod": "NODE_ENV=production node generate-sw.js && ng build --configuration production",
-    "build:staging": "NODE_ENV=staging node generate-sw.js && ng build --configuration staging",
+    "build:prod": "NODE_ENV=production node update-ngsw-version.js && node generate-sw.js && ng build --configuration production",
+    "build:staging": "NODE_ENV=staging node update-ngsw-version.js && node generate-sw.js && ng build --configuration staging",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "lint": "ng lint"

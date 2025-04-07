@@ -63,6 +63,33 @@ import {
   HlmPaginationItemDirective,
 } from '@spartan-ng/ui-pagination-helm';
 
+// Interface pour les documents
+interface Document {
+  id: number;
+  documentType: 'quote' | 'invoice' | 'credit_note' | string;
+  documentDate: Date;
+  total: number;
+  client: {
+    id: number;
+    name: string;
+    email: string;
+    street?: string;
+    number?: string;
+    postalCode?: string;
+    city?: string;
+    country?: string;
+    phone?: string;
+    company_vat_number?: string;
+  };
+  invoice_number?: number;
+  quote_number?: number;
+  invoice?: any;
+  group_acceptance?: string;
+  order_giver_acceptance?: string;
+  comment?: string;
+  [key: string]: any; // Pour permettre d'autres propriétés
+}
+
 /* Ajout d'une interface pour le contexte modal */
 interface ModalContext {
   close: () => void;
@@ -141,7 +168,7 @@ export class FacturationComponent implements OnInit, OnDestroy {
   protected isLoading = signal<boolean>(true);
   protected searchNumber = signal<string>('');
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  protected originalDocuments = signal<any[]>([]);
+  protected originalDocuments = signal<Document[]>([]);
 
   // Computed values
   protected reportDateFormatted = computed(() =>
@@ -162,17 +189,34 @@ export class FacturationComponent implements OnInit, OnDestroy {
     totalItems: signal(0),
   };
 
+  // Nouveau système de pagination pour les factures/notes de crédit
+  protected invoicesPagination = {
+    currentPage: signal(this.INITIAL_PAGE),
+    totalPages: signal(0),
+    totalItems: signal(0),
+  };
+
   protected itemsPerPage = signal(this.ITEMS_PER_PAGE);
 
   // Documents state
   currentFilter: 'all' | 'quotes' | 'invoiced_quotes' | 'credit-note' = 'all';
+  invoicesFilter: 'all' | 'invoices' | 'credit-notes' = 'all'; // Nouveau filtre pour les factures et notes de crédit
   invoices: InvoiceEntity[] = [];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  protected allDocuments = signal<any[]>([]);
+  protected allDocuments = signal<Document[]>([]);
+  protected allQuotes = signal<Document[]>([]); // Uniquement les devis
+  protected allInvoicesAndCreditNotes = signal<Document[]>([]); // Uniquement les factures et notes de crédit
+
   protected paginatedDocuments = computed(() => {
     const startIndex =
       (this.pagination.currentPage() - 1) * this.itemsPerPage();
-    return this.allDocuments().slice(
+    return this.allQuotes().slice(startIndex, startIndex + this.itemsPerPage());
+  });
+
+  protected paginatedInvoicesAndCreditNotes = computed(() => {
+    const startIndex =
+      (this.invoicesPagination.currentPage() - 1) * this.itemsPerPage();
+    return this.allInvoicesAndCreditNotes().slice(
       startIndex,
       startIndex + this.itemsPerPage()
     );
@@ -249,39 +293,131 @@ export class FacturationComponent implements OnInit, OnDestroy {
   }
 
   private updateDocuments(): void {
-    if (!this.accountPrincipal?.quote && !this.groupAccount()?.quote) {
-      this.allDocuments.set([]);
-      return;
-    }
+    let allDocs = [];
 
-    const quotes = this.getFormattedQuotes();
-    const creditNotes = this.getFormattedCreditNotes();
-    let allDocs = [...quotes, ...creditNotes];
+    // Récupération des devis et formatage
+    const formattedQuotes = this.getFormattedQuotes();
 
-    allDocs = this.filterDocuments(allDocs);
-    allDocs.sort(this.sortByDate);
+    // Récupération des notes de crédit et formatage
+    const formattedCreditNotes = this.getFormattedCreditNotes();
 
-    // Stocker les documents originaux avant la recherche
-    this.originalDocuments.set(allDocs);
+    // Récupération des factures et formatage
+    const formattedInvoices = this.getFormattedInvoices();
 
-    // Appliquer le filtre de recherche
+    // Combinaison de tous les documents
+    allDocs = [...formattedQuotes, ...formattedCreditNotes];
+
+    // Filtrage selon le filtre actuel
+    const filteredDocs = this.filterDocuments(allDocs);
+
+    // Recherche par numéro
+    let docsMatchingSearch = filteredDocs;
     if (this.searchNumber()) {
-      allDocs = allDocs.filter((doc) => {
-        const searchTerm = this.searchNumber().toLowerCase();
-        if (doc.documentType === 'quote' && 'quote_number' in doc) {
-          return `D-${doc.quote_number}`.toLowerCase().includes(searchTerm);
-        } else if (
-          doc.documentType === 'credit_note' &&
-          'invoice_number' in doc
-        ) {
-          return `NC-${doc.invoice_number}`.toLowerCase().includes(searchTerm);
+      const searchLower = this.searchNumber().toLowerCase();
+      docsMatchingSearch = filteredDocs.filter((doc) => {
+        if (doc.documentType === 'quote') {
+          return `d-${doc.quote_number}`.toLowerCase().includes(searchLower);
+        } else if (doc.documentType === 'credit_note') {
+          return `nc-${doc.invoice_number}`.toLowerCase().includes(searchLower);
         }
         return false;
       });
     }
 
-    this.updatePagination(allDocs);
-    this.allDocuments.set(allDocs);
+    // Tri par date décroissante
+    const sortedDocs = docsMatchingSearch.sort(this.sortByDate);
+    this.allDocuments.set(sortedDocs);
+
+    // Mise à jour des documents séparés
+    this.updateSeparatedDocuments(
+      formattedQuotes,
+      formattedInvoices,
+      formattedCreditNotes
+    );
+
+    // Mise à jour de la pagination
+    this.updatePagination(this.allQuotes());
+    this.updateInvoicesPagination(this.allInvoicesAndCreditNotes());
+  }
+
+  private updateSeparatedDocuments(
+    quotes: Document[],
+    invoices: Document[],
+    creditNotes: Document[]
+  ): void {
+    // Filtrage des devis
+    let filteredQuotes = quotes;
+    console.log('Devis originaux:', quotes.length);
+    console.log('Factures originales:', invoices.length);
+    console.log('Notes de crédit originales:', creditNotes.length);
+
+    if (this.currentFilter === 'quotes') {
+      filteredQuotes = quotes.filter((quote) => !quote.invoice);
+    } else if (this.currentFilter === 'invoiced_quotes') {
+      filteredQuotes = quotes.filter((quote) => quote.invoice);
+    } else if (this.currentFilter === 'credit-note') {
+      filteredQuotes = [];
+    }
+
+    // Recherche par numéro pour les devis
+    if (this.searchNumber()) {
+      const searchLower = this.searchNumber().toLowerCase();
+      filteredQuotes = filteredQuotes.filter((quote) =>
+        `d-${quote.quote_number}`.toLowerCase().includes(searchLower)
+      );
+    }
+
+    // Tri des devis par numéro (ordre décroissant) au lieu de par date
+    const sortedQuotes = filteredQuotes.sort((a: Document, b: Document) => {
+      const aNumber = a.quote_number || 0;
+      const bNumber = b.quote_number || 0;
+      return bNumber - aNumber;
+    });
+
+    this.allQuotes.set(sortedQuotes);
+    console.log('Devis filtrés:', filteredQuotes.length);
+
+    // Filtrage des factures et notes de crédit
+    let invoicesAndCreditNotes = [...invoices, ...creditNotes];
+    console.log(
+      'Total factures et notes de crédit:',
+      invoicesAndCreditNotes.length
+    );
+
+    // Filtrage selon le filtre de factures
+    if (this.invoicesFilter === 'invoices') {
+      invoicesAndCreditNotes = invoices;
+    } else if (this.invoicesFilter === 'credit-notes') {
+      invoicesAndCreditNotes = creditNotes;
+    }
+
+    // Recherche par numéro pour les factures et notes de crédit
+    if (this.searchNumber()) {
+      const searchLower = this.searchNumber().toLowerCase();
+      invoicesAndCreditNotes = invoicesAndCreditNotes.filter((doc) => {
+        if (doc.documentType === 'invoice') {
+          return `f-${doc.invoice_number}`.toLowerCase().includes(searchLower);
+        } else if (doc.documentType === 'credit_note') {
+          return `nc-${doc.invoice_number}`.toLowerCase().includes(searchLower);
+        }
+        return false;
+      });
+    }
+
+    // Tri des factures et notes de crédit par numéro (ordre décroissant)
+    const sortedInvoicesAndCreditNotes = invoicesAndCreditNotes.sort(
+      (a: Document, b: Document) => {
+        const aNumber = a.invoice_number || 0;
+        const bNumber = b.invoice_number || 0;
+        return bNumber - aNumber;
+      }
+    );
+
+    this.allInvoicesAndCreditNotes.set(sortedInvoicesAndCreditNotes);
+    console.log(
+      'Factures et notes de crédit filtrées:',
+      sortedInvoicesAndCreditNotes.length
+    );
   }
 
   private getFormattedQuotes() {
@@ -305,6 +441,16 @@ export class FacturationComponent implements OnInit, OnDestroy {
         ...invoice,
         documentDate: invoice.invoice_date,
         documentType: 'credit_note',
+      }));
+  }
+
+  private getFormattedInvoices() {
+    return this.invoices
+      .filter((inv) => inv.type === 'invoice')
+      .map((invoice) => ({
+        ...invoice,
+        documentDate: invoice.invoice_date,
+        documentType: 'invoice',
       }));
   }
 
@@ -341,11 +487,24 @@ export class FacturationComponent implements OnInit, OnDestroy {
     );
   }
 
+  private updateInvoicesPagination(docs: any[]): void {
+    const totalItems = docs.length;
+    const totalPages = Math.ceil(totalItems / this.itemsPerPage());
+
+    this.invoicesPagination.totalItems.set(totalItems);
+    this.invoicesPagination.totalPages.set(Math.max(1, totalPages));
+
+    if (this.invoicesPagination.currentPage() > totalPages && totalPages > 0) {
+      this.invoicesPagination.currentPage.set(totalPages);
+    }
+  }
+
   generateQuotePDF(quote: QuoteEntity): void {
     this.services.pdf.generateQuotePDF(quote);
   }
 
   generateInvoicePDF(invoice: InvoiceEntity): void {
+    console.log('Invoice:', invoice);
     this.services.pdf.generateInvoicePDF(invoice);
   }
 
@@ -541,5 +700,60 @@ export class FacturationComponent implements OnInit, OnDestroy {
   protected onSearchChange(): void {
     this.pagination.currentPage.set(1);
     this.updateDocuments();
+  }
+
+  filterInvoicesList(type: 'all' | 'invoices' | 'credit-notes'): void {
+    this.invoicesFilter = type;
+    this.invoicesPagination.currentPage.set(1);
+    this.updateDocuments();
+  }
+
+  protected onInvoicesPageChange(page: number): void {
+    this.invoicesPagination.currentPage.set(page);
+  }
+
+  private getVisiblePagesGeneric(
+    currentPage: number,
+    totalPages: number
+  ): (number | 'ellipsis')[] {
+    if (totalPages <= 5) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+
+    if (currentPage <= 3) {
+      return [1, 2, 3, 'ellipsis', totalPages - 1, totalPages];
+    }
+
+    if (currentPage >= totalPages - 2) {
+      return [1, 2, 'ellipsis', totalPages - 2, totalPages - 1, totalPages];
+    }
+
+    return [
+      1,
+      'ellipsis',
+      currentPage - 1,
+      currentPage,
+      currentPage + 1,
+      'ellipsis',
+      totalPages,
+    ];
+  }
+
+  protected getVisibleInvoicesPages(
+    currentPage: number,
+    totalPages: number
+  ): (number | 'ellipsis')[] {
+    return this.getVisiblePagesGeneric(currentPage, totalPages);
+  }
+
+  // Méthodes pour caster les types et éviter les erreurs
+  protected asQuoteEntity(doc: Document): QuoteEntity {
+    // Conversion explicite pour le compilateur
+    return doc as unknown as QuoteEntity;
+  }
+
+  protected asInvoiceEntity(doc: Document): InvoiceEntity {
+    // Conversion explicite pour le compilateur
+    return doc as unknown as InvoiceEntity;
   }
 }

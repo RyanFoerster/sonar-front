@@ -593,6 +593,7 @@ export class PdfGeneratorService {
   }
 
   async generateInvoicePDF(invoice: InvoiceEntity): Promise<void> {
+    console.log('Invoice in pdf:', invoice);
     const doc = new jsPDF(this.getOptimizedPdfConfig());
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
@@ -639,7 +640,7 @@ export class PdfGeneratorService {
       { align: 'right' }
     );
     doc.text(
-      `N°${new Date().getFullYear()}-${invoice.invoice_number}`,
+      `N°${new Date().getFullYear()}/000${invoice.invoice_number}`,
       contentRightMargin,
       50,
       {
@@ -686,8 +687,10 @@ export class PdfGeneratorService {
     doc.setFont('helvetica', 'bold');
     const documentTitle =
       invoice.type === 'credit_note'
-        ? `Note de crédit n°${invoice.invoice_number}`
-        : `Facture n° ${new Date().getFullYear()}-${invoice.invoice_number}`;
+        ? `Note de crédit n°${new Date().getFullYear()}/000${
+            invoice.invoice_number
+          }`
+        : `Facture n° ${new Date().getFullYear()}/000${invoice.invoice_number}`;
     doc.text(documentTitle, contentLeftMargin, 95);
 
     // Date limite de paiement (alignée avec le bord gauche du tableau)
@@ -769,6 +772,37 @@ export class PdfGeneratorService {
         }
       },
     });
+
+    // Ajout des commentaires si présents
+    if (invoice.comment) {
+      const commentY = (doc as any).lastAutoTable.finalY + 15;
+
+      // Titre des commentaires
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Commentaires:', contentLeftMargin, commentY);
+      doc.setFont('helvetica', 'normal');
+
+      // Division du texte en lignes
+      const maxWidth = pageWidth - 2 * this.PAGE_MARGIN;
+      const commentLines = doc.splitTextToSize(invoice.comment, maxWidth);
+
+      // Affichage des lignes de commentaire
+      let currentY = commentY + 7;
+
+      // Vérifier si les commentaires peuvent tenir avant le QR code
+      const qrCodeStartY = finalY + 20;
+      const availableHeight = qrCodeStartY - currentY - 10;
+
+      if (commentLines.length * 5 > availableHeight) {
+        // Si les commentaires sont trop longs, on les place après le QR code
+        currentY = finalY + 75; // Position après le QR code
+      }
+
+      commentLines.forEach((line: string, index: number) => {
+        doc.text(line, contentLeftMargin, currentY + index * 5);
+      });
+    }
 
     // Informations bancaires en bas de page
     doc.setFontSize(9);

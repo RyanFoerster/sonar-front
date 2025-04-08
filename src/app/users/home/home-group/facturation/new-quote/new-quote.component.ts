@@ -1005,13 +1005,17 @@ export class NewQuoteComponent implements AfterViewInit {
         .pipe(take(1))
         .subscribe({
           next: () => {
+            this.isLoadingQuote.set(false);
             this.location.back();
           },
           error: (error: Error) => {
+            this.isLoadingQuote.set(false);
             console.error('Error creating quote:', error);
             toast.error('Erreur lors de la création du devis');
           },
         });
+    } else {
+      this.isLoadingQuote.set(false);
     }
   }
 
@@ -1102,10 +1106,10 @@ export class NewQuoteComponent implements AfterViewInit {
   }
 
   async updateQuote() {
-    this.isUpdating.set(true);
+    this.isLoadingQuote.set(true);
 
     if (!this.client() || !this.updatedQuoteId()) {
-      this.isUpdating.set(false);
+      this.isLoadingQuote.set(false);
       return;
     }
 
@@ -1141,11 +1145,12 @@ export class NewQuoteComponent implements AfterViewInit {
           this.isDoubleValidation()
         )
       );
-      this.isUpdating.set(false);
+      this.isLoadingQuote.set(false);
       this.goBack();
     } catch (error) {
       console.error('Erreur lors de la mise à jour du devis:', error);
-      this.isUpdating.set(false);
+      this.isLoadingQuote.set(false);
+      toast.error('Erreur lors de la mise à jour du devis');
     }
   }
 

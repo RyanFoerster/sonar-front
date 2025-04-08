@@ -184,6 +184,9 @@ export class PdfGeneratorService {
         3: { cellWidth: 40, halign: 'right' },
       },
       margin: { top: 30 },
+      didDrawPage: () => {
+        this.addFooter(doc, doc.internal.pageSize.getHeight(), []);
+      },
     });
 
     return (doc as any).lastAutoTable.finalY || tableStart;
@@ -355,44 +358,69 @@ export class PdfGeneratorService {
       },
     });
 
-    // Ajout des commentaires si présents
+    // Réinitialiser les couleurs après le tableau des totaux
+    doc.setTextColor(0, 0, 0);
+
+    // Ajout des commentaires si présents - position remontée juste après le tableau des totaux
     if (quote.comment) {
-      const commentStartY = (doc as any).lastAutoTable.finalY + 20;
-      let currentY = commentStartY;
+      // Position idéale des commentaires - directement après le tableau des totaux
+      const commentY =
+        (doc as any).previousAutoTable?.finalY + 15 || finalY + 10;
 
-      // Largeur disponible pour le texte
-      const maxWidth = pageWidth - 2 * this.PAGE_MARGIN;
+      // Définition de la position du footer (fixe)
+      const footerStartY = pageHeight - 45; // Position absolue du footer
 
-      // Division du texte en lignes
-      const commentLines = doc.splitTextToSize(quote.comment, maxWidth);
+      // Vérifier l'espace disponible sur la page actuelle
+      const availableSpace = footerStartY - commentY - 10;
 
-      // Calcul de l'espace disponible avant le footer
-      const footerHeight = 45;
-      const availableHeight = pageHeight - currentY - footerHeight;
-
-      // Si le commentaire ne tient pas sur la page courante, on crée une nouvelle page
-      if (commentLines.length * 5 > availableHeight) {
-        doc.addPage();
-        currentY = this.PAGE_MARGIN + 20;
-      }
-
-      // Titre des commentaires
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Commentaires:', this.PAGE_MARGIN, currentY);
+      // Calculer la hauteur approximative du texte
+      doc.setFontSize(9);
       doc.setFont('helvetica', 'normal');
+      const maxWidth = pageWidth - 2 * this.PAGE_MARGIN;
+      const commentLines = doc.splitTextToSize(quote.comment, maxWidth);
+      const lineHeight = 4;
+      const commentHeight = commentLines.length * lineHeight + 15; // +15 pour le titre et l'espacement
 
-      // Afficher tout le texte
-      commentLines.forEach((line: string, index: number) => {
-        const lineY = currentY + 7 + index * 5;
-        // Si on dépasse la limite de la page, on en crée une nouvelle
-        if (lineY > pageHeight - footerHeight) {
-          doc.addPage();
-          currentY = this.PAGE_MARGIN - index * 5;
-          this.addFooter(doc, pageHeight, []);
+      // Si pas assez d'espace, créer une nouvelle page
+      if (commentHeight > availableSpace) {
+        doc.addPage();
+
+        // Titre des commentaires en haut de la nouvelle page
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Commentaires:', this.PAGE_MARGIN, this.PAGE_MARGIN + 10);
+        doc.setFont('helvetica', 'normal');
+
+        // Ajouter les lignes de commentaire
+        doc.setFontSize(9);
+
+        // Gérer la pagination des commentaires si nécessaire
+        let currentY = this.PAGE_MARGIN + 20;
+
+        for (const line of commentLines) {
+          // Vérifier si on va dépasser la limite de la page
+          if (currentY > footerStartY - 10) {
+            // Passer à une nouvelle page
+            doc.addPage();
+            currentY = this.PAGE_MARGIN + 10;
+          }
+
+          // Écrire la ligne de commentaire
+          doc.text(line, this.PAGE_MARGIN, currentY);
+          currentY += lineHeight;
         }
-        doc.text(line, this.PAGE_MARGIN, lineY);
-      });
+      } else {
+        // Si assez d'espace, ajouter les commentaires sur la page actuelle
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Commentaires:', this.PAGE_MARGIN, commentY);
+
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        commentLines.forEach((line: string, index: number) => {
+          doc.text(line, this.PAGE_MARGIN, commentY + 10 + index * lineHeight);
+        });
+      }
     }
 
     // Ajouter le footer sur la dernière page
@@ -490,16 +518,31 @@ export class PdfGeneratorService {
     doc: jsPDF,
     invoice: InvoiceEntity,
     yPosition: number
-  ): Promise<void> {
+  ): Promise<number> {
     const qrCodeDataUrl = await this.generatePaymentQRCode(invoice);
+    let finalY = yPosition; // Initialiser avec la position de départ
+
     if (qrCodeDataUrl) {
       const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const footerStartY = pageHeight - 45; // Position de début du footer
 
       // Réduction de la taille du QR code
-      const qrCodeWidth = 30; // Réduit de 40 à 30
-      const qrCodeHeight = 30; // Réduit de 40 à 30
+      const qrCodeWidth = 30;
+      const qrCodeHeight = 30;
       const qrCodeX = this.PAGE_MARGIN;
-      const qrCodeY = yPosition + 20; // Réduit l'espace vertical
+      const qrCodeY = yPosition;
+
+      // Calculer la hauteur totale nécessaire pour le QR code + infos + conditions
+      const totalQrHeight = 80; // Estimation réaliste: QR(30) + Espace(5) + Info(20) + Espace(5) + TitreCond(5) + Cond(15)
+
+      // Vérifier si on a assez d'espace sur la page actuelle
+      if (qrCodeY + totalQrHeight > footerStartY) {
+        // Pas assez d'espace, créer une nouvelle page
+        doc.addPage();
+        // Appel récursif et retourner sa position Y finale
+        return this.addPaymentQRCode(doc, invoice, this.PAGE_MARGIN);
+      }
 
       // Optimisation de l'ajout du QR code
       doc.addImage(
@@ -513,27 +556,27 @@ export class PdfGeneratorService {
         'MEDIUM'
       );
 
-      // Ajout des informations de paiement à côté du QR code
-      doc.setFontSize(8); // Réduit de 9 à 8
+      // Ajout des informations de paiement à côté du QR code (plus compact)
+      doc.setFontSize(8);
       doc.setTextColor(0);
       let textY = qrCodeY + 5;
       doc.text('Informations de paiement:', qrCodeX + qrCodeWidth + 10, textY);
-      textY += 6; // Réduit l'espacement vertical de 8 à 6
+      textY += 5;
       doc.text(
         `IBAN: ${this.COMPANY_INFO.iban}`,
         qrCodeX + qrCodeWidth + 10,
         textY
       );
-      textY += 6; // Réduit l'espacement vertical de 8 à 6
+      textY += 5;
       doc.text(
         `BIC: ${this.COMPANY_INFO.bic}`,
         qrCodeX + qrCodeWidth + 10,
         textY
       );
-      textY += 6; // Réduit l'espacement vertical de 8 à 6
-      const reference = `facture_${
+      textY += 5;
+      const reference = `facture_N°${new Date().getFullYear()}/000${
         invoice.invoice_number
-      }_${invoice.client.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
+      }`;
       doc.text(
         `Communication: ${reference}`,
         qrCodeX + qrCodeWidth + 10,
@@ -541,55 +584,44 @@ export class PdfGeneratorService {
       );
 
       // Ajout des conditions de paiement en dessous du QR code
-      // Calcul de la position pour éviter le chevauchement avec le pied de page
-      const pageHeight = doc.internal.pageSize.getHeight();
-      const footerStartY = pageHeight - 45; // Position de début du footer
       const conditionsPaiement =
         "Toute somme non payée à son échéance porte intérêt de retard de plein droit et sans mise en demeure préalable au taux de 12 % l'an. En cas de non-paiement à l'échéance, les factures sont majorées de plein droit d'une indemnité forfaitaire de 15 % à titre de dommages et intérêts conventionnels avec un minimum de 150 euros et indépendamment des intérêts de retard.";
 
-      // Positionnement des conditions de paiement
-      const conditionsY = qrCodeY + qrCodeHeight + 8; // Réduit l'espace après le QR code
+      // Positionnement des conditions de paiement - plus compact
+      const conditionsY = qrCodeY + qrCodeHeight + 5;
 
-      // Toujours afficher les conditions, mais adapter la taille et la position
-      doc.setFontSize(7); // Taille de police réduite
+      // Adapter la taille de police pour les conditions
+      doc.setFontSize(6.5);
       doc.setFont('helvetica', 'bold');
       doc.text('Conditions de paiement:', qrCodeX, conditionsY);
 
       doc.setFont('helvetica', 'normal');
       const maxWidth = pageWidth - 2 * this.PAGE_MARGIN;
 
-      // Calculer l'espace disponible entre les conditions et le footer
-      const availableHeight = footerStartY - conditionsY - 8;
-
-      // Adapter la taille de police en fonction de l'espace disponible
-      if (availableHeight < 30) {
-        // Très peu d'espace disponible, utiliser une police très petite
-        doc.setFontSize(6);
-      } else if (availableHeight < 40) {
-        // Espace limité, utiliser une petite police
-        doc.setFontSize(6.5);
-      }
-
       // Diviser le texte pour qu'il s'adapte à la largeur disponible
-      const splitText = doc.splitTextToSize(conditionsPaiement, maxWidth);
+      let splitText = doc.splitTextToSize(conditionsPaiement, maxWidth);
 
-      // Estimer la hauteur du texte
-      const textHeight = splitText.length * 3; // Approximation de la hauteur (3 points par ligne)
+      // Calculer si le texte va dépasser le footer
+      let textHeight = splitText.length * 3;
 
-      // Si le texte risque de dépasser le footer, réduire encore la taille
-      if (conditionsY + 6 + textHeight > footerStartY) {
-        // Réduire davantage la taille de police
-        doc.setFontSize(5.5);
-        const splitTextSmaller = doc.splitTextToSize(
-          conditionsPaiement,
-          maxWidth
-        );
-        doc.text(splitTextSmaller, qrCodeX, conditionsY + 6);
+      if (conditionsY + 5 + textHeight > footerStartY) {
+        // Si les conditions risquent de déborder, les afficher en taille plus petite
+        doc.setFontSize(6);
+        splitText = doc.splitTextToSize(conditionsPaiement, maxWidth);
+        textHeight = splitText.length * 2.5; // Ajuster la hauteur pour la police plus petite
+        doc.text(splitText, qrCodeX, conditionsY + 5);
       } else {
-        // Sinon, utiliser la taille déjà définie
-        doc.text(splitText, qrCodeX, conditionsY + 6);
+        doc.text(splitText, qrCodeX, conditionsY + 5);
       }
+
+      // Calculer la position Y finale après les conditions
+      finalY = conditionsY + 5 + textHeight;
+    } else {
+      // S'il n'y a pas de QR code généré, retourner la position initiale
+      finalY = yPosition;
     }
+
+    return finalY; // Retourner la position Y la plus basse atteinte
   }
 
   async generateInvoicePDF(invoice: InvoiceEntity): Promise<void> {
@@ -597,20 +629,20 @@ export class PdfGeneratorService {
     const doc = new jsPDF(this.getOptimizedPdfConfig());
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
+    const footerStartY = pageHeight - 45; // Position fixe du début du footer
 
     // Configuration initiale du document
     doc.setFontSize(10);
     doc.setFont('helvetica');
 
-    // Définition des marges pour aligner avec le tableau
-    const tableWidth = 190; // Largeur standard du tableau
-    const contentLeftMargin = (pageWidth - tableWidth) / 2;
-    const contentRightMargin = pageWidth - contentLeftMargin;
+    // Marges de contenu pour un alignement cohérent
+    const contentLeftMargin = this.PAGE_MARGIN; // Utiliser la marge standard
+    const contentRightMargin = pageWidth - this.PAGE_MARGIN; // Utiliser la marge standard
 
-    // Optimisation de l'ajout du logo avec dimensions carrées
+    // Ajout du logo
     try {
       const logoUrl = '/assets/images/SONAR.png';
-      const logoSize = 40; // Taille carrée pour le logo
+      const logoSize = 40;
       doc.addImage(
         logoUrl,
         'PNG',
@@ -625,64 +657,98 @@ export class PdfGeneratorService {
       console.warn(`Impossible de charger le logo: ${error.message}`);
     }
 
-    // Titre Facture et date (ajusté pour le nouveau positionnement du logo)
+    // Titre (Facture/Note de crédit) et Numéro/Date
+    let currentY = this.PAGE_MARGIN + 10; // Démarrer un peu plus bas
     doc.setFontSize(28);
     doc.setTextColor(51, 51, 51);
     doc.setFont('helvetica', 'bold');
     const title = invoice.type === 'credit_note' ? 'Note de crédit' : 'Facture';
-    doc.text(title, contentRightMargin, 35, { align: 'right' });
+    doc.text(title, contentRightMargin, currentY, { align: 'right' });
+    currentY += 10; // Espacement
     doc.setFontSize(11);
     doc.setFont('helvetica', 'normal');
     doc.text(
       this.formatDateBelgium(invoice.invoice_date),
       contentRightMargin,
-      45,
+      currentY,
       { align: 'right' }
     );
+    currentY += 5;
     doc.text(
       `N°${new Date().getFullYear()}/000${invoice.invoice_number}`,
       contentRightMargin,
-      50,
+      currentY,
       {
         align: 'right',
       }
     );
 
-    // Informations de l'émetteur (ajustées pour le nouveau positionnement du logo)
-    doc.setFontSize(16);
-    doc.setFont('helvetica', 'bold');
-    doc.text(this.COMPANY_INFO.name, contentLeftMargin, 70);
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.text(this.COMPANY_INFO.address, contentLeftMargin, 80);
-    doc.text(this.COMPANY_INFO.email, contentLeftMargin, 85);
+    // Espacement avant les informations
+    currentY = Math.max(currentY, this.PAGE_MARGIN + 40) + 15; // S'assurer d'être sous le logo + espace
 
-    // Informations du client (ajustées pour maintenir l'alignement)
-    doc.setFontSize(16);
+    // Informations de l'émetteur
+    const companyInfoStartY = currentY;
+    doc.setFontSize(10); // Taille réduite pour plus de clarté
     doc.setFont('helvetica', 'bold');
-    doc.text(invoice.client.name, contentRightMargin, 70, { align: 'right' });
-    doc.setFontSize(10);
+    doc.text(this.COMPANY_INFO.name, contentLeftMargin, currentY);
+    currentY += 5;
+    doc.setFont('helvetica', 'normal');
+    doc.text(this.COMPANY_INFO.address, contentLeftMargin, currentY);
+    currentY += 5;
+    doc.text(this.COMPANY_INFO.city, contentLeftMargin, currentY);
+    currentY += 5;
+    doc.text(this.COMPANY_INFO.vat, contentLeftMargin, currentY);
+    currentY += 5;
+    doc.text(`Email: ${this.COMPANY_INFO.email}`, contentLeftMargin, currentY);
+    const companyInfoEndY = currentY;
+
+    // Informations du client (aligné à droite)
+    currentY = companyInfoStartY; // Réinitialiser pour aligner verticalement
+    const clientInfoX = contentRightMargin;
+    doc.setFontSize(10); // Taille réduite
+    doc.setFont('helvetica', 'bold');
+    const clientNameLines = doc.splitTextToSize(
+      invoice.client.name,
+      this.MAX_WIDTH
+    );
+    clientNameLines.forEach((line: string) => {
+      doc.text(line, clientInfoX, currentY, { align: 'right' });
+      currentY += 5;
+    });
     doc.setFont('helvetica', 'normal');
     doc.text(
       `${invoice.client.street} ${invoice.client.number}`,
-      contentRightMargin,
-      80,
+      clientInfoX,
+      currentY,
       { align: 'right' }
     );
+    currentY += 5;
     doc.text(
       `${invoice.client.postalCode} ${invoice.client.city}`,
-      contentRightMargin,
-      85,
+      clientInfoX,
+      currentY,
       { align: 'right' }
     );
+    currentY += 5;
+    doc.text(
+      invoice.client.country, // Ajout du pays
+      clientInfoX,
+      currentY,
+      { align: 'right' }
+    );
+    currentY += 5;
     doc.text(
       `TVA: ${invoice.client.company_vat_number || 'Non assujetti'}`,
-      contentRightMargin,
-      90,
+      clientInfoX,
+      currentY,
       { align: 'right' }
     );
+    const clientInfoEndY = currentY;
 
-    // Titre de la facture (aligné avec le bord gauche du tableau)
+    // Positionner le titre du document sous le bloc le plus bas (émetteur ou client)
+    currentY = Math.max(companyInfoEndY, clientInfoEndY) + 15; // Espace après les infos
+
+    // Titre de la facture
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
     const documentTitle =
@@ -691,9 +757,10 @@ export class PdfGeneratorService {
             invoice.invoice_number
           }`
         : `Facture n° ${new Date().getFullYear()}/000${invoice.invoice_number}`;
-    doc.text(documentTitle, contentLeftMargin, 95);
+    doc.text(documentTitle, contentLeftMargin, currentY);
+    currentY += 10; // Espace après le titre
 
-    // Date limite de paiement (alignée avec le bord gauche du tableau)
+    // Date limite de paiement
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
     doc.text(
@@ -703,136 +770,167 @@ export class PdfGeneratorService {
           : 'N/A'
       }`,
       contentLeftMargin,
-      105
+      currentY
     );
+    currentY += 15; // Plus d'espace avant le tableau
 
-    const startY = 115;
+    const productTableStartY = currentY;
 
-    // Tableau des produits avec marges alignées
+    // Tableau des produits
     autoTable(doc, {
       head: [['Description', 'Qté', 'Prix HT', 'Remise', 'Total HT']],
       body: invoice.products.map((product) => [
         product.description,
         product.quantity.toString(),
         `${product.price_htva!.toFixed(2)}€`,
-        '0,00€',
+        '0,00€', // Remise fixe, à adapter si nécessaire
         `${(product.price_htva! * product.quantity).toFixed(2)}€`,
       ]),
-      startY: startY,
+      startY: productTableStartY,
       styles: {
         fontSize: 9,
-        cellPadding: 5,
+        cellPadding: 4, // Padding réduit
       },
       headStyles: {
-        fillColor: [200, 192, 77],
+        fillColor: [200, 192, 77], // Jaune Sonar
         textColor: 255,
         fontSize: 9,
         fontStyle: 'bold',
-        halign: 'left',
+        halign: 'center', // Centrer les en-têtes par défaut
       },
       columnStyles: {
-        0: { cellWidth: 80 },
+        0: { cellWidth: 'auto', halign: 'left' }, // Description alignée à gauche
         1: { cellWidth: 20, halign: 'center' },
         2: { cellWidth: 30, halign: 'right' },
         3: { cellWidth: 30, halign: 'right' },
         4: { cellWidth: 30, halign: 'right' },
       },
+      willDrawCell: function (data) {
+        // Appliquer l'alignement spécifique pour l'en-tête de la description
+        if (data.row.section === 'head' && data.column.index === 0) {
+          data.cell.styles.halign = 'left';
+        }
+      },
       margin: { left: contentLeftMargin, right: contentLeftMargin },
+      didDrawPage: () => {
+        this.addFooter(doc, pageHeight, []);
+      },
     });
 
-    // Position Y après le tableau
-    const finalY = (doc as any).lastAutoTable.finalY + 10;
+    // Position Y juste après le tableau des produits
+    const productsTableFinalY = (doc as any).lastAutoTable.finalY;
 
-    // Tableau des totaux avec alignement amélioré
+    // --- Gestion Tableau des Totaux ---
+    // Positionner les totaux juste en dessous du tableau produits
+    currentY = productsTableFinalY + 5; // Petit espace après tableau produits
+
+    // Calculer la hauteur *réelle* du tableau des totaux (approximatif)
+    const totalsRowCount = 4; // Sous-total, TVA 6%, TVA 21%, Total
+    const totalsRowHeight = 7; // Basé sur fontSize 9 + padding 2
+    const totalsTableHeight = totalsRowCount * totalsRowHeight;
+
+    // Vérifier si les totaux tiennent sur la page actuelle
+    if (currentY + totalsTableHeight > footerStartY) {
+      doc.addPage();
+      currentY = this.PAGE_MARGIN;
+      // Le didDrawPage du tableau précédent a déjà ajouté le footer
+    }
+
+    // Dessiner le tableau des totaux
     autoTable(doc, {
       body: [
         ['Sous-total', `${invoice.price_htva.toFixed(2)}€`],
         ['TVA 6%', `${invoice.total_vat_6.toFixed(2)}€`],
         ['TVA 21%', `${invoice.total_vat_21.toFixed(2)}€`],
         ['Total', `${invoice.total.toFixed(2)}€`],
-        ['Payé', '0,00€'],
-        ['Solde', `${invoice.total.toFixed(2)}€`],
       ],
-      startY: finalY,
-      margin: { left: pageWidth - 90 },
+      startY: currentY,
+      // Aligner le tableau des totaux à droite de la page
+      margin: { left: contentRightMargin - 80 }, // Aligner la fin avec la marge droite (largeur table = 80)
       styles: {
         fontSize: 9,
         cellPadding: 2,
       },
       theme: 'plain',
       columnStyles: {
-        0: { cellWidth: 40, halign: 'right' },
-        1: { cellWidth: 40, halign: 'right', fontStyle: 'bold' },
-      },
-      didDrawCell: (data) => {
-        // Mettre en surbrillance la dernière ligne (Solde)
-        if (data.row.index === 5) {
-          doc.setFillColor(0, 0, 0);
-          doc.setTextColor(255, 255, 255);
-        }
+        0: { cellWidth: 40, halign: 'right' }, // Libellé à droite
+        1: { cellWidth: 40, halign: 'right', fontStyle: 'bold' }, // Montant à droite
       },
     });
 
-    // Ajout des commentaires si présents
+    // Mettre à jour currentY après le tableau des totaux
+    currentY = (doc as any).lastAutoTable.finalY + 5; // Espace réduit après totaux
+
+    // Réinitialiser les styles
+    doc.setTextColor(0, 0, 0);
+    doc.setFont('helvetica', 'normal');
+
+    // --- Gestion QR Code (AVANT commentaires) ---
+    let finalYAfterQRCode = currentY;
+    if (invoice.type !== 'credit_note') {
+      finalYAfterQRCode = await this.addPaymentQRCode(doc, invoice, currentY);
+      // Ajouter un petit espace après le bloc QR/Conditions
+      currentY = finalYAfterQRCode + 5; // Espace encore réduit
+    }
+
+    // --- Gestion Commentaires (APRES QR Code) ---
+    // Utiliser la position Y après le QR code (ou après les totaux si pas de QR)
+
+    // Calculer l'espace nécessaire pour les commentaires
+    let spaceNeededForComments = 0;
+    let commentLines: string[] = [];
+    const commentTitleHeight = 10; // Hauteur titre + petit espacement
+    const commentLineHeight = 4;
+    const commentMaxWidth = pageWidth - 2 * contentLeftMargin;
+
     if (invoice.comment) {
-      const commentY = (doc as any).lastAutoTable.finalY + 15;
+      doc.setFontSize(9); // Taille pour le calcul
+      commentLines = doc.splitTextToSize(invoice.comment, commentMaxWidth);
+      spaceNeededForComments =
+        commentLines.length * commentLineHeight + commentTitleHeight;
+    }
 
-      // Titre des commentaires
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Commentaires:', contentLeftMargin, commentY);
-      doc.setFont('helvetica', 'normal');
-
-      // Division du texte en lignes
-      const maxWidth = pageWidth - 2 * this.PAGE_MARGIN;
-      const commentLines = doc.splitTextToSize(invoice.comment, maxWidth);
-
-      // Affichage des lignes de commentaire
-      let currentY = commentY + 7;
-
-      // Vérifier si les commentaires peuvent tenir avant le QR code
-      const qrCodeStartY = finalY + 20;
-      const availableHeight = qrCodeStartY - currentY - 10;
-
-      if (commentLines.length * 5 > availableHeight) {
-        // Si les commentaires sont trop longs, on les place après le QR code
-        currentY = finalY + 75; // Position après le QR code
+    // Ajouter les commentaires (avec gestion de page si nécessaire)
+    if (invoice.comment && commentLines.length > 0) {
+      // Faut-il une nouvelle page AVANT les commentaires (basé sur l'espace RESTANT) ?
+      if (currentY + spaceNeededForComments > footerStartY) {
+        doc.addPage();
+        currentY = this.PAGE_MARGIN; // Réinitialiser en haut de la nouvelle page
+        // Le didDrawPage du tableau précédent (totaux) a déjà ajouté le footer
       }
 
-      commentLines.forEach((line: string, index: number) => {
-        doc.text(line, contentLeftMargin, currentY + index * 5);
+      // Dessiner les commentaires
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Commentaires:', contentLeftMargin, currentY);
+      currentY += 5; // Espace après titre
+
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+      commentLines.forEach((line: string) => {
+        // Vérifier si on dépasse PENDANT l'écriture des lignes (long commentaire)
+        if (currentY + commentLineHeight > footerStartY) {
+          doc.addPage();
+          currentY = this.PAGE_MARGIN;
+          // Le didDrawPage du tableau précédent OU le addFooter de la page d'avant
+          // (si commentaires longs) devrait avoir géré le footer.
+          // Redessiner le titre sur la nouvelle page
+          doc.setFontSize(10);
+          doc.setFont('helvetica', 'bold');
+          doc.text('Commentaires:', contentLeftMargin, currentY);
+          currentY += 5;
+          doc.setFontSize(9);
+          doc.setFont('helvetica', 'normal');
+        }
+        doc.text(line, contentLeftMargin, currentY);
+        currentY += commentLineHeight;
       });
     }
 
-    // Informations bancaires en bas de page
-    doc.setFontSize(9);
-    doc.setTextColor(51, 51, 51);
-
-    // Colonne 1 - Siège social
-    doc.setFont('helvetica', 'bold');
-    doc.text('Siège social', 10, pageHeight - 40);
-    doc.setFont('helvetica', 'normal');
-    doc.text(this.COMPANY_INFO.address, 10, pageHeight - 35);
-    doc.text(this.COMPANY_INFO.city, 10, pageHeight - 30);
-
-    // Colonne 2 - Coordonnées
-    doc.setFont('helvetica', 'bold');
-    doc.text('Coordonnées', 80, pageHeight - 40);
-    doc.setFont('helvetica', 'normal');
-    doc.text(this.COMPANY_INFO.name, 80, pageHeight - 35);
-    doc.text(this.COMPANY_INFO.email, 80, pageHeight - 30);
-
-    // Colonne 3 - Détails bancaires
-    doc.setFont('helvetica', 'bold');
-    doc.text('Détails bancaires', 150, pageHeight - 40);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`IBAN: ${this.COMPANY_INFO.iban}`, 150, pageHeight - 35);
-    doc.text('BIC: GEBABEBB', 150, pageHeight - 30);
-
-    // Ajouter le QR code seulement pour les factures (pas pour les notes de crédit)
-    if (invoice.type !== 'credit_note') {
-      await this.addPaymentQRCode(doc, invoice, finalY);
-    }
+    // Ajouter le footer sur la DERNIÈRE page explicitement
+    // (didDrawPage ne s'exécute pas s'il n'y a pas de tableau sur la dernière page,
+    // ou si le dernier élément n'est pas un tableau)
+    this.addFooter(doc, pageHeight, []);
 
     const prefix = invoice.type === 'credit_note' ? 'note-credit' : 'facture';
     doc.save(`${prefix}_${invoice.invoice_number}.pdf`);

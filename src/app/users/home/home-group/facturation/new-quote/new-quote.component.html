@@ -649,7 +649,7 @@
             <p class="flex items-center gap-2 text-sm text-gray-700">
               <hlm-checkbox
                 [checked]="isTvaIncluded()"
-                (click)="toggleTvaIncluded()"
+                (checkedChange)="toggleTvaIncluded()"
                 [disabled]="products().length === 0"
                 class="rounded-md"
               />
@@ -1000,32 +1000,23 @@
             disabled
           >
             <hlm-icon class="animate-spin" size="sm" name="lucideLoader" />
-            Génération du devis...
-          </button>
-          } @else { @if (!isUpdating()) {
-          <button
-            class="bg-primary text-white font-medium text-sm rounded-lg px-4 py-2 md:px-6 md:py-2.5 flex items-center gap-2 hover:bg-primary/90 transition-all w-full md:w-auto"
-            hlmBtn
-            type="submit"
-          >
-            <hlm-icon size="sm" name="lucideFileDown" />
-            {{ updatedQuoteId() ? "Modifier le devis" : "Générer le devis" }}
-          </button>
-          } @else {
-          <button
-            class="bg-gray-700 text-white font-medium text-sm rounded-lg px-4 py-2 md:px-6 md:py-2.5 flex items-center gap-2 hover:bg-gray-200 transition-all w-full md:w-auto"
-            hlmBtn
-            type="submit"
-            disabled
-          >
-            <hlm-icon class="animate-spin" size="sm" name="lucideLoader" />
             {{
               updatedQuoteId()
                 ? "Modification du devis..."
                 : "Génération du devis..."
             }}
           </button>
-          }}
+          } @else {
+          <button
+            class="bg-primary text-white font-medium text-sm rounded-lg px-4 py-2 md:px-6 md:py-2.5 flex items-center gap-2 hover:bg-primary/90 transition-all w-full md:w-auto"
+            hlmBtn
+            type="submit"
+            (click)="isLoadingQuote.set(true)"
+          >
+            <hlm-icon size="sm" name="lucideFileDown" />
+            {{ updatedQuoteId() ? "Modifier le devis" : "Générer le devis" }}
+          </button>
+          }
         </div>
       </div>
 

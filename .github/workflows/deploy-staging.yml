@@ -1,6 +1,8 @@
 name: Deploy to Staging Environment
 
 on:
+  push:
+    branches: ["*"]
   workflow_run:
     workflows: ["Docker Staging Image"]
     types:

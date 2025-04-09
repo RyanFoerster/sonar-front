@@ -214,8 +214,10 @@ export class NewCreditNoteComponent implements AfterViewInit {
       });
 
     this.createCreditNoteForm = this.formBuilder.group({
-      credit_note_date: ['', Validators.required],
-      service_date: ['', Validators.required],
+      credit_note_date: [
+        this.datePipe.transform(this.currentDate, 'yyyy-MM-dd'),
+        Validators.required,
+      ],
       client_id: ['', Validators.required],
       products: [[]],
       vat_included: [false],

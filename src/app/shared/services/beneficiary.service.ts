@@ -4,6 +4,13 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Beneficiary } from '../entities/beneficiary.entity';
 
+interface BeneficiaryPaginatedResponse {
+  items: Beneficiary[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -11,8 +18,24 @@ export class BeneficiaryService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = `${environment.API_URL}/beneficiaries`;
 
-  getAllBeneficiaries(): Observable<{ items: Beneficiary[] }> {
-    return this.http.get<{ items: Beneficiary[] }>(this.apiUrl);
+  getAllBeneficiaries(
+    page = 1,
+    limit = 10
+  ): Observable<BeneficiaryPaginatedResponse> {
+    // Définir clairement les paramètres pour éviter toute confusion côté serveur
+    return this.http.get<BeneficiaryPaginatedResponse>(
+      `${this.apiUrl}?page=${page}&limit=${limit}`
+    );
+  }
+
+  // Récupérer une page spécifique de bénéficiaires sans charger les autres pages
+  getBeneficiariesPage(
+    page = 1,
+    limit = 10
+  ): Observable<BeneficiaryPaginatedResponse> {
+    return this.http.get<BeneficiaryPaginatedResponse>(
+      `${this.apiUrl}?page=${page}&limit=${limit}`
+    );
   }
 
   createBeneficiary(

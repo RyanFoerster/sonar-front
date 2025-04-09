@@ -49,7 +49,15 @@ import {
   HlmThComponent,
   HlmTrowComponent,
 } from '@spartan-ng/ui-table-helm';
-import { catchError, delay, forkJoin, from, of, tap } from 'rxjs';
+import {
+  catchError,
+  delay,
+  forkJoin,
+  from,
+  lastValueFrom,
+  of,
+  tap,
+} from 'rxjs';
 import { switchMap, take } from 'rxjs/operators';
 import { CompteGroupeEntity } from '../../../../shared/entities/compte-groupe.entity';
 import { PrincipalAccountEntity } from '../../../../shared/entities/principal-account.entity';
@@ -208,6 +216,9 @@ export class ProjectAccountComponent implements AfterViewInit {
     filteredBeneficiaries: signal<Beneficiary[]>([]),
     selectedBeneficiary: signal<Beneficiary | null>(null),
     showBeneficiariesDropdown: signal(false),
+    visibleBeneficiaries: signal<Beneficiary[]>([]),
+    beneficiariesPageSize: signal(10),
+    beneficiariesCurrentPage: signal(1),
     resetForm: (form: FormGroup) => {
       form.reset();
       this.state.amountHtva.set(0);
@@ -907,53 +918,97 @@ export class ProjectAccountComponent implements AfterViewInit {
 
   private async loadBeneficiaries() {
     try {
-      const beneficiaries: Beneficiary[] = [];
+      // Charge uniquement la première page des bénéficiaires au chargement initial
+      const data = await lastValueFrom(
+        this.services.beneficiary.getBeneficiariesPage(1).pipe(take(1))
+      );
 
-      this.services.beneficiary
-        .getAllBeneficiaries()
-        .pipe(
-          take(1),
-          tap((data) => {
-            beneficiaries.push(...data.items);
-            if (beneficiaries && beneficiaries.length > 0) {
-              this.state.beneficiaries.set(beneficiaries);
-              this.state.filteredBeneficiaries.set(beneficiaries);
-            } else {
-              this.state.beneficiaries.set([]);
-              this.state.filteredBeneficiaries.set([]);
-            }
-          })
-        )
-        .subscribe();
+      if (data && data.items && data.items.length > 0) {
+        this.state.beneficiaries.set(data.items);
+        this.state.filteredBeneficiaries.set(data.items);
+
+        // Initialiser la page courante et le nombre total de pages
+        this.state.beneficiariesCurrentPage.set(1);
+
+        // Charger les éléments visibles pour la première page
+        this.loadMoreBeneficiaries();
+      } else {
+        this.state.beneficiaries.set([]);
+        this.state.filteredBeneficiaries.set([]);
+        this.state.visibleBeneficiaries.set([]);
+      }
     } catch (error) {
       console.error('Erreur lors du chargement des bénéficiaires:', error);
       this.state.beneficiaries.set([]);
       this.state.filteredBeneficiaries.set([]);
+      this.state.visibleBeneficiaries.set([]);
     }
   }
 
   protected filterBeneficiaries(event: Event): void {
     const target = event.target as HTMLInputElement;
     const value = target.value.toLowerCase();
-    const currentBeneficiaries = this.state.beneficiaries();
-
-    if (!Array.isArray(currentBeneficiaries)) {
-      this.state.filteredBeneficiaries.set([]);
-      return;
-    }
 
     if (!value) {
-      this.state.filteredBeneficiaries.set(currentBeneficiaries);
+      // Si le champ est vide, afficher tous les bénéficiaires déjà chargés
+      this.state.filteredBeneficiaries.set(this.state.beneficiaries());
+      // Réinitialiser la pagination et recharger la première page
+      this.state.beneficiariesCurrentPage.set(1);
+      this.loadMoreBeneficiaries();
       return;
     }
 
-    const filtered = currentBeneficiaries.filter(
-      (beneficiary) =>
-        beneficiary?.account_owner?.toLowerCase().includes(value) ||
-        beneficiary?.iban?.toLowerCase().includes(value)
-    );
+    if (value.length >= 3) {
+      // Si le texte a au moins 3 caractères, utiliser la recherche backend
+      this.services.beneficiary
+        .searchBeneficiaries(value)
+        .pipe(
+          take(1),
+          tap((results) => {
+            // Assurer qu'il n'y a pas de doublons dans les résultats de recherche
+            const uniqueResults = new Map<number, Beneficiary>();
+            results.forEach((beneficiary) => {
+              if (beneficiary && beneficiary.id) {
+                uniqueResults.set(beneficiary.id, beneficiary);
+              }
+            });
 
-    this.state.filteredBeneficiaries.set(filtered);
+            this.state.filteredBeneficiaries.set(
+              Array.from(uniqueResults.values())
+            );
+            // Réinitialiser la pagination et recharger la première page
+            this.state.beneficiariesCurrentPage.set(1);
+            this.loadMoreBeneficiaries();
+          }),
+          catchError((error) => {
+            console.error(
+              'Erreur lors de la recherche des bénéficiaires:',
+              error
+            );
+            return of([]);
+          })
+        )
+        .subscribe();
+    } else {
+      // Sinon, filtrer sur les données locales déjà chargées
+      const currentBeneficiaries = this.state.beneficiaries();
+      if (!Array.isArray(currentBeneficiaries)) {
+        this.state.filteredBeneficiaries.set([]);
+        this.state.visibleBeneficiaries.set([]);
+        return;
+      }
+
+      const filtered = currentBeneficiaries.filter(
+        (beneficiary) =>
+          beneficiary?.account_owner?.toLowerCase().includes(value) ||
+          beneficiary?.iban?.toLowerCase().includes(value)
+      );
+
+      this.state.filteredBeneficiaries.set(filtered);
+      // Réinitialiser la pagination et recharger la première page
+      this.state.beneficiariesCurrentPage.set(1);
+      this.loadMoreBeneficiaries();
+    }
   }
 
   protected toggleBeneficiariesDropdown(event: Event): void {
@@ -963,7 +1018,87 @@ export class ProjectAccountComponent implements AfterViewInit {
       !this.state.showBeneficiariesDropdown()
     );
     if (this.state.showBeneficiariesDropdown()) {
-      this.state.filteredBeneficiaries.set(this.state.beneficiaries());
+      // S'assurer que la liste des bénéficiaires n'a pas de doublons avant de l'afficher
+      const uniqueBeneficiaries = new Map<number, Beneficiary>();
+      this.state.beneficiaries().forEach((beneficiary) => {
+        if (beneficiary && beneficiary.id) {
+          uniqueBeneficiaries.set(beneficiary.id, beneficiary);
+        }
+      });
+      const allBeneficiaries = Array.from(uniqueBeneficiaries.values());
+      this.state.filteredBeneficiaries.set(allBeneficiaries);
+
+      // Réinitialiser la pagination et charger la première page
+      this.state.beneficiariesCurrentPage.set(1);
+      this.loadMoreBeneficiaries();
+    }
+  }
+
+  // Méthode pour charger plus de bénéficiaires
+  protected loadMoreBeneficiaries(loadMore = false): void {
+    if (loadMore) {
+      // Récupérer la page suivante depuis le serveur
+      const nextPage = this.state.beneficiariesCurrentPage() + 1;
+
+      this.services.beneficiary
+        .getBeneficiariesPage(nextPage)
+        .pipe(
+          take(1),
+          tap((data) => {
+            // Ajouter les nouveaux bénéficiaires à ceux déjà chargés
+            if (data && data.items && data.items.length > 0) {
+              // Garder une trace des IDs pour éviter les doublons
+              const currentIds = new Set(
+                this.state.beneficiaries().map((b) => b.id)
+              );
+
+              // Filtrer pour ne garder que les nouveaux bénéficiaires
+              const newBeneficiaries = data.items.filter(
+                (b) => !currentIds.has(b.id)
+              );
+
+              // Mettre à jour la liste complète des bénéficiaires
+              const updatedBeneficiaries = [
+                ...this.state.beneficiaries(),
+                ...newBeneficiaries,
+              ];
+
+              this.state.beneficiaries.set(updatedBeneficiaries);
+              this.state.beneficiariesCurrentPage.set(nextPage);
+
+              // Mettre à jour également les bénéficiaires filtrés si aucun filtre n'est actif
+              const searchValue = (
+                document.querySelector(
+                  'input[placeholder="Rechercher un bénéficiaire"]'
+                ) as HTMLInputElement
+              )?.value;
+              if (!searchValue) {
+                this.state.filteredBeneficiaries.set(updatedBeneficiaries);
+              }
+
+              // Mettre à jour les bénéficiaires visibles (uniquement les 10 premiers de la page)
+              this.state.visibleBeneficiaries.set([
+                ...this.state.visibleBeneficiaries(),
+                ...newBeneficiaries,
+              ]);
+            }
+          }),
+          catchError((error) => {
+            console.error(
+              'Erreur lors du chargement des bénéficiaires supplémentaires:',
+              error
+            );
+            return of(null);
+          })
+        )
+        .subscribe();
+    } else {
+      // Initialiser les bénéficiaires visibles avec les 10 premiers
+      const pageSize = this.state.beneficiariesPageSize();
+      const visibleItems = this.state
+        .filteredBeneficiaries()
+        .slice(0, pageSize);
+      this.state.visibleBeneficiaries.set(visibleItems);
     }
   }
 
@@ -984,7 +1119,16 @@ export class ProjectAccountComponent implements AfterViewInit {
 
     if (!dropdownElement) {
       this.state.showBeneficiariesDropdown.set(false);
-      this.state.filteredBeneficiaries.set(this.state.beneficiaries());
+      // S'assurer que la liste filtrée n'a pas de doublons
+      const uniqueBeneficiaries = new Map<number, Beneficiary>();
+      this.state.beneficiaries().forEach((beneficiary) => {
+        if (beneficiary && beneficiary.id) {
+          uniqueBeneficiaries.set(beneficiary.id, beneficiary);
+        }
+      });
+      this.state.filteredBeneficiaries.set(
+        Array.from(uniqueBeneficiaries.values())
+      );
     }
   }
 
@@ -992,7 +1136,16 @@ export class ProjectAccountComponent implements AfterViewInit {
   protected onEscapePressed(event: KeyboardEvent): void {
     event.stopPropagation();
     this.state.showBeneficiariesDropdown.set(false);
-    this.state.filteredBeneficiaries.set(this.state.beneficiaries());
+    // S'assurer que la liste filtrée n'a pas de doublons
+    const uniqueBeneficiaries = new Map<number, Beneficiary>();
+    this.state.beneficiaries().forEach((beneficiary) => {
+      if (beneficiary && beneficiary.id) {
+        uniqueBeneficiaries.set(beneficiary.id, beneficiary);
+      }
+    });
+    this.state.filteredBeneficiaries.set(
+      Array.from(uniqueBeneficiaries.values())
+    );
   }
 
   protected addAccount(account: {

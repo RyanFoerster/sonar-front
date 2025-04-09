@@ -22,7 +22,7 @@ jobs:
       - name: Build Docker Staging Image
         id: build-image
         run: |
-          docker build --build-arg BUILD_ENV=staging -t ${{ secrets.DOCKER_USERNAME }}/sonar-front:staging .
+          docker build -f Dockerfile.staging -t ${{ secrets.DOCKER_USERNAME }}/sonar-front:staging .
 
       - name: Push the Docker Staging Image
         id: push-image

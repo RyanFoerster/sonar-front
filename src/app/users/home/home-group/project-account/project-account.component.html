@@ -449,8 +449,9 @@
                           </div>
                           }
 
-                          <!-- Afficher le bouton seulement s'il reste des pages à charger -->
-                          @if (state.beneficiariesCurrentPage() < 2) {
+                          <!-- Afficher le bouton seulement s'il reste des pages à charger et qu'il n'y a pas de recherche active -->
+                          @if (state.beneficiariesCurrentPage() < 2 &&
+                          !state.isSearchActive()) {
                           <div class="px-2 py-1 mt-1">
                             <button
                               type="button"

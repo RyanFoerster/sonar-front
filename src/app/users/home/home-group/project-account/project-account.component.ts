@@ -7,6 +7,7 @@ import {
   input,
   signal,
   type WritableSignal,
+  type Signal,
 } from '@angular/core';
 import { Router } from '@angular/router';
 import {
@@ -125,6 +126,34 @@ interface SelectedAccount {
   name?: string;
 }
 
+// Interface pour typer l'objet state
+interface ProjectAccountState {
+  isSpinner: WritableSignal<boolean>;
+  isLoadingTransfer: WritableSignal<boolean>;
+  isLoadingVirement: WritableSignal<boolean>;
+  accountPrincipal: WritableSignal<PrincipalAccountEntity | undefined>;
+  accountGroup: WritableSignal<CompteGroupeEntity | undefined>;
+  transactionRecipient: WritableSignal<TransactionEntity[] | undefined>;
+  transactionSender: WritableSignal<TransactionEntity[] | undefined>;
+  principalAccounts: WritableSignal<PrincipalAccountEntity[]>;
+  filteredPrincipalAccounts: WritableSignal<PrincipalAccountEntity[]>;
+  groupAccounts: WritableSignal<CompteGroupeEntity[] | undefined>;
+  filteredGroupAccounts: WritableSignal<CompteGroupeEntity[] | undefined>;
+  amountHtva: WritableSignal<number>;
+  amountTva: WritableSignal<number>;
+  errorMessage: WritableSignal<string>;
+  beneficiaries: WritableSignal<Beneficiary[]>;
+  filteredBeneficiaries: WritableSignal<Beneficiary[]>;
+  selectedBeneficiary: WritableSignal<Beneficiary | null>;
+  showBeneficiariesDropdown: WritableSignal<boolean>;
+  visibleBeneficiaries: WritableSignal<Beneficiary[]>;
+  beneficiariesPageSize: WritableSignal<number>;
+  beneficiariesCurrentPage: WritableSignal<number>;
+  searchValue: WritableSignal<string>;
+  isSearchActive: Signal<boolean>;
+  resetForm: (form: FormGroup) => void;
+}
+
 @Component({
   selector: 'app-project-account',
   standalone: true,
@@ -197,7 +226,7 @@ export class ProjectAccountComponent implements AfterViewInit {
   protected readonly typeOfProjet = input<string>();
 
   // State signals
-  protected readonly state = {
+  protected readonly state: ProjectAccountState = {
     isSpinner: signal(false),
     isLoadingTransfer: signal(false),
     isLoadingVirement: signal(false),
@@ -219,11 +248,14 @@ export class ProjectAccountComponent implements AfterViewInit {
     visibleBeneficiaries: signal<Beneficiary[]>([]),
     beneficiariesPageSize: signal(10),
     beneficiariesCurrentPage: signal(1),
+    searchValue: signal(''),
+    isSearchActive: computed(() => this.state.searchValue().trim().length > 0),
     resetForm: (form: FormGroup) => {
       form.reset();
       this.state.amountHtva.set(0);
       this.state.amountTva.set(0);
       this.state.selectedBeneficiary.set(null);
+      this.state.searchValue.set('');
     },
   };
 
@@ -237,14 +269,18 @@ export class ProjectAccountComponent implements AfterViewInit {
     this.state
       .filteredPrincipalAccounts()
       ?.slice()
-      .sort((a, b) => (a.username ?? '').localeCompare(b.username ?? ''))
+      .sort((a: PrincipalAccountEntity, b: PrincipalAccountEntity) =>
+        (a.username ?? '').localeCompare(b.username ?? '')
+      )
   );
 
   protected readonly sortedGroupAccounts = computed(() =>
     this.state
       .filteredGroupAccounts()
       ?.slice()
-      .sort((a, b) => (a.username ?? '').localeCompare(b.username ?? ''))
+      .sort((a: CompteGroupeEntity, b: CompteGroupeEntity) =>
+        (a.username ?? '').localeCompare(b.username ?? '')
+      )
   );
 
   // Pagination states
@@ -958,26 +994,34 @@ export class ProjectAccountComponent implements AfterViewInit {
 
   protected filterBeneficiaries(event: Event): void {
     const target = event.target as HTMLInputElement;
-    const value = target.value.toLowerCase();
+    const value = target.value.toLowerCase().trim();
+
+    // Mettre à jour le signal searchValue
+    this.state.searchValue.set(value);
 
     if (!value) {
       // Si le champ est vide, afficher tous les bénéficiaires déjà chargés
       this.state.filteredBeneficiaries.set(this.state.beneficiaries());
       // Mise à jour direct de visibleBeneficiaries avec tous les bénéficiaires
       this.state.visibleBeneficiaries.set(this.state.beneficiaries());
-      // Réinitialiser la pagination et recharger la première page
+      // Réinitialiser la pagination
       this.state.beneficiariesCurrentPage.set(1);
-      this.loadMoreBeneficiaries();
       return;
     }
 
     if (value.length >= 3) {
       // Si le texte a au moins 3 caractères, utiliser la recherche backend
+      console.log(`Recherche backend pour: "${value}"`);
       this.services.beneficiary
         .searchBeneficiaries(value)
         .pipe(
           take(1),
           tap((results) => {
+            console.log(
+              `Résultats de recherche pour "${value}":`,
+              results.length
+            );
+
             // Assurer qu'il n'y a pas de doublons dans les résultats de recherche
             const uniqueResults = new Map<number, Beneficiary>();
             results.forEach((beneficiary) => {
@@ -992,9 +1036,8 @@ export class ProjectAccountComponent implements AfterViewInit {
             // Appliquer directement les résultats de recherche à visibleBeneficiaries
             this.state.visibleBeneficiaries.set(filteredResults);
 
-            // Réinitialiser la pagination et recharger la première page
+            // Réinitialiser la pagination
             this.state.beneficiariesCurrentPage.set(1);
-            this.loadMoreBeneficiaries();
           }),
           catchError((error) => {
             console.error(
@@ -1007,6 +1050,7 @@ export class ProjectAccountComponent implements AfterViewInit {
         .subscribe();
     } else {
       // Sinon, filtrer sur les données locales déjà chargées
+      console.log(`Filtrage local pour: "${value}"`);
       const currentBeneficiaries = this.state.beneficiaries();
       if (!Array.isArray(currentBeneficiaries)) {
         this.state.filteredBeneficiaries.set([]);
@@ -1020,13 +1064,16 @@ export class ProjectAccountComponent implements AfterViewInit {
           beneficiary?.iban?.toLowerCase().includes(value)
       );
 
+      console.log(
+        `Filtrage local: ${filtered.length} résultats sur ${currentBeneficiaries.length}`
+      );
+
       this.state.filteredBeneficiaries.set(filtered);
       // Appliquer directement les résultats filtrés à visibleBeneficiaries
       this.state.visibleBeneficiaries.set(filtered);
 
-      // Réinitialiser la pagination et recharger la première page
+      // Réinitialiser la pagination
       this.state.beneficiariesCurrentPage.set(1);
-      this.loadMoreBeneficiaries();
     }
   }
 
@@ -1059,8 +1106,55 @@ export class ProjectAccountComponent implements AfterViewInit {
       // Récupérer la page suivante depuis le serveur
       const nextPage = this.state.beneficiariesCurrentPage() + 1;
 
-      console.log('Chargement de la page', nextPage);
+      // Vérifier si une recherche est en cours
+      const searchInput = document.querySelector(
+        'input[placeholder="Rechercher un bénéficiaire"]'
+      ) as HTMLInputElement;
+      const searchValue = searchInput?.value?.trim().toLowerCase() || '';
 
+      console.log(
+        'Chargement de la page',
+        nextPage,
+        'recherche:',
+        searchValue ? 'oui' : 'non'
+      );
+
+      // Si une recherche est active avec 3 caractères ou plus, utiliser l'API de recherche
+      if (searchValue && searchValue.length >= 3) {
+        this.services.beneficiary
+          .searchBeneficiaries(searchValue)
+          .pipe(
+            take(1),
+            tap((results) => {
+              console.log(`Réponse de recherche pour "${searchValue}":`, {
+                results: results.length,
+              });
+
+              // Assurer qu'il n'y a pas de doublons dans les résultats de recherche
+              const uniqueResults = new Map<number, Beneficiary>();
+              results.forEach((beneficiary) => {
+                if (beneficiary && beneficiary.id) {
+                  uniqueResults.set(beneficiary.id, beneficiary);
+                }
+              });
+
+              const filteredResults = Array.from(uniqueResults.values());
+              this.state.filteredBeneficiaries.set(filteredResults);
+              this.state.visibleBeneficiaries.set(filteredResults);
+            }),
+            catchError((error) => {
+              console.error(
+                'Erreur lors de la recherche des bénéficiaires:',
+                error
+              );
+              return of([]);
+            })
+          )
+          .subscribe();
+        return;
+      }
+
+      // Sinon, charger la page suivante normalement
       this.services.beneficiary
         .getBeneficiariesPage(nextPage)
         .pipe(
@@ -1110,20 +1204,30 @@ export class ProjectAccountComponent implements AfterViewInit {
               this.state.beneficiariesCurrentPage.set(nextPage);
 
               // Mettre à jour également les bénéficiaires filtrés si aucun filtre n'est actif
-              const searchValue = (
-                document.querySelector(
-                  'input[placeholder="Rechercher un bénéficiaire"]'
-                ) as HTMLInputElement
-              )?.value;
               if (!searchValue) {
                 this.state.filteredBeneficiaries.set(updatedBeneficiaries);
-              }
 
-              // Mettre à jour les bénéficiaires visibles en ajoutant les nouveaux
-              this.state.visibleBeneficiaries.set([
-                ...this.state.visibleBeneficiaries(),
-                ...newBeneficiaries,
-              ]);
+                // Mettre à jour les bénéficiaires visibles en ajoutant les nouveaux
+                this.state.visibleBeneficiaries.set([
+                  ...this.state.visibleBeneficiaries(),
+                  ...newBeneficiaries,
+                ]);
+              } else {
+                // Si un filtre local est actif, filtrer les nouveaux bénéficiaires aussi
+                const filteredNew = newBeneficiaries.filter(
+                  (beneficiary) =>
+                    beneficiary?.account_owner
+                      ?.toLowerCase()
+                      .includes(searchValue) ||
+                    beneficiary?.iban?.toLowerCase().includes(searchValue)
+                );
+
+                // Ajouter uniquement les nouveaux bénéficiaires correspondant au filtre
+                this.state.visibleBeneficiaries.set([
+                  ...this.state.visibleBeneficiaries(),
+                  ...filteredNew,
+                ]);
+              }
             }
           }),
           catchError((error) => {

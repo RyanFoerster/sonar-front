@@ -924,14 +924,25 @@ export class ProjectAccountComponent implements AfterViewInit {
       );
 
       if (data && data.items && data.items.length > 0) {
+        // Stocker les infos de pagination
+        const totalItems = data.total || 0;
+        const totalPages = data.totalPages || 1;
+
+        console.log('Bénéficiaires chargés:', {
+          items: data.items.length,
+          totalItems,
+          totalPages,
+          page: data.page,
+        });
+
         this.state.beneficiaries.set(data.items);
         this.state.filteredBeneficiaries.set(data.items);
 
-        // Initialiser la page courante et le nombre total de pages
+        // Initialiser la page courante
         this.state.beneficiariesCurrentPage.set(1);
 
-        // Charger les éléments visibles pour la première page
-        this.loadMoreBeneficiaries();
+        // Initialiser les bénéficiaires visibles
+        this.state.visibleBeneficiaries.set(data.items);
       } else {
         this.state.beneficiaries.set([]);
         this.state.filteredBeneficiaries.set([]);
@@ -952,6 +963,8 @@ export class ProjectAccountComponent implements AfterViewInit {
     if (!value) {
       // Si le champ est vide, afficher tous les bénéficiaires déjà chargés
       this.state.filteredBeneficiaries.set(this.state.beneficiaries());
+      // Mise à jour direct de visibleBeneficiaries avec tous les bénéficiaires
+      this.state.visibleBeneficiaries.set(this.state.beneficiaries());
       // Réinitialiser la pagination et recharger la première page
       this.state.beneficiariesCurrentPage.set(1);
       this.loadMoreBeneficiaries();
@@ -973,9 +986,12 @@ export class ProjectAccountComponent implements AfterViewInit {
               }
             });
 
-            this.state.filteredBeneficiaries.set(
-              Array.from(uniqueResults.values())
-            );
+            const filteredResults = Array.from(uniqueResults.values());
+
+            this.state.filteredBeneficiaries.set(filteredResults);
+            // Appliquer directement les résultats de recherche à visibleBeneficiaries
+            this.state.visibleBeneficiaries.set(filteredResults);
+
             // Réinitialiser la pagination et recharger la première page
             this.state.beneficiariesCurrentPage.set(1);
             this.loadMoreBeneficiaries();
@@ -1005,6 +1021,9 @@ export class ProjectAccountComponent implements AfterViewInit {
       );
 
       this.state.filteredBeneficiaries.set(filtered);
+      // Appliquer directement les résultats filtrés à visibleBeneficiaries
+      this.state.visibleBeneficiaries.set(filtered);
+
       // Réinitialiser la pagination et recharger la première page
       this.state.beneficiariesCurrentPage.set(1);
       this.loadMoreBeneficiaries();
@@ -1040,11 +1059,21 @@ export class ProjectAccountComponent implements AfterViewInit {
       // Récupérer la page suivante depuis le serveur
       const nextPage = this.state.beneficiariesCurrentPage() + 1;
 
+      console.log('Chargement de la page', nextPage);
+
       this.services.beneficiary
         .getBeneficiariesPage(nextPage)
         .pipe(
           take(1),
           tap((data) => {
+            console.log(`Réponse du serveur pour la page ${nextPage}:`, {
+              page: data.page,
+              items: data.items.length,
+              totalPages: data.totalPages,
+              firstId: data.items[0]?.id,
+              lastId: data.items[data.items.length - 1]?.id,
+            });
+
             // Ajouter les nouveaux bénéficiaires à ceux déjà chargés
             if (data && data.items && data.items.length > 0) {
               // Garder une trace des IDs pour éviter les doublons
@@ -1056,6 +1085,20 @@ export class ProjectAccountComponent implements AfterViewInit {
               const newBeneficiaries = data.items.filter(
                 (b) => !currentIds.has(b.id)
               );
+
+              console.log(
+                'Nouveaux bénéficiaires uniques après filtrage:',
+                newBeneficiaries.length,
+                'IDs:',
+                newBeneficiaries.map((b) => b.id)
+              );
+
+              if (newBeneficiaries.length === 0) {
+                console.warn(
+                  'Aucun nouveau bénéficiaire trouvé pour la page',
+                  nextPage
+                );
+              }
 
               // Mettre à jour la liste complète des bénéficiaires
               const updatedBeneficiaries = [
@@ -1076,7 +1119,7 @@ export class ProjectAccountComponent implements AfterViewInit {
                 this.state.filteredBeneficiaries.set(updatedBeneficiaries);
               }
 
-              // Mettre à jour les bénéficiaires visibles (uniquement les 10 premiers de la page)
+              // Mettre à jour les bénéficiaires visibles en ajoutant les nouveaux
               this.state.visibleBeneficiaries.set([
                 ...this.state.visibleBeneficiaries(),
                 ...newBeneficiaries,
@@ -1092,13 +1135,6 @@ export class ProjectAccountComponent implements AfterViewInit {
           })
         )
         .subscribe();
-    } else {
-      // Initialiser les bénéficiaires visibles avec les 10 premiers
-      const pageSize = this.state.beneficiariesPageSize();
-      const visibleItems = this.state
-        .filteredBeneficiaries()
-        .slice(0, pageSize);
-      this.state.visibleBeneficiaries.set(visibleItems);
     }
   }
 

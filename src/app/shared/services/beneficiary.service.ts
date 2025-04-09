@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Beneficiary } from '../entities/beneficiary.entity';
 
@@ -22,10 +22,20 @@ export class BeneficiaryService {
     page = 1,
     limit = 10
   ): Observable<BeneficiaryPaginatedResponse> {
-    // Définir clairement les paramètres pour éviter toute confusion côté serveur
-    return this.http.get<BeneficiaryPaginatedResponse>(
-      `${this.apiUrl}?page=${page}&limit=${limit}`
+    console.log(
+      `getAllBeneficiaries: Appel à ${this.apiUrl}?page=${page}&limit=${limit}`
     );
+    return this.http
+      .get<BeneficiaryPaginatedResponse>(
+        `${this.apiUrl}?page=${page}&limit=${limit}`
+      )
+      .pipe(
+        tap((response) =>
+          console.log(
+            `getAllBeneficiaries réponse: page=${response.page}, totalPages=${response.totalPages}, items=${response.items.length}`
+          )
+        )
+      );
   }
 
   // Récupérer une page spécifique de bénéficiaires sans charger les autres pages
@@ -33,9 +43,17 @@ export class BeneficiaryService {
     page = 1,
     limit = 10
   ): Observable<BeneficiaryPaginatedResponse> {
-    return this.http.get<BeneficiaryPaginatedResponse>(
-      `${this.apiUrl}?page=${page}&limit=${limit}`
-    );
+    const url = `${this.apiUrl}?page=${page}&limit=${limit}`;
+    console.log(`getBeneficiariesPage: Appel à ${url}`);
+    return this.http
+      .get<BeneficiaryPaginatedResponse>(url)
+      .pipe(
+        tap((response) =>
+          console.log(
+            `getBeneficiariesPage réponse: page=${response.page}, totalPages=${response.totalPages}, items=${response.items.length}`
+          )
+        )
+      );
   }
 
   createBeneficiary(

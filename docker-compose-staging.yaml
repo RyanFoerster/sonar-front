@@ -14,7 +14,6 @@ services:
       - traefik.http.routers.sonar-front-staging.entrypoints=websecure
       - traefik.http.routers.sonar-front-staging.tls=true
       - traefik.http.routers.sonar-front-staging.tls.certresolver=cloudflare
-      - traefik.http.routers.sonar-front-staging.service=sonar-front-staging
       - traefik.http.routers.sonar-front-staging.tls.options=default
 
 networks:

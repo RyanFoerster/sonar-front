@@ -1,9 +1,6 @@
 name: Deploy to Staging Environment
 
 on:
-  push:
-    branches:
-      - Ryan
   workflow_run:
     workflows: ["Docker Staging Image"]
     types:
@@ -12,7 +9,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    # if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: Copy the docker-compose file
         uses: appleboy/ssh-action@master

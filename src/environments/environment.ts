@@ -5,7 +5,7 @@ export const environment = {
   REFRESH_TOKEN_KEY: 'refresh_token',
   USER_KEY: 'user',
   MAINTENANCE_MODE: false,
-  APP_VERSION: '0.7.0',
+  APP_VERSION: '0.7.1',
   firebase: {
     apiKey: 'AIzaSyBw-pgJr1BrcQbAtTp3elhfLKGSh40sLls',
     authDomain: 'sonarartists-1f217.firebaseapp.com',

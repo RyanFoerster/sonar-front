@@ -173,7 +173,8 @@
                 [ngClass]="{
                   'bg-green-50 text-green-700': doc['status'] === 'paid',
                   'bg-purple-50 text-purple-700':
-                    doc['status'] === 'payment_pending',
+                    doc['status'] === 'payment_pending' ||
+                    doc['status'] === 'pending',
                   'bg-yellow-50 text-yellow-700':
                     doc['status'] === 'first_reminder_sent',
                   'bg-orange-50 text-orange-700':
@@ -184,7 +185,8 @@
               >
                 @if (doc['status'] === 'paid') { Payée } @else {
                 {{
-                  doc["status"] === "payment_pending"
+                  doc["status"] === "payment_pending" ||
+                  doc["status"] === "pending"
                     ? "En attente de paiement"
                     : doc["status"] === "first_reminder_sent"
                     ? "Premier rappel envoyé"

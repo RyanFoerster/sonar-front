@@ -15,6 +15,9 @@ module.exports = {
         "gray-sonar": "#EEEEEE",
         "green-sonar": "#C8C04D",
       },
+      borderColor: {
+        "green-sonar": "#C8C04D",
+      },
     },
   },
   plugins: [],

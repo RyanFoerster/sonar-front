@@ -74,11 +74,14 @@ interface Document {
   };
   invoice_number?: number;
   quote_number?: number;
-  invoice?: any;
+  invoice?: InvoiceEntity | null;
   group_acceptance?: string;
   order_giver_acceptance?: string;
   comment?: string;
-  [key: string]: any; // Pour permettre d'autres propriétés
+  invoice_date?: Date;
+  status?: string;
+  reminder_level?: number;
+  linkedInvoiceId?: number;
 }
 
 /* Ajout d'une interface pour le contexte modal */
@@ -456,7 +459,7 @@ export class FacturationComponent implements OnInit, OnDestroy {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private sortByDate(a: any, b: any) {
+  private sortByDate(a: Document, b: Document) {
     return (
       new Date(b.documentDate).getTime() - new Date(a.documentDate).getTime()
     );
@@ -470,7 +473,7 @@ export class FacturationComponent implements OnInit, OnDestroy {
     );
   }
 
-  private updateInvoicesPagination(docs: any[]): void {
+  private updateInvoicesPagination(docs: Document[]): void {
     const totalItems = docs.length;
     const totalPages = Math.ceil(totalItems / this.itemsPerPage());
 
@@ -738,5 +741,43 @@ export class FacturationComponent implements OnInit, OnDestroy {
   protected asInvoiceEntity(doc: Document): InvoiceEntity {
     // Conversion explicite pour le compilateur
     return doc as unknown as InvoiceEntity;
+  }
+
+  /**
+   * Gère la mise à jour du statut d'une facture émise par le composant enfant.
+   * Recharge les données pour refléter le changement.
+   * @param updatedInvoiceId L'ID de la facture mise à jour.
+   */
+  protected async handleInvoiceUpdate(updatedInvoiceId: number): Promise<void> {
+    console.log(
+      `Facture ${updatedInvoiceId} mise à jour, rechargement des données...`
+    );
+    this.isLoading.set(true);
+    try {
+      if (this.typeOfProjet() === 'PRINCIPAL') {
+        const data = await firstValueFrom(
+          this.services.principal.getGroupByIdWithRelations(+this.id()!)
+        );
+        this.accountPrincipal = data;
+      } else if (this.typeOfProjet() === 'GROUP') {
+        const data = await firstValueFrom(
+          this.services.group.getGroupById(+this.id()!)
+        );
+        this.groupAccount.set(data);
+      } else {
+        await this.getConnectedUser();
+      }
+
+      this.loadInvoices();
+      toast('Statut de la facture mis à jour.');
+    } catch (error) {
+      console.error(
+        'Erreur lors du rechargement des données après mise à jour:',
+        error
+      );
+      toast.error('Erreur lors du rechargement des données.');
+    } finally {
+      this.isLoading.set(false);
+    }
   }
 }

@@ -79,6 +79,12 @@
             </th>
             <th
               scope="col"
+              class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4 font-medium whitespace-nowrap w-36"
+            >
+              Statut
+            </th>
+            <th
+              scope="col"
               class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4 font-medium text-right"
             >
               Actions
@@ -157,6 +163,40 @@
               }}</span>
             </td>
             <td
+              class="px-2 sm:px-3 md:px-4 lg:px-6 py-1.5 sm:py-2 md:py-3 lg:py-4 flex lg:table-cell items-center justify-between lg:justify-start"
+            >
+              <span class="font-medium lg:font-normal lg:hidden text-xs"
+                >Statut :</span
+              >
+              <span
+                class="inline-flex items-center justify-center rounded-full px-2 sm:px-3 py-0.5 sm:py-1 text-[10px] xs:text-xs font-medium min-w-[120px] text-center"
+                [ngClass]="{
+                  'bg-green-50 text-green-700': doc['status'] === 'paid',
+                  'bg-purple-50 text-purple-700':
+                    doc['status'] === 'payment_pending',
+                  'bg-yellow-50 text-yellow-700':
+                    doc['status'] === 'first_reminder_sent',
+                  'bg-orange-50 text-orange-700':
+                    doc['status'] === 'second_reminder_sent',
+                  'bg-red-50 text-red-700':
+                    doc['status'] === 'final_notice_sent'
+                }"
+              >
+                @if (doc['status'] === 'paid') { Payée } @else {
+                {{
+                  doc["status"] === "payment_pending"
+                    ? "En attente de paiement"
+                    : doc["status"] === "first_reminder_sent"
+                    ? "Premier rappel envoyé"
+                    : doc["status"] === "second_reminder_sent"
+                    ? "Deuxième rappel envoyé"
+                    : "Mise en demeure envoyée"
+                }}
+                }
+                <!-- Affiche le niveau de rappel si non payé -->
+              </span>
+            </td>
+            <td
               class="px-2 sm:px-3 md:px-4 lg:px-6 py-1.5 sm:py-2 md:py-3 lg:py-4"
             >
               <div
@@ -176,7 +216,22 @@
                   />
                   <span>Télécharger facture</span>
                 </button>
-                @if (canEditBilling()) { @if (!doc['linkedInvoiceId']) {
+                @if (canEditBilling() && doc['status'] !== 'paid') {
+                <button
+                  hlmBtn
+                  variant="outline"
+                  size="sm"
+                  class="flex items-center justify-center gap-1 sm:gap-1.5 w-full lg:w-auto text-[10px] xs:text-xs whitespace-nowrap px-1.5 sm:px-2 py-1 sm:py-1.5 border border-blue-200 hover:bg-blue-50 text-blue-700"
+                  (click)="markAsPaid(doc.id)"
+                >
+                  <hlm-icon
+                    size="sm"
+                    name="lucideCheckCircle"
+                    class="h-3 w-3 sm:h-4 sm:w-4 text-blue-600"
+                  />
+                  <span>Marquer comme payée</span>
+                </button>
+                } @if (canEditBilling()) { @if (!doc['linkedInvoiceId']) {
                 <button
                   hlmBtn
                   variant="ghost"
@@ -283,6 +338,18 @@
               <span class="font-medium text-xs sm:text-sm whitespace-nowrap">{{
                 doc.total | euroFormat
               }}</span>
+            </td>
+            <td
+              class="px-2 sm:px-3 md:px-4 lg:px-6 py-1.5 sm:py-2 md:py-3 lg:py-4 flex lg:table-cell items-center justify-between lg:justify-start"
+            >
+              <span class="font-medium lg:font-normal lg:hidden text-xs"
+                >Statut :</span
+              >
+              <span
+                class="inline-flex items-center justify-center rounded-full px-2 sm:px-3 py-0.5 sm:py-1 text-[10px] xs:text-xs font-medium min-w-[120px] text-center bg-blue-50 text-blue-700"
+                >Note de crédit</span
+              >
+              <!-- Statut spécifique pour NC -->
             </td>
             <td
               class="px-2 sm:px-3 md:px-4 lg:px-6 py-1.5 sm:py-2 md:py-3 lg:py-4"

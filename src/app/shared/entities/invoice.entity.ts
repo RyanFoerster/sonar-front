@@ -18,4 +18,5 @@ export interface InvoiceEntity {
   creditNoteAmount: number;
   client: ClientEntity;
   products: ProductEntity[];
+  reminder_level: number;
 }

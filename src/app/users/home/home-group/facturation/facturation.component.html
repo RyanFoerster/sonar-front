@@ -82,9 +82,22 @@
   tab="devis"
   class="flex flex-col gap-2 sm:gap-3 md:gap-4 px-2 sm:px-3 md:px-4"
 >
-  <hlm-tabs-list class="w-full grid grid-cols-2" aria-label="tabs example">
-    <button hlmTabsTrigger="devis">Devis</button>
-    <button hlmTabsTrigger="factures">Factures</button>
+  <hlm-tabs-list
+    class="w-full grid grid-cols-2 !bg-transparent"
+    aria-label="tabs example"
+  >
+    <button
+      class="data-[state=active]:bg-none-500 data-[state=active]:shadow-none data-[state=active]:border-b data-[state=active]:border-green-sonar data-[state=active]:text-black rounded-none"
+      hlmTabsTrigger="devis"
+    >
+      Devis
+    </button>
+    <button
+      class="data-[state=active]:bg-none-500 data-[state=active]:shadow-none data-[state=active]:border-b data-[state=active]:border-green-sonar data-[state=active]:text-black rounded-none"
+      hlmTabsTrigger="factures"
+    >
+      Factures
+    </button>
   </hlm-tabs-list>
   <div hlmTabsContent="devis">
     <!-- Tableau des devis -->

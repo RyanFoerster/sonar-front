@@ -1,6 +1,8 @@
-name: Deploy to Staging
+name: Deploy to Staging Environment
 
 on:
+  push:
+    branches: ["*"]
   workflow_run:
     workflows: ["docker-staging-image.yml"]
     types:
@@ -9,6 +11,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: Copy the docker-compose file

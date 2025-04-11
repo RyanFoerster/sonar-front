@@ -1,4 +1,4 @@
-import { Component, input, output } from '@angular/core';
+import { Component, input, output, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { HlmButtonDirective } from '@spartan-ng/ui-button-helm';
@@ -10,6 +10,10 @@ import {
 } from '@spartan-ng/ui-pagination-helm';
 import { EuroFormatPipe } from '../../../../../shared/pipes/euro-format.pipe';
 import { HlmToasterComponent } from '@spartan-ng/ui-sonner-helm';
+import { InvoiceService } from '../../../../../shared/services/invoice.service';
+import { provideIcons } from '@ng-icons/core';
+import { lucideCheckCircle } from '@ng-icons/lucide';
+
 interface Document {
   id: number;
   documentType: 'quote' | 'invoice' | 'credit_note' | string;
@@ -50,6 +54,7 @@ interface Document {
     HlmToasterComponent,
     EuroFormatPipe,
   ],
+  providers: [provideIcons({ lucideCheckCircle })],
   templateUrl: './invoices-table.component.html',
   styleUrl: './invoices-table.component.css',
 })
@@ -68,6 +73,9 @@ export class InvoicesTableComponent {
   canEditBilling = input<boolean>(false);
   hasAccessToBilling = input<boolean>(false);
   connectedUser = input<any>(null);
+
+  private readonly invoiceService = inject(InvoiceService);
+
   getVisibleInvoicesPages = (
     currentPage: number,
     totalPages: number
@@ -115,6 +123,7 @@ export class InvoicesTableComponent {
   generateInvoicePDFEvent = output<Document>();
   generateCreditNotePdfEvent = output<Document>();
   loadCreditNoteEvent = output<number>();
+  invoiceStatusUpdated = output<number>();
 
   filterInvoicesList(filter: 'all' | 'invoices' | 'credit-notes'): void {
     this.filterInvoicesListEvent.emit(filter);
@@ -134,6 +143,28 @@ export class InvoicesTableComponent {
 
   loadCreditNote(id: number): void {
     this.loadCreditNoteEvent.emit(id);
+  }
+
+  markAsPaid(invoiceId: number): void {
+    this.invoiceService.update(invoiceId, { status: 'paid' }).subscribe({
+      next: (/* updatedInvoice */) => {
+        console.log(`Facture ${invoiceId} marquée comme payée.`);
+        this.invoiceStatusUpdated.emit(invoiceId);
+        // Mettre à jour la liste locale pour refléter le changement
+        /* const updateLocalList = (list: Document[]) =>
+          list.map((doc) =>
+            doc.id === invoiceId && doc.documentType === 'invoice'
+              ? { ...doc, status: 'paid' }
+              : doc
+          ); */
+
+        // Mettre à jour à la fois la liste complète et la liste paginée si nécessaire
+      },
+      error: (err) => {
+        console.error('Erreur lors de la mise à jour du statut:', err);
+        // toast.error('Erreur lors de la mise à jour du statut de la facture.');
+      },
+    });
   }
 
   asInvoiceEntity(doc: Document): Document {

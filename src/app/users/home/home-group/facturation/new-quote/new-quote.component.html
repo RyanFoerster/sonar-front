@@ -606,6 +606,7 @@
               <p class="flex items-center gap-2 cursor-pointer group">
                 <hlm-checkbox
                   (click)="toggleArtisticPerformance()"
+                  [disabled]="isTva0()"
                   formControlName="vat"
                   class="rounded-md group-hover:border-primary transition-colors"
                 />
@@ -613,6 +614,20 @@
                   class="text-sm text-gray-700 group-hover:text-gray-900 transition-colors"
                 >
                   TVA 6% (Prestation artistique)
+                </span>
+              </p>
+
+              <p class="flex items-center gap-2 cursor-pointer group">
+                <hlm-checkbox
+                  (click)="toggleTva0()"
+                  [disabled]="isArtisticPerformance()"
+                  formControlName="vat"
+                  class="rounded-md group-hover:border-primary transition-colors"
+                />
+                <span
+                  class="text-sm text-gray-700 group-hover:text-gray-900 transition-colors"
+                >
+                  TVA 0% (Nécessite une pièce justificative a joindre au devis)
                 </span>
               </p>
             </div>
@@ -1012,6 +1027,11 @@
             hlmBtn
             type="submit"
             (click)="isLoadingQuote.set(true)"
+            [disabled]="
+              !isAtLeastOneAttachmentSelected() ||
+              !createQuoteForm.valid ||
+              products().length <= 0
+            "
           >
             <hlm-icon size="sm" name="lucideFileDown" />
             {{ updatedQuoteId() ? "Modifier le devis" : "Générer le devis" }}

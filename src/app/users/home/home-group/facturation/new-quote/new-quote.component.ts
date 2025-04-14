@@ -213,6 +213,7 @@ export class NewQuoteComponent implements AfterViewInit {
   protected isArtisticPerformance = signal(false);
   protected isPhysicalPerson = signal(false);
   protected isTvaIncluded = signal(false);
+  protected isTva0 = signal(false);
   protected isLoadingQuote = signal(false);
   protected isDoubleValidation = signal(true);
   protected showDoubleValidationWarningModal = signal(false);
@@ -533,6 +534,10 @@ export class NewQuoteComponent implements AfterViewInit {
     this.checkTvaIncluded();
   }
 
+  toggleTva0() {
+    this.isTva0.set(!this.isTva0());
+  }
+
   setTvaIncluded() {
     return this.isTvaIncluded();
   }
@@ -769,13 +774,17 @@ export class NewQuoteComponent implements AfterViewInit {
       description: formValues.description,
       price: +formValues.price,
       quantity: +formValues.quantity,
-      vat: formValues.vat ? 0.06 : 0.21,
+      vat: this.isTva0() ? 0 : formValues.vat ? 0.06 : 0.21,
     };
 
     // Calcul des montants en fonction de isTvaIncluded
     let price_htva, tva_amount, total;
 
-    if (this.isTvaIncluded()) {
+    if (this.isTva0()) {
+      price_htva = productToAdd.price * productToAdd.quantity;
+      tva_amount = 0;
+      total = price_htva;
+    } else if (this.isTvaIncluded()) {
       // Si TVA incluse, on recalcule les montants HTVA
       const priceWithVAT = productToAdd.price * productToAdd.quantity;
       const vatRate = productToAdd.vat;
@@ -811,6 +820,7 @@ export class NewQuoteComponent implements AfterViewInit {
           this.createProductForm.reset();
           this.createProductForm.patchValue({ quantity: 1, vat: false });
           this.toggleProductForm();
+          this.isTva0.set(false);
         })
       )
       .subscribe();
@@ -1461,5 +1471,27 @@ export class NewQuoteComponent implements AfterViewInit {
     this.existingAttachments.update((attachments) =>
       attachments.filter((a) => a.url !== attachment.url)
     );
+  }
+
+  // Fonction pour vérifier qu'au moins une pièce jointe est séléctionnée
+  // lorsqu'il y a au moins un produit avec une tva à 0
+  isAtLeastOneAttachmentSelected(): boolean {
+    // Vérifie s'il existe au moins un produit avec TVA 0% dans le signal products()
+    const requiresAttachment = this.products().some(
+      (product) => product.vat === 0
+    );
+
+    if (requiresAttachment) {
+      // Si la TVA 0% existe, vérifie si au moins un nouveau fichier (selectedFiles)
+      // OU une pièce jointe existante (existingAttachments()) est sélectionné pour le devis
+      const hasSelectedNewFiles = this.selectedFiles.length > 0;
+      const hasSelectedExistingAttachments =
+        this.existingAttachments().length > 0;
+      return hasSelectedNewFiles || hasSelectedExistingAttachments;
+    } else {
+      // Si aucun produit n'a de TVA 0%, la condition de pièce jointe n'est pas requise par cette règle.
+      // La fonction retourne true, et la désactivation du bouton dépendra uniquement de la validité du formulaire.
+      return true;
+    }
   }
 }

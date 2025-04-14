@@ -218,7 +218,8 @@
                   />
                   <span>Télécharger facture</span>
                 </button>
-                @if (canEditBilling() && doc['status'] !== 'paid') {
+                @if (connectedUser()?.role === 'ADMIN' && doc['status'] !==
+                'paid') {
                 <button
                   hlmBtn
                   variant="outline"
@@ -233,7 +234,8 @@
                   />
                   <span>Marquer comme payée</span>
                 </button>
-                } @if (canEditBilling()) { @if (!doc['linkedInvoiceId']) {
+                }
+                <!-- @if (canEditBilling()) { @if (!doc['linkedInvoiceId']) {
                 <button
                   hlmBtn
                   variant="ghost"
@@ -252,7 +254,9 @@
                   />
                   <span>Créer note de crédit</span>
                 </button>
-                } } @if (doc['linkedInvoiceId']) {
+                } 
+              }  -->
+                @if (doc['linkedInvoiceId']) {
                 <button
                   hlmBtn
                   variant="ghost"

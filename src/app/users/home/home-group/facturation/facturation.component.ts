@@ -9,7 +9,7 @@ import {
   OnInit,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { provideIcons } from '@ng-icons/core';
 import {
   lucideArrowLeft,
@@ -135,6 +135,7 @@ export class FacturationComponent implements OnInit, OnDestroy {
     group: inject(CompteGroupeService),
     pdf: inject(PdfGeneratorService),
     datePipe: inject(DatePipe),
+    router: inject(Router),
   };
 
   // Inputs
@@ -258,13 +259,31 @@ export class FacturationComponent implements OnInit, OnDestroy {
     }
   }
 
-  private initializeUserAccount(user: UserEntity): void {
+  private async initializeUserAccount(user: UserEntity): Promise<void> {
     this.isLoading.set(true);
-    const groupAccount = user.userSecondaryAccounts.find(
-      (account) => account.id === +this.id()!
-    );
-    this.groupAccount.set(groupAccount?.group_account);
-    this.loadInvoices();
+
+    if (this.typeOfProjet() === 'PRINCIPAL') {
+      const data = await firstValueFrom(
+        this.services.principal.getGroupByIdWithRelations(+this.id()!)
+      );
+      this.accountPrincipal = data;
+      this.loadInvoices();
+      this.initializeCreditNotes(data.invoice || []);
+    } else {
+      if (
+        user.userSecondaryAccounts.find(
+          (account) => account.secondary_account_id === +this.id()!
+        )
+      ) {
+        const data = await firstValueFrom(
+          this.services.group.getGroupById(+this.id()!)
+        );
+        this.groupAccount.set(data);
+        this.loadInvoices();
+      } else {
+        this.services.router.navigate(['/home']);
+      }
+    }
   }
 
   private initializeCreditNotes(invoices: InvoiceEntity[]): void {
@@ -333,14 +352,11 @@ export class FacturationComponent implements OnInit, OnDestroy {
   ): void {
     // Filtrage des devis
     let filteredQuotes = quotes;
-    console.log('Devis originaux:', quotes.length);
-    console.log('Factures originales:', invoices.length);
-    console.log('Notes de crédit originales:', creditNotes.length);
 
     if (this.currentFilter === 'quotes') {
-      filteredQuotes = quotes.filter((quote) => !quote.invoice);
+      filteredQuotes = quotes.filter((quote) => quote.status !== 'invoiced');
     } else if (this.currentFilter === 'invoiced_quotes') {
-      filteredQuotes = quotes.filter((quote) => quote.invoice);
+      filteredQuotes = quotes.filter((quote) => quote.status === 'invoiced');
     } else if (this.currentFilter === 'credit-note') {
       filteredQuotes = [];
     }
@@ -361,14 +377,9 @@ export class FacturationComponent implements OnInit, OnDestroy {
     });
 
     this.allQuotes.set(sortedQuotes);
-    console.log('Devis filtrés:', filteredQuotes.length);
 
     // Filtrage des factures et notes de crédit
     let invoicesAndCreditNotes = [...invoices, ...creditNotes];
-    console.log(
-      'Total factures et notes de crédit:',
-      invoicesAndCreditNotes.length
-    );
 
     // Filtrage selon le filtre de factures
     if (this.invoicesFilter === 'invoices') {
@@ -400,10 +411,6 @@ export class FacturationComponent implements OnInit, OnDestroy {
     );
 
     this.allInvoicesAndCreditNotes.set(sortedInvoicesAndCreditNotes);
-    console.log(
-      'Factures et notes de crédit filtrées:',
-      sortedInvoicesAndCreditNotes.length
-    );
   }
 
   private getFormattedQuotes() {
@@ -490,7 +497,6 @@ export class FacturationComponent implements OnInit, OnDestroy {
   }
 
   generateInvoicePDF(invoice: Document): void {
-    console.log('Invoice:', invoice);
     this.services.pdf.generateInvoicePDF(invoice as unknown as InvoiceEntity);
   }
 
@@ -675,7 +681,7 @@ export class FacturationComponent implements OnInit, OnDestroy {
 
     if (this.typeOfProjet() === 'GROUP') {
       const userAccount = this.connectedUser()?.userSecondaryAccounts.find(
-        (account) => account.id === +this.id()!
+        (account) => account.secondary_account_id === +this.id()!
       );
       return userAccount?.role_billing === 'ADMIN';
     }
@@ -749,9 +755,6 @@ export class FacturationComponent implements OnInit, OnDestroy {
    * @param updatedInvoiceId L'ID de la facture mise à jour.
    */
   protected async handleInvoiceUpdate(updatedInvoiceId: number): Promise<void> {
-    console.log(
-      `Facture ${updatedInvoiceId} mise à jour, rechargement des données...`
-    );
     this.isLoading.set(true);
     try {
       if (this.typeOfProjet() === 'PRINCIPAL') {

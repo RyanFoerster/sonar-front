@@ -288,7 +288,6 @@
       <hlm-icon class="w-3 sm:w-4" name="lucideChevronRight" />
     </a>
 
-    @if(connectedUser()?.role === "ADMIN"){
     <a
       routerLink="facturation"
       [queryParams]="{ typeOfProjet: typeOfProjet() }"
@@ -297,6 +296,5 @@
       >Facturation
       <hlm-icon class="w-3 sm:w-4" name="lucideChevronRight" />
     </a>
-    }
   </div>
 </div>

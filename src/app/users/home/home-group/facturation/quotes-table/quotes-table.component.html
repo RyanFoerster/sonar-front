@@ -185,11 +185,15 @@
               <span
                 class="inline-flex items-center justify-center rounded-full px-2 sm:px-3 py-0.5 sm:py-1 text-[10px] xs:text-xs font-medium min-w-[120px] sm:min-w-[140px] lg:min-w-[120px] text-center"
                 [ngClass]="{
-                  'bg-blue-50 text-blue-700': !doc.invoice,
-                  'bg-green-50 text-green-700': doc.invoice
+                  'bg-green-50 text-green-700': doc['status']! === 'invoiced',
+                  'bg-blue-50 text-blue-700': doc['status']! !== 'invoiced'
                 }"
               >
-                {{ doc.invoice ? "Devis facturé" : "Devis en attente" }}
+                {{
+                  doc["status"] === "invoiced"
+                    ? "Devis facturé"
+                    : "Devis en attente"
+                }}
               </span>
             </td>
             <td

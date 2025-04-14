@@ -7,7 +7,7 @@ import {
   signal,
   input,
 } from '@angular/core';
-import { DatePipe, NgClass } from '@angular/common';
+import { DatePipe, JsonPipe, NgClass } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 
@@ -44,6 +44,7 @@ import {
 import { EuroFormatPipe } from '../../../../../shared/pipes/euro-format.pipe';
 import { QuoteEntity } from '../../../../../shared/entities/quote.entity';
 import { InvoiceEntity } from '../../../../../shared/entities/invoice.entity';
+import { UserEntity } from '../../../../../shared/entities/user.entity';
 
 // Importing the Document interface from parent component
 interface Document {
@@ -100,6 +101,7 @@ export interface ModalContext {
     HlmPaginationContentDirective,
     HlmPaginationItemDirective,
     HlmToasterComponent,
+    JsonPipe,
   ],
   providers: [
     provideIcons({
@@ -129,9 +131,9 @@ export class QuotesTableComponent {
   @Input() currentFilter: 'all' | 'quotes' | 'invoiced_quotes' | 'credit-note' =
     'all';
   typeOfProjet = input<string>();
-  @Input() canEditBilling: () => boolean = () => false;
-  @Input() hasAccessToBilling: () => boolean = () => true;
-  @Input() connectedUser: () => any = () => null;
+  canEditBilling = input<boolean>(false);
+  hasAccessToBilling = input<boolean>(true);
+  connectedUser = input<UserEntity | null>(null);
 
   @Output() pageChange = new EventEmitter<number>();
   @Output() filterChange = new EventEmitter<

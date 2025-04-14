@@ -1,156 +1,285 @@
-<div class="flex flex-col gap-4 px-10">
-  <div class="flex flex-col gap-2">
-    <h2 class="text-2xl font-bold">Factures</h2>
-    <brn-separator class="bg-primary" hlmSeparator />
+<div class="container mx-auto p-4 md:p-6 lg:p-8">
+  <h1 class="text-2xl font-bold mb-6">Toutes les Factures</h1>
 
-    <div class="flex flex-col gap-2 mt-2">
-      <div
-        class="h-20 flex flex-col lg:flex-row justify-end items-center gap-2 w-full"
+  <!-- Filtres et Recherche -->
+  <div
+    class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200"
+  >
+    <!-- Filtre par Statut -->
+    <div class="w-full md:w-auto flex-shrink-0">
+      <label
+        class="block text-sm font-medium text-gray-700 mb-1.5"
+        for="statusFilter"
+        >Filtrer par statut</label
       >
-        <brn-select
-          class="inline-block lg:min-w-80 w-full lg:w-auto"
-          placeholder="Action rapide"
-        >
-          <hlm-select-trigger class="w-full">
-            <hlm-select-value />
-          </hlm-select-trigger>
-          <hlm-select-content class="w-full">
-            <hlm-option (click)="sortInvoices('sended')" value="sended"
-              >Envoyée</hlm-option
-            >
-            <hlm-option (click)="sortInvoices('draft')" value="draft"
-              >Brouillon</hlm-option
-            >
-            <hlm-option (click)="sortInvoices('canceled')" value="canceled"
-              >Annulée</hlm-option
-            >
-            <hlm-option
-              (click)="sortInvoices('payment_pending')"
-              value="payment_pending"
-              >En attente de paiement</hlm-option
-            >
-            <hlm-option
-              (click)="sortInvoices('payment_done')"
-              value="payment_done"
-              >Payée</hlm-option
-            >
-            <hlm-option (click)="sortInvoices('all')" value="all"
-              >Toutes</hlm-option
-            >
-          </hlm-select-content>
-        </brn-select>
+      <hlm-select
+        class="inline-block w-full md:w-52"
+        [(ngModel)]="selectedStatus"
+        (ngModelChange)="filterByStatus($event)"
+        name="statusFilter"
+      >
+        <hlm-select-trigger class="w-full justify-between group">
+          <hlm-select-value
+            placeholder="Choisir un statut"
+            class="text-muted-foreground group-data-[placeholder]:text-muted-foreground"
+          />
+          <hlm-icon
+            name="lucideChevronDown"
+            size="sm"
+            class="text-muted-foreground"
+          />
+        </hlm-select-trigger>
+        <hlm-select-content class="w-full">
+          <hlm-option value="all">Tous les statuts</hlm-option>
+          <hlm-option value="paid">Payée</hlm-option>
+          <hlm-option value="pending">En attente</hlm-option>
+          <hlm-option value="payment_pending">En attente (Stripe)</hlm-option>
+          <!-- Assuming you might have this -->
+          <!-- Add other relevant statuses from your actual system -->
+          <!--
+          <hlm-option value="payment_error">Erreur paiement</hlm-option>
+          <hlm-option value="draft">Brouillon</hlm-option>
+          <hlm-option value="canceled">Annulée</hlm-option>
+          <hlm-option value="sended">Envoyée</hlm-option>
+          -->
+        </hlm-select-content>
+      </hlm-select>
+    </div>
 
-        <input
-          hlmInput
-          (input)="searchInvoices($event)"
-          placeholder="Rechercher"
-          class="lg:min-w-80 w-full lg:w-auto"
-        />
-      </div>
-      <hlm-table class="w-full hidden lg:block">
-        <hlm-trow class="w-full flex justify-between">
-          <hlm-th class="w-1/12">Facture</hlm-th>
-          <hlm-th class="w-1/12">Date</hlm-th>
-          <hlm-th class="w-2/12">Client</hlm-th>
-          <hlm-th class="w-1/12">Montant</hlm-th>
-          <hlm-th class="w-1/12">Statut</hlm-th>
-        </hlm-trow>
-        @for (invoice of sortedInvoices(); track invoice.id) {
-          <hlm-trow class="w-full flex justify-between">
-            <hlm-td class="w-1/12">{{ invoice.id }}</hlm-td>
-            <hlm-td class="w-1/12">{{ invoice.invoice_date | date }}</hlm-td>
-            <hlm-td class="w-2/12">{{ invoice.client.name }}</hlm-td>
-            <hlm-td class="w-1/12">{{ invoice.total | euroFormat }}</hlm-td>
-            <hlm-td
-              class="w-1/12 flex items-center justify-center rounded-md h-10 self-center font-medium uppercase text-xs"
-              [class.text-orange-500]="invoice.status === 'payment_pending'"
-              [class.bg-orange-200]="invoice.status === 'payment_pending'"
-              [class.text-green-500]="invoice.status === 'payment_done'"
-              [class.bg-green-200]="invoice.status === 'payment_done'"
-              [class.text-red-500]="invoice.status === 'payment_error'"
-              [class.bg-red-200]="invoice.status === 'payment_error'"
-              [class.text-red-500]="invoice.status === 'canceled'"
-              [class.bg-red-200]="invoice.status === 'canceled'"
-              [class.text-gray-500]="invoice.status === 'draft'"
-              [class.bg-gray-200]="invoice.status === 'draft'"
-              [class.text-blue-500]="invoice.status === 'sended'"
-              [class.bg-blue-200]="invoice.status === 'sended'"
-            >
-              {{
-                invoice.status === "payment_pending"
-                  ? "En attente"
-                  : invoice.status === "payment_done"
-                    ? "Payé"
-                    : invoice.status === "draft"
-                      ? "Brouillon"
-                      : invoice.status === "canceled"
-                        ? "Annulée"
-                        : invoice.status === "sended"
-                          ? "Envoyée"
-                          : "Erreur"
-              }}</hlm-td
-            >
-          </hlm-trow>
-        }
-      </hlm-table>
+    <!-- Recherche -->
+    <div class="w-full md:flex-1">
+      <label
+        class="block text-sm font-medium text-gray-700 mb-1.5"
+        for="searchInput"
+        >Rechercher</label
+      >
+      <input
+        hlmInput
+        id="searchInput"
+        class="w-full"
+        placeholder="Rechercher par N°, client, N° entreprise..."
+        (input)="searchInvoices($event)"
+      />
+    </div>
+  </div>
 
-      <div class="lg:hidden space-y-4">
-        @for (invoice of sortedInvoices(); track invoice.id) {
-          <div class="bg-white shadow-md rounded-lg p-4 space-y-3">
-            <div class="flex justify-between items-center">
-              <span class="text-sm font-medium text-gray-500">Facture</span>
-              <span class="text-lg font-semibold">{{ invoice.id }}</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-sm font-medium text-gray-500">Date</span>
-              <span class="text-gray-700">{{
-                invoice.invoice_date | date
-              }}</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-sm font-medium text-gray-500">Client</span>
-              <span class="text-gray-700">{{ invoice.client.name }}</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-sm font-medium text-gray-500">Montant</span>
-              <span class="text-lg font-semibold text-gray-900">{{
-                invoice.total | euroFormat
-              }}</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-sm font-medium text-gray-500">Statut</span>
+  <!-- Tableau des Factures -->
+  @if (paginatedInvoices().length > 0) {
+  <div
+    class="relative overflow-x-auto rounded-xl border border-gray-200 bg-white"
+  >
+    <div class="min-w-full overflow-x-auto">
+      <table hlmTable class="w-full text-sm text-left">
+        <thead class="hidden lg:table-header-group">
+          <tr
+            class="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-200"
+          >
+            <th hlmTh class="w-20 px-3 py-3 sm:px-4">N°</th>
+            <th hlmTh class="w-32 px-3 py-3 sm:px-4">Date</th>
+            <th hlmTh class="px-3 py-3 sm:px-4">Client</th>
+            <th hlmTh class="w-28 px-3 py-3 sm:px-4 text-right">Total</th>
+            <th hlmTh class="w-36 px-3 py-3 sm:px-4 text-center">Statut</th>
+            <th hlmTh class="w-48 px-3 py-3 sm:px-4 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          @for (invoice of paginatedInvoices(); track invoice.id) {
+          <tr
+            hlmTrow
+            class="bg-white hover:bg-gray-50 transition-colors flex flex-col lg:table-row mb-3 lg:mb-0 rounded-lg lg:rounded-none shadow-sm lg:shadow-none border border-gray-100 lg:border-0"
+          >
+            <td
+              hlmTd
+              class="px-3 py-2 sm:px-4 lg:py-3 flex lg:table-cell items-center justify-between lg:justify-start border-b lg:border-none border-gray-100"
+            >
               <span
-                class="px-3 py-1 rounded-full text-xs font-medium"
-                [ngClass]="{
-                  'bg-orange-100 text-orange-800':
-                    invoice.status === 'payment_pending',
-                  'bg-green-100 text-green-800':
-                    invoice.status === 'payment_done',
-                  'bg-red-100 text-red-800':
-                    invoice.status === 'payment_error' ||
-                    invoice.status === 'canceled',
-                  'bg-gray-100 text-gray-800': invoice.status === 'draft',
-                  'bg-blue-100 text-blue-800': invoice.status === 'sended',
-                }"
+                class="font-medium lg:hidden text-xs text-gray-500 uppercase mr-2"
+                >N° :</span
               >
-                {{
-                  invoice.status === "payment_pending"
-                    ? "En attente"
-                    : invoice.status === "payment_done"
-                      ? "Payé"
-                      : invoice.status === "draft"
-                        ? "Brouillon"
-                        : invoice.status === "canceled"
-                          ? "Annulée"
-                          : invoice.status === "sended"
-                            ? "Envoyée"
-                            : "Erreur"
-                }}
+              <span class="whitespace-nowrap font-medium text-gray-800"
+                >F-{{ invoice.id }}</span
+              >
+            </td>
+            <td
+              hlmTd
+              class="px-3 py-2 sm:px-4 lg:py-3 flex lg:table-cell items-center justify-between lg:justify-start border-b lg:border-none border-gray-100"
+            >
+              <span
+                class="font-medium lg:hidden text-xs text-gray-500 uppercase mr-2"
+                >Date :</span
+              >
+              <span class="whitespace-nowrap text-gray-600">{{
+                invoice.invoice_date | date : "dd/MM/yyyy"
+              }}</span>
+            </td>
+            <td
+              hlmTd
+              class="px-3 py-2 sm:px-4 lg:py-3 border-b lg:border-none border-gray-100"
+            >
+              <div class="flex items-center gap-3">
+                <div
+                  class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 font-medium flex-shrink-0 text-sm"
+                >
+                  {{ invoice.client.name.charAt(0).toUpperCase() || "A" }}
+                </div>
+                <div class="min-w-0 flex-grow">
+                  <div class="font-semibold text-gray-900 truncate text-sm">
+                    {{ invoice.client.name }}
+                  </div>
+                  <div class="text-xs text-gray-500 truncate">
+                    {{ invoice.client.email }}
+                  </div>
+                  @if(invoice.client.company_number) {
+                  <div class="text-[10px] text-gray-400 truncate">
+                    N° Ent: {{ invoice.client.company_number }}
+                  </div>
+                  }
+                </div>
+              </div>
+            </td>
+            <td
+              hlmTd
+              class="px-3 py-2 sm:px-4 lg:py-3 flex lg:table-cell items-center justify-between lg:justify-end lg:text-right border-b lg:border-none border-gray-100"
+            >
+              <span
+                class="font-medium lg:hidden text-xs text-gray-500 uppercase mr-2"
+                >Total :</span
+              >
+              <span
+                class="font-semibold text-sm whitespace-nowrap text-gray-800"
+                >{{ invoice.total | euroFormat }}</span
+              >
+            </td>
+            <td
+              hlmTd
+              class="px-3 py-2 sm:px-4 lg:py-3 flex lg:table-cell items-center justify-between lg:justify-center border-b lg:border-none border-gray-100"
+            >
+              <span
+                class="font-medium lg:hidden text-xs text-gray-500 uppercase mr-2"
+                >Statut :</span
+              >
+              <span
+                class="inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-semibold leading-none min-w-[100px] text-center border"
+                [ngClass]="getStatusClasses(invoice.status)"
+              >
+                {{ getStatusLabel(invoice.status) }}
               </span>
-            </div>
-          </div>
-        }
+            </td>
+            <td hlmTd class="px-3 py-2 sm:px-4 lg:py-3">
+              <div
+                class="flex flex-col lg:flex-row items-stretch lg:items-center justify-end gap-1.5 sm:gap-2"
+              >
+                <button
+                  hlmBtn
+                  variant="ghost"
+                  size="sm"
+                  class="flex items-center justify-center gap-1.5 w-full lg:w-auto text-xs whitespace-nowrap px-2 py-1.5 border border-transparent hover:border-gray-200 hover:bg-gray-100 text-gray-600 hover:text-gray-800"
+                  (click)="downloadInvoice(invoice)"
+                >
+                  <hlm-icon
+                    size="sm"
+                    name="lucideFileDown"
+                    class="h-3.5 w-3.5"
+                  />
+                  <span class="lg:hidden">Télécharger</span>
+                </button>
+                @if (invoice.status !== 'paid') {
+                <button
+                  hlmBtn
+                  variant="ghost"
+                  size="sm"
+                  class="flex items-center justify-center gap-1.5 w-full lg:w-auto text-xs whitespace-nowrap px-2 py-1.5 border border-transparent hover:border-green-200 hover:bg-green-50 text-green-600 hover:text-green-700"
+                  (click)="markAsPaid(invoice.id)"
+                >
+                  <hlm-icon
+                    size="sm"
+                    name="lucideCheckCircle"
+                    class="h-3.5 w-3.5"
+                  />
+                  <span class="lg:hidden">Marquer Payée</span>
+                </button>
+                }
+              </div>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <nav hlmPagination class="mt-4 sm:mt-6 flex justify-center">
+    <ul
+      hlmPaginationContent
+      class="flex flex-wrap gap-1 justify-center items-center"
+    >
+      <li hlmPaginationItem class="mx-0.5 sm:mx-1">
+        <button
+          hlmBtn
+          variant="ghost"
+          class="px-2 md:px-3 py-1.5 text-xs sm:text-sm font-medium"
+          [disabled]="currentPage() === 1"
+          (click)="onPageChange(currentPage() - 1)"
+        >
+          Précédent
+        </button>
+      </li>
+
+      @for (page of getVisiblePages(); track $index) { @if (page === 'ellipsis')
+      {
+      <li hlmPaginationItem class="mx-0.5 sm:mx-1">
+        <span class="px-2 md:px-3 py-1.5 text-xs sm:text-sm">...</span>
+      </li>
+      } @else {
+      <li hlmPaginationItem class="mx-0.5 sm:mx-1">
+        <button
+          hlmBtn
+          [variant]="currentPage() === page ? 'default' : 'outline'"
+          class="min-w-[32px] sm:min-w-[36px] h-8 sm:h-9 px-2 md:px-3 py-1.5 text-xs sm:text-sm font-medium"
+          (click)="onPageChange(page)"
+        >
+          {{ page }}
+        </button>
+      </li>
+      } }
+
+      <li hlmPaginationItem class="mx-0.5 sm:mx-1">
+        <button
+          hlmBtn
+          variant="ghost"
+          class="px-2 md:px-3 py-1.5 text-xs sm:text-sm font-medium"
+          [disabled]="currentPage() === totalPages()"
+          (click)="onPageChange(currentPage() + 1)"
+        >
+          Suivant
+        </button>
+      </li>
+    </ul>
+  </nav>
+
+  } @else {
+  <div
+    class="py-12 text-center rounded-xl border border-dashed border-gray-300 bg-white mt-6"
+  >
+    <div class="flex flex-col items-center gap-3 sm:gap-4">
+      <div
+        class="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-gray-100 flex items-center justify-center"
+      >
+        <hlm-icon name="lucideFileText" size="lg" class="text-gray-400" />
+      </div>
+      <div class="space-y-1 sm:space-y-2">
+        <h3 class="text-base sm:text-lg font-semibold text-gray-900">
+          Aucune facture trouvée
+        </h3>
+        <p class="text-sm text-gray-500 max-w-md mx-auto">
+          @if (searchTerm() || selectedStatus() !== 'all') { Aucune facture ne
+          correspond à vos critères de recherche ou de filtre actuels. } @else {
+          Il n'y a actuellement aucune facture enregistrée. }
+        </p>
       </div>
     </div>
   </div>
+  }
 </div>
+<hlm-toaster />

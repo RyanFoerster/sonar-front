@@ -2,7 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
-import { SwPush } from '@angular/service-worker';
+import { SwPush, SwUpdate } from '@angular/service-worker';
 import { FirebaseMessagingService } from './services/firebase-messaging.service';
 import { AuthService } from './shared/services/auth.service';
 import { NotificationService } from './services/notification.service';
@@ -34,6 +34,7 @@ export class AppComponent implements OnInit {
   private firebaseMessagingService = inject(FirebaseMessagingService);
   private authService = inject(AuthService);
   private notificationService = inject(NotificationService);
+  private swUpdate = inject(SwUpdate);
 
   constructor(private router: Router) {
     this.router.events
@@ -45,6 +46,14 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.swUpdate.versionUpdates.subscribe((event) => {
+      if (event.type === 'VERSION_READY') {
+        this.swUpdate.activateUpdate().then(() => {
+          window.location.reload();
+        });
+      }
+    });
+
     // Vérifier si les notifications sont désactivées explicitement dans le localStorage
     const notificationsDisabled = this.areNotificationsDisabledInLocalStorage();
 

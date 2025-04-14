@@ -15,7 +15,7 @@ export default [
       import('./facturation/facturation.component').then(
         (m) => m.FacturationComponent
       ),
-    canActivate: [authGuard, adminGuard],
+    canActivate: [authGuard],
   },
   {
     path: ':id/facturation/new-quote',
@@ -23,7 +23,7 @@ export default [
       import('./facturation/new-quote/new-quote.component').then(
         (m) => m.NewQuoteComponent
       ),
-    canActivate: [authGuard, adminGuard],
+    canActivate: [authGuard],
   },
   {
     path: ':id/facturation/new-credit-note',
@@ -31,7 +31,7 @@ export default [
       import('./facturation/new-credit-note/new-credit-note.component').then(
         (m) => m.NewCreditNoteComponent
       ),
-    canActivate: [authGuard, adminGuard],
+    canActivate: [authGuard],
   },
   {
     path: ':id/membership',

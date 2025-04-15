@@ -94,8 +94,8 @@
               class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
               hlmInput
               type="number"
-              [min]="connectedUser()?.role === 'USER' ? 10 : 10"
-              [max]="connectedUser()?.role === 'USER' ? 30 : null"
+              [min]="connectedUser()?.role === 'ADMIN' ? null : 10"
+              [max]="connectedUser()?.role === 'ADMIN' ? null : 30"
               placeholder="Min: 10, Max: 30"
             />
             @if (createQuoteForm.get('payment_deadline')?.invalid &&
@@ -105,10 +105,12 @@
               @if
               (createQuoteForm.get('payment_deadline')?.errors?.['required']) {
               Le délai de paiement est requis } @else if
-              (createQuoteForm.get('payment_deadline')?.errors?.['min']) { Le
-              délai minimum est de 10 jours } @else if
-              (createQuoteForm.get('payment_deadline')?.errors?.['max']) { Le
-              délai maximum est de 30 jours }
+              (createQuoteForm.get('payment_deadline')?.errors?.['min']) { @if
+              (connectedUser()?.role !== 'ADMIN') { Le délai minimum est de 10
+              jours } } @else if
+              (createQuoteForm.get('payment_deadline')?.errors?.['max']) { @if
+              (connectedUser()?.role !== 'ADMIN') { Le délai maximum est de 30
+              jours } }
             </span>
             }
           </p>
@@ -269,7 +271,13 @@
         <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
           <div class="flex justify-between items-start">
             <div class="space-y-1">
+              @if (client()?.is_physical_person) {
+              <h3 class="font-semibold text-gray-900">
+                {{ client()?.firstname }} {{ client()?.lastname }}
+              </h3>
+              } @else {
               <h3 class="font-semibold text-gray-900">{{ client()?.name }}</h3>
+              }
               <p class="text-sm text-gray-600">
                 {{ client()?.street }} {{ client()?.number }}
               </p>
@@ -1039,9 +1047,9 @@
           }
         </div>
       </div>
-
-      <hlm-toaster />
     </form>
+    <hlm-toaster />
+
     } @else {
     <form
       [formGroup]="createClientForm"
@@ -1087,6 +1095,7 @@
         <p class="flex items-center gap-2 cursor-pointer group">
           <hlm-checkbox
             (checkedChange)="togglePhysicalPerson()"
+            [checked]="isPhysicalPerson()"
             class="rounded-md group-hover:border-primary transition-colors"
           />
           <span
@@ -1323,6 +1332,37 @@
               }
             </p>
           </div>
+        </div>
+
+        <div class="space-y-4">
+          <p class="block" hlmLabel>
+            <span class="text-sm font-medium text-gray-900"
+              >Délai de paiement par défaut (jours)*</span
+            >
+            <input
+              formControlName="default_payment_deadline"
+              type="number"
+              hlmInput
+              [min]="connectedUser()?.role === 'ADMIN' ? null : 10"
+              [max]="connectedUser()?.role === 'ADMIN' ? null : 30"
+              placeholder="Min: 10, Max: 30"
+              class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+            />
+            @if (createClientForm.get('default_payment_deadline')?.invalid &&
+            createClientForm.get('default_payment_deadline')?.touched) {
+            <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
+              <hlm-icon size="xs" name="lucideAlertCircle" />
+              @if
+              (createClientForm.get('default_payment_deadline')?.errors?.['required'])
+              { Le délai est requis } @else if
+              (createClientForm.get('default_payment_deadline')?.errors?.['min'])
+              { @if (connectedUser()?.role === 'ADMIN') { Min. 1 jour } @else {
+              Min. 10 jours } } @else if
+              (createClientForm.get('default_payment_deadline')?.errors?.['max'])
+              { @if (connectedUser()?.role !== 'ADMIN') { Max. 30 jours } }
+            </span>
+            }
+          </p>
         </div>
       </div>
 

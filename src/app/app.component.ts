@@ -46,13 +46,38 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.swUpdate.versionUpdates.subscribe((event) => {
-      if (event.type === 'VERSION_READY') {
-        this.swUpdate.activateUpdate().then(() => {
-          window.location.reload();
+    if (this.swUpdate.isEnabled) {
+      this.swUpdate.versionUpdates.subscribe((event) => {
+        if (event.type === 'VERSION_READY') {
+          console.log('Nouvelle version prête à être activée.');
+          this.swUpdate.activateUpdate().then(() => {
+            console.log('Nouvelle version activée. Rechargement...');
+            window.location.reload();
+          });
+        }
+      });
+
+      // Vérifier les mises à jour au démarrage
+      this.swUpdate
+        .checkForUpdate()
+        .then((updateFound) => {
+          if (updateFound) {
+            console.log(
+              'Mise à jour trouvée lors de la vérification initiale.'
+            );
+          } else {
+            console.log(
+              'Aucune mise à jour trouvée lors de la vérification initiale.'
+            );
+          }
+        })
+        .catch((err) => {
+          console.error(
+            'Erreur lors de la vérification des mises à jour:',
+            err
+          );
         });
-      }
-    });
+    }
 
     // Vérifier si les notifications sont désactivées explicitement dans le localStorage
     const notificationsDisabled = this.areNotificationsDisabledInLocalStorage();

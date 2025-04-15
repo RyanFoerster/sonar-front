@@ -258,10 +258,7 @@ export class NewQuoteComponent implements AfterViewInit {
         Validators.required,
       ],
       service_date: ['', Validators.required],
-      payment_deadline: [
-        10,
-        [Validators.required, Validators.min(10), Validators.max(30)],
-      ],
+      payment_deadline: [10, [Validators.required]],
       validation_deadline: [
         this.datePipe.transform(
           new Date(new Date().getTime() + 10 * 24 * 60 * 60 * 1000),
@@ -291,6 +288,7 @@ export class NewQuoteComponent implements AfterViewInit {
       company_vat_number: [null],
       national_number: [null],
       is_physical_person: [false],
+      default_payment_deadline: [10, [Validators.min(10), Validators.max(30)]],
     });
 
     this.createProductForm = this.formBuilder.group({
@@ -312,6 +310,49 @@ export class NewQuoteComponent implements AfterViewInit {
 
   async ngAfterViewInit() {
     await this.getConnectedUser();
+
+    // Adapter les validateurs pour le délai de paiement par défaut en fonction du rôle
+    const deadlineControl = this.createClientForm.get(
+      'default_payment_deadline'
+    );
+    if (deadlineControl) {
+      if (this.connectedUser()?.role === 'ADMIN') {
+        // Pour les admins: minimum 1 jour, pas de max
+        deadlineControl.setValidators([Validators.required, Validators.min(1)]);
+      } else {
+        // Pour les autres: min 10, max 30
+        deadlineControl.setValidators([
+          Validators.required,
+          Validators.min(10),
+          Validators.max(30),
+        ]);
+      }
+      deadlineControl.updateValueAndValidity(); // Mettre à jour la validité
+    }
+
+    // --- AJOUT : Adapter les validateurs pour le délai de paiement du DEVIS ---
+    const quotePaymentDeadlineControl =
+      this.createQuoteForm.get('payment_deadline');
+    if (quotePaymentDeadlineControl) {
+      if (this.connectedUser()?.role !== 'ADMIN') {
+        // Pour les non-admins: ajouter min 10, max 30
+        quotePaymentDeadlineControl.addValidators([
+          Validators.min(10),
+          Validators.max(30),
+        ]);
+      } else {
+        // Pour les admins: s'assurer que min et max sont retirés s'ils existaient
+        quotePaymentDeadlineControl.removeValidators([
+          Validators.min(10),
+          Validators.max(30),
+        ]);
+        // Optionnel: ajouter un min(1) si nécessaire pour les admins
+        // quotePaymentDeadlineControl.addValidators(Validators.min(1));
+      }
+      quotePaymentDeadlineControl.updateValueAndValidity(); // Mettre à jour la validité
+    }
+    // --- FIN AJOUT ---
+
     await this.loadUserAttachments();
 
     if (this.connectedUser()?.role === 'ADMIN') {
@@ -433,13 +474,15 @@ export class NewQuoteComponent implements AfterViewInit {
         // Pré-remplir le formulaire avec les données du client existant
         const currentClient = this.client()!;
         this.isPhysicalPerson.set(currentClient.is_physical_person || false);
+        // Pré-remplir le délai de paiement par défaut
+        const defaultDeadline = currentClient.default_payment_deadline ?? 10;
 
         if (currentClient.is_physical_person) {
           // Pour une personne physique, séparer le nom en prénom et nom
-          const [firstname = '', lastname = ''] = currentClient.name.split(' ');
           this.createClientForm.patchValue({
-            firstname,
-            lastname,
+            firstname: currentClient.firstname,
+            lastname: currentClient.lastname,
+            name: `${currentClient.firstname} ${currentClient.lastname}`.trim(),
             email: currentClient.email,
             phone: currentClient.phone,
             street: currentClient.street,
@@ -449,6 +492,7 @@ export class NewQuoteComponent implements AfterViewInit {
             postalCode: currentClient.postalCode,
             national_number: currentClient.national_number,
             is_physical_person: true,
+            default_payment_deadline: defaultDeadline,
           });
         } else {
           // Pour une entreprise
@@ -464,6 +508,7 @@ export class NewQuoteComponent implements AfterViewInit {
             company_number: currentClient.company_number,
             company_vat_number: currentClient.company_vat_number,
             is_physical_person: false,
+            default_payment_deadline: defaultDeadline,
           });
         }
       } else {
@@ -495,6 +540,9 @@ export class NewQuoteComponent implements AfterViewInit {
 
   togglePhysicalPerson() {
     this.isPhysicalPerson.set(!this.isPhysicalPerson());
+    this.createClientForm.patchValue({
+      is_physical_person: this.isPhysicalPerson(),
+    });
 
     if (this.isPhysicalPerson()) {
       this.createClientForm.get('name')?.clearValidators();
@@ -678,17 +726,23 @@ export class NewQuoteComponent implements AfterViewInit {
             } else {
               clientList.push(newClient);
             }
+            this.clients.set(clientList);
 
             // Mise à jour du client actuel
             this.currentClient.set(newClient);
+            this.client.set(newClient);
 
             // Réinitialisation du formulaire et des états
-            this.createClientForm.reset();
+            this.createClientForm.reset({
+              country: 'Belgique',
+              default_payment_deadline: 10,
+            });
             this.toggleClientForm(false);
             this.isPhysicalPerson.set(false);
 
             // Sauvegarde de l'utilisateur connecté
             this.authService.setUser(this.connectedUser()!);
+            toast.success('Client créé avec succès');
           })
         )
         .subscribe();
@@ -725,13 +779,24 @@ export class NewQuoteComponent implements AfterViewInit {
             if (existingIndex !== -1) {
               clientList[existingIndex] = updatedClient;
             }
+            this.clients.set(clientList);
 
             // Mise à jour du client actuel
             this.currentClient.set(updatedClient);
             this.client.set(updatedClient);
 
+            // Mettre à jour aussi le délai de paiement du formulaire de devis
+            const paymentDeadline =
+              updatedClient.default_payment_deadline ?? 10;
+            this.createQuoteForm.patchValue({
+              payment_deadline: paymentDeadline,
+            });
+
             // Réinitialisation du formulaire et des états
-            this.createClientForm.reset();
+            this.createClientForm.reset({
+              country: 'Belgique',
+              default_payment_deadline: 10,
+            });
             this.toggleClientForm(false);
             this.isPhysicalPerson.set(false);
 
@@ -761,6 +826,11 @@ export class NewQuoteComponent implements AfterViewInit {
           this.tva21.set(0);
           this.totalHtva.set(0);
           this.total.set(0);
+          // Pré-remplir le délai de paiement du devis avec celui du client, sinon 10 jours
+          const paymentDeadline = data.default_payment_deadline ?? 10;
+          this.createQuoteForm.patchValue({
+            payment_deadline: paymentDeadline,
+          });
         })
       )
       .subscribe();

@@ -33,7 +33,6 @@
           <hlm-option value="all">Tous les statuts</hlm-option>
           <hlm-option value="paid">Payée</hlm-option>
           <hlm-option value="pending">En attente</hlm-option>
-          <hlm-option value="payment_pending">En attente (Stripe)</hlm-option>
           <!-- Assuming you might have this -->
           <!-- Add other relevant statuses from your actual system -->
           <!--
@@ -74,10 +73,64 @@
           <tr
             class="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-200"
           >
-            <th hlmTh class="w-20 px-3 py-3 sm:px-4">N°</th>
-            <th hlmTh class="w-32 px-3 py-3 sm:px-4">Date</th>
+            <th hlmTh class="w-20 px-3 py-3 sm:px-4">
+              <button
+                class="flex items-center gap-1 hover:text-gray-700 transition-colors focus:outline-none"
+                (click)="sortBy('invoice_number')"
+              >
+                <span>N°</span>
+                @if (sortField() === 'invoice_number') {
+                <span class="text-primary">{{
+                  sortOrder() === "asc" ? "↑" : "↓"
+                }}</span>
+                } @else {
+                <hlm-icon
+                  name="lucideArrowUpDown"
+                  size="xs"
+                  class="text-gray-400 h-3 w-3"
+                />
+                }
+              </button>
+            </th>
+            <th hlmTh class="w-32 px-3 py-3 sm:px-4">
+              <button
+                class="flex items-center gap-1 hover:text-gray-700 transition-colors focus:outline-none"
+                (click)="sortBy('invoice_date')"
+              >
+                <span>Date</span>
+                @if (sortField() === 'invoice_date') {
+                <span class="text-primary">{{
+                  sortOrder() === "asc" ? "↑" : "↓"
+                }}</span>
+                } @else {
+                <hlm-icon
+                  name="lucideArrowUpDown"
+                  size="xs"
+                  class="text-gray-400 h-3 w-3"
+                />
+                }
+              </button>
+            </th>
             <th hlmTh class="px-3 py-3 sm:px-4">Client</th>
-            <th hlmTh class="w-28 px-3 py-3 sm:px-4 text-right">Total</th>
+            <th hlmTh class="w-28 px-3 py-3 sm:px-4 text-right">
+              <button
+                class="flex items-center justify-end gap-1 w-full hover:text-gray-700 transition-colors focus:outline-none"
+                (click)="sortBy('total')"
+              >
+                <span>Total</span>
+                @if (sortField() === 'total') {
+                <span class="text-primary">{{
+                  sortOrder() === "asc" ? "↑" : "↓"
+                }}</span>
+                } @else {
+                <hlm-icon
+                  name="lucideArrowUpDown"
+                  size="xs"
+                  class="text-gray-400 h-3 w-3"
+                />
+                }
+              </button>
+            </th>
             <th hlmTh class="w-36 px-3 py-3 sm:px-4 text-center">Statut</th>
             <th hlmTh class="w-48 px-3 py-3 sm:px-4 text-right">Actions</th>
           </tr>
@@ -96,9 +149,9 @@
                 class="font-medium lg:hidden text-xs text-gray-500 uppercase mr-2"
                 >N° :</span
               >
-              <span class="whitespace-nowrap font-medium text-gray-800"
-                >F-{{ invoice.id }}</span
-              >
+              <span class="whitespace-nowrap font-medium text-gray-800">{{
+                formatInvoiceNumber(invoice)
+              }}</span>
             </td>
             <td
               hlmTd

@@ -17,7 +17,7 @@
       <hlm-icon size="sm" name="lucideArrowLeft" class="block" />
       Retour
     </a>
-    @if (canEditBilling()) {
+    @if (canEditBilling() || connectedUser()?.comptePrincipal?.id === +id()!) {
     <a
       routerLink="new-quote"
       [queryParams]="{ typeOfProjet: typeOfProjet() }"

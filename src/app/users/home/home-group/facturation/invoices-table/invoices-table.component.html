@@ -107,7 +107,9 @@
               <span class="font-medium lg:font-normal lg:hidden text-xs"
                 >N° :</span
               >
-              <span class="whitespace-nowrap">F-{{ doc.invoice_number }}</span>
+              <span class="whitespace-nowrap">{{
+                formatInvoiceNumber(doc)
+              }}</span>
             </td>
             <td
               class="px-2 sm:px-3 md:px-4 lg:px-6 py-1.5 sm:py-2 md:py-3 lg:py-4 flex lg:table-cell items-center justify-between lg:justify-start"
@@ -288,9 +290,9 @@
               <span class="font-medium lg:font-normal lg:hidden text-xs"
                 >N° :</span
               >
-              <span class="whitespace-nowrap"
-                >NC-{{ doc["invoice_number"] }}</span
-              >
+              <span class="whitespace-nowrap">{{
+                formatInvoiceNumber(doc)
+              }}</span>
             </td>
             <td
               class="px-2 sm:px-3 md:px-4 lg:px-6 py-1.5 sm:py-2 md:py-3 lg:py-4 flex lg:table-cell items-center justify-between lg:justify-start"

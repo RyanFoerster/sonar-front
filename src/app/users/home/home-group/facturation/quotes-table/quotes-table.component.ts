@@ -227,4 +227,19 @@ export class QuotesTableComponent {
   asQuoteEntity(doc: Document): QuoteEntity {
     return doc as unknown as QuoteEntity;
   }
+
+  /**
+   * Formate le numéro de devis.
+   * @param doc Le document (devis)
+   * @returns Le numéro formaté avec le préfixe approprié
+   */
+  formatQuoteNumber(doc: Document): string {
+    if (!doc.quote_number) return '';
+
+    const currentYear = new Date().getFullYear();
+    const paddedNumber = doc.quote_number.toString().padStart(4, '0');
+
+    // Format: d-(année)/000(numéro)
+    return `d-${currentYear}/${paddedNumber}`;
+  }
 }

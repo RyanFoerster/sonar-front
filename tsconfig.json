@@ -16,10 +16,10 @@
     "importHelpers": true,
     "isolatedModules": true,
     "inlineSourceMap": false,
-    "target": "ES2022",
-    "module": "ES2022",
+    "target": "ESNext",
+    "module": "ESNext",
     "useDefineForClassFields": false,
-    "lib": ["ES2022", "dom"],
+    "lib": ["ESNext", "dom"],
     "types": ["node"],
     "paths": {
       "@spartan-ng/ui-accordion-helm": [

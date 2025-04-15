@@ -23,6 +23,7 @@ import {
   lucideChevronDown,
   lucideFileDown,
   lucideFileText,
+  lucideArrowUpDown,
 } from '@ng-icons/lucide';
 import { HlmToasterComponent } from '@spartan-ng/ui-sonner-helm';
 import {
@@ -35,6 +36,7 @@ import {
   HlmPaginationPreviousComponent,
 } from '@spartan-ng/ui-pagination-helm';
 import { toast } from 'ngx-sonner';
+import { PdfGeneratorService } from '../../shared/services/pdf-generator.service';
 
 type InvoiceStatus = 'payment_pending' | 'pending' | 'paid';
 
@@ -71,6 +73,7 @@ type InvoiceStatus = 'payment_pending' | 'pending' | 'paid';
       lucideChevronDown,
       lucideFileDown,
       lucideFileText,
+      lucideArrowUpDown,
     }),
   ],
   templateUrl: './all-invoices.component.html',
@@ -79,6 +82,7 @@ type InvoiceStatus = 'payment_pending' | 'pending' | 'paid';
 export class AllInvoicesComponent implements OnInit {
   private readonly invoiceService = inject(InvoiceService);
   private readonly usersService = inject(UsersService);
+  private readonly pdfService = inject(PdfGeneratorService);
 
   connectedUser = signal<UserEntity | null>(null);
   allInvoices = signal<InvoiceEntity[]>([]);
@@ -86,21 +90,74 @@ export class AllInvoicesComponent implements OnInit {
   selectedStatus = signal<InvoiceStatus | 'all'>('all');
   currentPage = signal<number>(1);
   itemsPerPage = signal<number>(10);
+  sortOrder = signal<'asc' | 'desc'>('desc');
+  sortField = signal<'invoice_number' | 'invoice_date' | 'total' | 'id'>(
+    'invoice_number'
+  );
 
   filteredInvoices = computed(() => {
     const term = this.searchTerm().toLowerCase();
     const status = this.selectedStatus();
-    const invoices = this.allInvoices()
-      .filter((invoice) => invoice.type === 'invoice')
-      .sort((a, b) => b.id - a.id);
+    const sortField = this.sortField();
+    const sortOrder = this.sortOrder();
+
+    // Filtre toutes les factures et notes de crédit (on pourrait ajouter un filtre de type plus tard)
+    let invoices = [...this.allInvoices()];
+
+    // Tri des factures
+    invoices = invoices.sort((a, b) => {
+      let comparison = 0;
+      let numA: number, numB: number;
+      let dateA: number, dateB: number;
+
+      switch (sortField) {
+        case 'invoice_number':
+          // Convertir les numéros de facture en nombres si possible pour un tri correct
+          numA = parseInt(a.invoice_number?.toString() || '0', 10);
+          numB = parseInt(b.invoice_number?.toString() || '0', 10);
+          comparison = numA - numB;
+          break;
+        case 'invoice_date':
+          dateA = new Date(a.invoice_date || 0).getTime();
+          dateB = new Date(b.invoice_date || 0).getTime();
+          comparison = dateA - dateB;
+          break;
+        case 'total':
+          comparison = a.total - b.total;
+          break;
+        case 'id':
+        default:
+          comparison = a.id - b.id;
+          break;
+      }
+
+      // Inverser le tri si descendant
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
 
     return invoices.filter((invoice) => {
       const statusMatch = status === 'all' || invoice.status === status;
+
+      // Format du numéro selon le type de document avec l'année courante
+      const currentYear = new Date().getFullYear();
+      const paddedNumber =
+        invoice.invoice_number?.toString().padStart(4, '0') || '';
+
+      let formattedNumber = '';
+      if (invoice.type === 'invoice') {
+        formattedNumber = `f-${currentYear}/${paddedNumber}`.toLowerCase();
+      } else if (invoice.type === 'credit_note') {
+        formattedNumber = `nc-${currentYear}/${paddedNumber}`.toLowerCase();
+      }
+
       const searchMatch =
         !term ||
         invoice.client.name.toLowerCase().includes(term) ||
         invoice.client.company_number?.toString().includes(term) ||
-        invoice.id.toString().includes(term);
+        invoice.id.toString().includes(term) ||
+        invoice.invoice_number?.toString().includes(term) ||
+        formattedNumber.includes(term);
+
       return statusMatch && searchMatch;
     });
   });
@@ -148,6 +205,19 @@ export class AllInvoicesComponent implements OnInit {
     this.currentPage.set(1);
   }
 
+  sortBy(field: 'invoice_number' | 'invoice_date' | 'total' | 'id'): void {
+    if (this.sortField() === field) {
+      // Inverser l'ordre si on clique sur le même champ
+      this.sortOrder.update((current) => (current === 'asc' ? 'desc' : 'asc'));
+    } else {
+      // Définir le nouveau champ et réinitialiser l'ordre
+      this.sortField.set(field);
+      this.sortOrder.set('asc');
+    }
+    // Réinitialiser la pagination
+    this.currentPage.set(1);
+  }
+
   onPageChange(page: number): void {
     if (page >= 1 && page <= this.totalPages()) {
       this.currentPage.set(page);
@@ -175,10 +245,7 @@ export class AllInvoicesComponent implements OnInit {
   }
 
   downloadInvoice(invoice: InvoiceEntity): void {
-    console.log('Tentative de téléchargement de la facture:', invoice.id);
-    toast.info(
-      `Le téléchargement de la facture ${invoice.id} n'est pas encore implémenté.`
-    );
+    this.pdfService.generateInvoicePDF(invoice);
   }
 
   getStatusLabel(status: string): string {
@@ -244,5 +311,42 @@ export class AllInvoicesComponent implements OnInit {
       }
     }
     return pages;
+  }
+
+  /**
+   * Formate le numéro de facture selon son type.
+   * @param invoice La facture à formater
+   * @returns Le numéro formaté avec le préfixe approprié
+   */
+  formatInvoiceNumber(invoice: InvoiceEntity): string {
+    if (!invoice.invoice_number) return '';
+
+    const currentYear = new Date().getFullYear();
+    const paddedNumber = invoice.invoice_number.toString().padStart(4, '0');
+
+    if (invoice.type === 'invoice') {
+      // Format global: f-(année)/000(numéro)
+      return `f-${currentYear}/${paddedNumber}`;
+    } else if (invoice.type === 'credit_note') {
+      // Format note de crédit: nc-(année)/000(numéro)
+      return `nc-${currentYear}/${paddedNumber}`;
+    }
+
+    return `${invoice.invoice_number}`;
+  }
+
+  /**
+   * Formate le numéro de devis.
+   * @param quote Le devis à formater
+   * @returns Le numéro formaté avec le préfixe approprié
+   */
+  formatQuoteNumber(quote: any): string {
+    if (!quote.quote_number) return '';
+
+    const currentYear = new Date().getFullYear();
+    const paddedNumber = quote.quote_number.toString().padStart(4, '0');
+
+    // Format: d-(année)/000(numéro)
+    return `d-${currentYear}/${paddedNumber}`;
   }
 }

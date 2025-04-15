@@ -170,4 +170,26 @@ export class InvoicesTableComponent {
   asInvoiceEntity(doc: Document): Document {
     return doc;
   }
+
+  /**
+   * Formate le numéro de facture selon son type.
+   * @param doc Le document (facture ou note de crédit)
+   * @returns Le numéro formaté avec le préfixe approprié
+   */
+  formatInvoiceNumber(doc: Document): string {
+    if (!doc.invoice_number) return '';
+
+    const currentYear = new Date().getFullYear();
+    const paddedNumber = doc.invoice_number.toString().padStart(4, '0');
+
+    if (doc.documentType === 'invoice') {
+      // Format global: f-(année)/000(numéro)
+      return `f-${currentYear}/${paddedNumber}`;
+    } else if (doc.documentType === 'credit_note') {
+      // Format note de crédit: nc-(année)/000(numéro)
+      return `nc-${currentYear}/${paddedNumber}`;
+    }
+
+    return `${doc.invoice_number}`;
+  }
 }

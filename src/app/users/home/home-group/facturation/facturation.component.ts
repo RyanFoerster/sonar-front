@@ -364,9 +364,15 @@ export class FacturationComponent implements OnInit, OnDestroy {
     // Recherche par numéro pour les devis
     if (this.searchNumber()) {
       const searchLower = this.searchNumber().toLowerCase();
-      filteredQuotes = filteredQuotes.filter((quote) =>
-        `d-${quote.quote_number}`.toLowerCase().includes(searchLower)
-      );
+      filteredQuotes = filteredQuotes.filter((quote) => {
+        // Nouveau format d-(année)/000(numéro)
+        const currentYear = new Date().getFullYear();
+        const paddedNumber =
+          quote.quote_number?.toString().padStart(4, '0') || '';
+        const formattedNumber =
+          `d-${currentYear}/${paddedNumber}`.toLowerCase();
+        return formattedNumber.includes(searchLower);
+      });
     }
 
     // Tri des devis par numéro (ordre décroissant) au lieu de par date
@@ -393,9 +399,21 @@ export class FacturationComponent implements OnInit, OnDestroy {
       const searchLower = this.searchNumber().toLowerCase();
       invoicesAndCreditNotes = invoicesAndCreditNotes.filter((doc) => {
         if (doc.documentType === 'invoice') {
-          return `f-${doc.invoice_number}`.toLowerCase().includes(searchLower);
+          // Nouveau format f-(année)/000(numéro)
+          const currentYear = new Date().getFullYear();
+          const paddedNumber =
+            doc.invoice_number?.toString().padStart(4, '0') || '';
+          const formattedNumber =
+            `f-${currentYear}/${paddedNumber}`.toLowerCase();
+          return formattedNumber.includes(searchLower);
         } else if (doc.documentType === 'credit_note') {
-          return `nc-${doc.invoice_number}`.toLowerCase().includes(searchLower);
+          // Nouveau format nc-(année)/000(numéro)
+          const currentYear = new Date().getFullYear();
+          const paddedNumber =
+            doc.invoice_number?.toString().padStart(4, '0') || '';
+          const formattedNumber =
+            `nc-${currentYear}/${paddedNumber}`.toLowerCase();
+          return formattedNumber.includes(searchLower);
         }
         return false;
       });
@@ -782,5 +800,34 @@ export class FacturationComponent implements OnInit, OnDestroy {
     } finally {
       this.isLoading.set(false);
     }
+  }
+
+  // Nouvelle méthode pour formater les numéros de facture
+  protected formatInvoiceNumber(invoice: Document): string {
+    if (!invoice.invoice_number) return '';
+
+    const currentYear = new Date().getFullYear();
+    const paddedNumber = invoice.invoice_number.toString().padStart(4, '0');
+
+    if (invoice.documentType === 'invoice') {
+      // Format global: f-(année)/000(numéro)
+      return `f-${currentYear}/${paddedNumber}`;
+    } else if (invoice.documentType === 'credit_note') {
+      // Format note de crédit: nc-(année)/000(numéro)
+      return `nc-${currentYear}/${paddedNumber}`;
+    }
+
+    return `${invoice.invoice_number}`;
+  }
+
+  // Nouvelle méthode pour formater les numéros de devis
+  protected formatQuoteNumber(quote: Document): string {
+    if (!quote.quote_number) return '';
+
+    const currentYear = new Date().getFullYear();
+    const paddedNumber = quote.quote_number.toString().padStart(4, '0');
+
+    // Format: d-(année)/000(numéro)
+    return `d-${currentYear}/${paddedNumber}`;
   }
 }

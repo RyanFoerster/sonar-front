@@ -30,7 +30,9 @@
   "dataGroups": [
     {
       "name": "api",
-      "urls": ["/api/**"],
+      "urls": [
+        "/api/**"
+      ],
       "cacheConfig": {
         "maxSize": 100,
         "maxAge": "1h",
@@ -38,8 +40,13 @@
       }
     }
   ],
-  "navigationUrls": ["/**", "!/**/*.*", "!/**/*__*", "!/**/*__*/**"],
+  "navigationUrls": [
+    "/**",
+    "!/**/*.*",
+    "!/**/*__*",
+    "!/**/*__*/**"
+  ],
   "appData": {
-    "version": "0.6.15"
+    "version": "0.7.3"
   }
 }

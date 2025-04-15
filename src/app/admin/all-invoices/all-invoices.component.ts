@@ -38,7 +38,18 @@ import {
 import { toast } from 'ngx-sonner';
 import { PdfGeneratorService } from '../../shared/services/pdf-generator.service';
 
-type InvoiceStatus = 'payment_pending' | 'pending' | 'paid';
+type InvoiceStatus =
+  | 'payment_pending'
+  | 'pending'
+  | 'paid'
+  | 'first_reminder_sent'
+  | 'second_reminder_sent'
+  | 'final_notice_sent';
+type FilterStatus = InvoiceStatus | 'all' | 'pending_and_payment_pending';
+
+interface QuoteLike {
+  quote_number?: number | string;
+}
 
 @Component({
   selector: 'app-all-invoices',
@@ -87,7 +98,7 @@ export class AllInvoicesComponent implements OnInit {
   connectedUser = signal<UserEntity | null>(null);
   allInvoices = signal<InvoiceEntity[]>([]);
   searchTerm = signal<string>('');
-  selectedStatus = signal<InvoiceStatus | 'all'>('all');
+  selectedStatus = signal<FilterStatus>('all');
   currentPage = signal<number>(1);
   itemsPerPage = signal<number>(10);
   sortOrder = signal<'asc' | 'desc'>('desc');
@@ -136,7 +147,15 @@ export class AllInvoicesComponent implements OnInit {
     });
 
     return invoices.filter((invoice) => {
-      const statusMatch = status === 'all' || invoice.status === status;
+      let statusMatch = false;
+      if (status === 'all') {
+        statusMatch = true;
+      } else if (status === 'pending_and_payment_pending') {
+        statusMatch =
+          invoice.status === 'pending' || invoice.status === 'payment_pending';
+      } else {
+        statusMatch = invoice.status === status;
+      }
 
       // Format du numéro selon le type de document avec l'année courante
       const currentYear = new Date().getFullYear();
@@ -194,7 +213,8 @@ export class AllInvoicesComponent implements OnInit {
       .subscribe();
   }
 
-  filterByStatus(status: InvoiceStatus | 'all') {
+  filterByStatus(status: FilterStatus) {
+    console.log(status);
     this.selectedStatus.set(status);
     this.currentPage.set(1);
   }
@@ -248,27 +268,47 @@ export class AllInvoicesComponent implements OnInit {
     this.pdfService.generateInvoicePDF(invoice);
   }
 
-  getStatusLabel(status: string): string {
-    switch (status as InvoiceStatus) {
+  getStatusLabel(status: string | undefined): string {
+    switch (status as FilterStatus) {
       case 'payment_pending':
-        return 'En attente';
+        return 'Paiement en attente';
       case 'pending':
         return 'En attente';
       case 'paid':
         return 'Payée';
+      case 'first_reminder_sent':
+        return '1er rappel envoyé';
+      case 'second_reminder_sent':
+        return '2ème rappel envoyé';
+      case 'final_notice_sent':
+        return 'Mise en demeure envoyée';
       default:
-        return status;
+        return status || '';
     }
   }
 
-  getStatusClasses(status: string): Record<string, boolean> {
+  getStatusClasses(status: string | undefined): Record<string, boolean> {
     const isPaid = status === 'paid';
-    const isPending = status === 'payment_pending' || status === 'pending';
+    const isPending = status === 'pending';
+    const isPaymentPending = status === 'payment_pending';
+    const isFirstReminder = status === 'first_reminder_sent';
+    const isSecondReminder = status === 'second_reminder_sent';
+    const isFinalNotice = status === 'final_notice_sent';
 
     return {
       'bg-green-100 text-green-800 border-green-200': isPaid,
       'bg-yellow-100 text-yellow-800 border-yellow-200': isPending,
-      'bg-gray-100 text-gray-800 border-gray-200': !isPaid && !isPending,
+      'bg-blue-100 text-blue-800 border-blue-200': isPaymentPending,
+      'bg-orange-100 text-orange-800 border-orange-200': isFirstReminder,
+      'bg-red-100 text-red-800 border-red-200': isSecondReminder,
+      'bg-purple-100 text-purple-800 border-purple-200': isFinalNotice,
+      'bg-gray-100 text-gray-800 border-gray-200':
+        !isPaid &&
+        !isPending &&
+        !isPaymentPending &&
+        !isFirstReminder &&
+        !isSecondReminder &&
+        !isFinalNotice,
     };
   }
 
@@ -340,7 +380,7 @@ export class AllInvoicesComponent implements OnInit {
    * @param quote Le devis à formater
    * @returns Le numéro formaté avec le préfixe approprié
    */
-  formatQuoteNumber(quote: any): string {
+  formatQuoteNumber(quote: QuoteLike): string {
     if (!quote.quote_number) return '';
 
     const currentYear = new Date().getFullYear();

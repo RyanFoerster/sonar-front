@@ -5,6 +5,8 @@ import { InvoiceEntity } from './invoice.entity';
 export interface ClientEntity {
   id: number;
   name: string;
+  firstname: string;
+  lastname: string;
   email: string;
   phone: string;
   street: string;
@@ -16,6 +18,7 @@ export interface ClientEntity {
   company_vat_number?: string;
   national_number: string;
   is_physical_person: boolean;
+  default_payment_deadline?: number;
   createdAt: Date;
   updatedAt: Date;
   user: UserEntity;

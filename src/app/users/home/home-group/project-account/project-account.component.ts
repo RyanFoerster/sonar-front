@@ -149,6 +149,8 @@ interface ProjectAccountState {
   visibleBeneficiaries: WritableSignal<Beneficiary[]>;
   beneficiariesPageSize: WritableSignal<number>;
   beneficiariesCurrentPage: WritableSignal<number>;
+  beneficiariesTotalItems: WritableSignal<number>;
+  beneficiariesTotalPages: WritableSignal<number>;
   searchValue: WritableSignal<string>;
   isSearchActive: Signal<boolean>;
   resetForm: (form: FormGroup) => void;
@@ -248,6 +250,8 @@ export class ProjectAccountComponent implements AfterViewInit {
     visibleBeneficiaries: signal<Beneficiary[]>([]),
     beneficiariesPageSize: signal(10),
     beneficiariesCurrentPage: signal(1),
+    beneficiariesTotalItems: signal(0),
+    beneficiariesTotalPages: signal(1),
     searchValue: signal(''),
     isSearchActive: computed(() => this.state.searchValue().trim().length > 0),
     resetForm: (form: FormGroup) => {
@@ -973,6 +977,8 @@ export class ProjectAccountComponent implements AfterViewInit {
 
         this.state.beneficiaries.set(data.items);
         this.state.filteredBeneficiaries.set(data.items);
+        this.state.beneficiariesTotalItems.set(totalItems);
+        this.state.beneficiariesTotalPages.set(totalPages);
 
         // Initialiser la page courante
         this.state.beneficiariesCurrentPage.set(1);
@@ -982,12 +988,16 @@ export class ProjectAccountComponent implements AfterViewInit {
       } else {
         this.state.beneficiaries.set([]);
         this.state.filteredBeneficiaries.set([]);
+        this.state.beneficiariesTotalItems.set(0);
+        this.state.beneficiariesTotalPages.set(1);
         this.state.visibleBeneficiaries.set([]);
       }
     } catch (error) {
       console.error('Erreur lors du chargement des bénéficiaires:', error);
       this.state.beneficiaries.set([]);
       this.state.filteredBeneficiaries.set([]);
+      this.state.beneficiariesTotalItems.set(0);
+      this.state.beneficiariesTotalPages.set(1);
       this.state.visibleBeneficiaries.set([]);
     }
   }
@@ -1162,72 +1172,85 @@ export class ProjectAccountComponent implements AfterViewInit {
           tap((data) => {
             console.log(`Réponse du serveur pour la page ${nextPage}:`, {
               page: data.page,
-              items: data.items.length,
+              items: data.items?.length ?? 'N/A',
               totalPages: data.totalPages,
-              firstId: data.items[0]?.id,
-              lastId: data.items[data.items.length - 1]?.id,
+              firstId:
+                data.items && data.items.length > 0 ? data.items[0]?.id : 'N/A',
+              lastId:
+                data.items && data.items.length > 0
+                  ? data.items[data.items.length - 1]?.id
+                  : 'N/A',
             });
 
-            // Ajouter les nouveaux bénéficiaires à ceux déjà chargés
-            if (data && data.items && data.items.length > 0) {
-              // Garder une trace des IDs pour éviter les doublons
-              const currentIds = new Set(
-                this.state.beneficiaries().map((b) => b.id)
+            if (data && typeof data.totalPages !== 'undefined') {
+              this.state.beneficiariesTotalPages.set(data.totalPages);
+            } else {
+              console.warn(
+                'Réponse API invalide ou totalPages manquant pour la page',
+                nextPage
               );
+              return;
+            }
 
-              // Filtrer pour ne garder que les nouveaux bénéficiaires
-              const newBeneficiaries = data.items.filter(
-                (b) => !currentIds.has(b.id)
-              );
-
-              console.log(
-                'Nouveaux bénéficiaires uniques après filtrage:',
-                newBeneficiaries.length,
-                'IDs:',
-                newBeneficiaries.map((b) => b.id)
-              );
-
-              if (newBeneficiaries.length === 0) {
-                console.warn(
-                  'Aucun nouveau bénéficiaire trouvé pour la page',
-                  nextPage
-                );
-              }
-
-              // Mettre à jour la liste complète des bénéficiaires
-              const updatedBeneficiaries = [
-                ...this.state.beneficiaries(),
-                ...newBeneficiaries,
-              ];
-
-              this.state.beneficiaries.set(updatedBeneficiaries);
+            if (data && data.items) {
               this.state.beneficiariesCurrentPage.set(nextPage);
 
-              // Mettre à jour également les bénéficiaires filtrés si aucun filtre n'est actif
-              if (!searchValue) {
-                this.state.filteredBeneficiaries.set(updatedBeneficiaries);
-
-                // Mettre à jour les bénéficiaires visibles en ajoutant les nouveaux
-                this.state.visibleBeneficiaries.set([
-                  ...this.state.visibleBeneficiaries(),
-                  ...newBeneficiaries,
-                ]);
-              } else {
-                // Si un filtre local est actif, filtrer les nouveaux bénéficiaires aussi
-                const filteredNew = newBeneficiaries.filter(
-                  (beneficiary) =>
-                    beneficiary?.account_owner
-                      ?.toLowerCase()
-                      .includes(searchValue) ||
-                    beneficiary?.iban?.toLowerCase().includes(searchValue)
+              if (data.items.length > 0) {
+                const currentIds = new Set(
+                  this.state.beneficiaries().map((b) => b.id)
+                );
+                const newBeneficiaries = data.items.filter(
+                  (b) => b && b.id && !currentIds.has(b.id)
                 );
 
-                // Ajouter uniquement les nouveaux bénéficiaires correspondant au filtre
-                this.state.visibleBeneficiaries.set([
-                  ...this.state.visibleBeneficiaries(),
-                  ...filteredNew,
-                ]);
+                console.log(
+                  'Nouveaux bénéficiaires uniques après filtrage:',
+                  newBeneficiaries.length,
+                  'IDs:',
+                  newBeneficiaries.map((b) => b.id)
+                );
+
+                if (newBeneficiaries.length > 0) {
+                  const updatedBeneficiaries = [
+                    ...this.state.beneficiaries(),
+                    ...newBeneficiaries,
+                  ];
+                  this.state.beneficiaries.set(updatedBeneficiaries);
+
+                  if (!this.state.isSearchActive()) {
+                    this.state.filteredBeneficiaries.set(updatedBeneficiaries);
+                    this.state.visibleBeneficiaries.set([
+                      ...this.state.visibleBeneficiaries(),
+                      ...newBeneficiaries,
+                    ]);
+                  } else {
+                    const searchValue = this.state.searchValue();
+                    const filteredNew = newBeneficiaries.filter(
+                      (beneficiary) =>
+                        beneficiary?.account_owner
+                          ?.toLowerCase()
+                          .includes(searchValue) ||
+                        beneficiary?.iban?.toLowerCase().includes(searchValue)
+                    );
+                    this.state.visibleBeneficiaries.set([
+                      ...this.state.visibleBeneficiaries(),
+                      ...filteredNew,
+                    ]);
+                  }
+                } else {
+                  console.warn(
+                    'Aucun nouveau bénéficiaire unique trouvé pour la page',
+                    nextPage
+                  );
+                }
+              } else {
+                console.log('Aucun item trouvé pour la page', nextPage);
               }
+            } else {
+              console.warn(
+                'Réponse API invalide (items manquants) pour la page',
+                nextPage
+              );
             }
           }),
           catchError((error) => {

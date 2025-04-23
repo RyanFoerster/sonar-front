@@ -207,6 +207,7 @@ export class AllInvoicesComponent implements OnInit {
       .pipe(
         take(1),
         tap((invoices: InvoiceEntity[]) => {
+          console.log('invoices', invoices);
           this.allInvoices.set(invoices);
         })
       )

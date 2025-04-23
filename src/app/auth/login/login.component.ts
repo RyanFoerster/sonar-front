@@ -90,9 +90,6 @@ export class LoginComponent {
             this.authService.setTokens(data.access_token, data.refresh_token);
 
             // 2. Initialiser les services de notification explicitement ici
-            console.log(
-              'Initialisation forcée des services de notification avant navigation'
-            );
 
             // Initialiser WebSocket
             this.notificationService.loadUserData(); // S'assurer que userId est à jour
@@ -104,9 +101,6 @@ export class LoginComponent {
                 this.notificationService.socketState$.subscribe(
                   (isConnected) => {
                     if (isConnected) {
-                      console.log(
-                        'WebSocket connecté avec succès, prêt pour la navigation'
-                      );
                       subscription.unsubscribe();
                       resolve();
                     }
@@ -116,9 +110,7 @@ export class LoginComponent {
               // Timeout de sécurité pour ne pas bloquer indéfiniment
               setTimeout(() => {
                 subscription.unsubscribe();
-                console.log(
-                  'Timeout de connexion WebSocket atteint, navigation forcée'
-                );
+
                 resolve();
               }, 2000);
             });
@@ -131,12 +123,7 @@ export class LoginComponent {
             ) {
               fcmPromise = new Promise<void>((resolve) => {
                 this.firebaseMessagingService.requestPermission().subscribe({
-                  next: (token) => {
-                    if (token) {
-                      console.log(
-                        'Token FCM récupéré avec succès avant navigation'
-                      );
-                    }
+                  next: () => {
                     resolve();
                   },
                   error: () => resolve(),
@@ -145,7 +132,6 @@ export class LoginComponent {
 
                 // Timeout de sécurité
                 setTimeout(() => {
-                  console.log('Timeout FCM atteint, navigation forcée');
                   resolve();
                 }, 2000);
               });
@@ -153,9 +139,6 @@ export class LoginComponent {
 
             // 3. Attendre que les initialisations soient terminées avant de naviguer
             Promise.all([waitForSocketConnection, fcmPromise]).then(() => {
-              console.log(
-                "Services de notification initialisés, navigation vers la page d'accueil"
-              );
               if (data.user.isActive) {
                 this.router.navigate(['/home']);
               } else {

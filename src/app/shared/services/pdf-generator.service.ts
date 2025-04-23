@@ -192,13 +192,169 @@ export class PdfGeneratorService {
     return (doc as any).lastAutoTable.finalY || tableStart;
   }
 
+  // --- FONCTION AVEC POSITIONNEMENT MANUEL X/Y ---
+  private addCommentWithClickableLinks(
+    doc: jsPDF,
+    htmlString: string,
+    startX: number,
+    startY: number,
+    maxWidth: number
+  ): number {
+    const parser = new DOMParser();
+    const cleanedHtml = htmlString
+      .replace(/>\s+</g, '><')
+      .replace(/\n/g, '')
+      .trim();
+    const parsedHtml = parser.parseFromString(
+      `<body>${cleanedHtml}</body>`,
+      'text/html'
+    );
+    const body = parsedHtml.body;
+
+    let currentX = startX;
+    let currentY = startY;
+    const lineHeight = doc.getLineHeight() / doc.internal.scaleFactor;
+    const paragraphSpacing = 3;
+    const defaultColor = '#000000';
+    const linkColor = '#0000EE';
+    const defaultFontSize = 9;
+    const spaceWidth = doc.getTextWidth(' ');
+
+    // Correction: Définir checkPagination avant processNode
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const footerStartY = pageHeight - 45;
+    const checkPagination = () => {
+      if (currentY > footerStartY) {
+        doc.addPage();
+        this.addFooter(doc, pageHeight, []);
+        currentY = this.PAGE_MARGIN;
+      }
+    };
+
+    const processNode = (node: Node) => {
+      // Fonction pour passer à la ligne suivante
+      const newLine = () => {
+        currentX = startX;
+        currentY += lineHeight;
+        checkPagination(); // Appeler checkPagination qui est maintenant définie
+      };
+
+      if (node.nodeType === Node.TEXT_NODE) {
+        const text = node.textContent?.replace(/\s+/g, ' ').trim();
+        if (text) {
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(defaultFontSize);
+          doc.setTextColor(defaultColor);
+
+          const words = text.split(' ');
+          words.forEach((word) => {
+            if (!word) return;
+            const wordWidth = doc.getTextWidth(word);
+
+            // Vérifier si le mot dépasse (ajouter espace sauf si premier mot de la ligne)
+            const effectiveWidth =
+              wordWidth + (currentX === startX ? 0 : spaceWidth);
+            if (currentX + effectiveWidth > startX + maxWidth) {
+              newLine(); // Passer à la ligne suivante
+            }
+
+            // Ajouter l'espace avant le mot (sauf si début de ligne)
+            if (currentX !== startX) {
+              currentX += spaceWidth;
+            }
+
+            // Écrire le mot
+            doc.text(word, currentX, currentY);
+            currentX += wordWidth; // Avancer X
+          });
+        }
+      } else if (node.nodeType === Node.ELEMENT_NODE) {
+        const element = node as HTMLElement;
+        switch (element.tagName.toLowerCase()) {
+          case 'a': {
+            const href = element.getAttribute('href');
+            const linkText = (element.textContent || href)
+              ?.replace(/\s+/g, ' ')
+              .trim();
+            if (href && linkText) {
+              doc.setFont('helvetica', 'normal');
+              doc.setFontSize(defaultFontSize);
+              doc.setTextColor(linkColor); // Couleur lien
+
+              const words = linkText.split(' ');
+              words.forEach((word) => {
+                if (!word) return;
+                const wordWidth = doc.getTextWidth(word);
+                const effectiveWidth =
+                  wordWidth + (currentX === startX ? 0 : spaceWidth);
+
+                if (currentX + effectiveWidth > startX + maxWidth) {
+                  newLine();
+                }
+                if (currentX !== startX) {
+                  currentX += spaceWidth;
+                }
+                // Écrire le mot du lien
+                doc.textWithLink(word, currentX, currentY, { url: href });
+                currentX += wordWidth;
+              });
+              doc.setTextColor(defaultColor); // Revenir couleur par défaut
+            }
+            break;
+          }
+          case 'p': {
+            const isFirstContentNode =
+              !element.previousSibling && startY === currentY;
+            if (!isFirstContentNode || currentX !== startX) {
+              newLine();
+              if (!isFirstContentNode) {
+                currentY += paragraphSpacing;
+                // Appeler checkPagination ici aussi après espacement
+                checkPagination();
+              }
+            }
+            element.childNodes.forEach((child) => processNode(child));
+            if (element.nextSibling) {
+              newLine();
+              currentY += paragraphSpacing;
+              // Appeler checkPagination ici aussi après espacement
+              checkPagination();
+            } else {
+              if (currentX !== startX) {
+                newLine();
+              }
+            }
+            break;
+          }
+          case 'br': {
+            newLine(); // Forcer un saut de ligne
+            break;
+          }
+          // Ignorer styles, traiter enfants
+          case 'strong':
+          case 'b':
+          case 'em':
+          case 'i':
+          case 'u':
+          case 's':
+          default: {
+            element.childNodes.forEach((child) => processNode(child));
+            break;
+          }
+        }
+      }
+    };
+
+    processNode(body);
+    return currentY + (currentX === startX ? 0 : lineHeight);
+  }
+  // --- FIN FONCTION AVEC POSITIONNEMENT MANUEL X/Y ---
+
   generateQuotePDF(quote: QuoteEntity): void {
     const doc = new jsPDF(this.getOptimizedPdfConfig());
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
-
-    // Couleur principale pour le design
-    const mainColor = [200, 192, 77] as [number, number, number]; // #C8C04D en RGB
+    const mainColor = [200, 192, 77] as [number, number, number];
 
     // Logo en haut à gauche
     try {
@@ -334,10 +490,7 @@ export class PdfGeneratorService {
       margin: { left: this.PAGE_MARGIN, right: this.PAGE_MARGIN },
     });
 
-    // Position Y après le tableau
-    const finalY = (doc as any).lastAutoTable.finalY + 10;
-
-    // Tableau des totaux avec alignement amélioré
+    const productsTableFinalY = (doc as any).lastAutoTable.finalY + 10;
     autoTable(doc, {
       body: [
         ['Sous-total', `${quote.price_htva?.toFixed(2) || '0.00'}€`],
@@ -345,7 +498,7 @@ export class PdfGeneratorService {
         ['TVA 21%', `${quote.total_vat_21.toFixed(2)}€`],
         ['Total', `${quote.total.toFixed(2)}€`],
       ],
-      startY: finalY,
+      startY: productsTableFinalY,
       margin: { left: pageWidth - 90 },
       styles: {
         fontSize: 9,
@@ -357,73 +510,39 @@ export class PdfGeneratorService {
         1: { cellWidth: 40, halign: 'right', fontStyle: 'bold' },
       },
     });
+    const totalsTableFinalY = (doc as any).lastAutoTable.finalY;
+    let finalY = totalsTableFinalY + 15;
 
-    // Réinitialiser les couleurs après le tableau des totaux
-    doc.setTextColor(0, 0, 0);
-
-    // Ajout des commentaires si présents - position remontée juste après le tableau des totaux
     if (quote.comment) {
-      // Position idéale des commentaires - directement après le tableau des totaux
-      const commentY =
-        (doc as any).previousAutoTable?.finalY + 15 || finalY + 10;
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      const commentTitle = 'Commentaires:';
+      const footerStartY = pageHeight - 45;
 
-      // Définition de la position du footer (fixe)
-      const footerStartY = pageHeight - 45; // Position absolue du footer
-
-      // Vérifier l'espace disponible sur la page actuelle
-      const availableSpace = footerStartY - commentY - 10;
-
-      // Calculer la hauteur approximative du texte
-      doc.setFontSize(9);
-      doc.setFont('helvetica', 'normal');
-      const maxWidth = pageWidth - 2 * this.PAGE_MARGIN;
-      const commentLines = doc.splitTextToSize(quote.comment, maxWidth);
-      const lineHeight = 4;
-      const commentHeight = commentLines.length * lineHeight + 15; // +15 pour le titre et l'espacement
-
-      // Si pas assez d'espace, créer une nouvelle page
-      if (commentHeight > availableSpace) {
+      if (finalY + 10 > footerStartY) {
         doc.addPage();
-
-        // Titre des commentaires en haut de la nouvelle page
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Commentaires:', this.PAGE_MARGIN, this.PAGE_MARGIN + 10);
-        doc.setFont('helvetica', 'normal');
-
-        // Ajouter les lignes de commentaire
-        doc.setFontSize(9);
-
-        // Gérer la pagination des commentaires si nécessaire
-        let currentY = this.PAGE_MARGIN + 20;
-
-        for (const line of commentLines) {
-          // Vérifier si on va dépasser la limite de la page
-          if (currentY > footerStartY - 10) {
-            // Passer à une nouvelle page
-            doc.addPage();
-            currentY = this.PAGE_MARGIN + 10;
-          }
-
-          // Écrire la ligne de commentaire
-          doc.text(line, this.PAGE_MARGIN, currentY);
-          currentY += lineHeight;
-        }
-      } else {
-        // Si assez d'espace, ajouter les commentaires sur la page actuelle
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Commentaires:', this.PAGE_MARGIN, commentY);
-
-        doc.setFontSize(9);
-        doc.setFont('helvetica', 'normal');
-        commentLines.forEach((line: string, index: number) => {
-          doc.text(line, this.PAGE_MARGIN, commentY + 10 + index * lineHeight);
-        });
+        this.addFooter(doc, pageHeight, []);
+        finalY = this.PAGE_MARGIN;
       }
+      doc.text(commentTitle, this.PAGE_MARGIN, finalY);
+      finalY += 5;
+
+      // --- MODIFICATION : Appel à la nouvelle fonction ---
+      const commentMaxWidth = pageWidth - 2 * this.PAGE_MARGIN;
+      finalY = this.addCommentWithClickableLinks(
+        doc,
+        quote.comment,
+        this.PAGE_MARGIN,
+        finalY,
+        commentMaxWidth
+      );
+      // --- FIN MODIFICATION ---
     }
 
     // Ajouter le footer sur la dernière page
+    // S'assurer que finalY est bien sur la dernière page active
+    const currentPage = doc.getNumberOfPages();
+    doc.setPage(currentPage); // Se positionner sur la dernière page
     this.addFooter(doc, pageHeight, []);
 
     doc.save(`devis_${quote.id}.pdf`);
@@ -715,6 +834,21 @@ export class PdfGeneratorService {
       doc.text(line, clientInfoX, currentY, { align: 'right' });
       currentY += 5;
     });
+
+    doc.setFont('helvetica', 'normal');
+    doc.text(
+      `${
+        invoice.main_account
+          ? invoice.main_account.username
+          : invoice.group_account
+          ? invoice.group_account.username
+          : 'N/A'
+      }`,
+      clientInfoX,
+      currentY,
+      { align: 'right' }
+    );
+    currentY += 5;
     doc.setFont('helvetica', 'normal');
     doc.text(
       `${invoice.client.street} ${invoice.client.number}`,
@@ -876,60 +1010,37 @@ export class PdfGeneratorService {
     // --- Gestion Commentaires (APRES QR Code) ---
     // Utiliser la position Y après le QR code (ou après les totaux si pas de QR)
 
-    // Calculer l'espace nécessaire pour les commentaires
-    let spaceNeededForComments = 0;
-    let commentLines: string[] = [];
-    const commentTitleHeight = 10; // Hauteur titre + petit espacement
-    const commentLineHeight = 4;
-    const commentMaxWidth = pageWidth - 2 * contentLeftMargin;
-
+    // --- Appel à la fonction unifiée pour les commentaires ---
     if (invoice.comment) {
-      doc.setFontSize(9); // Taille pour le calcul
-      commentLines = doc.splitTextToSize(invoice.comment, commentMaxWidth);
-      spaceNeededForComments =
-        commentLines.length * commentLineHeight + commentTitleHeight;
-    }
-
-    // Ajouter les commentaires (avec gestion de page si nécessaire)
-    if (invoice.comment && commentLines.length > 0) {
-      // Faut-il une nouvelle page AVANT les commentaires (basé sur l'espace RESTANT) ?
-      if (currentY + spaceNeededForComments > footerStartY) {
-        doc.addPage();
-        currentY = this.PAGE_MARGIN; // Réinitialiser en haut de la nouvelle page
-        // Le didDrawPage du tableau précédent (totaux) a déjà ajouté le footer
-      }
-
-      // Dessiner les commentaires
       doc.setFontSize(10);
       doc.setFont('helvetica', 'bold');
-      doc.text('Commentaires:', contentLeftMargin, currentY);
-      currentY += 5; // Espace après titre
+      const commentTitle = 'Commentaires:';
 
-      doc.setFontSize(9);
-      doc.setFont('helvetica', 'normal');
-      commentLines.forEach((line: string) => {
-        // Vérifier si on dépasse PENDANT l'écriture des lignes (long commentaire)
-        if (currentY + commentLineHeight > footerStartY) {
-          doc.addPage();
-          currentY = this.PAGE_MARGIN;
-          // Le didDrawPage du tableau précédent OU le addFooter de la page d'avant
-          // (si commentaires longs) devrait avoir géré le footer.
-          // Redessiner le titre sur la nouvelle page
-          doc.setFontSize(10);
-          doc.setFont('helvetica', 'bold');
-          doc.text('Commentaires:', contentLeftMargin, currentY);
-          currentY += 5;
-          doc.setFontSize(9);
-          doc.setFont('helvetica', 'normal');
-        }
-        doc.text(line, contentLeftMargin, currentY);
-        currentY += commentLineHeight;
-      });
+      // Vérifier si le titre tiendra (Cette vérification est importante si addComment... ne gère pas la page pour le titre seul)
+      if (currentY + 10 > footerStartY) {
+        doc.addPage();
+        // Il FAUT ajouter le footer si une page est ajoutée ici
+        this.addFooter(doc, pageHeight, []);
+        currentY = this.PAGE_MARGIN;
+      }
+      doc.text(commentTitle, contentLeftMargin, currentY);
+      currentY += 5; // Espace après le titre
+
+      const commentMaxWidth = pageWidth - 2 * contentLeftMargin;
+      // Appel de la fonction qui gère le texte et les liens
+      currentY = this.addCommentWithClickableLinks(
+        doc,
+        invoice.comment,
+        contentLeftMargin,
+        currentY,
+        commentMaxWidth
+      );
     }
+    // --- FIN GESTION COMMENTAIRES ---
 
     // Ajouter le footer sur la DERNIÈRE page explicitement
-    // (didDrawPage ne s'exécute pas s'il n'y a pas de tableau sur la dernière page,
-    // ou si le dernier élément n'est pas un tableau)
+    const currentPageInvoice = doc.getNumberOfPages();
+    doc.setPage(currentPageInvoice);
     this.addFooter(doc, pageHeight, []);
 
     const prefix = invoice.type === 'credit_note' ? 'note-credit' : 'facture';

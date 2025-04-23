@@ -65,6 +65,15 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 
+// Interface simple pour les calendriers Google
+interface GoogleCalendar {
+  id: string;
+  summary: string; // Nom du calendrier
+  description?: string;
+  primary?: boolean;
+  // Ajouter d'autres champs si nécessaire
+}
+
 // Constants pour les types de notification
 const TOAST_TYPES = {
   SUCCESS: 'success' as const,
@@ -134,6 +143,12 @@ export class ProfileComponent implements OnInit {
   protected pendingEventCount = signal<number>(0);
   protected isProcessingEventResponse: Record<string, boolean> = {};
 
+  // Google Calendar Test Section
+  protected isLoadingCalendars = signal<boolean>(false);
+  protected googleCalendarsFetchAttempted = signal<boolean>(false); // Pour savoir si on doit afficher la zone de résultat
+  protected googleCalendars = signal<GoogleCalendar[] | null>(null);
+  protected googleCalendarsError = signal<string | null>(null);
+
   protected eventTabs = [
     { label: 'À venir', value: 'upcoming' },
     { label: 'Passés', value: 'past' },
@@ -153,6 +168,9 @@ export class ProfileComponent implements OnInit {
   private route: ActivatedRoute = inject(ActivatedRoute);
   private router: Router = inject(Router);
   private http: HttpClient = inject(HttpClient);
+
+  // Définir l'URL de base de l'API
+  readonly apiUrl = environment.API_URL; // Utiliser l'URL de l'environnement
 
   constructor() {
     this.updateUserForm = this.formBuilder.group({
@@ -214,6 +232,8 @@ export class ProfileComponent implements OnInit {
     this.authService.getCurrentUser().subscribe((user) => {
       this.connectedUser.set(user);
       if (user) {
+        // Suppression de la réinitialisation du formulaire ici
+        /*
         this.updateUserForm = this.formBuilder.group({
           id: [user.id],
           email: [user.email, [Validators.required, Validators.email]],
@@ -221,6 +241,7 @@ export class ProfileComponent implements OnInit {
           firstName: [user.firstName],
           telephone: [user.telephone],
         });
+        */
       }
     });
 
@@ -249,8 +270,51 @@ export class ProfileComponent implements OnInit {
     // Charger les événements de l'utilisateur
     this.loadUserEvents();
 
-    // Vérifier les paramètres de l'URL pour afficher directement un onglet spécifique
+    // Gérer les queryParams pour les onglets et le succès de la liaison Google
     this.route.queryParams.subscribe((params) => {
+      // Vérifier si la liaison Google vient de réussir
+      if (params['google_linked'] === 'success') {
+        console.log(
+          'Google account linked successfully, refreshing user data...'
+        );
+        // Forcer le rafraîchissement via UsersService.getInfo()
+        this.usersService.getInfo().subscribe(
+          (updatedUser: UserEntity) => {
+            console.log('User data refreshed:', updatedUser);
+            // Mettre à jour l'état d'authentification global
+            this.authService.setUser(updatedUser);
+            // Le signal connectedUser devrait se mettre à jour via l'effect
+            // this.connectedUser.set(updatedUser); // Normalement plus nécessaire grâce à l'effect
+
+            // Afficher un toast de succès
+            this.notificationService.showToast(
+              TOAST_TYPES.SUCCESS,
+              'Compte Google lié',
+              'Votre compte Google a été lié avec succès.'
+            );
+            // Nettoyer l'URL (supprimer le query param)
+            // Utiliser replaceUrl pour éviter d'ajouter une entrée dans l'historique
+            this.router.navigate([], {
+              relativeTo: this.route,
+              queryParams: { google_linked: null }, // Met à null pour le supprimer
+              queryParamsHandling: 'merge', // Conserve les autres params éventuels
+              replaceUrl: true, // Remplace l'entrée actuelle dans l'historique
+            });
+          },
+          (error) => {
+            console.error(
+              'Error refreshing user data after Google link:',
+              error
+            );
+            this.notificationService.showToast(
+              TOAST_TYPES.ERROR,
+              'Erreur',
+              'Impossible de rafraîchir les informations utilisateur.'
+            );
+          }
+        );
+      }
+
       // Si on a un paramètre 'tab' pour indiquer qu'il faut afficher l'onglet événements
       if (params['tab'] === 'event') {
         // Scroller jusqu'à la section des événements
@@ -292,6 +356,12 @@ export class ProfileComponent implements OnInit {
 
       this.usersService.update(updateUserDto).subscribe((user) => {
         this.connectedUser.set(user);
+        this.authService.setUser(user);
+        this.notificationService.showToast(
+          TOAST_TYPES.SUCCESS,
+          'Profil mis à jour',
+          'Vos informations ont été enregistrées avec succès.'
+        );
         ctx.close();
       });
     }
@@ -733,10 +803,9 @@ export class ProfileComponent implements OnInit {
         : InvitationStatus.DECLINED;
 
     // Utiliser HttpClient directement pour éviter les problèmes d'URL
-    const apiUrl = environment.API_URL;
     this.http
       .post<Event>(
-        `${apiUrl}/groups/events/${event.id}/response?personId=${userId}`,
+        `${this.apiUrl}/groups/events/${event.id}/response?personId=${userId}`,
         { status: invitationStatus }
       )
       .subscribe({
@@ -882,5 +951,135 @@ export class ProfileComponent implements OnInit {
         selectedEventId: event.id,
       },
     });
+  }
+
+  /**
+   * Initiate Google account linking by calling the backend to get the
+   * specific Google OAuth URL for the authenticated user, then redirects.
+   */
+  linkGoogleAccount(): void {
+    // Call the backend endpoint to get the Google Auth URL
+    this.http
+      .get<{ googleAuthUrl: string }>(`${this.apiUrl}/auth/google/get-auth-url`)
+      .subscribe({
+        next: (response) => {
+          if (response && response.googleAuthUrl) {
+            // Redirect the user's browser to the URL provided by the backend
+            window.location.href = response.googleAuthUrl;
+          } else {
+            console.error('Invalid response from backend for Google Auth URL');
+            this.notificationService.showToast(
+              TOAST_TYPES.ERROR,
+              'Erreur',
+              "Impossible d'initier la connexion avec Google (réponse invalide)."
+            );
+          }
+        },
+        error: (error: HttpErrorResponse) => {
+          console.error('Error fetching Google Auth URL:', error);
+          this.notificationService.showToast(
+            TOAST_TYPES.ERROR,
+            'Erreur',
+            `Impossible d'initier la connexion avec Google: ${error.message}`
+          );
+        },
+      });
+  }
+
+  /**
+   * Initiates the process to unlink the Google account.
+   */
+  unlinkGoogleAccount(): void {
+    // Optionnel: Ajouter une confirmation
+    if (
+      !confirm(
+        'Êtes-vous sûr de vouloir délier votre compte Google ? Cette action ne peut pas être annulée.'
+      )
+    ) {
+      return;
+    }
+
+    console.log('Unlinking Google Account...');
+
+    this.http
+      .delete<{ message: string }>(`${this.apiUrl}/auth/google/unlink`)
+      .subscribe({
+        next: (response) => {
+          console.log(
+            'Google account unlinked successfully:',
+            response.message
+          );
+          // Rafraîchir les données utilisateur pour mettre à jour l'UI
+          this.usersService.getInfo().subscribe(
+            (updatedUser: UserEntity) => {
+              this.authService.setUser(updatedUser);
+              // Afficher un toast de succès
+              this.notificationService.showToast(
+                TOAST_TYPES.SUCCESS,
+                'Compte Google délié',
+                'Votre compte Google a été dissocié avec succès.'
+              );
+              // Pas besoin de nettoyer l'URL ici
+            },
+            (error) => {
+              console.error(
+                'Error refreshing user data after Google unlink:',
+                error
+              );
+              // Afficher un toast même si le rafraîchissement échoue, car la dissociation a réussi
+              this.notificationService.showToast(
+                TOAST_TYPES.INFO,
+                'Compte Google délié',
+                'Compte dissocié, mais erreur lors du rafraîchissement des informations.'
+              );
+            }
+          );
+        },
+        error: (error: HttpErrorResponse) => {
+          console.error('Error unlinking Google account:', error);
+          this.notificationService.showToast(
+            TOAST_TYPES.ERROR,
+            'Erreur de dissociation',
+            `Impossible de délier le compte Google: ${
+              error.error?.message || error.message
+            }`
+          );
+        },
+      });
+  }
+
+  /**
+   * Fetches the list of Google Calendars from the backend.
+   */
+  fetchGoogleCalendars(): void {
+    this.isLoadingCalendars.set(true);
+    this.googleCalendarsFetchAttempted.set(true); // Marquer que la tentative a été faite
+    this.googleCalendars.set(null); // Réinitialiser les résultats précédents
+    this.googleCalendarsError.set(null); // Réinitialiser l'erreur précédente
+
+    this.http
+      .get<GoogleCalendar[]>(`${this.apiUrl}/auth/google/calendars`) // Utiliser l'interface
+      .pipe(finalize(() => this.isLoadingCalendars.set(false))) // Assure que le chargement s'arrête
+      .subscribe({
+        next: (calendars) => {
+          console.log('Fetched Google Calendars:', calendars);
+          this.googleCalendars.set(calendars);
+        },
+        error: (error: HttpErrorResponse) => {
+          console.error('Error fetching Google Calendars:', error);
+          this.googleCalendarsError.set(
+            error.error?.message ||
+              error.message ||
+              'Une erreur inconnue est survenue.'
+          );
+          // Afficher un toast d'erreur
+          this.notificationService.showToast(
+            TOAST_TYPES.ERROR,
+            'Erreur Calendriers Google',
+            this.googleCalendarsError() ||
+              'Impossible de récupérer les calendriers.'
+          );
+        },
+      });
   }
 }

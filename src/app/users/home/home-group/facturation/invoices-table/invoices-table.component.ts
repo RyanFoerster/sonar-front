@@ -22,6 +22,8 @@ interface Document {
   client: {
     id: number;
     name: string;
+    firstname?: string;
+    lastname?: string;
     email: string;
     street?: string;
     number?: string;
@@ -30,6 +32,15 @@ interface Document {
     country?: string;
     phone?: string;
     company_vat_number?: string;
+    is_physical_person?: boolean;
+  };
+  main_account?: {
+    id: number;
+    username: string;
+  };
+  group_account?: {
+    id: number;
+    username: string;
   };
   invoice_number?: number;
   quote_number?: number;

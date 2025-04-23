@@ -678,7 +678,11 @@ export class NewCreditNoteComponent implements AfterViewInit {
       };
 
       this.productService
-        .update(this.idProductToEdit()!.toString(), editProductDto)
+        .update(
+          this.idProductToEdit()!.toString(),
+          editProductDto,
+          this.isTvaIncluded()
+        )
         .pipe(
           take(1),
           tap((data) => {

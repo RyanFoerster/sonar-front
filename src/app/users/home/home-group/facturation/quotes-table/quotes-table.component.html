@@ -138,41 +138,23 @@
                   </div>
                   @if (doc.comment) {
                   <div class="flex items-center mt-1">
-                    <div
-                      class="relative group cursor-help"
-                      data-tooltip="Commentaire"
+                    <button
+                      type="button"
+                      (click)="openCommentModal(doc.comment)"
+                      class="relative cursor-pointer"
+                      title="Voir le commentaire"
                     >
-                      <div class="inline-flex items-center">
-                        <span
-                          class="inline-flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2 py-0.5 sm:py-1 bg-primary/10 text-primary rounded-full text-[10px] xs:text-xs font-medium"
-                        >
-                          <hlm-icon
-                            size="sm"
-                            name="lucideMessageCircle"
-                            class="text-primary group-hover:text-primary/80 transition-colors h-3 w-3 sm:h-4 sm:w-4"
-                          />
-                          <span class="hidden sm:inline"
-                            >Commentaire ajouté</span
-                          >
-                        </span>
-                      </div>
-                      <div
-                        class="hidden group-hover:block absolute z-50 bottom-full left-0 sm:left-1/2 sm:-translate-x-1/2 mb-2 w-[calc(100vw-2rem)] sm:w-max max-w-xs"
+                      <span
+                        class="inline-flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2 py-0.5 sm:py-1 bg-primary/10 text-primary rounded-full text-[10px] xs:text-xs font-medium hover:bg-primary/20 transition-colors"
                       >
-                        <div
-                          class="bg-gray-900 text-white text-[10px] xs:text-xs sm:text-sm rounded-lg py-1.5 sm:py-2 md:py-3 px-2 sm:px-3 md:px-4 shadow-lg whitespace-normal break-words"
-                        >
-                          {{ doc.comment }}
-                        </div>
-                        <div
-                          class="absolute top-full left-4 sm:left-1/2 transform sm:-translate-x-1/2 -mt-2"
-                        >
-                          <div
-                            class="border-8 border-transparent border-t-gray-900"
-                          ></div>
-                        </div>
-                      </div>
-                    </div>
+                        <hlm-icon
+                          size="sm"
+                          name="lucideMessageCircle"
+                          class="text-primary h-3 w-3 sm:h-4 sm:w-4"
+                        />
+                        <span class="hidden sm:inline">Commentaire ajouté</span>
+                      </span>
+                    </button>
                   </div>
                   }
                 </div>
@@ -414,7 +396,16 @@
             </td>
           </tr>
           <hlm-toaster />
-          } }
+          } } @else {
+          <tr class="bg-white">
+            <td
+              [attr.colspan]="7"
+              class="px-6 py-4 text-center text-gray-500 italic"
+            >
+              Vous n'avez pas accès à la facturation pour ce projet.
+            </td>
+          </tr>
+          }
         </tbody>
       </table>
     </div>
@@ -515,3 +506,47 @@
   </div>
   }
 </div>
+
+<!-- Modal pour afficher le commentaire -->
+@if (isCommentModalOpen()) {
+<div
+  class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+  (click)="isCommentModalOpen.set(false)"
+>
+  <div
+    class="bg-white rounded-xl p-4 sm:p-6 max-w-lg w-full mx-auto shadow-xl space-y-3 sm:space-y-4"
+    (click)="$event.stopPropagation()"
+  >
+    <div
+      class="flex justify-between items-center border-b border-gray-200 pb-3 sm:pb-4"
+    >
+      <h3 class="text-base sm:text-lg font-semibold text-gray-900">
+        Commentaire
+      </h3>
+      <button
+        type="button"
+        (click)="isCommentModalOpen.set(false)"
+        class="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-all"
+        aria-label="Fermer"
+      >
+        <hlm-icon size="sm" name="lucideX" />
+      </button>
+    </div>
+    <div
+      #commentContent
+      class="comment-modal-content prose prose-sm sm:prose-base max-w-none text-gray-700 max-h-[60vh] overflow-y-auto prose-a:text-blue-600 prose-a:underline hover:prose-a:text-blue-800"
+      [innerHTML]="currentCommentHtml()"
+    ></div>
+    <div class="flex justify-end pt-3 sm:pt-4 border-t border-gray-200">
+      <button
+        hlmBtn
+        variant="outline"
+        (click)="isCommentModalOpen.set(false)"
+        class="text-xs sm:text-sm"
+      >
+        Fermer
+      </button>
+    </div>
+  </div>
+</div>
+}

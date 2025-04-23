@@ -133,9 +133,6 @@ export class NotificationService {
   initSocket(): void {
     // Éviter les initialisations multiples simultanées
     if (this.isSocketInitializing || this.isSocketConnected) {
-      console.log(
-        "Socket déjà en cours d'initialisation ou connecté, initialisation ignorée"
-      );
       return;
     }
 
@@ -146,22 +143,18 @@ export class NotificationService {
 
     if (!this.userId) {
       this.isSocketInitializing = false;
-      console.log(
-        'Aucun utilisateur connecté, initialisation du socket annulée'
-      );
+
       return;
     }
 
     // Fermer toute connexion existante pour éviter les doublons
     if (this.socket) {
-      console.log('Fermeture de la connexion WebSocket existante');
       this.socket.disconnect();
       this.socket = null;
       this.socketStateSubject.next(false);
       this.isSocketConnected = false;
     }
 
-    console.log('Initialisation de la connexion WebSocket...');
     this.socket = io(environment.API_URL, {
       transports: ['websocket'],
       path: '/socket.io',
@@ -174,7 +167,6 @@ export class NotificationService {
 
     // Logs de débogage
     this.socket.on('connect', () => {
-      console.log('WebSocket connecté avec ID:', this.socket?.id);
       this.isSocketConnected = true;
       this.socketStateSubject.next(true);
 
@@ -182,7 +174,6 @@ export class NotificationService {
       // pour s'assurer que la connexion est bien établie
       setTimeout(() => {
         if (this.socket?.connected) {
-          console.log(`Tentative de rejoindre la room user-${this.userId}`);
           this.socket?.emit('join', `user-${this.userId}`);
         }
         this.isSocketInitializing = false;
@@ -190,7 +181,6 @@ export class NotificationService {
     });
 
     this.socket.on('disconnect', () => {
-      console.log('WebSocket déconnecté');
       this.isSocketConnected = false;
       this.socketStateSubject.next(false);
     });
@@ -204,7 +194,6 @@ export class NotificationService {
 
     // Écouter les nouvelles notifications
     this.socket.on('notification_created', (notification: Notification) => {
-      console.log('Notification reçue:', notification);
       this.handleNewNotification(notification);
     });
 
@@ -489,11 +478,8 @@ export class NotificationService {
       return;
     }
 
-    console.log('Déconnexion du WebSocket...');
-
     // Si le socket est dans une room utilisateur, quitter cette room
     if (this.userId && this.socket.connected) {
-      console.log(`Tentative de quitter la room user-${this.userId}`);
       this.socket.emit('leave', `user-${this.userId}`);
     }
 
@@ -502,7 +488,6 @@ export class NotificationService {
       if (this.socket) {
         this.socket.disconnect();
         this.socket = null;
-        console.log('WebSocket déconnecté avec succès');
       }
 
       // Réinitialiser les états

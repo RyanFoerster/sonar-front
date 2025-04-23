@@ -59,7 +59,7 @@
             Modifier le profil
           </button>
           <hlm-dialog-content
-            class="p-5 rounded-xl m-4 w-11/12"
+            class="p-6 rounded-xl m-4 w-11/12 md:max-w-lg"
             *brnDialogContent="let ctx"
           >
             <hlm-dialog-header>
@@ -71,130 +71,155 @@
             </hlm-dialog-header>
             <form
               [formGroup]="updateUserForm"
-              class="py-1 grid gap-1 md:py-4 md:gap-4"
+              class="py-4 grid gap-4"
               (ngSubmit)="updateUser(ctx)"
             >
               <div
-                class="items-center grid grid-cols-4 gap-4 *:text-xs *:md:text-base"
+                class="grid grid-cols-4 items-center gap-x-4 gap-y-2 *:text-sm"
               >
-                <label hlmLabel for="username" class="text-left font-bold"
+                <label
+                  hlmLabel
+                  for="username"
+                  class="text-left font-medium col-span-4 md:col-span-1 md:text-right"
                   >Username</label
                 >
                 <input
                   formControlName="username"
                   hlmInput
                   id="username"
-                  [value]="connectedUser()?.comptePrincipal?.username"
-                  class="col-span-3 m-2 shadow-lg border rounded-full px-2"
+                  placeholder="Votre nom d'utilisateur"
+                  class="col-span-4 md:col-span-3 rounded-md px-3 py-1.5 border focus:ring-1 focus:ring-primary focus:border-primary"
                 />
               </div>
 
               <div
-                class="items-center grid grid-cols-4 gap-4 *:text-xs *:md:text-base"
+                class="grid grid-cols-4 items-center gap-x-4 gap-y-2 *:text-sm"
               >
-                <label hlmLabel for="lastname" class="text-left font-bold"
+                <label
+                  hlmLabel
+                  for="lastname"
+                  class="text-left font-medium col-span-4 md:col-span-1 md:text-right"
                   >Nom</label
                 >
                 <input
                   formControlName="name"
                   hlmInput
                   id="lastname"
-                  [value]="connectedUser()?.name"
-                  class="col-span-3 m-2 shadow-lg border rounded-full px-2"
+                  placeholder="Votre nom de famille"
+                  class="col-span-4 md:col-span-3 rounded-md px-3 py-1.5 border focus:ring-1 focus:ring-primary focus:border-primary"
                 />
               </div>
 
               <div
-                class="items-center grid grid-cols-4 gap-4 *:text-xs *:md:text-base"
+                class="grid grid-cols-4 items-center gap-x-4 gap-y-2 *:text-sm"
               >
-                <label hlmLabel for="firstname" class="text-left font-bold"
+                <label
+                  hlmLabel
+                  for="firstname"
+                  class="text-left font-medium col-span-4 md:col-span-1 md:text-right"
                   >Prénom</label
                 >
                 <input
                   formControlName="firstName"
                   hlmInput
                   id="firstname"
-                  [value]="connectedUser()?.firstName"
-                  class="col-span-3 m-2 shadow-lg border rounded-full px-2"
+                  placeholder="Votre prénom"
+                  class="col-span-4 md:col-span-3 rounded-md px-3 py-1.5 border focus:ring-1 focus:ring-primary focus:border-primary"
                 />
               </div>
 
               <div
-                class="items-center grid grid-cols-4 gap-4 *:text-xs *:md:text-base"
+                class="grid grid-cols-4 items-center gap-x-4 gap-y-2 *:text-sm"
               >
-                <label hlmLabel for="number" class="text-left font-bold"
+                <label
+                  hlmLabel
+                  for="nationalNumber"
+                  class="text-left font-medium col-span-4 md:col-span-1 md:text-right"
                   >Numéro national</label
                 >
                 <input
                   formControlName="numeroNational"
                   hlmInput
-                  id="number"
-                  [value]="connectedUser()?.numeroNational"
-                  class="col-span-3 m-2 shadow-lg border rounded-full px-2"
+                  id="nationalNumber"
+                  placeholder="Ex: 90.01.01-123.45"
+                  class="col-span-4 md:col-span-3 rounded-md px-3 py-1.5 border focus:ring-1 focus:ring-primary focus:border-primary"
                 />
               </div>
 
               <div
-                class="items-center grid grid-cols-4 gap-4 *:text-xs *:md:text-base"
+                class="grid grid-cols-4 items-center gap-x-4 gap-y-2 *:text-sm"
               >
-                <label hlmLabel for="phone" class="text-left font-bold"
+                <label
+                  hlmLabel
+                  for="phone"
+                  class="text-left font-medium col-span-4 md:col-span-1 md:text-right"
                   >Téléphone</label
                 >
                 <input
                   formControlName="telephone"
                   hlmInput
                   id="phone"
-                  [value]="connectedUser()?.telephone"
-                  class="col-span-3 m-2 shadow-lg border rounded-full px-2"
+                  placeholder="Votre numéro de téléphone"
+                  class="col-span-4 md:col-span-3 rounded-md px-3 py-1.5 border focus:ring-1 focus:ring-primary focus:border-primary"
                 />
               </div>
 
               <div
-                class="items-center grid grid-cols-4 gap-4 *:text-xs *:md:text-base"
+                class="grid grid-cols-4 items-center gap-x-4 gap-y-2 *:text-sm"
               >
-                <label hlmLabel for="email" class="text-left font-bold"
+                <label
+                  hlmLabel
+                  for="email"
+                  class="text-left font-medium col-span-4 md:col-span-1 md:text-right"
                   >E-mail</label
                 >
                 <input
                   formControlName="email"
                   hlmInput
+                  type="email"
                   id="email"
-                  [value]="connectedUser()?.email"
-                  class="col-span-3 m-2 shadow-lg border rounded-full px-2"
+                  placeholder="Votre adresse e-mail"
+                  class="col-span-4 md:col-span-3 rounded-md px-3 py-1.5 border focus:ring-1 focus:ring-primary focus:border-primary"
                 />
               </div>
 
               <div
-                class="items-center grid grid-cols-4 gap-4 *:text-xs *:md:text-base"
+                class="grid grid-cols-4 items-center gap-x-4 gap-y-2 *:text-sm"
               >
-                <label hlmLabel for="number" class="text-left font-bold"
+                <label
+                  hlmLabel
+                  for="iban"
+                  class="text-left font-medium col-span-4 md:col-span-1 md:text-right"
                   >Compte bancaire</label
                 >
                 <input
                   formControlName="iban"
                   hlmInput
-                  id="number"
-                  [value]="connectedUser()?.iban"
-                  class="col-span-3 m-2 shadow-lg border rounded-full px-2"
+                  id="iban"
+                  placeholder="Votre numéro IBAN"
+                  class="col-span-4 md:col-span-3 rounded-md px-3 py-1.5 border focus:ring-1 focus:ring-primary focus:border-primary"
                 />
               </div>
 
               <div
-                class="items-center grid grid-cols-4 gap-4 *:text-xs *:md:text-base"
+                class="grid grid-cols-4 items-center gap-x-4 gap-y-2 *:text-sm"
               >
-                <label hlmLabel for="address" class="text-left font-bold"
+                <label
+                  hlmLabel
+                  for="address"
+                  class="text-left font-medium col-span-4 md:col-span-1 md:text-right"
                   >Adresse</label
                 >
                 <input
                   formControlName="address"
                   hlmInput
                   id="address"
-                  [value]="connectedUser()?.address"
-                  class="col-span-3 m-2 shadow-lg border rounded-full px-2"
+                  placeholder="Votre adresse postale"
+                  class="col-span-4 md:col-span-3 rounded-md px-3 py-1.5 border focus:ring-1 focus:ring-primary focus:border-primary"
                 />
               </div>
               <button
-                class="rounded-full text-xs md:text-base"
+                class="w-full mt-4 md:mt-6 py-2 px-4 rounded-md text-sm font-semibold"
                 hlmBtn
                 type="submit"
               >
@@ -226,8 +251,128 @@
         <p class="text-[9px] md:text-sm">{{ connectedUser()?.address }}</p>
       </div>
 
-      <!-- Section Notifications -->
-      <div class="flex items-center mt-4 mb-2">
+      <!-- Section Connexions Externes -->
+      @if(connectedUser()?.role === 'ADMIN') {
+      <div class="flex items-center pt-2 border-t border-gray-600 mt-2">
+        <p class="font-bold text-[9px] md:text-sm w-28 md:w-56">Connexions</p>
+        <div class="flex items-center gap-2">
+          <!-- Affichage conditionnel basé sur googleId -->
+          <ng-container
+            *ngIf="connectedUser()?.googleId; else linkGoogleButton"
+          >
+            <!-- Compte Google Lié -->
+            <div class="flex items-center gap-1 text-green-500">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                fill="currentColor"
+                class="bi bi-check-circle-fill"
+                viewBox="0 0 16 16"
+              >
+                <path
+                  d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"
+                />
+              </svg>
+              <span class="text-[9px] md:text-sm font-medium"
+                >Compte Google lié</span
+              >
+              <!-- Bouton pour délier -->
+              <button
+                hlmBtn
+                variant="link"
+                class="p-1 h-auto text-xs text-red-500 hover:text-red-700 ml-2"
+                (click)="unlinkGoogleAccount()"
+                title="Délier votre compte Google"
+              >
+                (Délier)
+              </button>
+            </div>
+          </ng-container>
+
+          <ng-template #linkGoogleButton>
+            <!-- Bouton pour lier le compte Google -->
+            <button
+              hlmBtn
+              variant="outline"
+              class="flex items-center gap-2 text-xs md:text-sm"
+              (click)="linkGoogleAccount()"
+              title="Lier votre compte Google Agenda pour synchroniser les événements"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                fill="currentColor"
+                class="bi bi-google"
+                viewBox="0 0 16 16"
+              >
+                <path
+                  d="M15.545 6.558a9.42 9.42 0 0 1 .139 1.626c0 2.434-.87 4.492-2.384 5.885h.002C11.978 15.292 10.158 16 8 16A8 8 0 1 1 8 0a7.689 7.689 0 0 1 5.352 2.082l-2.284 2.284A4.347 4.347 0 0 0 8 3.166c-2.087 0-3.86 1.408-4.492 3.304a4.792 4.792 0 0 0 0 3.063h.003c.635 1.893 2.405 3.301 4.492 3.301 1.078 0 2.004-.276 2.722-.764h-.003a3.702 3.702 0 0 0 1.599-2.431H8v-3.08h7.545z"
+                />
+              </svg>
+              <span>Lier le compte Google</span>
+            </button>
+          </ng-template>
+        </div>
+      </div>
+      <!-- FIN Section Connexions Externes -->
+      }
+
+      <!-- Section Test Calendriers Google (visible si lié) -->
+      <div
+        *ngIf="connectedUser()?.googleId"
+        class="pt-2 border-t border-gray-600 mt-2"
+      >
+        <p class="font-bold text-[9px] md:text-sm w-28 md:w-56">
+          Calendriers Google
+        </p>
+        <div class="flex flex-col gap-2">
+          <button
+            hlmBtn
+            variant="outline"
+            size="sm"
+            class="w-fit"
+            (click)="fetchGoogleCalendars()"
+            [disabled]="isLoadingCalendars()"
+          >
+            <span *ngIf="!isLoadingCalendars()">Afficher mes calendriers</span>
+            <span *ngIf="isLoadingCalendars()" class="flex items-center">
+              <div
+                class="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-2"
+              ></div>
+              Chargement...
+            </span>
+          </button>
+
+          <!-- Zone d'affichage des résultats -->
+          <div *ngIf="googleCalendarsFetchAttempted()" class="mt-2">
+            <ul
+              *ngIf="googleCalendars() && googleCalendars()!.length > 0"
+              class="list-disc list-inside text-xs md:text-sm"
+            >
+              <li *ngFor="let calendar of googleCalendars()">
+                {{ calendar.summary }}
+              </li>
+            </ul>
+            <p
+              *ngIf="googleCalendars() && googleCalendars()!.length === 0"
+              class="text-xs md:text-sm text-gray-500"
+            >
+              Aucun calendrier trouvé.
+            </p>
+            <p
+              *ngIf="googleCalendarsError()"
+              class="text-xs md:text-sm text-red-500"
+            >
+              Erreur: {{ googleCalendarsError() }}
+            </p>
+          </div>
+        </div>
+      </div>
+      <!-- FIN Section Test Calendriers Google -->
+
+      <div class="flex pt-2 border-t border-gray-600 mt-2">
         <p class="font-bold text-[9px] md:text-sm w-28 md:w-56">
           Notifications
         </p>

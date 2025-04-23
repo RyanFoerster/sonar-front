@@ -1,7 +1,14 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable, tap, catchError, throwError } from 'rxjs';
+import {
+  BehaviorSubject,
+  Observable,
+  tap,
+  catchError,
+  throwError,
+  Subject,
+} from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { UserEntity } from '../entities/user.entity';
 import { NotificationService } from '../../services/notification.service';
@@ -19,6 +26,14 @@ export class AuthService {
 
   private readonly authState = new BehaviorSubject<boolean>(false);
   private readonly currentUser = new BehaviorSubject<UserEntity | null>(null);
+
+  // Rendre le BehaviorSubject public
+  isRefreshingSubject = new BehaviorSubject<boolean>(false);
+  isRefreshing$ = this.isRefreshingSubject.asObservable();
+
+  // Subject pour stocker le nouveau token après rafraîchissement
+  private tokenRefreshedSource = new Subject<string>();
+  tokenRefreshed$ = this.tokenRefreshedSource.asObservable();
 
   constructor() {
     this.initializeAuth();
@@ -61,12 +76,24 @@ export class AuthService {
   }
 
   refreshToken(): Observable<{ access_token: string; refresh_token: string }> {
+    console.log('[AuthService] refreshToken: Tentative de refresh démarrée.');
+
+    console.log('[AuthService] refreshToken: Marque isRefreshing à true.');
+    this.isRefreshingSubject.next(true);
+
     const refreshToken = this.getRefreshToken();
     if (!refreshToken) {
-      this.clearAuth();
+      console.log('[AuthService] refreshToken: Pas de refresh token trouvé.');
+      this.isRefreshingSubject.next(false);
+      this.clearAuth(); // Déjà présent
+      // Redirection ajoutée ici si ce n'est pas déjà géré ailleurs
+      this.router.navigate(['/login']);
       return throwError(() => new Error('No refresh token available'));
     }
 
+    console.log(
+      '[AuthService] refreshToken: Envoi de la requête POST /auth/refresh...'
+    );
     return this.httpClient
       .post<{ access_token: string; refresh_token: string }>(
         `${environment.API_URL}/auth/refresh`,
@@ -74,12 +101,27 @@ export class AuthService {
       )
       .pipe(
         tap((tokens) => {
+          console.log(
+            '[AuthService] refreshToken: Requête réussie, nouveaux tokens reçus.'
+          );
           this.setTokens(tokens.access_token, tokens.refresh_token);
+          // Émettre le nouveau token pour les requêtes en attente
+          this.tokenRefreshedSource.next(tokens.access_token);
+          console.log(
+            '[AuthService] refreshToken: Marque isRefreshing à false (succès).'
+          );
+          this.isRefreshingSubject.next(false); // Fin du rafraîchissement
         }),
         catchError((error) => {
-          console.error('Erreur refresh token:', error);
+          console.error(
+            '[AuthService] refreshToken: Erreur lors de la requête POST /auth/refresh:',
+            error
+          );
+          this.isRefreshingSubject.next(false); // Fin du rafraîchissement (échec)
           this.clearAuth();
-          return throwError(() => error);
+          // S'assurer de la redirection en cas d'échec du refresh
+          this.router.navigate(['/login']);
+          return throwError(() => error); // Re-throw l'erreur
         })
       );
   }
@@ -166,18 +208,30 @@ export class AuthService {
   }
 
   private clearAuth(): void {
+    console.log(
+      "[AuthService] clearAuth: Nettoyage des données d'authentification."
+    );
     localStorage.removeItem(environment.TOKEN_KEY);
     localStorage.removeItem(environment.REFRESH_TOKEN_KEY);
     localStorage.removeItem(environment.USER_KEY);
     this.currentUser.next(null);
     this.authState.next(false);
+    // S'assurer que l'état de rafraîchissement est aussi réinitialisé
+    this.isRefreshingSubject.next(false);
+    console.log('[AuthService] clearAuth: isRefreshingSubject remis à false.');
   }
 
   private checkAppVersion(): void {
     const localVersion = localStorage.getItem(this.LOCAL_VERSION_KEY);
-    if (localVersion !== environment.APP_VERSION) {
-      this.clearAuth();
-      localStorage.setItem(this.LOCAL_VERSION_KEY, environment.APP_VERSION);
+    const currentVersion = environment.APP_VERSION;
+
+    if (localVersion !== currentVersion) {
+      console.log(
+        `Mise à jour de la version locale de ${localVersion} vers ${currentVersion}`
+      );
+      localStorage.setItem(this.LOCAL_VERSION_KEY, currentVersion);
+      // Optionnel : Forcer la déconnexion ou le rechargement si la version change drastiquement
+      // this.logout(); ou window.location.reload();
     }
   }
 }

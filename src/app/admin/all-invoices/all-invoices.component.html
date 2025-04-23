@@ -117,12 +117,13 @@
               </button>
             </th>
             <th hlmTh class="px-3 py-3 sm:px-4">Client</th>
+            <th hlmTh class="px-3 py-3 sm:px-4">Projet</th>
             <th hlmTh class="w-28 px-3 py-3 sm:px-4 text-right">
               <button
                 class="flex items-center justify-end gap-1 w-full hover:text-gray-700 transition-colors focus:outline-none"
                 (click)="sortBy('total')"
               >
-                <span>Total</span>
+                <span>Total HTVA</span>
                 @if (sortField() === 'total') {
                 <span class="text-primary">{{
                   sortOrder() === "asc" ? "↑" : "↓"
@@ -187,6 +188,9 @@
                   <div class="text-xs text-gray-500 truncate">
                     {{ invoice.client.email }}
                   </div>
+                  <div class="text-xs text-gray-500 truncate">
+                    {{ invoice.client.phone }}
+                  </div>
                   @if(invoice.client.company_number) {
                   <div class="text-[10px] text-gray-400 truncate">
                     N° Ent: {{ invoice.client.company_number }}
@@ -197,15 +201,29 @@
             </td>
             <td
               hlmTd
+              class="px-3 py-2 sm:px-4 lg:py-3 border-b lg:border-none border-gray-100"
+            >
+              <div class="flex items-center gap-3">
+                {{
+                  invoice.main_account
+                    ? invoice.main_account.username
+                    : invoice.group_account
+                    ? invoice.group_account.username
+                    : "N/A"
+                }}
+              </div>
+            </td>
+            <td
+              hlmTd
               class="px-3 py-2 sm:px-4 lg:py-3 flex lg:table-cell items-center justify-between lg:justify-end lg:text-right border-b lg:border-none border-gray-100"
             >
               <span
                 class="font-medium lg:hidden text-xs text-gray-500 uppercase mr-2"
-                >Total :</span
+                >Total HTVA :</span
               >
               <span
                 class="font-semibold text-sm whitespace-nowrap text-gray-800"
-                >{{ invoice.total | euroFormat }}</span
+                >{{ invoice.price_htva | euroFormat }}</span
               >
             </td>
             <td

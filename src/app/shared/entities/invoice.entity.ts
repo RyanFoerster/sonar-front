@@ -1,4 +1,6 @@
 import { ClientEntity } from './client.entity';
+import { CompteGroupeEntity } from './compte-groupe.entity';
+import { PrincipalAccountEntity } from './principal-account.entity';
 import { ProductEntity } from './product.entity';
 
 export interface InvoiceEntity {
@@ -18,5 +20,7 @@ export interface InvoiceEntity {
   creditNoteAmount: number;
   client: ClientEntity;
   products: ProductEntity[];
+  main_account: PrincipalAccountEntity;
+  group_account: CompteGroupeEntity;
   reminder_level: number;
 }

@@ -717,14 +717,29 @@
       >
         <label for="quote-comment" class="block">
           <span class="text-sm font-medium text-gray-900">Commentaire</span>
-          <textarea
-            id="quote-comment"
-            formControlName="comment"
-            class="mt-2 w-full min-h-[120px] bg-white border border-gray-200 text-sm rounded-lg p-4 focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-            placeholder="Ajoutez un commentaire au devis (conditions particulières, informations supplémentaires...)"
-          ></textarea>
         </label>
+        <quill-editor
+          formControlName="comment"
+          id="quote-comment"
+          placeholder="Ajoutez un commentaire (conditions, infos...). Les liens sont acceptés."
+          class="[&_.ql-container]:min-h-[120px] [&_.ql-container]:rounded-b-lg [&_.ql-toolbar]:rounded-t-lg [&_.ql-toolbar]:border-gray-200 [&_.ql-container]:border-gray-200 [&_.ql-container]:border-t-0 mt-2 block w-full"
+          theme="snow"
+          [modules]="quillModules"
+        ></quill-editor>
+
+        <!-- Affichage des erreurs pour le commentaire -->
+        @if (createQuoteForm.get('comment')?.invalid &&
+        createQuoteForm.get('comment')?.touched) {
+        <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
+          <hlm-icon size="xs" name="lucideAlertCircle" />
+          @if (createQuoteForm.get('comment')?.errors?.['maxlength']) { Le
+          commentaire ne peut pas dépasser
+          {{ createQuoteForm.get('comment')?.errors?.['maxlength'].requiredLength }}
+          caractères. } @else { Le champ commentaire contient une erreur. }
+        </span>
+        }
       </div>
+      <!-- Fin Commentaire Section -->
 
       <!-- Fichier Section -->
       <div
@@ -1035,11 +1050,7 @@
             hlmBtn
             type="submit"
             (click)="isLoadingQuote.set(true)"
-            [disabled]="
-              !isAtLeastOneAttachmentSelected() ||
-              !createQuoteForm.valid ||
-              products().length <= 0
-            "
+            [disabled]=""
           >
             <hlm-icon size="sm" name="lucideFileDown" />
             {{ updatedQuoteId() ? "Modifier le devis" : "Générer le devis" }}

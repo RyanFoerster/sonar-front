@@ -16,6 +16,7 @@ export interface UserEntity {
   address: string;
   profilePicture: string;
   monthly_billing: boolean;
+  googleId?: string | null;
   comptePrincipal: PrincipalAccountEntity;
   userSecondaryAccounts: UserSecondaryAccountEntity[];
   clients: ClientEntity[];

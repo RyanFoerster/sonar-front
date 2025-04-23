@@ -50,10 +50,17 @@ export class AppComponent implements OnInit {
       this.swUpdate.versionUpdates.subscribe((event) => {
         if (event.type === 'VERSION_READY') {
           console.log('Nouvelle version prête à être activée.');
-          this.swUpdate.activateUpdate().then(() => {
-            console.log('Nouvelle version activée. Rechargement...');
-            window.location.reload();
-          });
+          // Proposer à l'utilisateur de recharger
+          const wantsReload = confirm(
+            "Une nouvelle version de l'application est disponible. Voulez-vous recharger maintenant ?"
+          );
+          if (wantsReload) {
+            this.swUpdate.activateUpdate().then(() => {
+              console.log('Nouvelle version activée. Rechargement...');
+              window.location.reload();
+            });
+          }
+          // Si l'utilisateur refuse, la nouvelle version sera chargée au prochain rechargement manuel
         }
       });
 

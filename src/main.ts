@@ -24,7 +24,7 @@ if ('serviceWorker' in navigator) {
               if ((e.target as ServiceWorker).state === 'activated') {
                 // console.log('Service Worker maintenant activé!');
                 // Force le rechargement de la page pour s'assurer que le service worker contrôle la page
-                window.location.reload();
+                // window.location.reload(); // <-- Commenté
               }
             });
           }
@@ -34,7 +34,7 @@ if ('serviceWorker' in navigator) {
           // L'événement 'controllerchange' sera déclenché quand le SW prendra le contrôle
           navigator.serviceWorker.addEventListener('controllerchange', () => {
             // console.log('Nouveau Service Worker a pris le contrôle');
-            window.location.reload();
+            // window.location.reload(); // <-- Commenté
           });
         } else if (registration.active) {
           // console.log('Service Worker déjà actif');
@@ -52,6 +52,7 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker
       .register('firebase-messaging-sw.js')
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       .then((registration) => {
         // console.log(
         //   'Service Worker Firebase Messaging enregistré avec succès:',

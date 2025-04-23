@@ -1,0 +1,10 @@
+/* Utilisation de ::ng-deep pour styliser le contenu injecté par [innerHTML] */
+::ng-deep .comment-modal-content a {
+  color: #2563eb; /* Correspond à text-blue-600 */
+  text-decoration: underline;
+  transition: color 0.2s ease-in-out;
+}
+
+::ng-deep .comment-modal-content a:hover {
+  color: #1d4ed8; /* Correspond à text-blue-800 */
+}

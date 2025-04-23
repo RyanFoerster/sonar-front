@@ -3,7 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import { CompteGroupeEntity } from '../entities/compte-groupe.entity';
 import { environment } from '../../../environments/environment';
 import { GroupProjectDto } from '../dtos/group-project.dto';
-import { UserEntity } from '../entities/user.entity';
+// import { UserEntity } from '../entities/user.entity'; // Supprimé car plus utilisé
 import { Observable } from 'rxjs';
 import { AuthService } from './auth.service';
 import { UserSecondaryAccountEntity } from '../entities/user-secondary-account.entity';
@@ -20,6 +20,7 @@ interface GroupInvitationDto {
 export class CompteGroupeService {
   httpClient: HttpClient = inject(HttpClient);
   private authService = inject(AuthService);
+  private userSecondaryAccountApiUrl = `${environment.API_URL}/user-secondary-account`;
 
   private getHeaders(): HttpHeaders {
     const token = this.authService.getToken();
@@ -52,8 +53,8 @@ export class CompteGroupeService {
     );
   }
 
-  getAllMembers(id: number) {
-    return this.httpClient.get<UserEntity[]>(
+  getAllMembers(id: number): Observable<UserSecondaryAccountEntity[]> {
+    return this.httpClient.get<UserSecondaryAccountEntity[]>(
       `${environment.API_URL}/compte-groupe/${id}/members`,
       { headers: this.getHeaders() }
     );
@@ -90,10 +91,37 @@ export class CompteGroupeService {
   inviteUserToGroup(
     invitation: GroupInvitationDto
   ): Observable<UserSecondaryAccountEntity> {
-    // Utiliser l'endpoint d'invitation au lieu de la création directe
     return this.httpClient.post<UserSecondaryAccountEntity>(
       `${environment.API_URL}/groupe-invitation/invite`,
       invitation,
+      { headers: this.getHeaders() }
+    );
+  }
+
+  /**
+   * Permet à l'utilisateur connecté de quitter un groupe
+   * @param groupId ID du groupe à quitter
+   * @returns Observable avec un message de confirmation
+   */
+  leaveGroup(groupId: number): Observable<{ message: string }> {
+    return this.httpClient.delete<{ message: string }>(
+      `${this.userSecondaryAccountApiUrl}/groups/${groupId}/leave`,
+      { headers: this.getHeaders() }
+    );
+  }
+
+  /**
+   * Permet à un administrateur du groupe de retirer un membre
+   * @param groupId ID du groupe
+   * @param memberId ID de l'utilisateur à retirer
+   * @returns Observable avec un message de confirmation
+   */
+  removeMember(
+    groupId: number,
+    memberId: number
+  ): Observable<{ message: string }> {
+    return this.httpClient.delete<{ message: string }>(
+      `${this.userSecondaryAccountApiUrl}/groups/${groupId}/members/${memberId}`,
       { headers: this.getHeaders() }
     );
   }

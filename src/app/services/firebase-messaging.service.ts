@@ -120,9 +120,6 @@ export class FirebaseMessagingService {
   requestPermission(): Observable<string | null> {
     // Éviter les demandes multiples simultanées
     if (this.isInitializingToken) {
-      console.log(
-        'Une demande de token FCM est déjà en cours, opération ignorée'
-      );
       return this.fcmTokenSubject.asObservable();
     }
 
@@ -131,9 +128,6 @@ export class FirebaseMessagingService {
     // Vérifier si les notifications sont explicitement désactivées dans localStorage
     const notificationsDisabled = this.areNotificationsDisabledInLocalStorage();
     if (notificationsDisabled) {
-      console.log(
-        'Notifications explicitement désactivées dans localStorage, abandon'
-      );
       this.fcmTokenSubject.next(null);
       this.isInitializingToken = false;
       return this.fcmTokenSubject.asObservable();
@@ -149,7 +143,6 @@ export class FirebaseMessagingService {
     // Si un token existe déjà dans le sujet, ne pas en demander un nouveau
     const currentToken = this.fcmTokenSubject.getValue();
     if (currentToken) {
-      console.log('Un token FCM existe déjà, réutilisation du token existant');
       this.isInitializingToken = false;
       return this.fcmTokenSubject.asObservable();
     }
@@ -495,26 +488,18 @@ export class FirebaseMessagingService {
    * Déconnecte et réinitialise Firebase Messaging
    */
   disconnectMessaging(): void {
-    console.log('Déconnexion de Firebase Messaging...');
-
     // Effacer le token et réinitialiser les états
     if (this.messaging) {
-      this.clearToken()
-        .then(() => {
-          console.log('Token FCM effacé avec succès');
-        })
-        .catch((error) => {
-          console.error(
-            'Erreur lors de la déconnexion de Firebase Messaging:',
-            error
-          );
-        });
+      this.clearToken().catch((error) => {
+        console.error(
+          'Erreur lors de la déconnexion de Firebase Messaging:',
+          error
+        );
+      });
     }
 
     // Réinitialiser les sujets
     this.fcmTokenSubject.next(null);
     this.notificationSubject.next(null);
-
-    console.log('Firebase Messaging déconnecté');
   }
 }

@@ -43,7 +43,6 @@ import {
 
 import { EuroFormatPipe } from '../../../../../shared/pipes/euro-format.pipe';
 import { QuoteEntity } from '../../../../../shared/entities/quote.entity';
-import { InvoiceEntity } from '../../../../../shared/entities/invoice.entity';
 import { UserEntity } from '../../../../../shared/entities/user.entity';
 
 // Importing the Document interface from parent component
@@ -63,6 +62,14 @@ interface Document {
     country?: string;
     phone?: string;
     company_vat_number?: string;
+  };
+  main_account?: {
+    id: number;
+    username: string;
+  };
+  group_account?: {
+    id: number;
+    username: string;
   };
   invoice_number?: number;
   quote_number?: number;
@@ -147,6 +154,10 @@ export class QuotesTableComponent {
     ctx: ModalContext;
   }>();
 
+  // Ajout des signaux pour la modal de commentaire
+  protected isCommentModalOpen = signal(false);
+  protected currentCommentHtml = signal<string | null>(null);
+
   protected paginatedDocuments = computed(() => {
     const startIndex =
       (this.pagination.currentPage() - 1) * this.itemsPerPage();
@@ -229,6 +240,17 @@ export class QuotesTableComponent {
   }
 
   /**
+   * Ouvre la modal pour afficher le commentaire HTML.
+   * @param comment Le commentaire HTML à afficher.
+   */
+  openCommentModal(comment: string | undefined): void {
+    if (comment) {
+      this.currentCommentHtml.set(comment);
+      this.isCommentModalOpen.set(true);
+    }
+  }
+
+  /**
    * Formate le numéro de devis.
    * @param doc Le document (devis)
    * @returns Le numéro formaté avec le préfixe approprié
@@ -241,5 +263,19 @@ export class QuotesTableComponent {
 
     // Format: d-(année)/000(numéro)
     return `d-${currentYear}/${paddedNumber}`;
+  }
+
+  /**
+   * Supprime les balises HTML d'une chaîne de caractères.
+   * @param html La chaîne HTML à nettoyer.
+   * @returns La chaîne sans balises HTML.
+   */
+  stripHtmlTags(html: string): string {
+    if (!html) {
+      return '';
+    }
+    // Utilise DOMParser pour analyser et extraire le texte
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    return doc.body.textContent || '';
   }
 }

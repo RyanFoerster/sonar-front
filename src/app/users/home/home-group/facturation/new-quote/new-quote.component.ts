@@ -8,6 +8,7 @@ import {
   computed,
   input,
   ChangeDetectorRef,
+  ChangeDetectionStrategy,
 } from '@angular/core';
 import {
   FormBuilder,
@@ -75,6 +76,7 @@ import { HlmSelectImports } from '@spartan-ng/ui-select-helm';
 import { EuroFormatPipe } from '../../../../../shared/pipes/euro-format.pipe';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { QuoteDto } from '../../../../../shared/dtos/quote.dto';
+import { QuillModule } from 'ngx-quill';
 
 @Component({
   selector: 'app-new-quote',
@@ -101,6 +103,7 @@ import { QuoteDto } from '../../../../../shared/dtos/quote.dto';
     HlmIconComponent,
     DatePipe,
     HlmToasterComponent,
+    QuillModule,
   ],
   providers: [
     provideIcons({
@@ -133,6 +136,7 @@ import { QuoteDto } from '../../../../../shared/dtos/quote.dto';
   ],
   templateUrl: './new-quote.component.html',
   styleUrl: './new-quote.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NewQuoteComponent implements AfterViewInit {
   private formBuilder: FormBuilder = inject(FormBuilder);
@@ -245,6 +249,13 @@ export class NewQuoteComponent implements AfterViewInit {
   protected selectedAttachment = signal<ProjectAttachment | null>(null);
   protected showAttachmentModal = signal(false);
 
+  // Configuration personnalisée pour Quill
+  quillModules = {
+    toolbar: [
+      ['link'], // Uniquement le bouton pour les liens
+    ],
+  };
+
   constructor() {
     this.searchControl.valueChanges
       .pipe(debounceTime(300), distinctUntilChanged())
@@ -270,7 +281,7 @@ export class NewQuoteComponent implements AfterViewInit {
       products: [[]],
       vat_included: [false],
       type_of_project: [''],
-      comment: [''],
+      comment: ['', [Validators.maxLength(2000)]],
     });
 
     this.createClientForm = this.formBuilder.group({
@@ -1192,6 +1203,20 @@ export class NewQuoteComponent implements AfterViewInit {
       this.isLoadingQuote.set(false);
       return;
     }
+
+    // Logs pour vérifier quelle propriété n'est pas valid dans mon formulaire
+    // Vérifier la validité de chaque contrôle du formulaire
+    Object.keys(this.createQuoteForm.controls).forEach((key) => {
+      const control = this.createQuoteForm.get(key);
+      console.log(
+        `Contrôle ${key}: valeur = ${control?.value}, valide = ${control?.valid}, erreurs = `,
+        control?.errors
+      );
+    });
+
+    // Afficher l'état global du formulaire
+    console.log(`Formulaire complet valide: ${this.createQuoteForm.valid}`);
+    console.log(`Valeurs du formulaire:`, this.createQuoteForm.value);
 
     const quoteDto: QuoteDto = {
       quote_date: new Date(this.createQuoteForm.get('quote_date')?.value),

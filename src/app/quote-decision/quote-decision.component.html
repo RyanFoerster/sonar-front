@@ -327,7 +327,10 @@
               {{ quoteFromDB.validation_deadline | date : "dd/MM/yyyy" }}
             </p>
             @if(quoteFromDB.comment) {
-            <p class="break-words">{{ quoteFromDB.comment }}</p>
+            <div
+              class="break-words prose max-w-none [&_a]:text-blue-600 [&_a]:hover:underline"
+              [innerHTML]="quoteFromDB.comment"
+            ></div>
             }
           </div>
         </div>

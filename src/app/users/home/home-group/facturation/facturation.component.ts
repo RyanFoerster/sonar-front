@@ -20,6 +20,7 @@ import {
   lucideFileText,
   lucideSearch,
   lucideMessageCircle,
+  lucideX,
 } from '@ng-icons/lucide';
 
 import { HlmButtonDirective } from '@spartan-ng/ui-button-helm';
@@ -63,6 +64,8 @@ interface Document {
   client: {
     id: number;
     name: string;
+    firstname?: string;
+    lastname?: string;
     email: string;
     street?: string;
     number?: string;
@@ -71,6 +74,7 @@ interface Document {
     country?: string;
     phone?: string;
     company_vat_number?: string;
+    is_physical_person?: boolean;
   };
   invoice_number?: number;
   quote_number?: number;
@@ -118,6 +122,7 @@ interface ModalContext {
       lucideFilePlus,
       lucideSearch,
       lucideMessageCircle,
+      lucideX,
     }),
     DatePipe,
   ],
@@ -154,7 +159,6 @@ export class FacturationComponent implements OnInit, OnDestroy {
   protected filterSelected = signal<'invoice' | 'credit-note' | 'all'>('all');
   protected isLoading = signal<boolean>(true);
   protected searchNumber = signal<string>('');
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   protected originalDocuments = signal<Document[]>([]);
 
   // Computed values
@@ -189,7 +193,6 @@ export class FacturationComponent implements OnInit, OnDestroy {
   currentFilter: 'all' | 'quotes' | 'invoiced_quotes' | 'credit-note' = 'all';
   invoicesFilter: 'all' | 'invoices' | 'credit-notes' = 'all'; // Nouveau filtre pour les factures et notes de crédit
   invoices: InvoiceEntity[] = [];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   protected allDocuments = signal<Document[]>([]);
   protected allQuotes = signal<Document[]>([]); // Uniquement les devis
   protected allInvoicesAndCreditNotes = signal<Document[]>([]); // Uniquement les factures et notes de crédit
@@ -247,6 +250,7 @@ export class FacturationComponent implements OnInit, OnDestroy {
       const data = await firstValueFrom(
         this.services.principal.getGroupByIdWithRelations(+this.id()!)
       );
+      console.log('data principal', data);
       this.accountPrincipal = data;
       this.loadInvoices();
       this.initializeCreditNotes(data.invoice || []);
@@ -483,7 +487,6 @@ export class FacturationComponent implements OnInit, OnDestroy {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private sortByDate(a: Document, b: Document) {
     return (
       new Date(b.documentDate).getTime() - new Date(a.documentDate).getTime()
@@ -515,6 +518,7 @@ export class FacturationComponent implements OnInit, OnDestroy {
   }
 
   generateInvoicePDF(invoice: Document): void {
+    console.log('invoice in generateInvoicePDF', invoice);
     this.services.pdf.generateInvoicePDF(invoice as unknown as InvoiceEntity);
   }
 
@@ -772,22 +776,28 @@ export class FacturationComponent implements OnInit, OnDestroy {
    * Recharge les données pour refléter le changement.
    * @param updatedInvoiceId L'ID de la facture mise à jour.
    */
-  protected async handleInvoiceUpdate(updatedInvoiceId: number): Promise<void> {
+  protected async handleInvoiceUpdate(): Promise<void> {
     this.isLoading.set(true);
     try {
       if (this.typeOfProjet() === 'PRINCIPAL') {
         const data = await firstValueFrom(
           this.services.principal.getGroupByIdWithRelations(+this.id()!)
         );
+        console.log('data principal', data);
         this.accountPrincipal = data;
       } else if (this.typeOfProjet() === 'GROUP') {
         const data = await firstValueFrom(
           this.services.group.getGroupById(+this.id()!)
         );
+        console.log('data group', data);
         this.groupAccount.set(data);
       } else {
+        console.log('this.typeOfProjet()', this.typeOfProjet());
         await this.getConnectedUser();
       }
+
+      console.log('this.accountPrincipal', this.accountPrincipal);
+      console.log('this.groupAccount', this.groupAccount());
 
       this.loadInvoices();
       toast('Statut de la facture mis à jour.');

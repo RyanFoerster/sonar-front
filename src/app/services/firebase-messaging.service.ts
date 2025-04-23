@@ -383,9 +383,9 @@ export class FirebaseMessagingService {
     const notificationTitle = payload.notification?.title || 'Notification';
     const notificationOptions: NotificationOptions = {
       body: payload.notification?.body || '',
-      icon: '/assets/icons/icon-128x128.png',
+      icon: 'https://sonarartists.be/icons/icon.webp',
       data: payload.data,
-      badge: '/assets/icons/icon-96x96.png',
+      badge: 'https://sonarartists.be/icons/icon.webp',
     };
 
     // Vérifier si les notifications sont supportées et permises

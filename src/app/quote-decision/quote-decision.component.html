@@ -16,6 +16,302 @@
 </div>
 }  -->
 @else {
+<!-- Condition pour afficher le formulaire ou le devis -->
+@if (isClientInfoRequired() && role === 'CLIENT') {
+<!-- FORMULAIRE CLIENT -->
+<div class="container mx-auto px-4 py-8">
+  <div class="max-w-2xl mx-auto bg-white rounded-xl shadow-lg p-6 md:p-8">
+    <h2 class="text-xl font-bold text-gray-900 mb-6 border-b pb-4">
+      Complétez vos informations
+    </h2>
+    <p class="text-sm text-gray-600 mb-6">
+      Veuillez fournir les informations suivantes pour pouvoir consulter et
+      répondre au devis N° D-{{ quoteFromDB.quote_number }}.
+    </p>
+    <form
+      [formGroup]="clientInfoForm"
+      (ngSubmit)="submitClientInfo()"
+      class="space-y-6"
+    >
+      <!-- Champs du formulaire client -->
+      <p class="block" hlmLabel>
+        <span class="text-sm font-medium text-gray-900">Pays*</span>
+        <brn-select
+          formControlName="country"
+          class="mt-1.5"
+          placeholder="Belgique"
+        >
+          <hlm-select-trigger
+            class="w-full bg-white border-gray-200 text-sm rounded-lg"
+          >
+            <hlm-select-value />
+          </hlm-select-trigger>
+          <hlm-select-content class="w-full max-h-80">
+            @for (pays of paysEuropeens; track pays) {
+            <hlm-option [value]="pays" class="text-sm">{{ pays }}</hlm-option>
+            }
+          </hlm-select-content>
+        </brn-select>
+        <!-- Erreur pays -->
+        @if (clientInfoForm.get('country')?.invalid &&
+        clientInfoForm.get('country')?.touched) {
+        <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
+          <hlm-icon size="xs" name="lucideAlertCircle" /> Le pays est requis
+        </span>
+        }
+      </p>
+
+      <p class="flex items-center gap-2 cursor-pointer group">
+        <hlm-checkbox
+          formControlName="is_physical_person"
+          (checkedChange)="togglePhysicalPerson()"
+          class="rounded-md group-hover:border-primary transition-colors"
+        />
+        <span
+          class="text-sm text-gray-700 group-hover:text-gray-900 transition-colors"
+          >Personne physique ou association de fait ?</span
+        >
+      </p>
+
+      @if (!isPhysicalPerson()) {
+      <div class="space-y-4">
+        <p class="block" hlmLabel>
+          <span class="text-sm font-medium text-gray-900"
+            >Numéro d'entreprise</span
+          >
+          <input
+            formControlName="company_number"
+            hlmInput
+            placeholder="987 XXX XXX"
+            class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+          />
+        </p>
+        <p class="block" hlmLabel>
+          <span class="text-sm font-medium text-gray-900">Numéro de TVA</span>
+          <input
+            formControlName="company_vat_number"
+            hlmInput
+            placeholder="BE0XXX XXX XXX"
+            class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+          />
+        </p>
+        <p class="block" hlmLabel>
+          <span class="text-sm font-medium text-gray-900"
+            >Nom de l'entreprise*</span
+          >
+          <input
+            formControlName="name"
+            hlmInput
+            placeholder="Nom de l'entreprise"
+            class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+          />
+          @if (clientInfoForm.get('name')?.invalid &&
+          clientInfoForm.get('name')?.touched) {
+          <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
+            <hlm-icon size="xs" name="lucideAlertCircle" /> Le nom de
+            l'entreprise est requis
+          </span>
+          }
+        </p>
+      </div>
+      } @else {
+      <div class="space-y-4">
+        <p class="block" hlmLabel>
+          <span class="text-sm font-medium text-gray-900">Numéro national</span>
+          <input
+            formControlName="national_number"
+            hlmInput
+            placeholder="12345678910"
+            class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+          />
+        </p>
+        <div class="grid md:grid-cols-2 gap-4">
+          <p class="block" hlmLabel>
+            <span class="text-sm font-medium text-gray-900">Prénom*</span>
+            <input
+              formControlName="firstname"
+              hlmInput
+              placeholder="Prénom"
+              class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+            />
+            @if (clientInfoForm.get('firstname')?.invalid &&
+            clientInfoForm.get('firstname')?.touched) {
+            <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
+              <hlm-icon size="xs" name="lucideAlertCircle" /> Le prénom est
+              requis
+            </span>
+            }
+          </p>
+          <p class="block" hlmLabel>
+            <span class="text-sm font-medium text-gray-900">Nom*</span>
+            <input
+              formControlName="lastname"
+              hlmInput
+              placeholder="Nom"
+              class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+            />
+            @if (clientInfoForm.get('lastname')?.invalid &&
+            clientInfoForm.get('lastname')?.touched) {
+            <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
+              <hlm-icon size="xs" name="lucideAlertCircle" /> Le nom est requis
+            </span>
+            }
+          </p>
+        </div>
+      </div>
+      }
+
+      <div class="grid md:grid-cols-2 gap-4">
+        <p class="block" hlmLabel>
+          <span class="text-sm font-medium text-gray-900">Email*</span>
+          <input
+            formControlName="email"
+            type="email"
+            hlmInput
+            placeholder="adresse@email.com"
+            class="mt-1.5 w-full bg-gray-100 border-gray-200 text-sm rounded-lg cursor-not-allowed"
+          />
+          <!-- Pas d'erreur ici car désactivé -->
+        </p>
+        <p class="block" hlmLabel>
+          <span class="text-sm font-medium text-gray-900">Téléphone*</span>
+          <input
+            formControlName="phone"
+            type="tel"
+            hlmInput
+            placeholder="+32 XXX XX XX XX"
+            class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+          />
+          @if (clientInfoForm.get('phone')?.invalid &&
+          clientInfoForm.get('phone')?.touched) {
+          <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
+            <hlm-icon size="xs" name="lucideAlertCircle" /> Le numéro de
+            téléphone est requis
+          </span>
+          }
+        </p>
+      </div>
+
+      <div class="space-y-4">
+        <div class="grid md:grid-cols-2 gap-4">
+          <p class="block" hlmLabel>
+            <span class="text-sm font-medium text-gray-900">Rue*</span>
+            <input
+              formControlName="street"
+              hlmInput
+              placeholder="Rue"
+              class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+            />
+            @if (clientInfoForm.get('street')?.invalid &&
+            clientInfoForm.get('street')?.touched) {
+            <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
+              <hlm-icon size="xs" name="lucideAlertCircle" /> La rue est requise
+            </span>
+            }
+          </p>
+          <p class="block" hlmLabel>
+            <span class="text-sm font-medium text-gray-900">Numéro*</span>
+            <input
+              formControlName="number"
+              hlmInput
+              placeholder="Numéro"
+              class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+            />
+            @if (clientInfoForm.get('number')?.invalid &&
+            clientInfoForm.get('number')?.touched) {
+            <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
+              <hlm-icon size="xs" name="lucideAlertCircle" /> Le numéro est
+              requis
+            </span>
+            }
+          </p>
+        </div>
+        <div class="grid md:grid-cols-3 gap-4">
+          <p class="block" hlmLabel>
+            <span class="text-sm font-medium text-gray-900">Code postal*</span>
+            <input
+              formControlName="postalCode"
+              hlmInput
+              placeholder="Code postal"
+              class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+            />
+            @if (clientInfoForm.get('postalCode')?.invalid &&
+            clientInfoForm.get('postalCode')?.touched) {
+            <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
+              <hlm-icon size="xs" name="lucideAlertCircle" /> Le code postal est
+              requis
+            </span>
+            }
+          </p>
+          <p class="block md:col-span-2" hlmLabel>
+            <span class="text-sm font-medium text-gray-900">Ville*</span>
+            <input
+              formControlName="city"
+              hlmInput
+              placeholder="Ville"
+              class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+            />
+            @if (clientInfoForm.get('city')?.invalid &&
+            clientInfoForm.get('city')?.touched) {
+            <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
+              <hlm-icon size="xs" name="lucideAlertCircle" /> La ville est
+              requise
+            </span>
+            }
+          </p>
+        </div>
+      </div>
+
+      <div class="space-y-4">
+        <p class="block" hlmLabel>
+          <span class="text-sm font-medium text-gray-900"
+            >Délai de paiement par défaut (jours)*</span
+          >
+          <input
+            formControlName="default_payment_deadline"
+            type="number"
+            hlmInput
+            [min]="10"
+            [max]="30"
+            placeholder="Min: 10, Max: 30"
+            class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+          />
+          @if (clientInfoForm.get('default_payment_deadline')?.invalid &&
+          clientInfoForm.get('default_payment_deadline')?.touched) {
+          <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
+            <hlm-icon size="xs" name="lucideAlertCircle" />
+            @if
+            (clientInfoForm.get('default_payment_deadline')?.errors?.['required'])
+            { Le délai est requis } @else if
+            (clientInfoForm.get('default_payment_deadline')?.errors?.['min']) {
+            Min. 10 jours } @else if
+            (clientInfoForm.get('default_payment_deadline')?.errors?.['max']) {
+            Max. 30 jours }
+          </span>
+          }
+        </p>
+      </div>
+      <!-- Fin Champs Formulaire -->
+
+      <div class="flex justify-end pt-6 border-t border-gray-200">
+        <button
+          hlmBtn
+          type="submit"
+          [disabled]="clientInfoForm.invalid || isSubmittingClientInfo()"
+          class="bg-primary text-white font-medium text-sm rounded-lg px-4 py-2 flex items-center gap-2 hover:bg-primary/90 transition-all disabled:opacity-50"
+        >
+          @if (isSubmittingClientInfo()) {
+          <hlm-icon class="animate-spin" size="sm" name="lucideLoader" />
+          Enregistrement... } @else {
+          <hlm-icon size="sm" name="lucideCheck" />
+          Enregistrer et voir le devis }
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+} @else {
+<!-- AFFICHAGE NORMAL DU DEVIS -->
 <div class="container mx-auto px-4 pb-32">
   <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
     <!-- En-tête -->
@@ -192,14 +488,14 @@
 
           <div class="space-y-4">
             <!-- <div>
-              <h4 class="text-sm text-gray-600 mb-1">Lieu(x)</h4>
-              <p class="text-base">Liège, Bruxelles</p>
-            </div>
+                  <h4 class="text-sm text-gray-600 mb-1">Lieu(x)</h4>
+                  <p class="text-base">Liège, Bruxelles</p>
+                </div>
 
-            <div>
-              <h4 class="text-sm text-gray-600 mb-1">Domaine</h4>
-              <p class="text-base">Musique</p>
-            </div> -->
+                <div>
+                  <h4 class="text-sm text-gray-600 mb-1">Domaine</h4>
+                  <p class="text-base">Musique</p>
+                </div> -->
 
             <div>
               <h4 class="text-sm text-gray-600 mb-1">
@@ -336,224 +632,205 @@
         </div>
       </div>
     </div>
-
-    <!-- Aperçu PDF -->
-    <!-- <div class="p-6">
-      @if(isLoadingPdf) {
-      <div
-        class="flex justify-center items-center h-[75vh] bg-gray-50 rounded-xl border border-gray-200"
-      >
-        <div class="flex flex-col items-center gap-3">
+    <!-- Barre d'action fixe -->
+    <div
+      class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg"
+    >
+      <div class="container mx-auto px-4">
+        <div class="max-w-4xl mx-auto py-4">
           <div
-            class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"
-          ></div>
-          <p class="text-gray-600">Chargement du devis en cours...</p>
-        </div>
-      </div>
-      } @else {
-      <iframe
-        id="pdfPreview"
-        class="w-full h-[75vh] rounded-xl border border-gray-200"
-        [class.opacity-50]="
-          quoteStatus === 'accepted' || quoteStatus === 'refused'
-        "
-      ></iframe>
-      }
-    </div> -->
-  </div>
-</div>
-
-<!-- Barre d'action fixe -->
-<div
-  class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg"
->
-  <div class="container mx-auto px-4">
-    <div class="max-w-4xl mx-auto py-4">
-      <div class="flex flex-col md:flex-row items-center justify-between gap-4">
-        <!-- Pièces jointes -->
-        @if(getAttachments().length > 0) {
-        <div class="relative group">
-          <button
-            class="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors text-gray-700"
-            type="button"
+            class="flex flex-col md:flex-row items-center justify-between gap-4"
           >
-            <hlm-icon name="lucideFileText" size="sm" />
-            <span>Pièces jointes ({{ getAttachments().length }})</span>
-            <hlm-icon
-              name="lucideChevronUp"
-              size="sm"
-              class="transform transition-transform group-hover:rotate-180"
-            />
-          </button>
+            <!-- Pièces jointes -->
+            @if(getAttachments().length > 0) {
+            <div class="relative group">
+              <button
+                class="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors text-gray-700"
+                type="button"
+              >
+                <hlm-icon name="lucideFileText" size="sm" />
+                <span>Pièces jointes ({{ getAttachments().length }})</span>
+                <hlm-icon
+                  name="lucideChevronUp"
+                  size="sm"
+                  class="transform transition-transform group-hover:rotate-180"
+                />
+              </button>
 
-          <!-- Popup des pièces jointes -->
-          <div
-            class="absolute bottom-full mb-2 left-0 w-[350px] bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 ease-in-out"
-          >
-            <div class="p-3 border-b border-gray-100">
-              <h3 class="text-sm font-medium text-gray-700">
-                Liste des pièces jointes
-              </h3>
-            </div>
-            <div class="max-h-[250px] overflow-y-auto p-2">
-              <div class="space-y-1">
-                @for(attachment of getAttachments(); track attachment.url) {
-                <button
-                  (click)="downloadAttachment(attachment.url)"
-                  class="flex items-center gap-2 w-full p-2 rounded-md hover:bg-gray-50 transition-colors text-sm group/item"
-                  type="button"
-                >
-                  <hlm-icon
-                    name="lucideFileText"
-                    size="sm"
-                    class="text-gray-400"
-                  />
-                  <span class="flex-1 text-left truncate text-gray-700">{{
-                    attachment.name
-                  }}</span>
-                  <hlm-icon
-                    name="lucideDownload"
-                    size="sm"
-                    class="text-blue-500 opacity-0 group-hover/item:opacity-100 transition-opacity"
-                  />
-                </button>
-                }
+              <!-- Popup des pièces jointes -->
+              <div
+                class="absolute bottom-full mb-2 left-0 w-[350px] bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 ease-in-out"
+              >
+                <div class="p-3 border-b border-gray-100">
+                  <h3 class="text-sm font-medium text-gray-700">
+                    Liste des pièces jointes
+                  </h3>
+                </div>
+                <div class="max-h-[250px] overflow-y-auto p-2">
+                  <div class="space-y-1">
+                    @for(attachment of getAttachments(); track attachment.url) {
+                    <button
+                      (click)="downloadAttachment(attachment.url)"
+                      class="flex items-center gap-2 w-full p-2 rounded-md hover:bg-gray-50 transition-colors text-sm group/item"
+                      type="button"
+                    >
+                      <hlm-icon
+                        name="lucideFileText"
+                        size="sm"
+                        class="text-gray-400"
+                      />
+                      <span class="flex-1 text-left truncate text-gray-700">{{
+                        attachment.name
+                      }}</span>
+                      <hlm-icon
+                        name="lucideDownload"
+                        size="sm"
+                        class="text-blue-500 opacity-0 group-hover/item:opacity-100 transition-opacity"
+                      />
+                    </button>
+                    }
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-        }
+            }
 
-        <!-- Actions ou Message de confirmation -->
-        @if(canTakeAction()) {
-        <div class="flex gap-4">
-          <div class="flex flex-col justify-center gap-4">
-            <!-- Conditions générales -->
-            <div class="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="terms"
-                [(ngModel)]="termsAccepted"
-                class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-              />
-              <label
-                for="terms"
-                class="text-sm text-gray-700 whitespace-nowrap"
-              >
-                J'ai lu et j'accepte les
-                <a
-                  href="/conditions-generales"
-                  target="_blank"
-                  class="text-blue-600 hover:text-blue-800 underline"
+            <!-- Actions ou Message de confirmation -->
+            @if(canTakeAction()) {
+            <div class="flex gap-4">
+              <div class="flex flex-col justify-center gap-4">
+                <!-- Conditions générales -->
+                <div class="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="terms"
+                    [(ngModel)]="termsAccepted"
+                    class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <label
+                    for="terms"
+                    class="text-sm text-gray-700 whitespace-nowrap"
+                  >
+                    J'ai lu et j'accepte les
+                    <a
+                      href="/conditions-generales"
+                      target="_blank"
+                      class="text-blue-600 hover:text-blue-800 underline"
+                    >
+                      conditions générales
+                    </a>
+                  </label>
+                </div>
+
+                @if(getAttachments().length > 0) {
+                <div class="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="attachments"
+                    [(ngModel)]="attachmentsAccepted"
+                    class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <label
+                    for="terms"
+                    class="text-sm text-gray-700 whitespace-nowrap"
+                  >
+                    J'ai pris connaissance des pièces jointes
+                  </label>
+                </div>
+                }
+              </div>
+
+              <!-- Boutons d'action -->
+              <div class="flex gap-3">
+                <button
+                  (click)="acceptQuote()"
+                  class="rounded-full bg-emerald-500 hover:bg-emerald-600 transition-colors px-6 py-2 text-white font-medium flex items-center justify-center gap-2"
+                  [disabled]="
+                    !termsAccepted ||
+                    (getAttachments().length > 0 && !attachmentsAccepted) ||
+                    isAccepting ||
+                    isRejecting
+                  "
+                  hlmBtn
                 >
-                  conditions générales
-                </a>
-              </label>
+                  @if(isAccepting) {
+                  <div
+                    class="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"
+                  ></div>
+                  } @else {
+                  <hlm-icon name="lucideCheck" size="sm" />
+                  }
+                  {{ isAccepting ? "En cours..." : "Accepter" }}
+                </button>
+                <button
+                  (click)="rejectQuote()"
+                  class="rounded-full bg-red-500 hover:bg-red-600 transition-colors px-6 py-2 text-white font-medium flex items-center justify-center gap-2"
+                  [disabled]="isAccepting || isRejecting"
+                  hlmBtn
+                >
+                  @if(isRejecting) {
+                  <div
+                    class="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"
+                  ></div>
+                  } @else {
+                  <hlm-icon name="lucideX" size="sm" />
+                  }
+                  {{ isRejecting ? "En cours..." : "Refuser" }}
+                </button>
+              </div>
             </div>
-
-            @if(getAttachments().length > 0) {
-            <div class="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="attachments"
-                [(ngModel)]="attachmentsAccepted"
-                class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-              />
-              <label
-                for="terms"
-                class="text-sm text-gray-700 whitespace-nowrap"
-              >
-                J'ai pris connaissance des pièces jointes
-              </label>
+            } @else if(isRefusedByOtherParty()) {
+            <!-- Message de refus par l'autre partie -->
+            <div class="flex items-center justify-center flex-grow">
+              <div class="flex items-center gap-2 text-red-600">
+                <hlm-icon name="lucideXCircle" size="sm" />
+                <span class="font-medium">
+                  @if(role === 'GROUP') { Le client a refusé ce devis } @else {
+                  Le groupe a refusé ce devis }
+                </span>
+              </div>
+            </div>
+            } @else {
+            <!-- Message de confirmation -->
+            <div class="flex items-center justify-center flex-grow">
+              @if(quoteStatus === 'accepted') {
+              <div class="flex items-center gap-2 text-emerald-600">
+                <hlm-icon name="lucideCheckCircle" size="sm" />
+                <span class="font-medium">Vous avez accepté ce devis</span>
+              </div>
+              } @else if(quoteStatus === 'refused') {
+              <div class="flex items-center justify-between w-full">
+                <div class="flex items-center gap-2 text-red-600">
+                  <hlm-icon name="lucideXCircle" size="sm" />
+                  <span class="font-medium">Vous avez refusé ce devis</span>
+                </div>
+                <button
+                  (click)="cancelRejection()"
+                  class="rounded-full bg-gray-500 hover:bg-gray-600 transition-colors px-6 py-2 text-white font-medium flex items-center justify-center gap-2"
+                  [disabled]="isCancelingRejection"
+                  hlmBtn
+                >
+                  @if(isCancelingRejection) {
+                  <div
+                    class="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"
+                  ></div>
+                  } @else {
+                  <hlm-icon name="lucideUndo2" size="sm" />
+                  }
+                  {{
+                    isCancelingRejection ? "En cours..." : "Annuler le refus"
+                  }}
+                </button>
+              </div>
+              }
             </div>
             }
           </div>
-
-          <!-- Boutons d'action -->
-          <div class="flex gap-3">
-            <button
-              (click)="acceptQuote()"
-              class="rounded-full bg-emerald-500 hover:bg-emerald-600 transition-colors px-6 py-2 text-white font-medium flex items-center justify-center gap-2"
-              [disabled]="
-                !termsAccepted ||
-                (getAttachments().length > 0 && !attachmentsAccepted) ||
-                isAccepting ||
-                isRejecting
-              "
-              hlmBtn
-            >
-              @if(isAccepting) {
-              <div
-                class="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"
-              ></div>
-              } @else {
-              <hlm-icon name="lucideCheck" size="sm" />
-              }
-              {{ isAccepting ? "En cours..." : "Accepter" }}
-            </button>
-            <button
-              (click)="rejectQuote()"
-              class="rounded-full bg-red-500 hover:bg-red-600 transition-colors px-6 py-2 text-white font-medium flex items-center justify-center gap-2"
-              [disabled]="isAccepting || isRejecting"
-              hlmBtn
-            >
-              @if(isRejecting) {
-              <div
-                class="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"
-              ></div>
-              } @else {
-              <hlm-icon name="lucideX" size="sm" />
-              }
-              {{ isRejecting ? "En cours..." : "Refuser" }}
-            </button>
-          </div>
         </div>
-        } @else if(isRefusedByOtherParty()) {
-        <!-- Message de refus par l'autre partie -->
-        <div class="flex items-center justify-center flex-grow">
-          <div class="flex items-center gap-2 text-red-600">
-            <hlm-icon name="lucideXCircle" size="sm" />
-            <span class="font-medium">
-              @if(role === 'GROUP') { Le client a refusé ce devis } @else { Le
-              groupe a refusé ce devis }
-            </span>
-          </div>
-        </div>
-        } @else {
-        <!-- Message de confirmation -->
-        <div class="flex items-center justify-center flex-grow">
-          @if(quoteStatus === 'accepted') {
-          <div class="flex items-center gap-2 text-emerald-600">
-            <hlm-icon name="lucideCheckCircle" size="sm" />
-            <span class="font-medium">Vous avez accepté ce devis</span>
-          </div>
-          } @else if(quoteStatus === 'refused') {
-          <div class="flex items-center justify-between w-full">
-            <div class="flex items-center gap-2 text-red-600">
-              <hlm-icon name="lucideXCircle" size="sm" />
-              <span class="font-medium">Vous avez refusé ce devis</span>
-            </div>
-            <button
-              (click)="cancelRejection()"
-              class="rounded-full bg-gray-500 hover:bg-gray-600 transition-colors px-6 py-2 text-white font-medium flex items-center justify-center gap-2"
-              [disabled]="isCancelingRejection"
-              hlmBtn
-            >
-              @if(isCancelingRejection) {
-              <div
-                class="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"
-              ></div>
-              } @else {
-              <hlm-icon name="lucideUndo2" size="sm" />
-              }
-              {{ isCancelingRejection ? "En cours..." : "Annuler le refus" }}
-            </button>
-          </div>
-          }
-        </div>
-        }
       </div>
     </div>
   </div>
+
+  <hlm-toaster />
 </div>
-}
+}}

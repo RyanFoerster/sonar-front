@@ -18,6 +18,7 @@ export interface ClientEntity {
   company_vat_number?: string;
   national_number: string;
   is_physical_person: boolean;
+  is_info_pending: boolean;
   default_payment_deadline?: number;
   createdAt: Date;
   updatedAt: Date;

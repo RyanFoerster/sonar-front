@@ -145,6 +145,18 @@ export class QuoteService {
     );
   }
 
+  // Nouvelle méthode pour marquer les infos comme fournies
+  markClientInfoAsProvided(quoteId: string) {
+    // Le endpoint doit correspondre à celui défini dans le backend (QuoteController)
+    // pour la méthode `markClientInfoAsProvided`.
+    // Exemple: 'quote/mark-info-provided/:id' ou similaire.
+    // *** AJUSTER LE PATH DE L'API ICI ***
+    return this.http.patch<QuoteEntity>(
+      `${this.apiUrl}/mark-info-provided/${quoteId}`, // !! Endpoint hypothétique !!
+      {}
+    );
+  }
+
   downloadAttachment(attachmentKey: string) {
     return this.http
       .get(`${this.apiUrl}/attachment/${encodeURIComponent(attachmentKey)}`, {

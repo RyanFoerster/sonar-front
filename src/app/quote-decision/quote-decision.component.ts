@@ -4,6 +4,7 @@ import {
   inject,
   Injector,
   signal,
+  OnInit,
 } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { QuoteService } from '../shared/services/quote.service';
@@ -14,7 +15,12 @@ import { HlmButtonDirective } from '@spartan-ng/ui-button-helm';
 import { HlmIconComponent } from '@spartan-ng/ui-icon-helm';
 import { CommonModule, DatePipe } from '@angular/common';
 import { provideIcons } from '@ng-icons/core';
-import { FormsModule } from '@angular/forms';
+import {
+  FormsModule,
+  ReactiveFormsModule,
+  FormBuilder,
+  Validators,
+} from '@angular/forms';
 import {
   lucideCheck,
   lucideCheckCircle,
@@ -24,9 +30,22 @@ import {
   lucideFileText,
   lucideDownload,
   lucideUndo2,
+  lucideLoader,
+  lucideAlertCircle,
 } from '@ng-icons/lucide';
 import { lastValueFrom } from 'rxjs';
 import { PdfGeneratorService } from '../shared/services/pdf-generator.service';
+import { FormGroup } from '@angular/forms';
+import { ClientService } from '../shared/services/client.service';
+import { HlmInputDirective } from '@spartan-ng/ui-input-helm';
+import { HlmLabelDirective } from '@spartan-ng/ui-label-helm';
+import { HlmCheckboxComponent } from '@spartan-ng/ui-checkbox-helm';
+import { BrnSelectImports } from '@spartan-ng/ui-select-brain';
+import { HlmSelectImports } from '@spartan-ng/ui-select-helm';
+import { HlmToasterComponent } from '@spartan-ng/ui-sonner-helm';
+import { toast } from 'ngx-sonner';
+import { HttpErrorResponse } from '@angular/common/http';
+import { ClientEntity } from '../shared/entities/client.entity';
 
 @Component({
   selector: 'app-quote-decision',
@@ -37,6 +56,13 @@ import { PdfGeneratorService } from '../shared/services/pdf-generator.service';
     CommonModule,
     DatePipe,
     FormsModule,
+    ReactiveFormsModule,
+    HlmInputDirective,
+    HlmLabelDirective,
+    HlmCheckboxComponent,
+    BrnSelectImports,
+    HlmSelectImports,
+    HlmToasterComponent,
   ],
   providers: [
     provideIcons({
@@ -48,16 +74,20 @@ import { PdfGeneratorService } from '../shared/services/pdf-generator.service';
       lucideFileText,
       lucideDownload,
       lucideUndo2,
+      lucideLoader,
+      lucideAlertCircle,
     }),
   ],
   templateUrl: './quote-decision.component.html',
   styleUrl: './quote-decision.component.css',
 })
-export class QuoteDecisionComponent implements AfterViewInit {
+export class QuoteDecisionComponent implements AfterViewInit, OnInit {
   private quoteService = inject(QuoteService);
   private authService = inject(AuthService);
   private pdfGenerator = inject(PdfGeneratorService);
   private _injector = inject(Injector);
+  private formBuilder = inject(FormBuilder);
+  private clientService = inject(ClientService);
 
   quoteId: string | null = null;
   quoteStatus: 'pending' | 'accepted' | 'refused' = 'pending';
@@ -70,13 +100,101 @@ export class QuoteDecisionComponent implements AfterViewInit {
   isAccepting = false;
   isRejecting = false;
   isCancelingRejection = false;
+  isClientInfoRequired = signal(false);
+  isSubmittingClientInfo = signal(false);
+  clientInfoForm!: FormGroup;
+  isPhysicalPerson = signal(false);
+  paysEuropeens: string[] = [
+    'Allemagne',
+    'Autriche',
+    'Belgique',
+    'Bulgarie',
+    'Chypre',
+    'Croatie',
+    'Danemark',
+    'Espagne',
+    'Estonie',
+    'Finlande',
+    'Grèce',
+    'Hongrie',
+    'Irlande',
+    'Italie',
+    'Lettonie',
+    'Lituanie',
+    'Luxembourg',
+    'Malte',
+    'Pays-Bas',
+    'Pologne',
+    'Portugal',
+    'République tchèque',
+    'Roumanie',
+    'Slovénie',
+    'Slovaquie',
+    'Suède',
+    'Suisse',
+    'Royaume-Uni',
+  ];
 
   constructor(private route: ActivatedRoute) {
-    // Récupérer les paramètres de requête (query parameters)
     this.route.queryParamMap.subscribe((params) => {
       this.quoteId = params.get('quote_id');
       this.role = params.get('role');
     });
+  }
+
+  ngOnInit(): void {
+    this.clientInfoForm = this.formBuilder.group({
+      country: ['Belgique', Validators.required],
+      is_physical_person: [false],
+      company_number: [null],
+      company_vat_number: [null],
+      name: [null],
+      national_number: [null],
+      firstname: [null],
+      lastname: [null],
+      email: [
+        { value: null, disabled: true },
+        [Validators.required, Validators.email],
+      ],
+      phone: [null, Validators.required],
+      street: [null, Validators.required],
+      number: [null, Validators.required],
+      city: [null, Validators.required],
+      postalCode: [null, Validators.required],
+      default_payment_deadline: [
+        10,
+        [Validators.required, Validators.min(10), Validators.max(30)],
+      ],
+    });
+    this.updateClientFormValidators();
+  }
+
+  private updateClientFormValidators(): void {
+    const isPhysical = this.clientInfoForm.get('is_physical_person')?.value;
+    const nameControl = this.clientInfoForm.get('name');
+    const firstnameControl = this.clientInfoForm.get('firstname');
+    const lastnameControl = this.clientInfoForm.get('lastname');
+
+    if (isPhysical) {
+      nameControl?.clearValidators();
+      firstnameControl?.setValidators([Validators.required]);
+      lastnameControl?.setValidators([Validators.required]);
+    } else {
+      nameControl?.setValidators([Validators.required]);
+      firstnameControl?.clearValidators();
+      lastnameControl?.clearValidators();
+    }
+    nameControl?.updateValueAndValidity();
+    firstnameControl?.updateValueAndValidity();
+    lastnameControl?.updateValueAndValidity();
+  }
+
+  togglePhysicalPerson(): void {
+    this.isPhysicalPerson.set(!this.isPhysicalPerson());
+    this.clientInfoForm.patchValue({
+      is_physical_person: this.isPhysicalPerson(),
+    });
+    this.updateClientFormValidators();
   }
 
   ngAfterViewInit() {
@@ -90,9 +208,24 @@ export class QuoteDecisionComponent implements AfterViewInit {
           this.quoteFromDB = data;
           this.updateQuoteStatus();
 
-          // Initialiser attachmentsAccepted à true s'il n'y a pas de pièces jointes
-          if (!data.attachment_url || data.attachment_url.length === 0) {
-            this.attachmentsAccepted = true;
+          console.log('[QuoteDecision] Data reçue du backend:', data);
+          this.isClientInfoRequired.set(data.client_info_required);
+          console.log(
+            '[QuoteDecision] Signal isClientInfoRequired mis à :',
+            this.isClientInfoRequired()
+          );
+
+          if (this.isClientInfoRequired()) {
+            this.clientInfoForm.patchValue({ email: data.client.email });
+            this.isPhysicalPerson.set(data.client.is_physical_person);
+            this.clientInfoForm.patchValue({
+              is_physical_person: data.client.is_physical_person,
+            });
+            this.updateClientFormValidators();
+          } else {
+            if (!data.attachment_url || data.attachment_url.length === 0) {
+              this.attachmentsAccepted = true;
+            }
           }
 
           return data;
@@ -155,24 +288,7 @@ export class QuoteDecisionComponent implements AfterViewInit {
   canAccess(): boolean {
     if (!this.quoteFromDB || !this.role) return false;
 
-    // Vérifier si l'utilisateur est admin
     if (this.connectedUser()?.role === 'ADMIN') return true;
-
-    // Vérifier si l'utilisateur fait partie du groupe et que c'est une décision de groupe
-    // if (
-    //   this.role === 'GROUP' &&
-    //   this.connectedUser()?.groupId === this.quoteFromDB.
-    // ) {
-    //   return true;
-    // }
-
-    // Vérifier si l'utilisateur est le client et que c'est une décision client
-    // if (
-    //   this.role === 'CLIENT' &&
-    //   this.connectedUser()?.id === this.quoteFromDB.client.id
-    // ) {
-    //   return true;
-    // }
 
     return true;
   }
@@ -185,7 +301,10 @@ export class QuoteDecisionComponent implements AfterViewInit {
     )
       return false;
 
-    // Vérifier si le devis est déjà accepté ou refusé par le rôle actuel
+    if (this.role === 'CLIENT' && this.isClientInfoRequired()) {
+      return false;
+    }
+
     if (
       this.role === 'GROUP' &&
       this.quoteFromDB.group_acceptance !== 'pending'
@@ -197,7 +316,6 @@ export class QuoteDecisionComponent implements AfterViewInit {
     )
       return false;
 
-    // Vérifier si l'autre partie a déjà refusé le devis
     if (
       this.role === 'GROUP' &&
       this.quoteFromDB.order_giver_acceptance === 'refused'
@@ -271,7 +389,6 @@ export class QuoteDecisionComponent implements AfterViewInit {
   cancelRejection() {
     if (!this.quoteId || !this.quoteFromDB) return;
 
-    // Vérifier que le devis est bien refusé par le rôle actuel
     if (
       (this.role === 'GROUP' &&
         this.quoteFromDB.group_acceptance !== 'refused') ||
@@ -317,7 +434,6 @@ export class QuoteDecisionComponent implements AfterViewInit {
     try {
       const doc = this.pdfGenerator.previewQuotePDF(quote);
 
-      // Rechercher l'iframe avec un maximum de 5 tentatives
       let attempts = 0;
       const maxAttempts = 5;
       const findAndUpdateIframe = () => {
@@ -378,7 +494,6 @@ export class QuoteDecisionComponent implements AfterViewInit {
       const decodedUrl = decodeURIComponent(url);
       const urlParts = decodedUrl.split('/');
       const fileName = urlParts[urlParts.length - 1];
-      // Supprimer les paramètres d'URL potentiels
       return fileName.split('?')[0];
     } catch {
       return 'Pièce jointe';
@@ -387,7 +502,6 @@ export class QuoteDecisionComponent implements AfterViewInit {
 
   getS3KeyFromUrl(url: string): string {
     try {
-      // L'URL est de la forme: https://sonar-artists-files.s3.eu-central-1.amazonaws.com/KEY
       const decodedUrl = decodeURIComponent(url);
       const match = decodedUrl.match(/amazonaws\.com\/(.*?)(\?|$)/);
       return match ? match[1] : '';
@@ -455,5 +569,107 @@ export class QuoteDecisionComponent implements AfterViewInit {
     }
 
     return false;
+  }
+
+  submitClientInfo() {
+    console.log('[QuoteDecision] Appel de submitClientInfo');
+    console.log(
+      '[QuoteDecision] Validité formulaire:',
+      this.clientInfoForm.valid
+    );
+    console.log(
+      '[QuoteDecision] Erreurs formulaire:',
+      this.clientInfoForm.errors
+    );
+    console.log(
+      '[QuoteDecision] Valeurs formulaire:',
+      this.clientInfoForm.getRawValue()
+    );
+
+    if (this.clientInfoForm.invalid) {
+      this.clientInfoForm.markAllAsTouched();
+      console.error('[QuoteDecision] Formulaire invalide détecté');
+      toast.error('Veuillez corriger les erreurs dans le formulaire.');
+      return;
+    }
+
+    console.log(
+      '[QuoteDecision] Vérification quoteFromDB et quoteId:',
+      this.quoteFromDB?.client?.id,
+      this.quoteId
+    );
+    if (!this.quoteFromDB?.client?.id || !this.quoteId) {
+      console.error('[QuoteDecision] ID client ou ID devis manquant');
+      toast.error(
+        'Erreur: Impossible de trouver les informations nécessaires.'
+      );
+      return;
+    }
+
+    this.isSubmittingClientInfo.set(true);
+    const clientId = this.quoteFromDB.client.id;
+    const updateData = { ...this.clientInfoForm.getRawValue() };
+
+    console.log(
+      '[QuoteDecision] Appel API updateDetails pour client:',
+      clientId
+    );
+    this.clientService
+      .updateDetails(clientId, updateData)
+      .pipe(
+        take(1),
+        finalize(() => {
+          console.log('[QuoteDecision] Finalize updateDetails');
+          this.isSubmittingClientInfo.set(false);
+        })
+      )
+      .subscribe({
+        next: (updatedClient: ClientEntity) => {
+          console.log('[QuoteDecision] Succès updateDetails:', updatedClient);
+          if (this.quoteFromDB) {
+            this.quoteFromDB.client = updatedClient;
+          }
+          console.log(
+            '[QuoteDecision] Appel API markClientInfoAsProvided pour devis:',
+            this.quoteId
+          );
+          this.quoteService
+            .markClientInfoAsProvided(this.quoteId!)
+            .pipe(take(1))
+            .subscribe({
+              next: (updatedQuote: QuoteEntity) => {
+                console.log(
+                  '[QuoteDecision] Succès markClientInfoAsProvided:',
+                  updatedQuote
+                );
+                this.quoteFromDB = updatedQuote;
+                this.isClientInfoRequired.set(false);
+                console.log(
+                  '[QuoteDecision] Signal isClientInfoRequired mis à false après succès'
+                );
+                toast.success('Informations enregistrées avec succès.');
+              },
+              error: (err: unknown | HttpErrorResponse) => {
+                console.error(
+                  '[QuoteDecision] Erreur markClientInfoAsProvided:',
+                  err
+                );
+                const message =
+                  err instanceof HttpErrorResponse && err.error?.message
+                    ? err.error.message
+                    : 'Erreur lors de la mise à jour du statut du devis.';
+                toast.error(message);
+              },
+            });
+        },
+        error: (error: unknown | HttpErrorResponse) => {
+          console.error('[QuoteDecision] Erreur updateDetails:', error);
+          const message =
+            error instanceof HttpErrorResponse && error.error?.message
+              ? error.error.message
+              : 'Erreur lors de la mise à jour des informations client.';
+          toast.error(message);
+        },
+      });
   }
 }

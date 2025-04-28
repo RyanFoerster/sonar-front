@@ -8,26 +8,67 @@ on:
 
 jobs:
   deploy:
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.name == 'Build and Publish Docker Image' &&
+      github.event.workflow_run.head_branch == 'main'
     runs-on: ubuntu-latest
     steps:
-      - name: Copy the docker-compose file
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USERNAME }}
-          password: ${{ secrets.SSH_PASSWORD }}
-          script: |
-            cd sonar-front
-            curl -o docker-compose.yaml https://raw.githubusercontent.com/${{ github.repository_owner }}/${{ github.event.repository.name }}/main/docker-compose.yaml
+      - name: Determine Environment and Settings
+        id: settings
+        run: |
+          if [[ "${{ github.event.workflow_run.head_branch }}" == "main" ]]; then
+            echo "env_name=Production" >> $GITHUB_OUTPUT
+            echo "tag=latest" >> $GITHUB_OUTPUT
+            echo "compose_file=docker-compose.yaml" >> $GITHUB_OUTPUT
+            echo "ssh_host=${{ secrets.SSH_HOST }}" >> $GITHUB_OUTPUT
+            echo "ssh_user=${{ secrets.SSH_USERNAME }}" >> $GITHUB_OUTPUT
+            echo "ssh_password=${{ secrets.SSH_PASSWORD }}" >> $GITHUB_OUTPUT
+            echo "github_token=${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_OUTPUT
+            echo "target_dir=sonar-front" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event.workflow_run.head_branch }}" == "Ryan" ]]; then
+            echo "env_name=Staging" >> $GITHUB_OUTPUT
+            echo "tag=staging" >> $GITHUB_OUTPUT
+            echo "compose_file=docker-compose.staging.yaml" >> $GITHUB_OUTPUT
+            # Use staging secrets if available, otherwise fallback to production secrets
+            # IMPORTANT: Create secrets like STAGING_SSH_HOST if needed
+            echo "ssh_host=${{ secrets.SSH_HOST }}" >> $GITHUB_OUTPUT
+            echo "ssh_user=${{ secrets.SSH_USERNAME }}" >> $GITHUB_OUTPUT
+            echo "ssh_password=${{ secrets.SSH_PASSWORD }}" >> $GITHUB_OUTPUT
+            echo "github_token=${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_OUTPUT # Usually the same token
+            echo "target_dir=sonar-front-staging" >> $GITHUB_OUTPUT
 
-      - name: Run the docker container
+      - name: Deploy to ${{ steps.settings.outputs.env_name }}
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USERNAME }}
-          password: ${{ secrets.SSH_PASSWORD }}
+          host: ${{ steps.settings.outputs.ssh_host }}
+          username: ${{ steps.settings.outputs.ssh_user }}
+          password: ${{ steps.settings.outputs.ssh_password }}
           script: |
-            cd sonar-front
-            docker compose pull
-            docker compose down
-            docker compose up -d
+            bash -c '
+            TARGET_DIR="${{ steps.settings.outputs.target_dir }}" # Use different directories
+            COMPOSE_FILE="${{ steps.settings.outputs.compose_file }}"
+            IMAGE_TAG="${{ steps.settings.outputs.tag }}"
+            REPO_OWNER="${{ github.repository_owner }}"
+            REPO_NAME="${{ github.event.repository.name }}"
+            BRANCH="${{ github.event.workflow_run.head_branch }}"
+            DOCKER_IMAGE="${{ secrets.DOCKER_USERNAME }}/sonar-front:${IMAGE_TAG}" # Construct image name
+
+            echo "Deploying branch ${BRANCH} (tag: ${IMAGE_TAG}) to ${TARGET_DIR} using ${COMPOSE_FILE}"
+
+            mkdir -p "${TARGET_DIR}"
+            cd "${TARGET_DIR}"
+
+            # Download the correct docker-compose file
+            curl -H 'Authorization: token ${{ steps.settings.outputs.github_token }}' -fLo "${COMPOSE_FILE}" "https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/${COMPOSE_FILE}"
+
+            # Ensure the image is pulled
+            docker pull "${DOCKER_IMAGE}"
+
+            # Use the specific compose file and tag for down/up
+            docker compose -f "${COMPOSE_FILE}" down
+            # Pass the tag to the compose file if needed (e.g., via env var or direct substitution if your compose file supports it)
+            # Example: export IMAGE_TAG=${IMAGE_TAG} && docker-compose -f "${COMPOSE_FILE}" up -d
+            # Assuming compose file uses the dimagin/sonar-front:${IMAGE_TAG} convention implicitly or explicitly
+            docker compose -f "${COMPOSE_FILE}" up -d --remove-orphans
+            '

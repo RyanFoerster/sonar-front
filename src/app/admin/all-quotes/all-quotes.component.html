@@ -1,0 +1,347 @@
+<div class="container mx-auto p-4 md:p-6 lg:p-8">
+  <h1 class="text-2xl font-bold mb-6">Tous les Devis</h1>
+
+  <!-- Filtres et Recherche -->
+  <div
+    class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200"
+  >
+    <!-- Filtre par Statut -->
+    <div class="w-full md:w-auto flex-shrink-0">
+      <label
+        class="block text-sm font-medium text-gray-700 mb-1.5"
+        for="statusFilter"
+        >Filtrer par statut</label
+      >
+      <hlm-select
+        class="inline-block w-full md:w-52"
+        [(ngModel)]="selectedStatus"
+        (ngModelChange)="filterByStatus($event)"
+        name="statusFilter"
+      >
+        <hlm-select-trigger class="w-full justify-between group">
+          <hlm-select-value
+            placeholder="Choisir un statut"
+            class="text-muted-foreground group-data-[placeholder]:text-muted-foreground"
+          />
+          <hlm-icon
+            name="lucideChevronDown"
+            size="sm"
+            class="text-muted-foreground"
+          />
+        </hlm-select-trigger>
+        <hlm-select-content class="w-full">
+          <hlm-option value="all">Tous les statuts</hlm-option>
+          <hlm-option value="pending">En attente</hlm-option>
+          <hlm-option value="accepted">Accepté</hlm-option>
+          <hlm-option value="refused">Refusé</hlm-option>
+          <hlm-option value="invoiced">Facturé</hlm-option>
+          <hlm-option value="expired">Expiré</hlm-option>
+          <!-- Ajoutez d'autres statuts de devis si nécessaire -->
+        </hlm-select-content>
+      </hlm-select>
+    </div>
+
+    <!-- Recherche -->
+    <div class="w-full md:flex-1">
+      <label
+        class="block text-sm font-medium text-gray-700 mb-1.5"
+        for="searchInput"
+        >Rechercher</label
+      >
+      <input
+        hlmInput
+        id="searchInput"
+        class="w-full"
+        placeholder="Rechercher par N°, client, projet..."
+        (input)="searchQuotes($event)"
+      />
+    </div>
+  </div>
+
+  <!-- Tableau des Devis -->
+  @if (paginatedQuotes().length > 0) {
+  <div
+    class="relative overflow-x-auto rounded-xl border border-gray-200 bg-white"
+  >
+    <div class="min-w-full overflow-x-auto">
+      <table hlmTable class="w-full text-sm text-left">
+        <thead class="hidden lg:table-header-group">
+          <tr
+            class="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-200"
+          >
+            <th hlmTh class="w-20 px-3 py-3 sm:px-4">
+              <button
+                class="flex items-center gap-1 hover:text-gray-700 transition-colors focus:outline-none"
+                (click)="sortBy('quote_number')"
+              >
+                <span>N°</span>
+                @if (sortField() === 'quote_number') {
+                <span class="text-primary">{{
+                  sortOrder() === "asc" ? "↑" : "↓"
+                }}</span>
+                } @else {
+                <hlm-icon
+                  name="lucideArrowUpDown"
+                  size="xs"
+                  class="text-gray-400 h-3 w-3"
+                />
+                }
+              </button>
+            </th>
+            <th hlmTh class="w-32 px-3 py-3 sm:px-4">
+              <button
+                class="flex items-center gap-1 hover:text-gray-700 transition-colors focus:outline-none"
+                (click)="sortBy('quote_date')"
+              >
+                <span>Date</span>
+                @if (sortField() === 'quote_date') {
+                <span class="text-primary">{{
+                  sortOrder() === "asc" ? "↑" : "↓"
+                }}</span>
+                } @else {
+                <hlm-icon
+                  name="lucideArrowUpDown"
+                  size="xs"
+                  class="text-gray-400 h-3 w-3"
+                />
+                }
+              </button>
+            </th>
+            <th hlmTh class="px-3 py-3 sm:px-4">Client</th>
+            <th hlmTh class="px-3 py-3 sm:px-4">Projet</th>
+            <th hlmTh class="w-28 px-3 py-3 sm:px-4 text-right">
+              <button
+                class="flex items-center justify-end gap-1 w-full hover:text-gray-700 transition-colors focus:outline-none"
+                (click)="sortBy('total')"
+              >
+                <span>Total HTVA</span>
+                @if (sortField() === 'total') {
+                <span class="text-primary">{{
+                  sortOrder() === "asc" ? "↑" : "↓"
+                }}</span>
+                } @else {
+                <hlm-icon
+                  name="lucideArrowUpDown"
+                  size="xs"
+                  class="text-gray-400 h-3 w-3"
+                />
+                }
+              </button>
+            </th>
+            <th hlmTh class="w-36 px-3 py-3 sm:px-4 text-center">Statut</th>
+            <th hlmTh class="w-48 px-3 py-3 sm:px-4 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          @for (quote of paginatedQuotes(); track quote.id) {
+          <tr
+            hlmTrow
+            class="bg-white hover:bg-gray-50 transition-colors flex flex-col lg:table-row mb-3 lg:mb-0 rounded-lg lg:rounded-none shadow-sm lg:shadow-none border border-gray-100 lg:border-0"
+          >
+            <td
+              hlmTd
+              class="px-3 py-2 sm:px-4 lg:py-3 flex lg:table-cell items-center justify-between lg:justify-start border-b lg:border-none border-gray-100"
+            >
+              <span
+                class="font-medium lg:hidden text-xs text-gray-500 uppercase mr-2"
+                >N° :</span
+              >
+              <span class="whitespace-nowrap font-medium text-gray-800">{{
+                formatQuoteNumber(quote)
+              }}</span>
+            </td>
+            <td
+              hlmTd
+              class="px-3 py-2 sm:px-4 lg:py-3 flex lg:table-cell items-center justify-between lg:justify-start border-b lg:border-none border-gray-100"
+            >
+              <span
+                class="font-medium lg:hidden text-xs text-gray-500 uppercase mr-2"
+                >Date :</span
+              >
+              <span class="whitespace-nowrap text-gray-600">{{
+                quote.quote_date | date : "dd/MM/yyyy"
+              }}</span>
+            </td>
+            <td
+              hlmTd
+              class="px-3 py-2 sm:px-4 lg:py-3 border-b lg:border-none border-gray-100"
+            >
+              <div class="flex items-center gap-3">
+                <div
+                  class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 font-medium flex-shrink-0 text-sm"
+                >
+                  {{ quote.client.name.charAt(0).toUpperCase() || "A" }}
+                </div>
+                <div class="min-w-0 flex-grow">
+                  <div class="font-semibold text-gray-900 truncate text-sm">
+                    {{ quote.client.name }}
+                  </div>
+                  <div class="text-xs text-gray-500 truncate">
+                    {{ quote.client.email }}
+                  </div>
+                  <div class="text-xs text-gray-500 truncate">
+                    {{ quote.client.phone }}
+                  </div>
+                  @if(quote.client.company_number) {
+                  <div class="text-[10px] text-gray-400 truncate">
+                    N° Ent: {{ quote.client.company_number }}
+                  </div>
+                  }
+                </div>
+              </div>
+            </td>
+            <td
+              hlmTd
+              class="px-3 py-2 sm:px-4 lg:py-3 border-b lg:border-none border-gray-100"
+            >
+              <div class="flex items-center gap-3">
+                <!-- {{ quote.main_account ? quote.main_account.username : quote.group_account ? quote.group_account.username : 'N/A' }} -->
+                <!-- Commented out due to entity mismatch -->
+              </div>
+            </td>
+            <td
+              hlmTd
+              class="px-3 py-2 sm:px-4 lg:py-3 flex lg:table-cell items-center justify-between lg:justify-end lg:text-right border-b lg:border-none border-gray-100"
+            >
+              <span
+                class="font-medium lg:hidden text-xs text-gray-500 uppercase mr-2"
+                >Total HTVA :</span
+              >
+              <span
+                class="font-semibold text-sm whitespace-nowrap text-gray-800"
+                >{{ quote.price_htva | euroFormat }}</span
+              >
+            </td>
+            <td
+              hlmTd
+              class="px-3 py-2 sm:px-4 lg:py-3 flex lg:table-cell items-center justify-between lg:justify-center border-b lg:border-none border-gray-100"
+            >
+              <span
+                class="font-medium lg:hidden text-xs text-gray-500 uppercase mr-2"
+                >Statut :</span
+              >
+              <span
+                class="inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-semibold leading-none min-w-[100px] text-center border"
+                [ngClass]="getStatusClasses(quote.status)"
+              >
+                {{ getStatusLabel(quote.status) }}
+              </span>
+            </td>
+            <td hlmTd class="px-3 py-2 sm:px-4 lg:py-3">
+              <div
+                class="flex flex-col lg:flex-row items-stretch lg:items-center justify-end gap-1.5 sm:gap-2"
+              >
+                <button
+                  hlmBtn
+                  variant="ghost"
+                  size="sm"
+                  class="flex items-center justify-center gap-1.5 w-full lg:w-auto text-xs whitespace-nowrap px-2 py-1.5 border border-transparent hover:border-gray-200 hover:bg-gray-100 text-gray-600 hover:text-gray-800"
+                  (click)="downloadQuote(quote)"
+                  title="Télécharger le devis"
+                >
+                  <hlm-icon
+                    size="sm"
+                    name="lucideFileDown"
+                    class="h-3.5 w-3.5"
+                  />
+                  <span class="lg:hidden">Télécharger</span>
+                </button>
+                <!-- Ajoutez d'autres boutons d'action si nécessaire -->
+                <!-- Exemple: Bouton Voir Détails -->
+                <!--
+                <button
+                  hlmBtn
+                  variant="outline"
+                  size="sm"
+                  class="flex items-center justify-center gap-1.5 w-full lg:w-auto text-xs px-2 py-1.5"
+                  [routerLink]="['/admin/quote', quote.id]" title="Voir les détails"
+                >
+                  <hlm-icon size="sm" name="lucideEye" class="h-3.5 w-3.5" />
+                  <span class="lg:hidden">Détails</span>
+                </button>
+                -->
+              </div>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <nav hlmPagination class="mt-4 sm:mt-6 flex justify-center">
+    <ul
+      hlmPaginationContent
+      class="flex flex-wrap gap-1 justify-center items-center"
+    >
+      <li hlmPaginationItem class="mx-0.5 sm:mx-1">
+        <button
+          hlmBtn
+          variant="ghost"
+          class="px-2 md:px-3 py-1.5 text-xs sm:text-sm font-medium"
+          [disabled]="currentPage() === 1"
+          (click)="onPageChange(currentPage() - 1)"
+        >
+          Précédent
+        </button>
+      </li>
+
+      @for (page of getVisiblePages(); track $index) { @if (page === 'ellipsis')
+      {
+      <li hlmPaginationItem class="mx-0.5 sm:mx-1">
+        <span class="px-2 md:px-3 py-1.5 text-xs sm:text-sm">...</span>
+      </li>
+      } @else {
+      <li hlmPaginationItem class="mx-0.5 sm:mx-1">
+        <button
+          hlmBtn
+          [variant]="currentPage() === page ? 'default' : 'outline'"
+          class="min-w-[32px] sm:min-w-[36px] h-8 sm:h-9 px-2 md:px-3 py-1.5 text-xs sm:text-sm font-medium"
+          (click)="onPageChange(page)"
+        >
+          {{ page }}
+        </button>
+      </li>
+      } }
+
+      <li hlmPaginationItem class="mx-0.5 sm:mx-1">
+        <button
+          hlmBtn
+          variant="ghost"
+          class="px-2 md:px-3 py-1.5 text-xs sm:text-sm font-medium"
+          [disabled]="currentPage() === totalPages()"
+          (click)="onPageChange(currentPage() + 1)"
+        >
+          Suivant
+        </button>
+      </li>
+    </ul>
+  </nav>
+
+  } @else {
+  <!-- Message si aucun devis trouvé -->
+  <div
+    class="py-12 text-center rounded-xl border border-dashed border-gray-300 bg-white mt-6"
+  >
+    <div class="flex flex-col items-center gap-3 sm:gap-4">
+      <div
+        class="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-gray-100 flex items-center justify-center"
+      >
+        <hlm-icon name="lucideFileText" size="lg" class="text-gray-400" />
+      </div>
+      <div class="space-y-1 sm:space-y-2">
+        <h3 class="text-base sm:text-lg font-semibold text-gray-900">
+          Aucun devis trouvé
+        </h3>
+        <p class="text-sm text-gray-500 max-w-md mx-auto">
+          @if (searchTerm() || selectedStatus() !== 'all') { Aucun devis ne
+          correspond à vos critères de recherche ou de filtre actuels. } @else {
+          Il n'y a actuellement aucun devis enregistré. }
+        </p>
+      </div>
+    </div>
+  </div>
+  }
+</div>
+<hlm-toaster />

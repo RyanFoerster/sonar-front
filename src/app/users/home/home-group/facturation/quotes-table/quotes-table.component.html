@@ -341,7 +341,8 @@
                 </button>
                 @if(connectedUser()?.role === 'ADMIN' ||
                 doc.order_giver_acceptance === 'accepted' &&
-                doc.group_acceptance === 'accepted') {
+                doc.group_acceptance === 'accepted' && doc['status'] !==
+                'invoiced') {
                 <hlm-alert-dialog>
                   <button
                     hlmBtn

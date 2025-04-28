@@ -87,6 +87,13 @@ export const routes: Routes = [
     canActivate: [maintenanceGuard, authGuard, activatedUserGuard, adminGuard],
   },
   {
+    path: 'all-quotes',
+    loadComponent: () =>
+      import('./admin/all-quotes/all-quotes.component').then(
+        (m) => m.AllQuotesComponent
+      ),
+  },
+  {
     path: 'usage-policy',
     loadComponent: () =>
       import('./usage-policy/usage-policy.component').then(

@@ -1,14 +1,18 @@
-name: Deploy to Production
+name: Deploy to Staging Environment
 
 on:
+  push:
+    branches: ["*"]
   workflow_run:
-    workflows: ["Build and Publish Docker Image"]
+    workflows: ["docker-staging-image.yml"]
     types:
       - completed
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
+    if: ${{ github.event.workflow_run.conclusion == 'success' }} && ${{ github.event.workflow_run.head_branch == 'Ryan' }}
     steps:
       - name: Copy the docker-compose file
         uses: appleboy/ssh-action@master
@@ -17,8 +21,8 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
           script: |
-            cd sonar-front
-            curl -o docker-compose.yaml https://raw.githubusercontent.com/${{ github.repository_owner }}/${{ github.event.repository.name }}/main/docker-compose.yaml
+            cd sonar-front-staging
+            curl -o docker-compose.yaml https://raw.githubusercontent.com/${{ github.repository_owner }}/${{ github.event.repository.name }}/Ryan/docker-compose-staging.yaml
 
       - name: Run the docker container
         uses: appleboy/ssh-action@master
@@ -27,7 +31,7 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
           script: |
-            cd sonar-front
-            docker compose pull
+            cd sonar-front-staging
             docker compose down
-            docker compose up -d
+            docker compose pull
+            docker compose up -d --force-recreate

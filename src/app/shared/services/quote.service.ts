@@ -4,12 +4,14 @@ import { QuoteDto } from '../dtos/quote.dto';
 import { environment } from '../../../environments/environment';
 import { QuoteEntity } from '../entities/quote.entity';
 import { map } from 'rxjs/operators';
+import { Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
 })
 export class QuoteService {
-  httpClient: HttpClient = inject(HttpClient);
+  private readonly http = inject(HttpClient);
+  private readonly apiUrl = `${environment.API_URL}/quote`;
 
   createQuote(quoteDto: QuoteDto, files: File[], isDoubleValidation: boolean) {
     const form = new FormData();
@@ -43,14 +45,19 @@ export class QuoteService {
     // Convertir les données du DTO en JSON string
     form.append('data', JSON.stringify(cleanQuoteDto));
 
-    return this.httpClient.post<boolean>(`${environment.API_URL}/quote`, form, {
+    return this.http.post<boolean>(`${this.apiUrl}`, form, {
       params: {
         isDoubleValidation,
       },
     });
   }
 
-  updateQuote(quoteId: string | null, quoteDto: QuoteDto, files: File[], isDoubleValidation: boolean) {
+  updateQuote(
+    quoteId: string | null,
+    quoteDto: QuoteDto,
+    files: File[],
+    isDoubleValidation: boolean
+  ) {
     const form = new FormData();
 
     // Ajouter les fichiers s'ils existent
@@ -75,8 +82,8 @@ export class QuoteService {
     // Convertir les données du DTO en JSON string
     form.append('data', JSON.stringify(cleanQuoteDto));
 
-    return this.httpClient.post<QuoteEntity>(
-      `${environment.API_URL}/quote/${quoteId}/update`,
+    return this.http.post<QuoteEntity>(
+      `${this.apiUrl}/${quoteId}/update`,
       form,
       {
         params: {
@@ -87,74 +94,86 @@ export class QuoteService {
   }
 
   getQuote(quoteId: string | null) {
-    return this.httpClient.get<QuoteEntity>(
-      `${environment.API_URL}/quote/${quoteId}`
-    );
+    return this.http.get<QuoteEntity>(`${this.apiUrl}/${quoteId}`);
   }
 
   reportQuoteDate(quoteId: number | null, report_date: Date) {
-    return this.httpClient.patch<boolean>(
-      `${environment.API_URL}/quote/${quoteId}/report_date`,
-      { report_date }
-    );
+    return this.http.patch<boolean>(`${this.apiUrl}/${quoteId}/report_date`, {
+      report_date,
+    });
   }
 
   acceptQuoteFromGroup(quoteId: string | null) {
-    return this.httpClient.patch<QuoteEntity>(
-      `${environment.API_URL}/quote/${quoteId}/group_acceptance`,
+    return this.http.patch<QuoteEntity>(
+      `${this.apiUrl}/${quoteId}/group_acceptance`,
       {}
     );
   }
 
   acceptQuoteFromClient(quoteId: string | null) {
-    return this.httpClient.patch<QuoteEntity>(
-      `${environment.API_URL}/quote/${quoteId}/order_giver_acceptance`,
+    return this.http.patch<QuoteEntity>(
+      `${this.apiUrl}/${quoteId}/order_giver_acceptance`,
       {}
     );
   }
 
   rejectQuoteFromGroup(quoteId: string | null) {
-    return this.httpClient.patch<QuoteEntity>(
-      `${environment.API_URL}/quote/${quoteId}/group_rejection`,
+    return this.http.patch<QuoteEntity>(
+      `${this.apiUrl}/${quoteId}/group_rejection`,
       {}
     );
   }
 
   rejectQuoteFromClient(quoteId: string | null) {
-    return this.httpClient.patch<QuoteEntity>(
-      `${environment.API_URL}/quote/${quoteId}/order_giver_rejection`,
+    return this.http.patch<QuoteEntity>(
+      `${this.apiUrl}/${quoteId}/order_giver_rejection`,
       {}
     );
   }
 
   cancelRejectionFromGroup(quoteId: string | null) {
-    return this.httpClient.patch<QuoteEntity>(
-      `${environment.API_URL}/quote/${quoteId}/group_rejection_cancel`,
+    return this.http.patch<QuoteEntity>(
+      `${this.apiUrl}/${quoteId}/group_rejection_cancel`,
       {}
     );
   }
 
   cancelRejectionFromClient(quoteId: string | null) {
-    return this.httpClient.patch<QuoteEntity>(
-      `${environment.API_URL}/quote/${quoteId}/order_giver_rejection_cancel`,
+    return this.http.patch<QuoteEntity>(
+      `${this.apiUrl}/${quoteId}/order_giver_rejection_cancel`,
+      {}
+    );
+  }
+
+  // Nouvelle méthode pour marquer les infos comme fournies
+  markClientInfoAsProvided(quoteId: string) {
+    // Le endpoint doit correspondre à celui défini dans le backend (QuoteController)
+    // pour la méthode `markClientInfoAsProvided`.
+    // Exemple: 'quote/mark-info-provided/:id' ou similaire.
+    // *** AJUSTER LE PATH DE L'API ICI ***
+    return this.http.patch<QuoteEntity>(
+      `${this.apiUrl}/mark-info-provided/${quoteId}`, // !! Endpoint hypothétique !!
       {}
     );
   }
 
   downloadAttachment(attachmentKey: string) {
-    return this.httpClient
-      .get(
-        `${environment.API_URL}/quote/attachment/${encodeURIComponent(
-          attachmentKey
-        )}`,
-        {
-          responseType: 'blob',
-          observe: 'response',
-          headers: {
-            Accept: 'application/octet-stream',
-          },
-        }
-      )
+    return this.http
+      .get(`${this.apiUrl}/attachment/${encodeURIComponent(attachmentKey)}`, {
+        responseType: 'blob',
+        observe: 'response',
+        headers: {
+          Accept: 'application/octet-stream',
+        },
+      })
       .pipe(map((response) => response.body as Blob));
+  }
+
+  getAllAdmin(): Observable<QuoteEntity[]> {
+    return this.http.get<QuoteEntity[]>(`${this.apiUrl}/all-admin`);
+  }
+
+  getById(id: number): Observable<QuoteEntity> {
+    return this.http.get<QuoteEntity>(`${this.apiUrl}/${id}`);
   }
 }

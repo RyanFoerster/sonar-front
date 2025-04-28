@@ -59,6 +59,7 @@ import {
   lucideSave,
   lucideFiles,
   lucideEye,
+  lucideInfo,
 } from '@ng-icons/lucide';
 
 import { HlmButtonDirective } from '@spartan-ng/ui-button-helm';
@@ -131,6 +132,7 @@ import { QuillModule } from 'ngx-quill';
       lucideSave,
       lucideFiles,
       lucideEye,
+      lucideInfo,
     }),
     DatePipe,
   ],
@@ -300,7 +302,14 @@ export class NewQuoteComponent implements AfterViewInit {
       national_number: [null],
       is_physical_person: [false],
       default_payment_deadline: [10, [Validators.min(10), Validators.max(30)]],
+      is_info_pending: [false],
     });
+
+    this.createClientForm
+      .get('is_info_pending')
+      ?.valueChanges.subscribe((isPending) => {
+        this.toggleClientFieldsValidation(isPending);
+      });
 
     this.createProductForm = this.formBuilder.group({
       description: ['', [Validators.required]],
@@ -705,59 +714,77 @@ export class NewQuoteComponent implements AfterViewInit {
   }
 
   createClient() {
-    if (this.createClientForm.valid) {
-      const formData = { ...this.createClientForm.value };
-
-      // Si c'est une personne physique, on combine firstname et lastname pour le name
-      if (this.isPhysicalPerson()) {
-        formData.name = `${formData.firstname} ${formData.lastname}`.trim();
-        formData.is_physical_person = true;
-      } else {
-        formData.is_physical_person = false;
-      }
-
-      this.clientService
-        .create(formData)
-        .pipe(
-          take(1),
-          tap((newClient) => {
-            this.setClient(newClient.id);
-
-            // Mise à jour de la liste des clients
-            const clientList =
-              this.connectedUser()?.role === 'ADMIN'
-                ? this.clients()
-                : this.connectedUser()!.clients;
-            const existingIndex = clientList.findIndex(
-              (client) => client.id === newClient.id
-            );
-
-            if (existingIndex !== -1) {
-              clientList[existingIndex] = newClient;
-            } else {
-              clientList.push(newClient);
-            }
-            this.clients.set(clientList);
-
-            // Mise à jour du client actuel
-            this.currentClient.set(newClient);
-            this.client.set(newClient);
-
-            // Réinitialisation du formulaire et des états
-            this.createClientForm.reset({
-              country: 'Belgique',
-              default_payment_deadline: 10,
-            });
-            this.toggleClientForm(false);
-            this.isPhysicalPerson.set(false);
-
-            // Sauvegarde de l'utilisateur connecté
-            this.authService.setUser(this.connectedUser()!);
-            toast.success('Client créé avec succès');
-          })
-        )
-        .subscribe();
+    if (this.createClientForm.invalid) {
+      this.createClientForm.markAllAsTouched();
+      toast.error('Veuillez corriger les erreurs dans le formulaire client.');
+      return;
     }
+
+    const clientData = this.createClientForm.value;
+    const userId = this.connectedUser()?.id;
+
+    if (!userId) {
+      toast.error('Erreur: Utilisateur non connecté.');
+      return;
+    }
+
+    // Si is_info_pending, ne garder que l'email et le flag
+    let dataToSend: Partial<ClientEntity> = {};
+    if (clientData.is_info_pending) {
+      dataToSend = {
+        email: clientData.email,
+        is_info_pending: true,
+        country: clientData.country, // Garder le pays sélectionné
+        is_physical_person: clientData.is_physical_person, // Garder le type
+      };
+    } else {
+      dataToSend = clientData;
+    }
+
+    this.clientService
+      .create(dataToSend as Partial<ClientEntity>)
+      .pipe(take(1))
+      .subscribe({
+        next: (newClient: ClientEntity) => {
+          this.setClient(newClient.id);
+
+          // Mise à jour de la liste des clients
+          const clientList =
+            this.connectedUser()?.role === 'ADMIN'
+              ? this.clients()
+              : this.connectedUser()!.clients;
+          const existingIndex = clientList.findIndex(
+            (client) => client.id === newClient.id
+          );
+
+          if (existingIndex !== -1) {
+            clientList[existingIndex] = newClient;
+          } else {
+            clientList.push(newClient);
+          }
+          this.clients.set(clientList);
+
+          // Mise à jour du client actuel
+          this.currentClient.set(newClient);
+          this.client.set(newClient);
+
+          // Réinitialisation du formulaire et des états
+          this.createClientForm.reset({
+            country: 'Belgique',
+            default_payment_deadline: 10,
+          });
+          this.toggleClientForm(false);
+          this.isPhysicalPerson.set(false);
+
+          // Sauvegarde de l'utilisateur connecté
+          this.authService.setUser(this.connectedUser()!);
+          toast.success('Client créé avec succès');
+        },
+        error: (error: unknown) => {
+          console.error('Erreur lors de la création du client:', error);
+          toast.error('Erreur lors de la création du client');
+        },
+      });
   }
 
   updateClient() {
@@ -1587,6 +1614,75 @@ export class NewQuoteComponent implements AfterViewInit {
       // Si aucun produit n'a de TVA 0%, la condition de pièce jointe n'est pas requise par cette règle.
       // La fonction retourne true, et la désactivation du bouton dépendra uniquement de la validité du formulaire.
       return true;
+    }
+  }
+
+  // Nouvelle méthode pour gérer la validation dynamique
+  private toggleClientFieldsValidation(isPending: boolean): void {
+    const fieldsToToggle = [
+      'name',
+      'firstname',
+      'lastname',
+      'phone',
+      'street',
+      'number',
+      'city',
+      'postalCode',
+      'company_number',
+      'company_vat_number',
+      'national_number',
+      'default_payment_deadline',
+    ];
+    const emailControl = this.createClientForm.get('email');
+
+    if (isPending) {
+      fieldsToToggle.forEach((fieldName) => {
+        this.createClientForm.get(fieldName)?.clearValidators();
+        this.createClientForm.get(fieldName)?.updateValueAndValidity();
+      });
+      // Assurer que l'email reste requis
+      emailControl?.setValidators([Validators.required, Validators.email]);
+      emailControl?.updateValueAndValidity();
+    } else {
+      // Rétablir les validateurs par défaut (ceux définis dans l'initialisation du form)
+      // Note: Ceci suppose que vous avez déjà défini les validateurs requis/min/max lors de l'initialisation
+      // Si ce n'est pas le cas, vous devrez les ajouter ici explicitement.
+      // Exemple pour 'name' si c'est une entreprise :
+      if (!this.isPhysicalPerson()) {
+        this.createClientForm.get('name')?.setValidators([Validators.required]);
+      } else {
+        this.createClientForm
+          .get('firstname')
+          ?.setValidators([Validators.required]);
+        this.createClientForm
+          .get('lastname')
+          ?.setValidators([Validators.required]);
+      }
+      this.createClientForm.get('phone')?.setValidators([Validators.required]);
+      this.createClientForm.get('street')?.setValidators([Validators.required]);
+      this.createClientForm.get('number')?.setValidators([Validators.required]);
+      this.createClientForm.get('city')?.setValidators([Validators.required]);
+      this.createClientForm
+        .get('postalCode')
+        ?.setValidators([Validators.required]);
+      emailControl?.setValidators([Validators.required, Validators.email]);
+
+      const deadlineControl = this.createClientForm.get(
+        'default_payment_deadline'
+      );
+      const min = this.connectedUser()?.role === 'ADMIN' ? null : 10;
+      const max = this.connectedUser()?.role === 'ADMIN' ? null : 30;
+      const validators = [Validators.required];
+      if (min !== null) validators.push(Validators.min(min));
+      if (max !== null) validators.push(Validators.max(max));
+      deadlineControl?.setValidators(validators);
+
+      // Mettre à jour la validité pour tous les champs modifiés
+      fieldsToToggle.forEach((fieldName) => {
+        this.createClientForm.get(fieldName)?.updateValueAndValidity();
+      });
+      emailControl?.updateValueAndValidity();
+      deadlineControl?.updateValueAndValidity();
     }
   }
 }

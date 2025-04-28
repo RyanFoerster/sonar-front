@@ -41,6 +41,13 @@ export class ClientService {
     );
   }
 
+  updateDetails(id: number, clientData: Partial<ClientEntity>) {
+    return this.httpClient.patch<ClientEntity>(
+      `${this.API_URL}/clients/update-details/${id}`,
+      clientData
+    );
+  }
+
   remove(id: number) {
     return this.httpClient.delete<void>(`${this.API_URL}/clients/${id}`);
   }

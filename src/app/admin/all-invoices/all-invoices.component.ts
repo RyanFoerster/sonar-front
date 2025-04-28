@@ -266,6 +266,7 @@ export class AllInvoicesComponent implements OnInit {
   }
 
   downloadInvoice(invoice: InvoiceEntity): void {
+    console.log('invoice', invoice);
     this.pdfService.generateInvoicePDF(invoice);
   }
 

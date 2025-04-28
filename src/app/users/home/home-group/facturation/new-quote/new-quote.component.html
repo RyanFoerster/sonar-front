@@ -269,6 +269,28 @@
 
         @if (client()) {
         <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          @if (client()?.is_info_pending) {
+          <div class="flex items-start gap-3">
+            <hlm-icon
+              name="lucideInfo"
+              class="text-blue-500 shrink-0 mt-0.5"
+              size="sm"
+            />
+            <div class="flex-1">
+              <h3 class="font-medium text-gray-800">
+                Client sélectionné (informations en attente)
+              </h3>
+              <p class="text-sm text-gray-600 mt-1">
+                <span class="font-medium">Email :</span> {{ client()?.email }}
+              </p>
+              <p class="text-sm text-gray-500 mt-2 italic">
+                Le client devra compléter ses informations (adresse, téléphone,
+                etc.) depuis le lien qui lui sera envoyé par email pour pouvoir
+                valider ce devis.
+              </p>
+            </div>
+          </div>
+          } @else {
           <div class="flex justify-between items-start">
             <div class="space-y-1">
               @if (client()?.is_physical_person) {
@@ -299,10 +321,12 @@
               type="button"
               (click)="toggleClientForm(false)"
               class="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-all"
+              title="Modifier le client"
             >
               <hlm-icon size="sm" name="lucideEdit" />
             </button>
           </div>
+          }
         </div>
         } @else {
         <div
@@ -1132,8 +1156,9 @@
                 }"
                 formControlName="company_number"
                 hlmInput
+                [disabled]="createClientForm.get('is_info_pending')?.value"
                 placeholder="987 XXX XXX"
-                class="flex-1 bg-white border-gray-200 text-sm rounded-lg"
+                class="flex-1 bg-white border-gray-200 text-sm rounded-lg disabled:bg-gray-100 disabled:cursor-not-allowed"
               />
               <button
                 (click)="checkBCE()"
@@ -1151,9 +1176,10 @@
             <span class="text-sm font-medium text-gray-900">Numéro de TVA</span>
             <input
               formControlName="company_vat_number"
+              [disabled]="createClientForm.get('is_info_pending')?.value"
               hlmInput
               placeholder="BE0XXX XXX XXX"
-              class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+              class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg disabled:bg-gray-100 disabled:cursor-not-allowed"
             />
           </p>
 
@@ -1163,9 +1189,10 @@
             >
             <input
               formControlName="name"
+              [disabled]="createClientForm.get('is_info_pending')?.value"
               hlmInput
               placeholder="Nom de l'entreprise"
-              class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+              class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg disabled:bg-gray-100 disabled:cursor-not-allowed"
             />
             @if (createClientForm.get('name')?.invalid &&
             createClientForm.get('name')?.touched) {
@@ -1184,9 +1211,10 @@
             >
             <input
               formControlName="national_number"
+              [disabled]="createClientForm.get('is_info_pending')?.value"
               hlmInput
               placeholder="12345678910"
-              class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+              class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg disabled:bg-gray-100 disabled:cursor-not-allowed"
             />
           </p>
 
@@ -1195,9 +1223,10 @@
               <span class="text-sm font-medium text-gray-900">Prénom*</span>
               <input
                 formControlName="firstname"
+                [disabled]="createClientForm.get('is_info_pending')?.value"
                 hlmInput
                 placeholder="Prénom"
-                class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+                class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg disabled:bg-gray-100 disabled:cursor-not-allowed"
               />
               @if (createClientForm.get('firstname')?.invalid &&
               createClientForm.get('firstname')?.touched) {
@@ -1212,9 +1241,10 @@
               <span class="text-sm font-medium text-gray-900">Nom*</span>
               <input
                 formControlName="lastname"
+                [disabled]="createClientForm.get('is_info_pending')?.value"
                 hlmInput
                 placeholder="Nom"
-                class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+                class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg disabled:bg-gray-100 disabled:cursor-not-allowed"
               />
               @if (createClientForm.get('lastname')?.invalid &&
               createClientForm.get('lastname')?.touched) {
@@ -1236,7 +1266,6 @@
               type="email"
               hlmInput
               placeholder="adresse@email.com"
-              class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
             />
             @if (createClientForm.get('email')?.invalid &&
             createClientForm.get('email')?.touched) {
@@ -1254,10 +1283,10 @@
             <span class="text-sm font-medium text-gray-900">Téléphone*</span>
             <input
               formControlName="phone"
+              [disabled]="createClientForm.get('is_info_pending')?.value"
               type="tel"
               hlmInput
               placeholder="+32 XXX XX XX XX"
-              class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
             />
             @if (createClientForm.get('phone')?.invalid &&
             createClientForm.get('phone')?.touched) {
@@ -1275,9 +1304,10 @@
               <span class="text-sm font-medium text-gray-900">Rue*</span>
               <input
                 formControlName="street"
+                [disabled]="createClientForm.get('is_info_pending')?.value"
                 hlmInput
                 placeholder="Rue"
-                class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+                class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg disabled:bg-gray-100 disabled:cursor-not-allowed"
               />
               @if (createClientForm.get('street')?.invalid &&
               createClientForm.get('street')?.touched) {
@@ -1292,9 +1322,10 @@
               <span class="text-sm font-medium text-gray-900">Numéro*</span>
               <input
                 formControlName="number"
+                [disabled]="createClientForm.get('is_info_pending')?.value"
                 hlmInput
                 placeholder="Numéro"
-                class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+                class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg disabled:bg-gray-100 disabled:cursor-not-allowed"
               />
               @if (createClientForm.get('number')?.invalid &&
               createClientForm.get('number')?.touched) {
@@ -1313,9 +1344,10 @@
               >
               <input
                 formControlName="postalCode"
+                [disabled]="createClientForm.get('is_info_pending')?.value"
                 hlmInput
                 placeholder="Code postal"
-                class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+                class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg disabled:bg-gray-100 disabled:cursor-not-allowed"
               />
               @if (createClientForm.get('postalCode')?.invalid &&
               createClientForm.get('postalCode')?.touched) {
@@ -1330,9 +1362,10 @@
               <span class="text-sm font-medium text-gray-900">Ville*</span>
               <input
                 formControlName="city"
+                [disabled]="createClientForm.get('is_info_pending')?.value"
                 hlmInput
                 placeholder="Ville"
-                class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+                class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg disabled:bg-gray-100 disabled:cursor-not-allowed"
               />
               @if (createClientForm.get('city')?.invalid &&
               createClientForm.get('city')?.touched) {
@@ -1352,12 +1385,13 @@
             >
             <input
               formControlName="default_payment_deadline"
+              [disabled]="createClientForm.get('is_info_pending')?.value"
               type="number"
               hlmInput
               [min]="connectedUser()?.role === 'ADMIN' ? null : 10"
               [max]="connectedUser()?.role === 'ADMIN' ? null : 30"
               placeholder="Min: 10, Max: 30"
-              class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+              class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg disabled:bg-gray-100 disabled:cursor-not-allowed"
             />
             @if (createClientForm.get('default_payment_deadline')?.invalid &&
             createClientForm.get('default_payment_deadline')?.touched) {
@@ -1375,6 +1409,19 @@
             }
           </p>
         </div>
+
+        <p class="flex items-center gap-2 cursor-pointer group">
+          <hlm-checkbox
+            formControlName="is_info_pending"
+            class="rounded-md group-hover:border-primary transition-colors"
+          />
+          <span
+            class="text-sm text-gray-700 group-hover:text-gray-900 transition-colors"
+          >
+            Laisser le client compléter ses informations (email requis
+            seulement)
+          </span>
+        </p>
       </div>
 
       <div class="flex justify-end gap-3 pt-6 border-t border-gray-200">

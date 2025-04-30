@@ -4,29 +4,5 @@ services:
     image: dimagin/sonar-front:latest
     container_name: sonar-front
     restart: unless-stopped
-    networks:
-      - traefik-network
     env_file:
       - .env
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.sonar.entrypoints=web
-      - traefik.http.routers.sonar.rule=Host(`${DOMAIN}`)
-      - traefik.http.middlewares.sonar-https-redirect.redirectscheme.scheme=https
-      - traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https
-      - traefik.http.routers.sonar.middlewares=sonar-https-redirect,sonar-cors
-      - traefik.http.routers.sonar-secure.entrypoints=websecure
-      - traefik.http.routers.sonar-secure.rule=Host(`${DOMAIN}`)
-      - traefik.http.routers.sonar-secure.tls=true
-      - traefik.http.routers.sonar-secure.tls.certresolver=cloudflare
-      - traefik.http.routers.sonar-secure.tls.domains[0].main=${DOMAIN}
-      - traefik.http.routers.sonar-secure.tls.domains[0].sans=*.${DOMAIN}
-      - traefik.http.middlewares.sonar-cors.headers.accesscontrolallowheaders=Origin,Content-Type,Accept,Authorization
-      - traefik.http.middlewares.sonar-cors.headers.accesscontrolallowmethods=GET,POST,PUT,DELETE,OPTIONS
-      - traefik.http.middlewares.sonar-cors.headers.accesscontrolalloworiginlist=*
-      - traefik.http.middlewares.sonar-cors.headers.accesscontrolmaxage=100
-      - traefik.http.middlewares.sonar-cors.headers.addvaryheader=true
-
-networks:
-  traefik-network:
-    external: true

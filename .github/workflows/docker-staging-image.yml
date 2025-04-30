@@ -2,9 +2,9 @@ name: Build and Push Docker Staging Image to Docker Hub
 
 on:
   push:
-    branches: ["*"]
+    branches: ["Ryan"]
   pull_request:
-    branches: ["*"]
+    branches: ["Ryan"]
 
 jobs:
   build-and-push-docker-staging-image:

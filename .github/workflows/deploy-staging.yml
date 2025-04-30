@@ -1,10 +1,8 @@
 name: Deploy to Staging Environment
 
 on:
-  push:
-    branches: ["*"]
   workflow_run:
-    workflows: ["docker-staging-image.yml"]
+    workflows: ["Build and Push Docker Staging Image to Docker Hub"]
     types:
       - completed
 

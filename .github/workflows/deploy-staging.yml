@@ -10,7 +10,10 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
-    if: ${{ github.event.workflow_run.conclusion == 'success' }} && ${{ github.event.workflow_run.name == 'Build and Push Docker Staging Image to Docker Hub' }}
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.name == 'Build and Push Docker Staging Image to Docker Hub' &&
+      github.event.workflow_run.head_branch == 'Ryan'
     steps:
       - name: Deploy to Staging
         uses: appleboy/ssh-action@master

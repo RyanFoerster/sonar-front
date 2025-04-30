@@ -12,26 +12,20 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
-    if: ${{ github.event.workflow_run.conclusion == 'success' }} && ${{ github.event.workflow_run.head_branch == 'Ryan' }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' }} && ${{ github.event.workflow_run.head_branch == 'Ryan' }} && ${{ github.event.workflow_run.name == 'Build and Push Docker Staging Image to Docker Hub' }}
     steps:
-      - name: Copy the docker-compose file
+      - name: Deploy to Staging
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
           script: |
-            cd sonar-front-staging
-            curl -o docker-compose.yaml https://raw.githubusercontent.com/${{ github.repository_owner }}/${{ github.event.repository.name }}/Ryan/docker-compose-staging.yaml
-
-      - name: Run the docker container
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USERNAME }}
-          password: ${{ secrets.SSH_PASSWORD }}
-          script: |
-            cd sonar-front-staging
-            docker compose down
-            docker compose pull
-            docker compose up -d --force-recreate
+            bash -c '
+              mkdir -p sonar-front-staging
+              cd sonar-front-staging
+              curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -o docker-compose.yaml https://raw.githubusercontent.com/${{ github.repository_owner }}/${{ github.event.repository.name }}/Ryan/docker-compose-staging.yaml
+              docker compose down
+              docker compose pull
+              docker compose up -d --force-recreate
+            '

@@ -8,26 +8,24 @@ on:
 
 jobs:
   deploy:
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.name == 'Build and Publish Docker Image' &&
+      github.event.workflow_run.head_branch == 'main'
     runs-on: ubuntu-latest
     steps:
-      - name: Copy the docker-compose file
+      - name: Deploy to Production
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
           script: |
-            cd sonar-front
-            curl -o docker-compose.yaml https://raw.githubusercontent.com/${{ github.repository_owner }}/${{ github.event.repository.name }}/main/docker-compose.yaml
-
-      - name: Run the docker container
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USERNAME }}
-          password: ${{ secrets.SSH_PASSWORD }}
-          script: |
-            cd sonar-front
-            docker compose pull
-            docker compose down
-            docker compose up -d
+            bash -c '
+              mkdir -p sonar-front
+              cd sonar-front
+              curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -o docker-compose.yaml https://raw.githubusercontent.com/${{ github.repository_owner }}/${{ github.event.repository.name }}/main/docker-compose.yaml
+              docker compose pull
+              docker compose down
+              docker compose up -d
+            '

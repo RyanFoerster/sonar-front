@@ -224,6 +224,9 @@ export class NewQuoteComponent implements AfterViewInit {
   protected isDoubleValidation = signal(true);
   protected showDoubleValidationWarningModal = signal(false);
 
+  // Ajout du signal pour la modale de confirmation d'édition de produit
+  protected showEditProductConfirmationModal = signal(false);
+
   protected createQuoteForm!: FormGroup;
   protected createClientForm!: FormGroup;
   protected createProductForm!: FormGroup;
@@ -1684,5 +1687,23 @@ export class NewQuoteComponent implements AfterViewInit {
       emailControl?.updateValueAndValidity();
       deadlineControl?.updateValueAndValidity();
     }
+  }
+
+  // Nouvelle fonction pour ouvrir la modale de confirmation
+  openEditProductConfirmation() {
+    if (this.editProductForm.valid) {
+      this.showEditProductConfirmationModal.set(true);
+    }
+  }
+
+  // Fonction appelée lors de la confirmation dans la modale
+  confirmEditProduct() {
+    this.editProductToDB(); // Appelle la logique originale de mise à jour
+    this.showEditProductConfirmationModal.set(false); // Ferme la modale
+  }
+
+  // Fonction pour annuler depuis la modale
+  cancelEditProduct() {
+    this.showEditProductConfirmationModal.set(false); // Ferme la modale
   }
 }

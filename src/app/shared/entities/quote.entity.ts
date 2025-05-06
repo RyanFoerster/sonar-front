@@ -1,6 +1,8 @@
 import { ClientEntity } from './client.entity';
 import { ProductEntity } from './product.entity';
 import { InvoiceEntity } from './invoice.entity';
+import { PrincipalAccountEntity } from './principal-account.entity';
+import { CompteGroupeEntity } from './compte-groupe.entity';
 
 export interface QuoteEntity {
   id: number;
@@ -30,4 +32,6 @@ export interface QuoteEntity {
   client: ClientEntity;
   products: ProductEntity[];
   invoice: InvoiceEntity;
+  main_account: PrincipalAccountEntity;
+  group_account: CompteGroupeEntity;
 }

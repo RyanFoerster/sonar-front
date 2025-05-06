@@ -1,4 +1,4 @@
-<div class="container mx-auto p-4 md:p-6 lg:p-8">
+<div class="mx-4 sm:mx-10">
   <h1 class="text-2xl font-bold mb-6">Tous les Devis</h1>
 
   <!-- Filtres et Recherche -->
@@ -195,8 +195,13 @@
               class="px-3 py-2 sm:px-4 lg:py-3 border-b lg:border-none border-gray-100"
             >
               <div class="flex items-center gap-3">
-                <!-- {{ quote.main_account ? quote.main_account.username : quote.group_account ? quote.group_account.username : 'N/A' }} -->
-                <!-- Commented out due to entity mismatch -->
+                {{
+                  quote.main_account
+                    ? quote.main_account.username
+                    : quote.group_account
+                    ? quote.group_account.username
+                    : "N/A"
+                }}
               </div>
             </td>
             <td

@@ -6,6 +6,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { tap, catchError, throwError } from 'rxjs';
+import { CommonModule } from '@angular/common';
 import {
   HlmAccordionContentComponent,
   HlmAccordionDirective,
@@ -44,6 +45,7 @@ import { NotificationTestComponent } from '../../test/notification-test/notifica
   selector: 'app-home',
   standalone: true,
   imports: [
+    CommonModule,
     HlmAccordionContentComponent,
     HlmAccordionDirective,
     HlmAccordionIconDirective,
@@ -186,8 +188,11 @@ export class HomeComponent {
     this.searchTerm.set(searchValue);
   }
 
-  createGroupProject(): void {
+  // Méthode modifiée pour accepter le contexte du dialogue et fermer en cas de succès
+  createGroupProject(dialogContext?: { close: () => void }): void {
     if (this.createGroupProjectForm.valid) {
+      // Efface l'ancien message d'erreur avant de soumettre
+      this.errorMessage.set('');
       const formValue = this.createGroupProjectForm.value;
       const groupProjectDto: GroupProjectDto = {
         username: formValue.username || '',
@@ -197,17 +202,29 @@ export class HomeComponent {
         .createGroupeProject(groupProjectDto)
         .pipe(
           tap(() => {
-            this.errorMessage.set('');
+            // Succès !
             this.createGroupProjectForm.reset();
-            this.initializeData();
+            this.initializeData(); // Recharge les données
+            dialogContext?.close(); // Ferme le dialogue
           }),
           catchError((error) => {
-            console.error('Erreur lors de la création du groupe:', error);
-            this.errorMessage.set(
-              error.error?.message ||
-                'Une erreur est survenue lors de la création du groupe'
+            // Erreur !
+            const backendMessage = error.error?.message;
+            const displayMessage =
+              backendMessage ||
+              'Une erreur inconnue est survenue lors de la création du groupe.';
+            console.error(
+              'Erreur lors de la création du groupe:',
+              error,
+              'Message Backend:',
+              backendMessage
             );
-            return throwError(() => error);
+            this.errorMessage.set(displayMessage); // Affiche l'erreur dans le dialogue
+
+            // Ne pas fermer le dialogue ici
+
+            // Renvoie une nouvelle erreur pour potentiellement être gérée ailleurs, ou juste pour arrêter le flux.
+            return throwError(() => new Error(displayMessage));
           })
         )
         .subscribe();

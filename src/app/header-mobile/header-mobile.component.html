@@ -2,7 +2,7 @@
   <hlm-icon (click)="toggleMenu()" size="lg" name="lucideAlignJustify" />
   @if (isToggleMenu()) {
   <div
-    class="gap-2 justify-center items-center flex flex-col bg-white h-screen w-screen absolute top-0 left-0 z-50 md:hidden"
+    class="gap-2 justify-center items-center flex flex-col bg-white h-screen w-screen absolute top-0 left-0 z-50 xl:hidden"
   >
     <div
       class="py-5 px-10 h-20 flex gap-5 rounded justify-between items-center w-full"
@@ -73,6 +73,13 @@
         class="*:text-black"
         hlmMenuBarItem
         >Liste des factures</a
+      >
+      <a
+        routerLink="/all-quotes"
+        (click)="toggleMenu()"
+        class="*:text-black"
+        hlmMenuBarItem
+        >Liste des devis</a
       >
 
       } @if (isPwaInstallable()) {

@@ -1,6 +1,6 @@
 <!-- En-tête -->
 <div
-  class="flex flex-col xs:flex-row justify-between items-start xs:items-center mb-3 sm:mb-4 md:mb-6 p-2 sm:p-3 md:p-4 gap-2 sm:gap-3 md:gap-4 bg-white/50 rounded-lg shadow-sm"
+  class="flex flex-col xs:flex-row justify-between items-start xs:items-center mb-3 sm:mb-4 md:mb-6 gap-2 sm:gap-3 md:gap-4 bg-white/50 rounded-lg mx-4 sm:mx-10"
 >
   <h1 class="text-lg xs:text-xl md:text-2xl font-bold">Facturation</h1>
   <div
@@ -43,7 +43,7 @@
 
 <!-- Champ de recherche global -->
 <div
-  class="flex flex-wrap gap-2 sm:gap-3 md:gap-4 mb-3 sm:mb-4 md:mb-6 p-2 sm:p-3 md:p-4 bg-white/50 rounded-lg"
+  class="flex flex-wrap gap-2 sm:gap-3 md:gap-4 mb-3 sm:mb-4 md:mb-6 mx-4 sm:mx-10 bg-white/50 rounded-lg"
 >
   <div class="w-full">
     <div class="relative w-full">
@@ -65,9 +65,7 @@
 
 <!-- Contenu principal -->
 @if (isLoading()) {
-<div
-  class="flex justify-center items-center p-4 sm:p-6 md:p-8 bg-white rounded-xl"
->
+<div class="flex justify-center items-center mx-4 sm:mx-10 bg-white rounded-xl">
   <div class="flex flex-col items-center gap-3 sm:gap-4">
     <div
       class="animate-spin rounded-full h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 border-t-2 border-b-2 border-gray-900"
@@ -80,7 +78,7 @@
 } @else {
 <hlm-tabs
   tab="devis"
-  class="flex flex-col gap-2 sm:gap-3 md:gap-4 px-2 sm:px-3 md:px-4"
+  class="flex flex-col gap-2 sm:gap-3 md:gap-4 mx-4 sm:mx-10"
 >
   <hlm-tabs-list
     class="w-full grid grid-cols-2 !bg-transparent"

@@ -37,7 +37,7 @@
   <div
     class="relative overflow-x-auto rounded-xl border border-gray-200 bg-white p-2 sm:p-3 md:p-4"
   >
-    <div class="min-w-full overflow-x-auto">
+    <div class="overflow-x-auto">
       <table class="w-full text-xs sm:text-sm text-left">
         <caption
           class="p-2 sm:p-3 md:p-4 text-sm sm:text-base md:text-lg font-semibold text-left text-gray-900 bg-white border-b border-gray-200"
@@ -203,7 +203,7 @@
                     >Groupe:</span
                   >
                   <span
-                    class="inline-flex items-center rounded-full px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] xs:text-xs font-medium"
+                    class="inline-flex items-center rounded-full px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] xs:text-xs font-medium whitespace-nowrap"
                     [ngClass]="{
                       'bg-green-50 text-green-700':
                         doc.group_acceptance === 'accepted',
@@ -223,7 +223,7 @@
                   </span>
                 </div>
                 <div class="flex items-center gap-1 sm:gap-2">
-                  <span class="text-[10px] text-gray-500 whitespace-nowrap"
+                  <span class="text-[10px] text-gray-500"
                     >Donneur d'ordre:</span
                   >
                   <span
@@ -259,7 +259,7 @@
                   hlmBtn
                   variant="ghost"
                   size="sm"
-                  class="flex items-center justify-center gap-1 sm:gap-1.5 w-full lg:w-auto text-[10px] xs:text-xs whitespace-nowrap px-1.5 sm:px-2 py-1 sm:py-1.5 border border-gray-200 hover:bg-gray-100 hover:border-gray-300"
+                  class="flex items-center justify-center gap-1 sm:gap-1.5 w-full lg:w-auto text-[10px] xs:text-xs whitespace-nowrap px-1 sm:px-1.5 py-1 sm:py-1.5 border border-gray-200 hover:bg-gray-100 hover:border-gray-300"
                   [ngClass]="{ 'opacity-50 cursor-not-allowed': doc.invoice }"
                   (click)="generateQuotePDF(doc)"
                   [disabled]="doc.invoice"
@@ -276,7 +276,7 @@
                   hlmBtn
                   variant="ghost"
                   size="sm"
-                  class="flex items-center justify-center gap-1 sm:gap-1.5 w-full lg:w-auto text-[10px] xs:text-xs whitespace-nowrap px-1.5 sm:px-2 py-1 sm:py-1.5 border border-gray-200 hover:bg-gray-100 hover:border-gray-300"
+                  class="flex items-center justify-center gap-1 sm:gap-1.5 w-full lg:w-auto text-[10px] xs:text-xs whitespace-nowrap px-1 sm:px-1.5 py-1 sm:py-1.5 border border-gray-200 hover:bg-gray-100 hover:border-gray-300"
                   (click)="generateInvoicePDF(doc.invoice)"
                 >
                   <hlm-icon
@@ -291,7 +291,7 @@
                   hlmBtn
                   variant="ghost"
                   size="sm"
-                  class="flex items-center justify-center gap-1 sm:gap-1.5 w-full lg:w-auto text-[10px] xs:text-xs whitespace-nowrap px-1.5 sm:px-2 py-1 sm:py-1.5 border border-gray-200 hover:bg-gray-100 hover:border-gray-300"
+                  class="flex items-center justify-center gap-1 sm:gap-1.5 w-full lg:w-auto text-[10px] xs:text-xs whitespace-nowrap px-1 sm:px-1.5 py-1 sm:py-1.5 border border-gray-200 hover:bg-gray-100 hover:border-gray-300"
                   routerLink="new-credit-note"
                   [queryParams]="{
                     typeOfProjet: typeOfProjet(),
@@ -310,7 +310,7 @@
                   hlmBtn
                   variant="ghost"
                   size="sm"
-                  class="flex items-center justify-center gap-1 sm:gap-1.5 w-full lg:w-auto text-[10px] xs:text-xs whitespace-nowrap px-1.5 sm:px-2 py-1 sm:py-1.5 border border-gray-200 hover:bg-gray-100 hover:border-gray-300"
+                  class="flex items-center justify-center gap-1 sm:gap-1.5 w-full lg:w-auto text-[10px] xs:text-xs whitespace-nowrap px-1 sm:px-1.5 py-1 sm:py-1.5 border border-gray-200 hover:bg-gray-100 hover:border-gray-300"
                   (click)="loadCreditNote(doc['linkedInvoiceId'])"
                 >
                   <hlm-icon
@@ -325,7 +325,7 @@
                   hlmBtn
                   variant="ghost"
                   size="sm"
-                  class="flex items-center justify-center gap-1 sm:gap-1.5 w-full lg:w-auto text-[10px] xs:text-xs whitespace-nowrap px-1.5 sm:px-2 py-1 sm:py-1.5 border border-gray-200 hover:bg-gray-100 hover:border-gray-300"
+                  class="flex items-center justify-center gap-1 sm:gap-1.5 w-full lg:w-auto text-[10px] xs:text-xs whitespace-nowrap px-1 sm:px-1.5 py-1 sm:py-1.5 border border-gray-200 hover:bg-gray-100 hover:border-gray-300"
                   routerLink="new-quote"
                   [queryParams]="{
                     typeOfProjet: typeOfProjet(),
@@ -348,7 +348,7 @@
                     hlmBtn
                     variant="default"
                     size="sm"
-                    class="flex items-center justify-center gap-1 sm:gap-1.5 w-full lg:w-auto text-[10px] xs:text-xs whitespace-nowrap px-1.5 sm:px-2 py-1 sm:py-1.5 bg-green-600 hover:bg-green-700 text-white"
+                    class="flex items-center justify-center gap-1 sm:gap-1.5 w-full lg:w-auto text-[10px] xs:text-xs whitespace-nowrap px-1 sm:px-1.5 py-1 sm:py-1.5 bg-green-600 hover:bg-green-700 text-white"
                     brnAlertDialogTrigger
                   >
                     <hlm-icon
@@ -512,11 +512,19 @@
 @if (isCommentModalOpen()) {
 <div
   class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+  tabindex="0"
   (click)="isCommentModalOpen.set(false)"
+  (keydown.enter)="isCommentModalOpen.set(false)"
+  (keydown.space)="isCommentModalOpen.set(false)"
+  role="button"
+  aria-label="Fermer la modale"
 >
   <div
     class="bg-white rounded-xl p-4 sm:p-6 max-w-lg w-full mx-auto shadow-xl space-y-3 sm:space-y-4"
     (click)="$event.stopPropagation()"
+    tabindex="0"
+    (keydown.enter)="isCommentModalOpen.set(false)"
+    (keydown.space)="isCommentModalOpen.set(false)"
   >
     <div
       class="flex justify-between items-center border-b border-gray-200 pb-3 sm:pb-4"
@@ -526,7 +534,10 @@
       </h3>
       <button
         type="button"
+        tabindex="0"
         (click)="isCommentModalOpen.set(false)"
+        (keydown.enter)="isCommentModalOpen.set(false)"
+        (keydown.space)="isCommentModalOpen.set(false)"
         class="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-all"
         aria-label="Fermer"
       >

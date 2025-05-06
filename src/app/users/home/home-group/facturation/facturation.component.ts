@@ -695,6 +695,12 @@ export class FacturationComponent implements OnInit, OnDestroy {
       return userAccount?.role_billing !== 'NONE';
     }
 
+    if (this.typeOfProjet() === 'PRINCIPAL') {
+      const userAccount =
+        this.connectedUser()?.comptePrincipal.id === +this.id()!;
+      return userAccount;
+    }
+
     return false;
   }
 
@@ -706,6 +712,12 @@ export class FacturationComponent implements OnInit, OnDestroy {
         (account) => account.secondary_account_id === +this.id()!
       );
       return userAccount?.role_billing === 'ADMIN';
+    }
+
+    if (this.typeOfProjet() === 'PRINCIPAL') {
+      const userAccount =
+        this.connectedUser()?.comptePrincipal.id === +this.id()!;
+      return userAccount;
     }
 
     return false;

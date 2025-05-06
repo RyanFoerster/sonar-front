@@ -10,7 +10,7 @@
   </a>
 
   @if (isUserConnected()) {
-  <div class="gap-2 justify-center items-center hidden md:flex">
+  <div class="gap-2 justify-center items-center hidden xl:flex">
     <hlm-menu-bar class="w-fit border-none">
       @if (pwaService.canInstall()) {
       <div
@@ -63,18 +63,18 @@
       Déconnexion
     </a>
   </div>
-  <app-header-mobile class="md:hidden" />
+  <app-header-mobile class="xl:hidden z-50" />
   } @else {
   <div class="flex gap-2 justify-center items-center">
     @if (router.url === '/login') {
     <a
       routerLink="/register"
       hlmBtn
-      class="cursor-pointer md:block rounded-full"
+      class="cursor-pointer xl:block rounded-full"
       >Inscription</a
     >
     } @else if (router.url !== '/register') {
-    <a routerLink="/login" hlmBtn class="cursor-pointer md:block rounded-full"
+    <a routerLink="/login" hlmBtn class="cursor-pointer xl:block rounded-full"
       >Connexion</a
     >
     }

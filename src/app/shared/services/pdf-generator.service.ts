@@ -389,9 +389,14 @@ export class PdfGeneratorService {
       45,
       { align: 'right' }
     );
-    doc.text(`N°${quote.id}`, pageWidth - this.PAGE_MARGIN, 55, {
-      align: 'right',
-    });
+    doc.text(
+      `N° ${new Date().getFullYear()}/000${quote.id}`,
+      pageWidth - this.PAGE_MARGIN,
+      55,
+      {
+        align: 'right',
+      }
+    );
 
     // Informations de l'émetteur
     doc.setFontSize(10);
@@ -420,7 +425,9 @@ export class PdfGeneratorService {
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
     doc.text(
-      `Devis N°${quote.id} pour ${quote.client.name}`,
+      `Devis N° ${new Date().getFullYear()}/000${quote.id} pour ${
+        quote.client.name
+      }`,
       this.PAGE_MARGIN,
       105
     );

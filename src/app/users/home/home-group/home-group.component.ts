@@ -25,7 +25,16 @@ import { CompteGroupeEntity } from '../../../shared/entities/compte-groupe.entit
 import { PrincipalAccountEntity } from '../../../shared/entities/principal-account.entity';
 import { UsersService } from '../../../shared/services/users.service';
 import { UserEntity } from '../../../shared/entities/user.entity';
-import { EMPTY, switchMap, take, tap, catchError, finalize, of } from 'rxjs';
+import {
+  EMPTY,
+  switchMap,
+  take,
+  tap,
+  catchError,
+  finalize,
+  of,
+  map,
+} from 'rxjs';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../shared/services/auth.service';
 import { Location } from '@angular/common';
@@ -156,16 +165,20 @@ export class HomeGroupComponent implements AfterViewInit {
               return this.comptePrincipalService.getGroupById(projectId).pipe(
                 tap((data) => {
                   this.projet.set(data);
-                  this.cdr.detectChanges(); // Force change detection
+                  this.cdr.detectChanges();
                 }),
-                switchMap(() =>
-                  of([
-                    {
-                      user: user,
-                      role_gestion: 'ADMIN',
-                    } as Partial<UserSecondaryAccountEntity>,
-                  ])
-                )
+                switchMap(() => {
+                  return this.fetchMembers(projectId).pipe(
+                    map(() => {
+                      return [
+                        {
+                          user: user,
+                          role_gestion: 'ADMIN',
+                        } as Partial<UserSecondaryAccountEntity>,
+                      ];
+                    })
+                  );
+                })
               );
             } else {
               // GROUP
@@ -175,8 +188,7 @@ export class HomeGroupComponent implements AfterViewInit {
                   this.projet.set(data);
                   this.cdr.detectChanges(); // Force change detection
                 }),
-                switchMap((groupData) => {
-                  if (!groupData) return of([]); // Handle case where groupData might be null/undefined
+                switchMap(() => {
                   return this.fetchMembers(projectId);
                 })
               );
@@ -192,14 +204,18 @@ export class HomeGroupComponent implements AfterViewInit {
                   this.projet.set(data);
                   this.cdr.detectChanges(); // Force change detection
                 }),
-                switchMap(() =>
-                  of([
-                    {
-                      user: user,
-                      role_gestion: 'ADMIN',
-                    } as Partial<UserSecondaryAccountEntity>,
-                  ])
-                )
+                switchMap(() => {
+                  return this.fetchMembers(projectId).pipe(
+                    map(() => {
+                      return [
+                        {
+                          user: user,
+                          role_gestion: 'ADMIN',
+                        } as Partial<UserSecondaryAccountEntity>,
+                      ];
+                    })
+                  );
+                })
               );
             } else {
               console.error(
@@ -226,9 +242,17 @@ export class HomeGroupComponent implements AfterViewInit {
                   this.projet.set(data);
                   this.cdr.detectChanges(); // Force change detection
                 }),
-                switchMap((groupData) => {
-                  if (!groupData) return of([]); // Handle case where groupData might be null/undefined
-                  return this.fetchMembers(projectId);
+                switchMap(() => {
+                  return this.fetchMembers(projectId).pipe(
+                    map(() => {
+                      return [
+                        {
+                          user: user,
+                          role_gestion: 'ADMIN',
+                        } as Partial<UserSecondaryAccountEntity>,
+                      ];
+                    })
+                  );
                 })
               );
             } else {
@@ -265,25 +289,48 @@ export class HomeGroupComponent implements AfterViewInit {
 
   fetchMembers(projectId: number) {
     this.state.isLoadingMembers.set(true);
-    return this.compteGroupeService.getAllMembers(projectId).pipe(
-      tap((members) => {
-        this.members.set(members);
-        const currentUserAccount = members.find(
-          (m) => m.user.id === this.connectedUser()?.id
-        );
-        if (currentUserAccount) {
-          this.connectedUserAccountInfo.set(currentUserAccount);
-        }
-      }),
-      catchError((err) => {
-        console.error('Erreur lors du chargement des membres:', err);
-        this.state.errorMessage.set(
-          err.error?.message || 'Impossible de charger les membres du groupe.'
-        );
-        return of([]);
-      }),
-      finalize(() => this.state.isLoadingMembers.set(false))
-    );
+
+    if (this.typeOfProjet() === 'PRINCIPAL') {
+      return this.comptePrincipalService.getAllMembers(projectId).pipe(
+        tap((members) => {
+          this.members.set(members);
+          const currentUserAccount = members.find(
+            (m) => m.user.id === this.connectedUser()?.id
+          );
+          if (currentUserAccount) {
+            this.connectedUserAccountInfo.set(currentUserAccount);
+          }
+        }),
+        catchError((err) => {
+          console.error('Erreur lors du chargement des membres:', err);
+          this.state.errorMessage.set(
+            err.error?.message || 'Impossible de charger les membres du groupe.'
+          );
+          return of([]);
+        }),
+        finalize(() => this.state.isLoadingMembers.set(false))
+      );
+    } else {
+      return this.compteGroupeService.getAllMembers(projectId).pipe(
+        tap((members) => {
+          this.members.set(members);
+          const currentUserAccount = members.find(
+            (m) => m.user.id === this.connectedUser()?.id
+          );
+          if (currentUserAccount) {
+            this.connectedUserAccountInfo.set(currentUserAccount);
+          }
+        }),
+        catchError((err) => {
+          console.error('Erreur lors du chargement des membres:', err);
+          this.state.errorMessage.set(
+            err.error?.message || 'Impossible de charger les membres du groupe.'
+          );
+          return of([]);
+        }),
+        finalize(() => this.state.isLoadingMembers.set(false))
+      );
+    }
   }
 
   goBack() {

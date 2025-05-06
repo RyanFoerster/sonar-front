@@ -3,6 +3,7 @@ services:
   sonar-front:
     image: dimagin/sonar-front:latest
     container_name: sonar-front
+    pull_policy: always
     restart: unless-stopped
     env_file:
       - .env

@@ -3,6 +3,7 @@ services:
   sonar-front-staging:
     image: dimagin/sonar-front:staging
     container_name: sonar-front-staging
+    pull_policy: always
     restart: unless-stopped
     env_file:
       - .env

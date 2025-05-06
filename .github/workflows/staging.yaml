@@ -1,4 +1,4 @@
-name: Build and Push Docker Staging Image to Docker Hub
+name: Build and Push Docker Staging Image to Docker Hub and Deploy to Staging
 
 on:
   push:
@@ -31,3 +31,15 @@ jobs:
           tags: ${{ secrets.DOCKER_USERNAME }}/sonar-front:staging
           push: true
           platforms: linux/amd64
+
+  deploy-staging-docker-image:
+    needs: build-and-push-docker-staging-image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Dokploy Deployment
+        run: |
+          curl -X POST "https://${{ secrets.DOKPLOY_URL }}/api/compose.deploy" \
+          -H "accept: application/json" \
+          -H "Content-Type: application/json" \
+          -H "x-api-key: ${{ secrets.DOKPLOY_STAGING_API_TOKEN }}" \
+          -d '{"composeId": "${{ secrets.DOKPLOY_STAGING_COMPOSE_ID }}"}'

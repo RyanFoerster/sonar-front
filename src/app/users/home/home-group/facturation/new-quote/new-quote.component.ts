@@ -307,6 +307,10 @@ export class NewQuoteComponent implements AfterViewInit {
       default_payment_deadline: [10, [Validators.min(10), Validators.max(30)]],
       is_info_pending: [false],
     });
+    console.log(
+      'Form after init, is_physical_person:',
+      this.createClientForm.get('is_physical_person')?.value
+    );
 
     this.createClientForm
       .get('is_info_pending')
@@ -488,20 +492,27 @@ export class NewQuoteComponent implements AfterViewInit {
   toggleClientForm(isNewClient: boolean) {
     if (isNewClient) {
       this.createClientForm.reset();
+      this.createClientForm.patchValue({
+        is_physical_person: false,
+        is_info_pending: false, // Explicite après reset
+      });
       this.isPhysicalPerson.set(false);
       this.createClientForm.patchValue({
         country: 'Belgique',
+        is_physical_person: false,
+        is_info_pending: false, // Redondant mais sûr
       });
     } else {
       if (this.client()) {
-        // Pré-remplir le formulaire avec les données du client existant
         const currentClient = this.client()!;
-        this.isPhysicalPerson.set(currentClient.is_physical_person || false);
-        // Pré-remplir le délai de paiement par défaut
+        const isPhysical = currentClient.is_physical_person || false;
+        const isInfoPending = currentClient.is_info_pending || false;
+        this.isPhysicalPerson.set(isPhysical);
+        // Note: Il n'y a pas de signal dédié pour isInfoPending dans le code actuel pour le .set()
+
         const defaultDeadline = currentClient.default_payment_deadline ?? 10;
 
-        if (currentClient.is_physical_person) {
-          // Pour une personne physique, séparer le nom en prénom et nom
+        if (isPhysical) {
           this.createClientForm.patchValue({
             firstname: currentClient.firstname,
             lastname: currentClient.lastname,
@@ -515,10 +526,10 @@ export class NewQuoteComponent implements AfterViewInit {
             postalCode: currentClient.postalCode,
             national_number: currentClient.national_number,
             is_physical_person: true,
+            is_info_pending: isInfoPending, // Ajouté
             default_payment_deadline: defaultDeadline,
           });
         } else {
-          // Pour une entreprise
           this.createClientForm.patchValue({
             name: currentClient.name,
             email: currentClient.email,
@@ -531,14 +542,34 @@ export class NewQuoteComponent implements AfterViewInit {
             company_number: currentClient.company_number,
             company_vat_number: currentClient.company_vat_number,
             is_physical_person: false,
+            is_info_pending: isInfoPending, // Ajouté
             default_payment_deadline: defaultDeadline,
           });
         }
       } else {
         this.createClientForm.reset();
+        this.createClientForm.patchValue({
+          is_physical_person: false,
+          is_info_pending: false, // Explicite après reset
+        });
+        this.isPhysicalPerson.set(false);
+        this.createClientForm.patchValue({
+          country: 'Belgique',
+          default_payment_deadline: 10,
+          is_physical_person: false,
+          is_info_pending: false, // Ajouté
+        });
       }
     }
     this.isToggleClientForm.set(!this.isToggleClientForm());
+    console.log(
+      'Form after toggleClientForm, is_physical_person:',
+      this.createClientForm.get('is_physical_person')?.value
+    );
+    console.log(
+      'Form after toggleClientForm, is_info_pending:',
+      this.createClientForm.get('is_info_pending')?.value
+    ); // Log pour is_info_pending
   }
 
   toggleProductForm() {
@@ -598,6 +629,10 @@ export class NewQuoteComponent implements AfterViewInit {
     this.createClientForm.get('lastname')?.updateValueAndValidity();
     this.createClientForm.get('company_number')?.updateValueAndValidity();
     this.createClientForm.get('company_vat_number')?.updateValueAndValidity();
+    console.log(
+      'Form after togglePhysicalPerson, is_physical_person:',
+      this.createClientForm.get('is_physical_person')?.value
+    );
   }
 
   async toggleTvaIncluded() {
@@ -723,6 +758,8 @@ export class NewQuoteComponent implements AfterViewInit {
       return;
     }
 
+    console.log('createClient', this.createClientForm.value);
+
     const clientData = this.createClientForm.value;
     const userId = this.connectedUser()?.id;
 
@@ -742,6 +779,7 @@ export class NewQuoteComponent implements AfterViewInit {
       };
     } else {
       dataToSend = clientData;
+      console.log('dataToSend', dataToSend);
     }
 
     this.clientService
@@ -772,11 +810,29 @@ export class NewQuoteComponent implements AfterViewInit {
           this.client.set(newClient);
 
           // Réinitialisation du formulaire et des états
+          console.log(
+            'Form BEFORE partial reset in createClient, is_physical_person:',
+            this.createClientForm.get('is_physical_person')?.value
+          );
           this.createClientForm.reset({
             country: 'Belgique',
             default_payment_deadline: 10,
+            is_physical_person: false, // Assurer la réinitialisation explicite
+            is_info_pending: false, // Assurer la réinitialisation explicite
           });
+          console.log(
+            'Form AFTER partial reset in createClient, is_physical_person:',
+            this.createClientForm.get('is_physical_person')?.value
+          );
+          console.log(
+            'Form AFTER partial reset in createClient, is_info_pending:',
+            this.createClientForm.get('is_info_pending')?.value
+          ); // Log pour is_info_pending
           this.toggleClientForm(false);
+          console.log(
+            'Form AFTER toggleClientForm in createClient, is_physical_person:',
+            this.createClientForm.get('is_physical_person')?.value
+          );
           this.isPhysicalPerson.set(false);
 
           // Sauvegarde de l'utilisateur connecté
@@ -837,6 +893,8 @@ export class NewQuoteComponent implements AfterViewInit {
             this.createClientForm.reset({
               country: 'Belgique',
               default_payment_deadline: 10,
+              is_physical_person: false, // Assurer la réinitialisation explicite
+              is_info_pending: false, // Assurer la réinitialisation explicite
             });
             this.toggleClientForm(false);
             this.isPhysicalPerson.set(false);
@@ -1637,19 +1695,20 @@ export class NewQuoteComponent implements AfterViewInit {
       'default_payment_deadline',
     ];
     const emailControl = this.createClientForm.get('email');
+    // Le champ 'country' n'est pas désactivé par is_info_pending
 
     if (isPending) {
       fieldsToToggle.forEach((fieldName) => {
         this.createClientForm.get(fieldName)?.clearValidators();
+        this.createClientForm.get(fieldName)?.disable(); // Désactiver le champ
         this.createClientForm.get(fieldName)?.updateValueAndValidity();
       });
-      // Assurer que l'email reste requis
+      // Assurer que l'email reste requis et activé
       emailControl?.setValidators([Validators.required, Validators.email]);
+      emailControl?.enable(); // S'assurer qu'il est activé
       emailControl?.updateValueAndValidity();
     } else {
-      // Rétablir les validateurs par défaut (ceux définis dans l'initialisation du form)
-      // Note: Ceci suppose que vous avez déjà défini les validateurs requis/min/max lors de l'initialisation
-      // Si ce n'est pas le cas, vous devrez les ajouter ici explicitement.
+      // Rétablir les validateurs et activer les champs
       // Exemple pour 'name' si c'est une entreprise :
       if (!this.isPhysicalPerson()) {
         this.createClientForm.get('name')?.setValidators([Validators.required]);
@@ -1669,19 +1728,21 @@ export class NewQuoteComponent implements AfterViewInit {
         .get('postalCode')
         ?.setValidators([Validators.required]);
       emailControl?.setValidators([Validators.required, Validators.email]);
+      emailControl?.enable(); // S'assurer qu'il est activé
 
       const deadlineControl = this.createClientForm.get(
         'default_payment_deadline'
       );
-      const min = this.connectedUser()?.role === 'ADMIN' ? null : 10;
+      const min = this.connectedUser()?.role === 'ADMIN' ? 1 : 10; // Correction: min 1 pour ADMIN
       const max = this.connectedUser()?.role === 'ADMIN' ? null : 30;
       const validators = [Validators.required];
-      if (min !== null) validators.push(Validators.min(min));
+      validators.push(Validators.min(min)); // Toujours un min
       if (max !== null) validators.push(Validators.max(max));
       deadlineControl?.setValidators(validators);
 
-      // Mettre à jour la validité pour tous les champs modifiés
+      // Activer tous les champs et mettre à jour leur validité
       fieldsToToggle.forEach((fieldName) => {
+        this.createClientForm.get(fieldName)?.enable(); // Activer le champ
         this.createClientForm.get(fieldName)?.updateValueAndValidity();
       });
       emailControl?.updateValueAndValidity();

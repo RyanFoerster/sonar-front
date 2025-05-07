@@ -416,7 +416,7 @@ export class PdfGeneratorService {
     doc.text(quote.client.street, pageWidth - this.PAGE_MARGIN - 60, 75);
     doc.text(quote.client.city, pageWidth - this.PAGE_MARGIN - 60, 80);
     doc.text(
-      quote.client.company_vat_number ?? 'TVA: BE 0790.515.752',
+      quote.client.company_vat_number ?? '',
       pageWidth - this.PAGE_MARGIN - 60,
       85
     );
@@ -844,20 +844,6 @@ export class PdfGeneratorService {
 
     doc.setFont('helvetica', 'normal');
     doc.text(
-      `${
-        invoice.main_account
-          ? invoice.main_account.username
-          : invoice.group_account
-          ? invoice.group_account.username
-          : 'N/A'
-      }`,
-      clientInfoX,
-      currentY,
-      { align: 'right' }
-    );
-    currentY += 5;
-    doc.setFont('helvetica', 'normal');
-    doc.text(
       `${invoice.client.street} ${invoice.client.number}`,
       clientInfoX,
       currentY,
@@ -878,8 +864,32 @@ export class PdfGeneratorService {
       { align: 'right' }
     );
     currentY += 5;
+    // Gestion du numéro de TVA selon les règles spécifiques
+    let vatText = 'Non assujetti';
+
+    if (invoice.client.company_vat_number) {
+      // Si le pays est la Belgique, ajouter le préfixe "BE"
+      if (invoice.client.country === 'Belgique') {
+        vatText = `BE${invoice.client.company_vat_number}`;
+      } else {
+        vatText = invoice.client.company_vat_number;
+      }
+    } else if (invoice.client.company_number) {
+      // Si pas de TVA mais un numéro d'entreprise existe
+      vatText = `${invoice.client.company_number}`;
+    } else if (invoice.client.is_physical_person) {
+      // Si c'est une personne physique
+      vatText = 'non assujeti';
+    }
+
     doc.text(
-      `TVA: ${invoice.client.company_vat_number || 'Non assujetti'}`,
+      `${
+        invoice.client.company_vat_number
+          ? 'TVA:'
+          : invoice.client.company_number
+          ? 'N° entreprise:'
+          : 'TVA:'
+      } ${vatText}`,
       clientInfoX,
       currentY,
       { align: 'right' }
@@ -913,7 +923,20 @@ export class PdfGeneratorService {
       contentLeftMargin,
       currentY
     );
-    currentY += 15; // Plus d'espace avant le tableau
+    currentY += 7; // Modifié. Était currentY += 15. Nouvel espacement après la date limite.
+
+    // Projet
+    const issuerNameForProject = `${
+      invoice.main_account
+        ? invoice.main_account.username
+        : invoice.group_account
+        ? invoice.group_account.username
+        : 'N/A'
+    }`;
+    doc.setFontSize(10); // Assurer la taille de la police
+    doc.setFont('helvetica', 'normal'); // Assurer le style de la police
+    doc.text(`Projet : ${issuerNameForProject}`, contentLeftMargin, currentY);
+    currentY += 8; // Espacement après "Projet :" pour conserver l'espacement total original de 15 avant le tableau.
 
     const productTableStartY = currentY;
 

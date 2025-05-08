@@ -46,10 +46,7 @@
         </div>
 
         <div class="space-y-2">
-          <p
-            class="font-medium text-gray-900 text-sm flex items-center gap-2"
-            hlmLabel
-          >
+          <p class="font-medium text-gray-900 text-sm" hlmLabel>
             Dernier jour de prestation / livraison
             <span class="relative group">
               <hlm-icon
@@ -67,13 +64,14 @@
                 parties.
               </span>
             </span>
+            <input
+              formControlName="service_date"
+              class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+              hlmInput
+              type="date"
+            />
           </p>
-          <input
-            formControlName="service_date"
-            class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
-            hlmInput
-            type="date"
-          />
+
           @if (createQuoteForm.get('service_date')?.invalid &&
           createQuoteForm.get('service_date')?.touched) {
           <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
@@ -1203,7 +1201,6 @@
                 }"
                 formControlName="company_number"
                 hlmInput
-                type="number"
                 placeholder="987 XXX XXX"
                 class="flex-1 bg-white border-gray-200 text-sm rounded-lg disabled:bg-gray-100 disabled:cursor-not-allowed"
               />

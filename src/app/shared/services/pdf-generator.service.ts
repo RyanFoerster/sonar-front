@@ -390,7 +390,7 @@ export class PdfGeneratorService {
       { align: 'right' }
     );
     doc.text(
-      `N° ${new Date().getFullYear()}/000${quote.id}`,
+      `N° ${new Date().getFullYear()}/000${quote.quote_number}`,
       pageWidth - this.PAGE_MARGIN,
       55,
       {

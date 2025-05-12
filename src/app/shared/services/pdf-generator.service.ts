@@ -411,26 +411,74 @@ export class PdfGeneratorService {
     // Informations du client
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
-    doc.text(quote.client.name!, pageWidth - this.PAGE_MARGIN - 60, 70);
+    const clientNameMaxWidth = 60; // Max width for client name before wrapping
+    const clientNameLines = doc.splitTextToSize(
+      quote.client.name!,
+      clientNameMaxWidth
+    );
+    let clientNameY = 70;
+    clientNameLines.forEach((line: string) => {
+      doc.text(line, pageWidth - this.PAGE_MARGIN - 60, clientNameY);
+      clientNameY += 5; // Adjust line height as needed
+    });
+
     doc.setFont('helvetica', 'normal');
-    doc.text(quote.client.street, pageWidth - this.PAGE_MARGIN - 60, 75);
-    doc.text(quote.client.city, pageWidth - this.PAGE_MARGIN - 60, 80);
+    let currentClientInfoY = clientNameY; // Start from the Y after client name
+    doc.text(
+      quote.client.street,
+      pageWidth - this.PAGE_MARGIN - 60,
+      currentClientInfoY
+    );
+    currentClientInfoY += 5;
+    doc.text(
+      quote.client.city,
+      pageWidth - this.PAGE_MARGIN - 60,
+      currentClientInfoY
+    );
+    currentClientInfoY += 5;
     doc.text(
       quote.client.company_vat_number ?? '',
       pageWidth - this.PAGE_MARGIN - 60,
-      85
+      currentClientInfoY
     );
 
     // Titre du document
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
-    doc.text(
-      `Devis N° ${new Date().getFullYear()}/000${quote.id} pour ${
-        quote.client.name
-      }`,
-      this.PAGE_MARGIN,
-      105
+    const titleTextPart1 = `Devis N° ${new Date().getFullYear()}/000${
+      quote.id
+    } pour `;
+    const clientNameForTitle = quote.client.name || '';
+    const availableWidthForNameInTitle =
+      pageWidth -
+      this.PAGE_MARGIN -
+      doc.getTextWidth(titleTextPart1) -
+      this.PAGE_MARGIN; // Subtract margins
+    const clientNameInTitleLines = doc.splitTextToSize(
+      clientNameForTitle,
+      availableWidthForNameInTitle > 0
+        ? availableWidthForNameInTitle
+        : this.MAX_WIDTH
     );
+
+    let titleY = 105;
+    doc.text(
+      titleTextPart1 + clientNameInTitleLines[0],
+      this.PAGE_MARGIN,
+      titleY
+    );
+
+    if (clientNameInTitleLines.length > 1) {
+      clientNameInTitleLines.slice(1).forEach((line: string) => {
+        titleY += 5; // Adjust line height as needed
+        doc.text(line, this.PAGE_MARGIN + doc.getTextWidth(' '), titleY); // Indent subsequent lines
+      });
+    }
+
+    // Ajuster la position Y des éléments suivants en fonction de la hauteur du titre
+    const executionDeadlineY = titleY + 10; // Espace après le titre
+    const paymentDeadlineY = executionDeadlineY + 5;
+    const productsTableStartY = paymentDeadlineY + 5;
 
     // Délai d'exécution
     doc.setFontSize(10);
@@ -440,18 +488,17 @@ export class PdfGeneratorService {
         quote.validation_deadline
       )}`,
       pageWidth - this.PAGE_MARGIN,
-      115,
+      executionDeadlineY,
       { align: 'right' }
     );
     doc.text(
       `Délais de paiement : ${quote.payment_deadline} jours à compter de la date de prestation / livraison`,
       pageWidth - this.PAGE_MARGIN,
-      120,
+      paymentDeadlineY,
       { align: 'right' }
     );
 
     // Tableau des produits
-    const startY = 125;
     autoTable(doc, {
       head: [['Description', 'Quantité(s)', 'Tarif', 'Remise', 'Total']],
       body: quote.products.map((product) => [
@@ -461,7 +508,7 @@ export class PdfGeneratorService {
         `0,00€`, // Remise fixe à 0 car la propriété discount n'existe pas
         `${(product.quantity * product.price).toFixed(2)}€`,
       ]),
-      startY: startY,
+      startY: productsTableStartY,
       styles: {
         fontSize: 9,
         cellPadding: 5,
@@ -833,37 +880,41 @@ export class PdfGeneratorService {
     const clientInfoX = contentRightMargin;
     doc.setFontSize(10); // Taille réduite
     doc.setFont('helvetica', 'bold');
+    const clientNameMaxWidth = 60; // Max width for client name before wrapping
     const clientNameLines = doc.splitTextToSize(
-      invoice.client.name,
-      this.MAX_WIDTH
+      invoice.client.name!,
+      clientNameMaxWidth
     );
+    let clientNameY = 70;
     clientNameLines.forEach((line: string) => {
-      doc.text(line, clientInfoX, currentY, { align: 'right' });
-      currentY += 5;
+      doc.text(line, clientInfoX, clientNameY);
+      clientNameY += 5; // Adjust line height as needed
     });
 
     doc.setFont('helvetica', 'normal');
+    let clientAddressY = clientNameY; // Partir de la position Y après le nom du client
     doc.text(
       `${invoice.client.street} ${invoice.client.number}`,
       clientInfoX,
-      currentY,
+      clientAddressY,
       { align: 'right' }
     );
-    currentY += 5;
+    clientAddressY += 5;
     doc.text(
       `${invoice.client.postalCode} ${invoice.client.city}`,
       clientInfoX,
-      currentY,
+      clientAddressY,
       { align: 'right' }
     );
-    currentY += 5;
+    clientAddressY += 5;
     doc.text(
       invoice.client.country, // Ajout du pays
       clientInfoX,
-      currentY,
+      clientAddressY,
       { align: 'right' }
     );
-    currentY += 5;
+    clientAddressY += 5;
+
     // Gestion du numéro de TVA selon les règles spécifiques
     let vatText = 'Non assujetti';
 
@@ -891,10 +942,10 @@ export class PdfGeneratorService {
           : 'TVA:'
       } ${vatText}`,
       clientInfoX,
-      currentY,
+      clientAddressY, // Utiliser la nouvelle variable Y pour l'adresse
       { align: 'right' }
     );
-    const clientInfoEndY = currentY;
+    const clientInfoEndY = clientAddressY;
 
     // Positionner le titre du document sous le bloc le plus bas (émetteur ou client)
     currentY = Math.max(companyInfoEndY, clientInfoEndY) + 15; // Espace après les infos

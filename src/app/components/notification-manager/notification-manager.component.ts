@@ -1,6 +1,6 @@
 import {
   Component,
-  ElementRef,
+  ElementRef, HostListener,
   OnDestroy,
   OnInit,
   ViewChild,
@@ -22,6 +22,7 @@ import {
   VolumeX,
   Volume2,
 } from 'lucide-angular';
+
 import { provideIcons } from '@spartan-ng/ui-icon-helm';
 import { HlmIconComponent } from '@spartan-ng/ui-icon-helm';
 import {
@@ -69,6 +70,8 @@ export class NotificationManagerComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   private scrollSubscription?: Subscription;
   private intersectionObserver?: IntersectionObserver;
+
+
   @ViewChild('loadMoreTrigger') loadMoreTrigger?: ElementRef;
 
   // Icônes
@@ -84,7 +87,8 @@ export class NotificationManagerComponent implements OnInit, OnDestroy {
   constructor(
     private notificationService: NotificationService,
     private router: Router,
-    private authService: AuthService
+    private authService: AuthService,
+    private eRef: ElementRef
   ) {}
 
   ngOnInit(): void {
@@ -246,9 +250,12 @@ export class NotificationManagerComponent implements OnInit, OnDestroy {
    * Ouvre ou ferme le panneau de notifications
    */
   toggleNotificationPanel(): void {
+
     this.isOpen = !this.isOpen;
 
+
     if (this.isOpen) {
+
       // Recharger les notifications à l'ouverture
       this.loadNotifications();
       this.setupIntersectionObserver();
@@ -412,4 +419,18 @@ export class NotificationManagerComponent implements OnInit, OnDestroy {
         return type.charAt(0).toUpperCase() + type.slice(1).replace('_', ' ');
     }
   }
+
+  /**
+   * Gère le clic en dehors du panneau de notifications
+   *
+   * @param event
+   */
+  @HostListener('document:click', ['$event'])
+  onClickOutside(event: MouseEvent) {
+    if (!this.eRef.nativeElement.contains(event.target)) {
+      this.isOpen = false;
+    }
+  }
+
+
 }

@@ -63,7 +63,7 @@ export class NotificationManagerComponent implements OnInit, OnDestroy {
   pageSize = 10;
   totalNotifications = 0;
   notificationSound = true;
-  currentFilter: 'all' | 'read' | 'unread' = 'all';
+  currentFilter: 'all' | 'read' | 'unread' = 'unread';
 
   @ViewChild('notificationList') notificationList?: ElementRef;
 
@@ -88,10 +88,11 @@ export class NotificationManagerComponent implements OnInit, OnDestroy {
     private notificationService: NotificationService,
     private router: Router,
     private authService: AuthService,
-    private eRef: ElementRef
+    private eRef: ElementRef,
   ) {}
 
   ngOnInit(): void {
+
     // S'abonner aux nouveaux événements de notification pour la mise à jour en temps réel
     this.notificationService.notifications$
       .pipe(takeUntil(this.destroy$))
@@ -272,6 +273,13 @@ export class NotificationManagerComponent implements OnInit, OnDestroy {
       .markAsRead(notification.id, !notification.isRead)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
+        next: () => {
+          // Recharger les notifications après mise à jour
+          this.loadNotifications(this.currentPage);
+
+          // Recharger le compteur de notifications non lues
+          this.loadUnreadCount();
+        },
         error: (error) => {
           console.error(
             'Erreur lors du changement du statut de la notification',
@@ -280,7 +288,10 @@ export class NotificationManagerComponent implements OnInit, OnDestroy {
         },
       });
 
-    // Si c'est une notification de transaction, naviguer vers les détails de la transaction
+
+
+
+  // Si c'est une notification de transaction, naviguer vers les détails de la transaction
     // if (
     //   notification.type === 'transaction' &&
     //   notification.data &&
@@ -402,6 +413,7 @@ export class NotificationManagerComponent implements OnInit, OnDestroy {
 
     // Déléguer la navigation au service de notifications
     this.notificationService.handleNotificationClick(notification);
+
   }
 
   /**

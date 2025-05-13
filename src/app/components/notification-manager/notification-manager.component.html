@@ -74,12 +74,13 @@
       >
         <div
           class="notification-content"
-          (click)="handleNotificationClick(notification, $event)"
+          (click)="notification.isRead && handleNotificationClick(notification, $event)"
           tabindex="0"
-          (keydown.enter)="handleNotificationClick(notification, $event)"
-          (keydown.space)="handleNotificationClick(notification, $event)"
+          (keydown.enter)="notification.isRead && handleNotificationClick(notification, $event)"
+          (keydown.space)="notification.isRead && handleNotificationClick(notification, $event)"
         >
-          <div class="notification-type" [attr.data-type]="notification.type">
+
+        <div class="notification-type" [attr.data-type]="notification.type">
             {{ getNotificationTypeLabel(notification.type) }}
           </div>
           <div class="notification-info">

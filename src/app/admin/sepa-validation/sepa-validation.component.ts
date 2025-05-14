@@ -49,6 +49,7 @@ import {
   lucideSend,
   lucideLoader2,
   lucideSearch,
+  lucideFileText,
 } from '@ng-icons/lucide';
 import { provideIcons } from '@ng-icons/core';
 import { PdfViewerComponent } from '../../shared/components/pdf-viewer/pdf-viewer.component';
@@ -92,6 +93,7 @@ import { PdfViewerComponent } from '../../shared/components/pdf-viewer/pdf-viewe
       lucideSend,
       lucideLoader2,
       lucideSearch,
+      lucideFileText,
     }),
   ],
   templateUrl: './sepa-validation.component.html',

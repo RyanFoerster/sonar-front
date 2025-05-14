@@ -691,7 +691,7 @@
                 </button>
               </th>
               <!-- Actions -->
-              <!-- <th hlmTh class="w-40 px-3 py-3 sm:px-4 text-right">Actions</th> -->
+              <th hlmTh class="w-40 px-3 py-3 sm:px-4 text-right">Actions</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-100">
@@ -785,43 +785,45 @@
                 </span>
               </td>
               <!-- Actions -->
-              <!--<td hlmTd class="px-3 py-2 sm:px-4 lg:py-3">
-                  <div
-                    class="flex flex-col lg:flex-row items-stretch lg:items-center justify-end gap-1.5 sm:gap-2"
+              <td hlmTd class="px-3 py-2 sm:px-4 lg:py-3">
+                <div
+                  class="flex flex-col lg:flex-row items-stretch lg:items-center justify-end gap-1.5 sm:gap-2"
+                >
+                  @if (virement.invoice_url) {
+                  <button
+                    hlmBtn
+                    variant="outline"
+                    size="sm"
+                    class="flex items-center justify-center gap-1.5 w-full lg:w-auto text-xs px-2 py-1.5"
+                    (click)="downloadInvoice(virement)"
+                    title="Voir la facture"
                   >
-                    <!-- @if (virement.status === 'PENDING') { -->
-              <!-- Afficher le bouton détails seulement si en attente -->
-              <!--<button
-                        hlmBtn
-                        variant="outline"
-                        size="sm"
-                        class="flex items-center justify-center gap-1.5 w-full lg:w-auto text-xs px-2 py-1.5"
-                        brnDialogTrigger
-                        (click)="openDetailedView(virement)"
-                        title="Voir les détails et valider/rejeter"
-                      >
-                        <hlm-icon size="sm" name="lucideEye" class="h-3.5 w-3.5" />
-                        <span class="hidden sm:inline">Détails</span>
-                      </button>
-                      } @else {
-                      <button
-                        hlmBtn
-                        variant="outline"
-                        size="sm"
-                        class="flex items-center justify-center gap-1.5 w-full lg:w-auto text-xs px-2 py-1.5 text-gray-400 cursor-not-allowed"
-                        disabled
-                        title="Action non disponible pour ce statut"
-                      >
-                        <hlm-icon
-                          size="sm"
-                          name="lucideEyeOff"
-                          class="h-3.5 w-3.5"
-                        />
-                        <span class="hidden sm:inline">Détails</span>
-                      </button>
-                      } -->
-              <!-- </div> -->
-              <!--</td> -->
+                    <hlm-icon
+                      size="sm"
+                      name="lucideFileText"
+                      class="h-3.5 w-3.5"
+                    />
+                    <span class="hidden sm:inline">Voir facture</span>
+                  </button>
+                  } @else {
+                  <button
+                    hlmBtn
+                    variant="outline"
+                    size="sm"
+                    class="flex items-center justify-center gap-1.5 w-full lg:w-auto text-xs px-2 py-1.5 text-gray-400 cursor-not-allowed"
+                    disabled
+                    title="Aucune facture disponible"
+                  >
+                    <hlm-icon
+                      size="sm"
+                      name="lucideFileWarning"
+                      class="h-3.5 w-3.5"
+                    />
+                    <span class="hidden sm:inline">Pas de facture</span>
+                  </button>
+                  }
+                </div>
+              </td>
             </tr>
             }
           </tbody>

@@ -99,4 +99,28 @@ export class VirementSepaService {
       }
     );
   }
+
+  update(virementUpdate: VirementSepaEntity): void {
+
+
+    this.httpClient.put<VirementSepaEntity>(
+      `${environment.API_URL}/virement-sepa/${virementUpdate.id}/update`,
+      virementUpdate
+    ).subscribe({
+      next: (response) => {
+        console.log("✅ Virement mis à jour avec succès :", response);
+        location.reload(); // ✅ recharge uniquement après succès
+      },
+      error: (error) => {
+        console.error("❌ Erreur lors de la mise à jour du virement :", error);
+        alert("Erreur lors de la mise à jour.");
+      }
+    });
+  }
+
+
+
+
+
+
 }

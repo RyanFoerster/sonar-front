@@ -12,16 +12,16 @@
     <div class="notification-header">
       <h3>Notifications</h3>
       <div class="notification-actions !flex-row">
-        <button
-          class="action-button"
-          title="Activer/désactiver le son"
-          (click)="toggleNotificationSound($event)"
-        >
-          <hlm-icon
-            [name]="notificationSound ? 'lucideBellRing' : 'lucideBell'"
-            size="18"
-          ></hlm-icon>
-        </button>
+<!--        <button-->
+<!--          class="action-button"-->
+<!--          title="Activer/désactiver le son"-->
+<!--          (click)="toggleNotificationSound($event)"-->
+<!--        >-->
+<!--          <hlm-icon-->
+<!--            [name]="notificationSound ? 'lucideBellRing' : 'lucideBell'"-->
+<!--            size="18"-->
+<!--          ></hlm-icon>-->
+<!--        </button>-->
         <button
           class="action-button"
           title="Tout marquer comme lu"
@@ -74,13 +74,13 @@
       >
         <div
           class="notification-content"
-          (click)="notification.isRead && handleNotificationClick(notification, $event)"
+          (click)="(notification.type === 'transaction') && handleNotificationClick(notification, $event)"
           tabindex="0"
-          (keydown.enter)="notification.isRead && handleNotificationClick(notification, $event)"
-          (keydown.space)="notification.isRead && handleNotificationClick(notification, $event)"
+          (keydown.enter)="(notification.type === 'transaction') && handleNotificationClick(notification, $event)"
+          (keydown.space)="(notification.type === 'transaction') && handleNotificationClick(notification, $event)"
         >
 
-        <div class="notification-type" [attr.data-type]="notification.type">
+          <div class="notification-type" [attr.data-type]="notification.type">
             {{ getNotificationTypeLabel(notification.type) }}
           </div>
           <div class="notification-info">

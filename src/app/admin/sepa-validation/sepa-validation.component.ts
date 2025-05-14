@@ -12,7 +12,7 @@ import { HlmButtonDirective } from '@spartan-ng/ui-button-helm';
 import { VirementSepaService } from '../../shared/services/virement-sepa.service';
 import { VirementSepaEntity } from '../../shared/entities/virement-sepa.entity';
 import { tap } from 'rxjs';
-import { DatePipe } from '@angular/common';
+import {DatePipe, NgClass, NgIf} from '@angular/common';
 import { EuroFormatPipe } from '../../shared/pipes/euro-format.pipe';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { HlmIconComponent } from '@spartan-ng/ui-icon-helm';
@@ -41,10 +41,11 @@ import {
   lucideChevronRight,
   lucideX,
   lucideMaximize2,
-  lucideInbox,
+  lucideInbox, lucidePencil, lucideCheck,
 } from '@ng-icons/lucide';
 import { provideIcons } from '@ng-icons/core';
 import { PdfViewerComponent } from '../../shared/components/pdf-viewer/pdf-viewer.component';
+
 
 @Component({
   selector: 'app-sepa-validation',
@@ -64,12 +65,16 @@ import { PdfViewerComponent } from '../../shared/components/pdf-viewer/pdf-viewe
     HlmDialogHeaderComponent,
     HlmDialogTitleDirective,
     PdfViewerComponent,
+    NgIf,
+    NgClass,
   ],
   providers: [
     provideIcons({
       lucideDownload,
+      lucidePencil,
       lucideEye,
       lucideEyeOff,
+      lucideCheck,
       lucideXCircle,
       lucideCheckCircle2,
       lucideChevronLeft,
@@ -83,6 +88,7 @@ import { PdfViewerComponent } from '../../shared/components/pdf-viewer/pdf-viewe
   styleUrl: './sepa-validation.component.css',
 })
 export class SepaValidationComponent implements AfterViewInit {
+
   private virementSepaService: VirementSepaService =
     inject(VirementSepaService);
   private sanitizer = inject(DomSanitizer);
@@ -96,6 +102,8 @@ export class SepaValidationComponent implements AfterViewInit {
     success: boolean;
     message: string;
   } | null>(null);
+  isEditing = false;
+  editedVirement: VirementSepaEntity | null = null;
 
   protected currentVirement = computed(() => {
     if (
@@ -284,4 +292,44 @@ export class SepaValidationComponent implements AfterViewInit {
       },
     });
   }
+
+// Active le mode édition pour un virement spécifique
+  handleModifieVirement(id: number) {
+    this.isEditing = true;
+    this.editedVirement = {...this.currentVirement()!}; // clone pour édition sans affecter directement
+  }
+
+  // Annule le mode édition
+  cancelEdit() {
+    this.isEditing = false;
+    this.editedVirement = null;
+  }
+
+// Valide les modifications apportées au virement
+  validateEdit() {
+    const confirmation = confirm("Êtes-vous sûr de vouloir valider les modifications ? Si oui, la page sera rechargée pour afficher les changements.");
+    if (!confirmation || !this.editedVirement) return;
+
+    // Appel API + reload se fait dans le service
+    this.virementSepaService.update(this.editedVirement);
+  }
+// Bloque le bouton de validation si le formulaire n'est pas valide
+  isFormValid(): boolean {
+    if (!this.editedVirement) return false;
+
+    const { iban, amount_total, amount_htva, amount_tva, communication, structured_communication } = this.editedVirement;
+
+    return (
+      iban?.trim() !== '' &&
+      amount_total !== null &&
+      amount_htva !== null &&
+      amount_tva !== null &&
+      communication?.trim() !== '' &&
+      structured_communication?.trim() !== ''
+    );
+  }
+
+
+
+
 }

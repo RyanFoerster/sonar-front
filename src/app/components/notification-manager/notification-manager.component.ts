@@ -324,6 +324,13 @@ export class NotificationManagerComponent implements OnInit, OnDestroy {
       .markAllAsRead()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
+        next: () => {
+          // Recharger les notifications après mise à jour
+          this.loadNotifications(this.currentPage);
+
+          // Recharger le compteur de notifications non lues
+          this.loadUnreadCount();
+        },
         error: (error) => {
           console.error(
             'Erreur lors du marquage de toutes les notifications comme lues',

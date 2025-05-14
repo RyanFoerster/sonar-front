@@ -129,68 +129,218 @@
 
                 <!-- Corps de la carte -->
                 <div class="p-4 space-y-4">
+
                   <!-- Informations bancaires -->
                   <div class="bg-gray-50 p-3 rounded-lg">
                     <p class="text-sm font-medium text-gray-500">IBAN</p>
-                    <p class="text-sm text-gray-900 break-all">
-                      {{ currentVirement()?.iban }}
-                    </p>
+                    <ng-container *ngIf="isEditing && editedVirement; else ibanView">
+                      <input
+                        [(ngModel)]="editedVirement.iban"
+                        name="iban"
+                        required
+                        class="w-full text-sm text-gray-900 border border-gray-300 rounded px-2 py-1"
+                        [ngClass]="{
+                       'border-red-500': editedVirement.iban === '',
+                       'border-gray-300': editedVirement.iban !== ''
+                      }"
+                      />
+                      <div *ngIf="editedVirement.iban === ''" class="text-red-500 text-xs mt-1">
+                        L'IBAN est requis.
+                      </div>
+                    </ng-container>
+                    <ng-template #ibanView>
+                      <p class="text-sm text-gray-900 break-all">
+                        {{ currentVirement()?.iban }}
+                      </p>
+                    </ng-template>
                   </div>
+
 
                   <!-- Montants -->
                   <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+
+                    <!-- TVAC -->
                     <div class="bg-gray-50 p-3 rounded-lg">
                       <p class="text-sm font-medium text-gray-500">TVAC</p>
-                      <p class="text-sm text-gray-900">
-                        {{ currentVirement()?.amount_total! | euroFormat }}
-                      </p>
+                      <ng-container *ngIf="isEditing && editedVirement; else tvacView">
+                        <input
+                          type="number"
+                          [(ngModel)]="editedVirement.amount_total"
+                          name="amount_total"
+                          required
+                          class="w-full text-sm text-gray-900 border rounded px-2 py-1"
+                          [ngClass]="{
+          'border-red-500': editedVirement.amount_total === null || editedVirement.amount_total === undefined,
+          'border-gray-300': editedVirement.amount_total !== null && editedVirement.amount_total !== undefined
+        }"
+                        />
+                        <div *ngIf="editedVirement.amount_total === null || editedVirement.amount_total === undefined" class="text-red-500 text-xs mt-1">
+                          Le montant TVAC est requis.
+                        </div>
+                      </ng-container>
+                      <ng-template #tvacView>
+                        <p class="text-sm text-gray-900">
+                          {{ currentVirement()?.amount_total! | euroFormat }}
+                        </p>
+                      </ng-template>
                     </div>
+
+                    <!-- HTVA -->
                     <div class="bg-gray-50 p-3 rounded-lg">
                       <p class="text-sm font-medium text-gray-500">HTVA</p>
-                      <p class="text-sm text-gray-900">
-                        {{ currentVirement()?.amount_htva! | euroFormat }}
-                      </p>
+                      <ng-container *ngIf="isEditing && editedVirement; else htvaView">
+                        <input
+                          type="number"
+                          [(ngModel)]="editedVirement.amount_htva"
+                          name="amount_htva"
+                          required
+                          class="w-full text-sm text-gray-900 border rounded px-2 py-1"
+                          [ngClass]="{
+          'border-red-500': editedVirement.amount_htva === null || editedVirement.amount_htva === undefined,
+          'border-gray-300': editedVirement.amount_htva !== null && editedVirement.amount_htva !== undefined
+        }"
+                        />
+                        <div *ngIf="editedVirement.amount_htva === null || editedVirement.amount_htva === undefined" class="text-red-500 text-xs mt-1">
+                          Le montant HTVA est requis.
+                        </div>
+                      </ng-container>
+                      <ng-template #htvaView>
+                        <p class="text-sm text-gray-900">
+                          {{ currentVirement()?.amount_htva! | euroFormat }}
+                        </p>
+                      </ng-template>
                     </div>
-                    <div
-                      class="bg-gray-50 p-3 rounded-lg col-span-2 sm:col-span-1"
-                    >
+
+                    <!-- TVA -->
+                    <div class="bg-gray-50 p-3 rounded-lg col-span-2 sm:col-span-1">
                       <p class="text-sm font-medium text-gray-500">TVA</p>
-                      <p class="text-sm text-gray-900">
-                        {{ currentVirement()?.amount_tva! | euroFormat }}
-                      </p>
+                      <ng-container *ngIf="isEditing && editedVirement; else tvaView">
+                        <input
+                          type="number"
+                          [(ngModel)]="editedVirement.amount_tva"
+                          name="amount_tva"
+                          required
+                          class="w-full text-sm text-gray-900 border rounded px-2 py-1"
+                          [ngClass]="{
+          'border-red-500': editedVirement.amount_tva === null || editedVirement.amount_tva === undefined,
+          'border-gray-300': editedVirement.amount_tva !== null && editedVirement.amount_tva !== undefined
+        }"
+                        />
+                        <div *ngIf="editedVirement.amount_tva === null || editedVirement.amount_tva === undefined" class="text-red-500 text-xs mt-1">
+                          Le montant TVA est requis.
+                        </div>
+                      </ng-container>
+                      <ng-template #tvaView>
+                        <p class="text-sm text-gray-900">
+                          {{ currentVirement()?.amount_tva! | euroFormat }}
+                        </p>
+                      </ng-template>
                     </div>
+
                   </div>
+
+
+
 
                   <!-- Communications et Projet -->
                   <div class="grid grid-cols-2 gap-4">
+                    <!-- Communication -->
                     <div class="bg-gray-50 p-3 rounded-lg">
-                      <p class="text-sm font-medium text-gray-500">
-                        Communication
-                      </p>
-                      <p class="text-sm text-gray-900 break-all">
-                        {{ currentVirement()?.communication || "-" }}
-                      </p>
+                      <p class="text-sm font-medium text-gray-500">Communication</p>
+                      <ng-container *ngIf="isEditing && editedVirement; else commView">
+                        <input
+                          type="text"
+                          [(ngModel)]="editedVirement.communication"
+                          name="communication"
+                          required
+                          class="w-full text-sm text-gray-900 border rounded px-2 py-1 break-all"
+                          [ngClass]="{
+          'border-red-500': editedVirement.communication?.trim() === '',
+          'border-gray-300': editedVirement.communication?.trim() !== ''
+        }"
+                        />
+                        <div *ngIf="editedVirement.communication?.trim() === ''" class="text-red-500 text-xs mt-1">
+                          La communication est requise.
+                        </div>
+                      </ng-container>
+                      <ng-template #commView>
+                        <p class="text-sm text-gray-900 break-all">
+                          {{ currentVirement()?.communication || '-' }}
+                        </p>
+                      </ng-template>
                     </div>
+
+                    <!-- Communication structurée -->
                     <div class="bg-gray-50 p-3 rounded-lg">
-                      <p class="text-sm font-medium text-gray-500">
-                        Communication structurée
-                      </p>
-                      <p class="text-sm text-gray-900">
-                        {{ currentVirement()?.structured_communication || "-" }}
-                      </p>
+                      <p class="text-sm font-medium text-gray-500">Communication structurée</p>
+                      <ng-container *ngIf="isEditing && editedVirement; else structuredCommView">
+                        <input
+                          type="text"
+                          [(ngModel)]="editedVirement.structured_communication"
+                          name="structured_communication"
+                          required
+                          class="w-full text-sm text-gray-900 border rounded px-2 py-1"
+                          [ngClass]="{
+          'border-red-500': editedVirement.structured_communication?.trim() === '',
+          'border-gray-300': editedVirement.structured_communication?.trim() !== ''
+        }"
+                        />
+                        <div *ngIf="editedVirement.structured_communication?.trim() === ''" class="text-red-500 text-xs mt-1">
+                          La communication structurée est requise.
+                        </div>
+                      </ng-container>
+                      <ng-template #structuredCommView>
+                        <p class="text-sm text-gray-900">
+                          {{ currentVirement()?.structured_communication || '-' }}
+                        </p>
+                      </ng-template>
                     </div>
-                    <div class="bg-gray-50 p-3 rounded-lg col-span-2">
+                  </div>
+
+                  <div class="bg-gray-50 p-3 rounded-lg col-span-2">
                       <p class="text-sm font-medium text-gray-500">Projet</p>
                       <p class="text-sm text-gray-900">
                         {{ currentVirement()?.projet_username }}
                       </p>
                     </div>
                   </div>
-                </div>
+
+
+
+
+
 
                 <!-- Actions -->
                 <div class="p-4 bg-gray-50 border-t border-gray-100">
                   <div class="flex flex-col sm:flex-row justify-end gap-2">
+
+                    <!-- Si en mode édition : boutons Annuler + Valider -->
+                    <ng-container *ngIf="isEditing; else defaultActions">
+                      <button
+                        (click)="cancelEdit()"
+                        class="w-full sm:w-auto inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        hlmBtn
+                      >
+                        <hlm-icon name="lucideX" class="w-4 h-4 mr-1" size="sm" />
+                        Annuler
+                      </button>
+
+                      <button
+                        (click)="validateEdit()"
+                        [disabled]="!isFormValid()"
+                        class="w-full sm:w-auto inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-lg
+         hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
+         disabled:opacity-50 disabled:cursor-not-allowed"
+                        hlmBtn
+                      >
+                        <hlm-icon name="lucideCheck" class="w-4 h-4 mr-1" size="sm" />
+                        Valider
+                      </button>
+
+                    </ng-container>
+
+                    <!-- Sinon : boutons classiques -->
+                    <ng-template #defaultActions>
                     <hlm-dialog class="w-full sm:w-auto">
                       <button
                         class="w-full sm:w-auto inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
@@ -260,7 +410,23 @@
                         </hlm-dialog-footer>
                       </hlm-dialog-content>
                     </hlm-dialog>
-                    <button
+
+
+                      <button
+                        (click)="handleModifieVirement(currentVirement()!.id)"
+                        class="w-full sm:w-auto inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-white bg-yellow-600 rounded-lg hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
+                        hlmBtn
+                      >
+                        <hlm-icon
+                          name="lucidePencil"
+                          class="w-4 h-4 mr-1"
+                          size="sm"
+                        />
+                        Modifier
+                      </button>
+
+
+                      <button
                       (click)="handleAcceptVirement(currentVirement()!.id, ctx)"
                       class="w-full sm:w-auto inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                       hlmBtn
@@ -272,7 +438,9 @@
                       />
                       Accepter
                     </button>
+                    </ng-template>
                   </div>
+
                 </div>
                 }
               </div>

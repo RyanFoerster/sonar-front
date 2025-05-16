@@ -343,7 +343,7 @@
                     <ng-template #defaultActions>
                     <hlm-dialog class="w-full sm:w-auto">
                       <button
-                        class="w-full sm:w-auto inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                        class="w-full sm:w-auto inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                         hlmBtn
                         brnDialogTrigger
                       >
@@ -716,4 +716,363 @@
     </div>
     }
   </div>
+
+  <!-- NOUVELLE SECTION : Tableau de TOUS les Virements SEPA -->
+  <div class="mt-12">
+    <div
+      class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6"
+    >
+      <h2 class="text-xl font-semibold text-gray-700 whitespace-nowrap">
+        Historique des virements SEPA
+      </h2>
+      <div class="w-full md:flex-1 md:max-w-md relative">
+        <label for="searchAllInput" class="sr-only"
+          >Rechercher dans tous les virements</label
+        >
+        <div
+          class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+        >
+          <hlm-icon name="lucideSearch" size="sm" class="text-gray-400" />
+        </div>
+        <input
+          hlmInput
+          id="searchAllInput"
+          class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+          placeholder="Rechercher par projet, titulaire, IBAN..."
+          [value]="searchTermAll()"
+          (input)="onSearchAllChanged($event)"
+        />
+      </div>
+    </div>
+
+    @if (paginatedAllVirements().length > 0) {
+    <!-- Tableau de Tous les Virements -->
+    <div
+      class="relative overflow-x-auto rounded-xl border border-gray-200 bg-white mb-6"
+    >
+      <div class="min-w-full overflow-x-auto">
+        <table hlmTable class="w-full text-sm text-left">
+          <thead class="hidden lg:table-header-group">
+            <tr
+              class="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-200"
+            >
+              <!-- Date de création -->
+              <th hlmTh class="w-40 px-3 py-3 sm:px-4">
+                <button
+                  class="flex items-center gap-1 hover:text-gray-700 transition-colors focus:outline-none"
+                  (click)="sortByAll('created_at')"
+                >
+                  <span>Date</span>
+                  @if (sortFieldAll() === 'created_at') {
+                  <span class="text-primary">{{
+                    sortOrderAll() === "asc" ? "↑" : "↓"
+                  }}</span>
+                  } @else {
+                  <hlm-icon
+                    name="lucideArrowUpDown"
+                    size="xs"
+                    class="text-gray-400 h-3 w-3"
+                  />
+                  }
+                </button>
+              </th>
+              <!-- Projet -->
+              <th hlmTh class="px-3 py-3 sm:px-4">
+                <button
+                  class="flex items-center gap-1 hover:text-gray-700 transition-colors focus:outline-none"
+                  (click)="sortByAll('projet_username')"
+                >
+                  <span>Projet</span>
+                  @if (sortFieldAll() === 'projet_username') {
+                  <span class="text-primary">{{
+                    sortOrderAll() === "asc" ? "↑" : "↓"
+                  }}</span>
+                  } @else {
+                  <hlm-icon
+                    name="lucideArrowUpDown"
+                    size="xs"
+                    class="text-gray-400 h-3 w-3"
+                  />
+                  }
+                </button>
+              </th>
+              <!-- Titulaire -->
+              <th hlmTh class="px-3 py-3 sm:px-4">
+                <button
+                  class="flex items-center gap-1 hover:text-gray-700 transition-colors focus:outline-none"
+                  (click)="sortByAll('account_owner')"
+                >
+                  <span>Titulaire</span>
+                  @if (sortFieldAll() === 'account_owner') {
+                  <span class="text-primary">{{
+                    sortOrderAll() === "asc" ? "↑" : "↓"
+                  }}</span>
+                  } @else {
+                  <hlm-icon
+                    name="lucideArrowUpDown"
+                    size="xs"
+                    class="text-gray-400 h-3 w-3"
+                  />
+                  }
+                </button>
+              </th>
+              <!-- IBAN -->
+              <th hlmTh class="px-3 py-3 sm:px-4">IBAN</th>
+              <!-- Montant Total -->
+              <th hlmTh class="w-32 px-3 py-3 sm:px-4 text-right">
+                <button
+                  class="flex items-center justify-end gap-1 w-full hover:text-gray-700 transition-colors focus:outline-none"
+                  (click)="sortByAll('amount_total')"
+                >
+                  <span>Montant Total</span>
+                  @if (sortFieldAll() === 'amount_total') {
+                  <span class="text-primary">{{
+                    sortOrderAll() === "asc" ? "↑" : "↓"
+                  }}</span>
+                  } @else {
+                  <hlm-icon
+                    name="lucideArrowUpDown"
+                    size="xs"
+                    class="text-gray-400 h-3 w-3"
+                  />
+                  }
+                </button>
+              </th>
+              <!-- Statut -->
+              <th hlmTh class="w-36 px-3 py-3 sm:px-4 text-center">
+                <button
+                  class="flex items-center justify-center gap-1 w-full hover:text-gray-700 transition-colors focus:outline-none"
+                  (click)="sortByAll('status')"
+                >
+                  <span>Statut</span>
+                  @if (sortFieldAll() === 'status') {
+                  <span class="text-primary">{{
+                    sortOrderAll() === "asc" ? "↑" : "↓"
+                  }}</span>
+                  } @else {
+                  <hlm-icon
+                    name="lucideArrowUpDown"
+                    size="xs"
+                    class="text-gray-400 h-3 w-3"
+                  />
+                  }
+                </button>
+              </th>
+              <!-- Actions -->
+              <th hlmTh class="w-40 px-3 py-3 sm:px-4 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            @for (virement of paginatedAllVirements(); track virement.id) {
+            <tr
+              hlmTrow
+              class="bg-white hover:bg-gray-50 transition-colors flex flex-col lg:table-row mb-3 lg:mb-0 rounded-lg lg:rounded-none shadow-sm lg:shadow-none border border-gray-100 lg:border-0"
+            >
+              <!-- Date -->
+              <td
+                hlmTd
+                class="px-3 py-2 sm:px-4 lg:py-3 flex lg:table-cell items-center justify-between lg:justify-start border-b lg:border-none border-gray-100"
+              >
+                <span
+                  class="font-medium lg:hidden text-xs text-gray-500 uppercase mr-2"
+                  >Date :</span
+                >
+                <span class="whitespace-nowrap text-gray-600 text-xs">{{
+                  virement.created_at | date : "dd/MM/yyyy HH:mm"
+                }}</span>
+              </td>
+              <!-- Projet -->
+              <td
+                hlmTd
+                class="px-3 py-2 sm:px-4 lg:py-3 flex lg:table-cell items-center justify-between lg:justify-start border-b lg:border-none border-gray-100"
+              >
+                <span
+                  class="font-medium lg:hidden text-xs text-gray-500 uppercase mr-2"
+                  >Projet :</span
+                >
+                <span
+                  class="text-gray-800 text-xs truncate"
+                  [title]="virement.projet_username"
+                  >{{ virement.projet_username }}</span
+                >
+              </td>
+              <!-- Titulaire -->
+              <td
+                hlmTd
+                class="px-3 py-2 sm:px-4 lg:py-3 flex lg:table-cell items-center justify-between lg:justify-start border-b lg:border-none border-gray-100"
+              >
+                <span
+                  class="font-medium lg:hidden text-xs text-gray-500 uppercase mr-2"
+                  >Titulaire :</span
+                >
+                <span
+                  class="text-gray-800 text-xs truncate"
+                  [title]="virement.account_owner"
+                  >{{ virement.account_owner }}</span
+                >
+              </td>
+              <!-- IBAN -->
+              <td
+                hlmTd
+                class="px-3 py-2 sm:px-4 lg:py-3 flex lg:table-cell items-center justify-between lg:justify-start border-b lg:border-none border-gray-100"
+              >
+                <span
+                  class="font-medium lg:hidden text-xs text-gray-500 uppercase mr-2"
+                  >IBAN :</span
+                >
+                <span class="text-gray-600 text-xs">{{ virement.iban }}</span>
+              </td>
+              <!-- Montant -->
+              <td
+                hlmTd
+                class="px-3 py-2 sm:px-4 lg:py-3 flex lg:table-cell items-center justify-between lg:justify-end lg:text-right border-b lg:border-none border-gray-100"
+              >
+                <span
+                  class="font-medium lg:hidden text-xs text-gray-500 uppercase mr-2"
+                  >Montant :</span
+                >
+                <span
+                  class="font-semibold text-xs whitespace-nowrap text-gray-800"
+                  >{{ virement.amount_total | euroFormat }}</span
+                >
+              </td>
+              <!-- Statut -->
+              <td
+                hlmTd
+                class="px-3 py-2 sm:px-4 lg:py-3 flex lg:table-cell items-center justify-between lg:justify-center border-b lg:border-none border-gray-100"
+              >
+                <span
+                  class="font-medium lg:hidden text-xs text-gray-500 uppercase mr-2"
+                  >Statut :</span
+                >
+                <span
+                  class="inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-semibold leading-none min-w-[80px] text-center border"
+                  [ngClass]="getStatusClasses(virement.status)"
+                >
+                  {{ getStatusLabel(virement.status) }}
+                </span>
+              </td>
+              <!-- Actions -->
+              <td hlmTd class="px-3 py-2 sm:px-4 lg:py-3">
+                <div
+                  class="flex flex-col lg:flex-row items-stretch lg:items-center justify-end gap-1.5 sm:gap-2"
+                >
+                  @if (virement.invoice_url) {
+                  <button
+                    hlmBtn
+                    variant="outline"
+                    size="sm"
+                    class="flex items-center justify-center gap-1.5 w-full lg:w-auto text-xs px-2 py-1.5"
+                    (click)="downloadInvoice(virement)"
+                    title="Voir la facture"
+                  >
+                    <hlm-icon
+                      size="sm"
+                      name="lucideFileText"
+                      class="h-3.5 w-3.5"
+                    />
+                    <span class="hidden sm:inline">Voir facture</span>
+                  </button>
+                  } @else {
+                  <button
+                    hlmBtn
+                    variant="outline"
+                    size="sm"
+                    class="flex items-center justify-center gap-1.5 w-full lg:w-auto text-xs px-2 py-1.5 text-gray-400 cursor-not-allowed"
+                    disabled
+                    title="Aucune facture disponible"
+                  >
+                    <hlm-icon
+                      size="sm"
+                      name="lucideFileWarning"
+                      class="h-3.5 w-3.5"
+                    />
+                    <span class="hidden sm:inline">Pas de facture</span>
+                  </button>
+                  }
+                </div>
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Pagination for All Virements -->
+    <nav hlmPagination class="mb-8 flex justify-center">
+      <ul
+        hlmPaginationContent
+        class="flex flex-wrap gap-1 justify-center items-center"
+      >
+        <li hlmPaginationItem class="mx-0.5 sm:mx-1">
+          <button
+            hlmBtn
+            variant="ghost"
+            class="px-2 md:px-3 py-1.5 text-xs sm:text-sm font-medium"
+            [disabled]="currentPageAll() === 1"
+            (click)="onPageChangeAll(currentPageAll() - 1)"
+          >
+            Précédent
+          </button>
+        </li>
+        @for (page of getVisiblePagesAll(); track $index) { @if (page ===
+        'ellipsis') {
+        <li hlmPaginationItem class="mx-0.5 sm:mx-1">
+          <span class="px-2 md:px-3 py-1.5 text-xs sm:text-sm">...</span>
+        </li>
+        } @else {
+        <li hlmPaginationItem class="mx-0.5 sm:mx-1">
+          <button
+            hlmBtn
+            [variant]="currentPageAll() === page ? 'default' : 'outline'"
+            class="min-w-[32px] sm:min-w-[36px] h-8 sm:h-9 px-2 md:px-3 py-1.5 text-xs sm:text-sm font-medium"
+            (click)="onPageChangeAll(page)"
+          >
+            {{ page }}
+          </button>
+        </li>
+        } }
+        <li hlmPaginationItem class="mx-0.5 sm:mx-1">
+          <button
+            hlmBtn
+            variant="ghost"
+            class="px-2 md:px-3 py-1.5 text-xs sm:text-sm font-medium"
+            [disabled]="currentPageAll() === totalPagesAll()"
+            (click)="onPageChangeAll(currentPageAll() + 1)"
+          >
+            Suivant
+          </button>
+        </li>
+      </ul>
+    </nav>
+
+    } @else {
+    <!-- Message if no virements found at all -->
+    <div
+      class="py-12 text-center rounded-xl border border-dashed border-gray-300 bg-white mb-8"
+    >
+      <div class="flex flex-col items-center gap-3 sm:gap-4">
+        <div
+          class="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-gray-100 flex items-center justify-center"
+        >
+          <hlm-icon name="lucideSearch" size="lg" class="text-gray-400" />
+          <!-- Icône de recherche pour "aucun résultat" -->
+        </div>
+        <div class="space-y-1 sm:space-y-2">
+          <h3 class="text-base sm:text-lg font-semibold text-gray-900">
+            @if (searchTermAll()) { Aucun virement ne correspond à votre
+            recherche } @else { Aucun virement SEPA enregistré }
+          </h3>
+          <p class="text-sm text-gray-500 max-w-md mx-auto">
+            @if (searchTermAll()) { Veuillez essayer avec d'autres mots-clés. }
+            @else { Il n'y a actuellement aucun virement SEPA dans l'historique.
+            }
+          </p>
+        </div>
+      </div>
+    </div>
+    }
+  </div>
+  <!-- FIN NOUVELLE SECTION -->
 </div>

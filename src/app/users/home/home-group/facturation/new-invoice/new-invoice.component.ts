@@ -78,9 +78,10 @@ import { EuroFormatPipe } from '../../../../../shared/pipes/euro-format.pipe';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { QuoteDto } from '../../../../../shared/dtos/quote.dto';
 import { QuillModule } from 'ngx-quill';
+import {InvoiceService} from "../../../../../shared/services/invoice.service";
 
 @Component({
-  selector: 'app-new-quote',
+  selector: 'app-new-invoice',
   standalone: true,
   imports: [
     HlmInputDirective,
@@ -136,14 +137,15 @@ import { QuillModule } from 'ngx-quill';
     }),
     DatePipe,
   ],
-  templateUrl: './new-quote.component.html',
-  styleUrl: './new-quote.component.css',
+  templateUrl: './new-invoice.component.html',
+  styleUrl: './new-invoice.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class NewQuoteComponent implements AfterViewInit {
+export class NewInvoiceComponent implements AfterViewInit {
   private formBuilder: FormBuilder = inject(FormBuilder);
   private clientService: ClientService = inject(ClientService);
   private productService: ProductService = inject(ProductService);
+  private invoiceService: InvoiceService = inject(InvoiceService);
   private quoteService: QuoteService = inject(QuoteService);
   private location: Location = inject(Location);
   private authService: AuthService = inject(AuthService);
@@ -220,14 +222,14 @@ export class NewQuoteComponent implements AfterViewInit {
   protected isPhysicalPerson = signal(false);
   protected isTvaIncluded = signal(false);
   protected isTva0 = signal(false);
-  protected isLoadingQuote = signal(false);
+  protected isLoadingInvoice = signal(false);
   protected isDoubleValidation = signal(true);
   protected showDoubleValidationWarningModal = signal(false);
 
   // Ajout du signal pour la modale de confirmation d'édition de produit
   protected showEditProductConfirmationModal = signal(false);
 
-  protected createQuoteForm!: FormGroup;
+  protected createInvoiceForm!: FormGroup;
   protected createClientForm!: FormGroup;
   protected createProductForm!: FormGroup;
   protected editProductForm!: FormGroup;
@@ -268,7 +270,7 @@ export class NewQuoteComponent implements AfterViewInit {
         this.filterClients(value || '');
       });
 
-    this.createQuoteForm = this.formBuilder.group({
+    this.createInvoiceForm = this.formBuilder.group({
       quote_date: [
         this.datePipe.transform(this.currentDate, 'yyyy-MM-dd'),
         Validators.required,
@@ -315,8 +317,8 @@ export class NewQuoteComponent implements AfterViewInit {
     this.createClientForm
       .get('is_info_pending')
       ?.valueChanges.subscribe((isPending) => {
-        this.toggleClientFieldsValidation(isPending);
-      });
+      this.toggleClientFieldsValidation(isPending);
+    });
 
     this.createProductForm = this.formBuilder.group({
       description: ['', [Validators.required]],
@@ -359,7 +361,7 @@ export class NewQuoteComponent implements AfterViewInit {
 
     // --- AJOUT : Adapter les validateurs pour le délai de paiement du DEVIS ---
     const quotePaymentDeadlineControl =
-      this.createQuoteForm.get('payment_deadline');
+      this.createInvoiceForm.get('payment_deadline');
     if (quotePaymentDeadlineControl) {
       if (this.connectedUser()?.role !== 'ADMIN') {
         // Pour les non-admins: ajouter min 10, max 30
@@ -378,7 +380,7 @@ export class NewQuoteComponent implements AfterViewInit {
       }
       quotePaymentDeadlineControl.updateValueAndValidity(); // Mettre à jour la validité
     }
-    // --- FIN AJOUT ---
+    //--- FIN AJOUT ---
 
     await this.loadUserAttachments();
 
@@ -398,7 +400,7 @@ export class NewQuoteComponent implements AfterViewInit {
     }
 
     if (this.updatedQuoteId()) {
-      this.isLoadingQuote.set(true);
+      this.isLoadingInvoice.set(true);
       try {
         const quote = (await firstValueFrom(
           this.quoteService.getQuote(this.updatedQuoteId()!)
@@ -419,7 +421,7 @@ export class NewQuoteComponent implements AfterViewInit {
         this.isTvaIncluded.set(quote.isVatIncluded);
 
         // Formater les dates avant de les assigner au formulaire
-        this.createQuoteForm.patchValue({
+        this.createInvoiceForm.patchValue({
           quote_date: this.formatDate(new Date(quote.quote_date)),
           service_date: this.formatDate(new Date(quote.service_date)),
           payment_deadline: quote.payment_deadline,
@@ -430,10 +432,10 @@ export class NewQuoteComponent implements AfterViewInit {
         });
 
         this.calculateTotals();
-        this.isLoadingQuote.set(false);
+        this.isLoadingInvoice.set(false);
       } catch (error) {
         console.error('Erreur lors de la récupération du devis:', error);
-        this.isLoadingQuote.set(false);
+        this.isLoadingInvoice.set(false);
       }
     }
   }
@@ -885,7 +887,7 @@ export class NewQuoteComponent implements AfterViewInit {
             // Mettre à jour aussi le délai de paiement du formulaire de devis
             const paymentDeadline =
               updatedClient.default_payment_deadline ?? 10;
-            this.createQuoteForm.patchValue({
+            this.createInvoiceForm.patchValue({
               payment_deadline: paymentDeadline,
             });
 
@@ -911,7 +913,7 @@ export class NewQuoteComponent implements AfterViewInit {
     if (clientId === null) {
       this.client.set(null);
       this.selectedClient.set(null);
-      this.createQuoteForm.patchValue({ client_id: '' });
+      this.createInvoiceForm.patchValue({ client_id: '' });
       return;
     }
     this.clientService
@@ -919,7 +921,7 @@ export class NewQuoteComponent implements AfterViewInit {
       .pipe(
         tap((data) => {
           this.client.set(data);
-          this.createQuoteForm.patchValue({ client_id: data.id });
+          this.createInvoiceForm.patchValue({ client_id: data.id });
           this.products.set([]);
           this.tva6.set(0);
           this.tva21.set(0);
@@ -927,7 +929,7 @@ export class NewQuoteComponent implements AfterViewInit {
           this.total.set(0);
           // Pré-remplir le délai de paiement du devis avec celui du client, sinon 10 jours
           const paymentDeadline = data.default_payment_deadline ?? 10;
-          this.createQuoteForm.patchValue({
+          this.createInvoiceForm.patchValue({
             payment_deadline: paymentDeadline,
           });
         })
@@ -1155,49 +1157,58 @@ export class NewQuoteComponent implements AfterViewInit {
 
     return keys;
   }
-
-  createQuote() {
-    if (this.createQuoteForm.valid) {
-      const quote = {
-        ...this.createQuoteForm.value,
+  createInvoice() {
+    if(this.createInvoiceForm.valid) {
+      const invoice = {
+        ...this.createInvoiceForm.value,
         products_id: this.products().map((product) => product.id!),
         client_id: this.client()!.id,
         isVatIncluded: this.isTvaIncluded(),
         total: this.total(),
-        tva21: this.tva21(),
-        tva6: this.tva6(),
-        totalHtva: this.totalHtva(),
+        total_vat_21: this.tva21(),
+        total_vat_6: this.tva6(),
+        price_htva: this.totalHtva(),
         attachment_keys: this.getAllAttachmentKeys(),
-      };
+        comment: this.createInvoiceForm.get('comment')?.value || '',
+        quote_date: new Date(this.createInvoiceForm.get('quote_date')?.value),
 
+
+      };
       // Ajouter l'ID du compte en fonction du type de projet
       if (this.typeOfProjet() === 'PRINCIPAL') {
-        quote.main_account_id = this.id();
+        invoice.main_account_id = this.id();
       } else {
-        quote.group_account_id = this.id();
+        invoice.group_account_id = this.id();
       }
-
       console.log('Fichiers à envoyer:', this.selectedFiles);
-
-      this.quoteService
-        .createQuote(quote, this.selectedFiles, this.isDoubleValidation())
+      this.invoiceService
+        .createInvoiceWithoutQuote(invoice,{
+          account_id: +this.id()!,
+          type: this.typeOfProjet() as 'PRINCIPAL' | 'GROUP',
+        })
         .pipe(take(1))
         .subscribe({
           next: () => {
-            this.isLoadingQuote.set(false);
+            this.isLoadingInvoice.set(false);
             this.location.back();
           },
           error: (error: Error) => {
-            this.isLoadingQuote.set(false);
-            console.error('Error creating quote:', error);
-            toast.error('Erreur lors de la création du devis');
+            this.isLoadingInvoice.set(false);
+            console.error('Error creating invoice:', error);
+            toast.error('Erreur lors de la création de la facture');
           },
         });
-    } else {
-      this.isLoadingQuote.set(false);
+
+    }
+    else {
+      this.isLoadingInvoice.set(false);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }
+
+
+
+
 
   onDragOver(event: DragEvent) {
     event.preventDefault();
@@ -1285,68 +1296,7 @@ export class NewQuoteComponent implements AfterViewInit {
     }
   }
 
-  async updateQuote() {
-    this.isLoadingQuote.set(true);
 
-    if (!this.client() || !this.updatedQuoteId()) {
-      this.isLoadingQuote.set(false);
-      return;
-    }
-
-    // Logs pour vérifier quelle propriété n'est pas valid dans mon formulaire
-    // Vérifier la validité de chaque contrôle du formulaire
-    Object.keys(this.createQuoteForm.controls).forEach((key) => {
-      const control = this.createQuoteForm.get(key);
-      console.log(
-        `Contrôle ${key}: valeur = ${control?.value}, valide = ${control?.valid}, erreurs = `,
-        control?.errors
-      );
-    });
-
-    // Afficher l'état global du formulaire
-    console.log(`Formulaire complet valide: ${this.createQuoteForm.valid}`);
-    console.log(`Valeurs du formulaire:`, this.createQuoteForm.value);
-
-    const quoteDto: QuoteDto = {
-      quote_date: new Date(this.createQuoteForm.get('quote_date')?.value),
-      service_date: new Date(this.createQuoteForm.get('service_date')?.value),
-      payment_deadline: this.createQuoteForm.get('payment_deadline')?.value,
-      validation_deadline: new Date(
-        this.createQuoteForm.get('validation_deadline')?.value
-      ),
-      client_id: this.client()!.id,
-      products_id: this.products().map((product) => product.id!),
-      isVatIncluded: this.isTvaIncluded(),
-      comment: this.createQuoteForm.get('comment')?.value || '',
-      attachment_keys: [
-        ...this.existingAttachments().map((attachment) =>
-          this.extractS3KeyFromUrl(attachment.url)
-        ),
-        ...this.selectedFiles.map(
-          (file) => `quote/${this.updatedQuoteId()}/${file.name}`
-        ),
-      ],
-    };
-
-    console.log('Fichiers à envoyer pour mise à jour:', this.selectedFiles);
-
-    try {
-      await firstValueFrom(
-        this.quoteService.updateQuote(
-          this.updatedQuoteId() || '',
-          quoteDto,
-          this.selectedFiles,
-          this.isDoubleValidation()
-        )
-      );
-      this.isLoadingQuote.set(false);
-      this.goBack();
-    } catch (error) {
-      console.error('Erreur lors de la mise à jour du devis:', error);
-      this.isLoadingQuote.set(false);
-      toast.error('Erreur lors de la mise à jour du devis');
-    }
-  }
 
   toggleClientSelect() {
     this.isClientSelectOpen.set(!this.isClientSelectOpen());
@@ -1406,7 +1356,7 @@ export class NewQuoteComponent implements AfterViewInit {
     const quoteDate = new Date((event.target as HTMLInputElement).value);
     const validationDate = new Date(quoteDate);
     validationDate.setDate(validationDate.getDate() + 10);
-    this.createQuoteForm.patchValue({
+    this.createInvoiceForm.patchValue({
       validation_deadline: this.formatDate(validationDate),
     });
   }

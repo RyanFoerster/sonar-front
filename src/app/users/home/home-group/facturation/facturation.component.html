@@ -37,6 +37,15 @@
       <hlm-icon size="sm" name="lucideFileText" class="block" />
       Note de crédit
     </a>
+      <a
+        routerLink="new-invoice"
+        [queryParams]="{ typeOfProjet: typeOfProjet() }"
+        class="w-full sm:w-auto rounded-lg text-xs sm:text-sm md:text-base font-semibold py-2 px-4 sm:px-5 md:px-6 bg-gray-sonar text-black flex justify-center items-center gap-2 hover:bg-gray-sonar/90 transition-all duration-200 shadow-sm"
+        hlmBtn
+      >
+        <hlm-icon size="sm" name="lucideFileText" class="block" />
+        Nouvelle facture
+      </a>
     } }
   </div>
 </div>

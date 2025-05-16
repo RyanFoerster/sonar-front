@@ -1,0 +1,1537 @@
+<div class="container max-w-7xl mx-auto px-4 md:px-6">
+  <button
+    type="button"
+    (click)="goBack()"
+    class="mb-4 md:mb-6 text-white hover:text-black border hover:border-black rounded-full flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 hover:bg-white transition-all"
+    hlmBtn
+  >
+    <hlm-icon size="sm" name="lucideCornerDownLeft" />
+    <span class="font-medium">Retour</span>
+  </button>
+
+  <div class="bg-gray-50 rounded-2xl p-4 md:p-8 space-y-6 md:space-y-8">
+    @if (!isToggleClientForm()) {
+      <div
+        class="flex justify-between items-center border-b border-gray-200 pb-4 md:pb-6"
+      >
+        <h1 class="text-xl md:text-3xl font-bold text-gray-900">Nouvelle facture</h1>
+      </div>
+
+      <form
+        [formGroup]="createInvoiceForm"
+        class="space-y-6 md:space-y-8"
+
+        (ngSubmit)="updatedQuoteId() ? createInvoice() : createInvoice()"
+      >
+        <!-- Dates Section -->
+        <div class="grid md:grid-cols-2 gap-6">
+          <div class="space-y-2">
+            <p class="font-medium text-gray-900 text-sm" hlmLabel>
+              Date de la facture
+              <input
+                formControlName="quote_date"
+                class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+                hlmInput
+                type="date"
+                [min]="notPastDate()"
+                (change)="updateValidationDeadline($event)"
+              />
+              @if (createInvoiceForm.get('invoice_date')?.invalid &&
+              createInvoiceForm.get('invoice_date')?.touched) {
+                <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
+              <hlm-icon size="xs" name="lucideAlertCircle" />
+              La date est requise
+            </span>
+              }
+            </p>
+          </div>
+
+          <div class="space-y-2">
+            <p class="font-medium text-gray-900 text-sm" hlmLabel>
+              Dernier jour de prestation / livraison
+              <span class="relative group">
+              <hlm-icon
+                size="xs"
+                name="lucideAlertCircle"
+                class="text-gray-400 cursor-help"
+              />
+              <span
+                class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 p-2 bg-gray-800 text-white text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10"
+              >
+                La facture sera automatiquement générée le jour suivant le
+                dernier jour de prestation / livraison. Vous avez aussi la
+                possibilité de la générer plus tôt en appuyant sur le bouton «
+                Générer la facture » une fois le devis accepté par toutes les
+                parties.
+              </span>
+            </span>
+              <input
+                formControlName="service_date"
+                class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+                hlmInput
+                type="date"
+              />
+            </p>
+
+            @if (createInvoiceForm.get('service_date')?.invalid &&
+            createInvoiceForm.get('service_date')?.touched) {
+              <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
+            <hlm-icon size="xs" name="lucideAlertCircle" />
+            La date de prestation est requise
+          </span>
+            }
+          </div>
+        </div>
+
+        <!-- Délais Section -->
+        <div class="grid md:grid-cols-2 gap-6">
+          <div class="space-y-2">
+            <p class="font-medium text-gray-900 text-sm" hlmLabel>
+              Délai de paiement (jours)
+              <input
+                formControlName="payment_deadline"
+                class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+                hlmInput
+                type="number"
+                [min]="connectedUser()?.role === 'ADMIN' ? null : 10"
+                [max]="connectedUser()?.role === 'ADMIN' ? null : 30"
+                placeholder="Min: 10, Max: 30"
+              />
+              @if (createInvoiceForm.get('payment_deadline')?.invalid &&
+              createInvoiceForm.get('payment_deadline')?.touched) {
+                <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
+              <hlm-icon size="xs" name="lucideAlertCircle" />
+                  @if
+                  (createInvoiceForm.get('payment_deadline')?.errors?.['required']) {
+                    Le délai de paiement est requis } @else if
+                  (createInvoiceForm.get('payment_deadline')?.errors?.['min']) { @if
+                  (connectedUser()?.role !== 'ADMIN') { Le délai minimum est de 10
+                    jours } } @else if
+                  (createInvoiceForm.get('payment_deadline')?.errors?.['max']) { @if
+                  (connectedUser()?.role !== 'ADMIN') { Le délai maximum est de 30
+                    jours } }
+            </span>
+              }
+            </p>
+          </div>
+
+          <div class="space-y-2">
+            <p class="font-medium text-gray-900 text-sm" hlmLabel>
+              Date limite de payement
+              <input
+                formControlName="validation_deadline"
+                class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+                hlmInput
+                type="date"
+                [min]="notPastDate()"
+              />
+              @if (createInvoiceForm.get('validation_deadline')?.invalid &&
+              createInvoiceForm.get('validation_deadline')?.touched) {
+                <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
+              <hlm-icon size="xs" name="lucideAlertCircle" />
+              La date de validité est requise
+            </span>
+              }
+            </p>
+          </div>
+        </div>
+
+        <!-- Client Section -->
+        <div class="space-y-4">
+          <div
+            class="flex flex-col md:flex-row md:justify-between md:items-center gap-4"
+          >
+            <h2 class="text-lg font-semibold text-gray-900">Client</h2>
+            <div
+              class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto"
+            >
+              @if (!client()) {
+                <div class="relative w-full sm:w-[400px] client-select">
+                  <button
+                    type="button"
+                    (click)="toggleClientSelect()"
+                    class="w-full bg-white text-gray-700 font-medium text-sm rounded-lg px-4 py-2.5 flex items-center justify-between gap-2 shadow-sm hover:bg-gray-50 border border-gray-200 transition-all"
+                  >
+                    <div class="flex items-center gap-2">
+                      <hlm-icon
+                        size="sm"
+                        name="lucideUsers"
+                        class="text-gray-400"
+                      />
+                      <span>{{
+                          selectedClient()
+                            ? selectedClient()?.name
+                            : "Sélectionner un client"
+                        }}</span>
+                    </div>
+                    <hlm-icon
+                      size="sm"
+                      [name]="
+                    isClientSelectOpen()
+                      ? 'lucideChevronUp'
+                      : 'lucideChevronDown'
+                  "
+                      class="text-gray-400"
+                    />
+                  </button>
+
+                  @if (isClientSelectOpen()) {
+                    <div
+                      class="absolute z-50 w-full mt-1 bg-white rounded-lg shadow-lg border border-gray-200 max-h-[400px] overflow-hidden"
+                    >
+                      <div class="p-2 border-b border-gray-100">
+                        <div class="relative">
+                          <hlm-icon
+                            name="lucideSearch"
+                            class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none z-10"
+                            size="sm"
+                          />
+                          <input
+                            type="text"
+                            [formControl]="searchControl"
+                            placeholder="Rechercher par nom, email ou n° TVA..."
+                            class="w-full pl-10 pr-4 py-2 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                          />
+                        </div>
+                      </div>
+
+                      <div class="overflow-y-auto max-h-[300px]">
+                        @if (filteredClients().length === 0) {
+                          <div class="p-4 text-sm text-gray-500 text-center">
+                            Aucun client trouvé
+                          </div>
+                        } @else { @for (client of filteredClients(); track client.id)
+                        {
+                          <button
+                            type="button"
+                            (click)="selectClient(client)"
+                            class="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0"
+                            [ngClass]="{
+                      'bg-primary/5': selectedClient()?.id === client.id
+                    }"
+                          >
+                            <div class="flex items-start gap-3">
+                              <div
+                                class="shrink-0 w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center"
+                              >
+
+                                {{
+                                  client.name && client.name.length > 0
+                                    ? client.name.charAt(0).toUpperCase()
+                                    : (client.email && client.email.length > 0
+                                      ? client.email.charAt(0).toUpperCase()
+                                      : 'A')
+                                }}
+
+                              </div>
+                              <div class="flex-1 min-w-0">
+                                <div class="flex items-center justify-between gap-2">
+                                  <p class="font-medium text-gray-900 truncate">
+                                    {{ client.name }}
+                                  </p>
+                                  @if (client.company_vat_number) {
+                                    <span class="text-xs text-gray-500">
+                            TVA: {{ client.company_vat_number }}
+                          </span>
+                                  }
+                                </div>
+                                <div
+                                  class="mt-0.5 flex items-center gap-2 text-sm text-gray-500"
+                                >
+                                  <span class="truncate">{{ client.email }}</span>
+                                  <span class="w-1 h-1 rounded-full bg-gray-300"></span>
+                                  <span class="truncate">{{ client.city }}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </button>
+                        } }
+                      </div>
+                    </div>
+                  }
+                </div>
+
+                <button
+                  type="button"
+                  (click)="toggleClientForm(true)"
+                  class="bg-primary text-white font-medium text-sm rounded-lg px-4 py-2.5 flex items-center justify-center gap-2 hover:bg-primary/90 transition-all w-full sm:w-auto"
+                  hlmBtn
+                >
+                  <hlm-icon size="sm" name="lucidePlusCircle" />
+                  Nouveau client
+                </button>
+              } @else {
+                <button
+                  type="button"
+                  (click)="setClient(null)"
+                  class="bg-gray-100 text-gray-700 font-medium text-sm rounded-lg px-4 py-2.5 flex items-center justify-center gap-2 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all border border-gray-200 w-full sm:w-auto"
+                  hlmBtn
+                >
+                  <hlm-icon size="sm" name="lucideX" />
+                  Désélectionner le client
+                </button>
+              }
+            </div>
+          </div>
+
+          @if (client()) {
+            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+              @if (client()?.is_info_pending) {
+                <div class="flex items-start gap-3">
+                  <hlm-icon
+                    name="lucideInfo"
+                    class="text-blue-500 shrink-0 mt-0.5"
+                    size="sm"
+                  />
+                  <div class="flex-1">
+                    <h3 class="font-medium text-gray-800">
+                      Client sélectionné (informations en attente)
+                    </h3>
+                    <p class="text-sm text-gray-600 mt-1">
+                      <span class="font-medium">Email :</span> {{ client()?.email }}
+                    </p>
+                    <p class="text-sm text-gray-500 mt-2 italic">
+                      Le client devra compléter ses informations (adresse, téléphone,
+                      etc.) depuis le lien qui lui sera envoyé par email pour pouvoir
+                      valider ce devis.
+                    </p>
+                  </div>
+                </div>
+              } @else {
+                <div class="flex justify-between items-start">
+                  <div class="space-y-1">
+                    @if (client()?.is_physical_person) {
+                      <h3 class="font-semibold text-gray-900">
+                        {{ client()?.firstname }} {{ client()?.lastname }}
+                      </h3>
+                    } @else {
+                      <h3 class="font-semibold text-gray-900">{{ client()?.name }}</h3>
+                    }
+                    <p class="text-sm text-gray-600">
+                      {{ client()?.street }} {{ client()?.number }}
+                    </p>
+                    <p class="text-sm text-gray-600">
+                      {{ client()?.city }} {{ client()?.postalCode }}
+                      {{ client()?.country }}
+                    </p>
+                    @if (client()?.company_number) {
+                      <p class="text-sm text-gray-600">
+                        TVA: {{ client()?.company_vat_number }}
+                      </p>
+                    } @else if (client()?.national_number) {
+                      <p class="text-sm text-gray-600">
+                        N° national: {{ client()?.national_number }}
+                      </p>
+                    }
+                  </div>
+                  <button
+                    type="button"
+                    (click)="toggleClientForm(false)"
+                    class="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-all"
+                    title="Modifier le client"
+                  >
+                    <hlm-icon size="sm" name="lucideEdit" />
+                  </button>
+                </div>
+              }
+            </div>
+          } @else {
+            <div
+              class="bg-amber-50 text-amber-600 p-4 rounded-lg text-sm flex items-center gap-2"
+            >
+              <hlm-icon size="sm" name="lucideAlertTriangle" />
+              Veuillez sélectionner ou créer un client
+            </div>
+          }
+        </div>
+
+        <!-- Services Section -->
+        <div class="space-y-4">
+          <div class="flex justify-between items-center">
+            <h2 class="text-lg font-semibold text-gray-900">Services</h2>
+            @if (!isToggleProductForm()) {
+              <button
+                type="button"
+                (click)="toggleProductForm()"
+                [disabled]="!client()"
+                class="bg-primary text-white font-medium text-sm rounded-lg px-4 py-2 flex items-center gap-2 hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                hlmBtn
+              >
+                <hlm-icon size="sm" name="lucidePlusCircle" />
+                Nouveau service
+              </button>
+            }
+          </div>
+
+          @if (!client() && !isToggleProductForm()) {
+            <div
+              class="bg-amber-50 text-amber-600 p-4 rounded-lg text-sm flex items-center gap-2"
+            >
+              <hlm-icon size="sm" name="lucideAlertTriangle" />
+              Veuillez sélectionner un client avant d'ajouter des services
+            </div>
+          } @if (products().length > 0) {
+          <div class="space-y-4">
+            @if (isToggleEditProductForm()) {
+              <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+                <form
+                  [formGroup]="editProductForm"
+                  (ngSubmit)="openEditProductConfirmation()"
+                  class="space-y-6"
+                >
+                  <div
+                    class="flex justify-between items-center border-b border-gray-200 pb-6"
+                  >
+                    <h3 class="font-semibold text-gray-900">Modifier le service</h3>
+                    <button
+                      type="button"
+                      (click)="toggleEditProductForm()"
+                      class="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-all"
+                    >
+                      <hlm-icon size="sm" name="lucideXCircle" />
+                    </button>
+                  </div>
+
+                  <div class="space-y-4">
+                    <p class="block" hlmLabel>
+                  <span class="text-sm font-medium text-gray-900"
+                  >Description*</span
+                  >
+                      <input
+                        formControlName="description"
+                        hlmInput
+                        placeholder="Description du service"
+                        class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+                      />
+                    </p>
+
+                    <div class="grid md:grid-cols-2 gap-4">
+                      <p class="block" hlmLabel>
+                        <span class="text-sm font-medium text-gray-900">Prix*</span>
+                        <input
+                          formControlName="price"
+                          type="number"
+                          hlmInput
+                          placeholder="0.00"
+                          class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+                        />
+                      </p>
+
+                      <p class="block" hlmLabel>
+                    <span class="text-sm font-medium text-gray-900"
+                    >Quantité*</span
+                    >
+                        <input
+                          formControlName="quantity"
+                          type="number"
+                          hlmInput
+                          placeholder="1"
+                          class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+                        />
+                      </p>
+                    </div>
+
+                    <p class="flex items-center gap-2 cursor-pointer group">
+                      <hlm-checkbox
+                        (click)="toggleArtisticPerformance()"
+                        formControlName="vat"
+                        class="rounded-md group-hover:border-primary transition-colors"
+                      />
+                      <span
+                        class="text-sm text-gray-700 group-hover:text-gray-900 transition-colors"
+                      >
+                    TVA 6% (Prestation artistique)
+                  </span>
+                    </p>
+                  </div>
+
+                  <div class="flex justify-end gap-3 pt-6 border-t border-gray-200">
+                    <button
+                      type="button"
+                      (click)="toggleEditProductForm()"
+                      class="bg-gray-100 text-gray-700 font-medium text-sm rounded-lg px-4 py-2 hover:bg-gray-200 transition-all"
+                      hlmBtn
+                    >
+                      Annuler
+                    </button>
+                    <button
+                      class="bg-primary text-white font-medium text-sm rounded-lg px-4 py-2 flex items-center gap-2 hover:bg-primary/90 transition-all"
+                      hlmBtn
+                      type="submit"
+                    >
+                      <hlm-icon size="sm" name="lucideCheck" />
+                      Modifier le service
+                    </button>
+                  </div>
+                </form>
+              </div>
+            }
+
+            <!-- Boîte de dialogue de confirmation pour la modification du produit -->
+            @if (showEditProductConfirmationModal()) {
+              <div
+                class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+              >
+                <div
+                  class="bg-white rounded-xl p-6 max-w-md w-full mx-auto shadow-xl space-y-4"
+                >
+                  <div class="flex items-center gap-3">
+                    <hlm-icon
+                      size="lg"
+                      name="lucideAlertTriangle"
+                      class="text-amber-500"
+                    />
+                    <h3 class="text-lg font-semibold text-gray-900">
+                      Confirmation requise
+                    </h3>
+                  </div>
+                  <p class="text-sm text-gray-600">
+                    Confirmer la modification mettra à jour ce service
+                    immédiatement, même si vous n'enregistrez pas encore le devis.
+                    Êtes-vous sûr de vouloir continuer ?
+                  </p>
+                  <div class="flex justify-end gap-3 pt-4 border-t border-gray-200">
+                    <button
+                      type="button"
+                      (click)="cancelEditProduct()"
+                      class="bg-gray-100 text-gray-700 font-medium text-sm rounded-lg px-4 py-2 hover:bg-gray-200 transition-all"
+                      hlmBtn
+                    >
+                      Annuler
+                    </button>
+                    <button
+                      type="button"
+                      (click)="confirmEditProduct()"
+                      class="bg-primary text-white font-medium text-sm rounded-lg px-4 py-2 flex items-center gap-2 hover:bg-primary/90 transition-all"
+                      hlmBtn
+                    >
+                      <hlm-icon size="sm" name="lucideCheck" />
+                      Confirmer
+                    </button>
+                  </div>
+                </div>
+              </div>
+            }
+            <!-- Fin de la boîte de dialogue -->
+
+            <div
+              class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto"
+            >
+              <table hlmTable class="w-full min-w-[800px]">
+                <thead>
+                <tr hlmTr class="border-b border-gray-200 bg-gray-50">
+                  <th
+                    hlmTh
+                    class="text-left font-medium text-gray-600 py-4 px-4 md:px-6"
+                  >
+                    Description
+                  </th>
+                  <th
+                    hlmTh
+                    class="text-right font-medium text-gray-600 py-4 px-4 md:px-6"
+                  >
+                    Prix unitaire HTVA
+                  </th>
+                  <th
+                    hlmTh
+                    class="text-right font-medium text-gray-600 py-4 px-4 md:px-6"
+                  >
+                    Quantité
+                  </th>
+                  <th
+                    hlmTh
+                    class="text-right font-medium text-gray-600 py-4 px-4 md:px-6"
+                  >
+                    Prix total HTVA
+                  </th>
+                  <th
+                    hlmTh
+                    class="text-right font-medium text-gray-600 py-4 px-4 md:px-6"
+                  >
+                    TVA
+                  </th>
+                  <th
+                    hlmTh
+                    class="text-right font-medium text-gray-600 py-4 px-4 md:px-6"
+                  >
+                    Total
+                  </th>
+                  <th hlmTh class="w-[100px] py-4 px-4 md:px-6"></th>
+                </tr>
+                </thead>
+                <tbody>
+                  @for (product of products(); track product.id) {
+                    <tr
+                      hlmTr
+                      class="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                    >
+                      <td hlmTd class="text-sm text-gray-900 py-4 px-4 md:px-6">
+                        {{ product.description }}
+                      </td>
+                      <td
+                        hlmTd
+                        class="text-right text-sm text-gray-900 py-4 px-4 md:px-6"
+                      >
+                        {{ product.price_htva! / product.quantity! | euroFormat }}
+                      </td>
+                      <td
+                        hlmTd
+                        class="text-right text-sm text-gray-900 py-4 px-4 md:px-6"
+                      >
+                        {{ product.quantity }}
+                      </td>
+                      <td
+                        hlmTd
+                        class="text-right text-sm text-gray-900 py-4 px-4 md:px-6"
+                      >
+                        {{ product.price_htva! | euroFormat }}
+                      </td>
+                      <td
+                        hlmTd
+                        class="text-right text-sm text-gray-900 py-4 px-4 md:px-6"
+                      >
+                        {{ product.vat * 100 }}%
+                      </td>
+                      <td
+                        hlmTd
+                        class="text-right text-sm text-gray-900 py-4 px-4 md:px-6 font-medium"
+                      >
+                        {{ product.total! | euroFormat }}
+                      </td>
+                      <td hlmTd class="py-4 px-4 md:px-6">
+                        <div class="flex justify-end gap-2">
+                          <button
+                            type="button"
+                            (click)="editProduct(product.id!)"
+                            class="text-gray-400 hover:text-primary p-1 rounded-full hover:bg-gray-100 transition-all"
+                          >
+                            <hlm-icon size="sm" name="lucideEdit" />
+                          </button>
+                          <button
+                            type="button"
+                            (click)="deleteProduct(product.id!)"
+                            class="text-gray-400 hover:text-red-600 p-1 rounded-full hover:bg-red-50 transition-all"
+                          >
+                            <hlm-icon size="sm" name="lucideTrash" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        } @else {
+          <div class="bg-gray-100 rounded-xl p-8 text-center">
+            <p class="text-gray-500 text-sm">
+              Aucun service ajouté pour le moment
+            </p>
+          </div>
+        } @if (isToggleProductForm()) {
+          <div
+            class="bg-white rounded-xl p-4 md:p-6 shadow-sm border border-gray-100"
+          >
+            <form
+              [formGroup]="createProductForm"
+              (ngSubmit)="createProduct()"
+              class="space-y-4 md:space-y-6"
+            >
+              <div
+                class="flex justify-between items-center border-b border-gray-200 pb-4 md:pb-6"
+              >
+                <h3 class="font-semibold text-gray-900">Nouveau service</h3>
+                <button
+                  type="button"
+                  (click)="toggleProductForm()"
+                  class="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-all"
+                >
+                  <hlm-icon size="sm" name="lucideXCircle" />
+                </button>
+              </div>
+
+              <div class="space-y-4">
+                <p class="block" hlmLabel>
+                <span class="text-sm font-medium text-gray-900"
+                >Description*</span
+                >
+                  <input
+                    formControlName="description"
+                    hlmInput
+                    placeholder="Description du service"
+                    class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+                  />
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <p class="block" hlmLabel>
+                    <span class="text-sm font-medium text-gray-900">Prix*</span>
+                    <input
+                      formControlName="price"
+                      type="number"
+                      hlmInput
+                      placeholder="0.00"
+                      class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+                    />
+                  </p>
+
+                  <p class="block" hlmLabel>
+                  <span class="text-sm font-medium text-gray-900"
+                  >Quantité*</span
+                  >
+                    <input
+                      formControlName="quantity"
+                      type="number"
+                      hlmInput
+                      placeholder="1"
+                      class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+                    />
+                  </p>
+                </div>
+
+                <p class="flex items-center gap-2 cursor-pointer group">
+                  <hlm-checkbox
+                    (click)="toggleArtisticPerformance()"
+                    [disabled]="isTva0()"
+                    formControlName="vat"
+                    class="rounded-md group-hover:border-primary transition-colors"
+                  />
+                  <span
+                    class="text-sm text-gray-700 group-hover:text-gray-900 transition-colors"
+                  >
+                  TVA 6% (Prestation artistique)
+                </span>
+                </p>
+
+                <p class="flex items-center gap-2 cursor-pointer group">
+                  <hlm-checkbox
+                    (click)="toggleTva0()"
+                    [disabled]="isArtisticPerformance()"
+                    formControlName="vat"
+                    class="rounded-md group-hover:border-primary transition-colors"
+                  />
+                  <span
+                    class="text-sm text-gray-700 group-hover:text-gray-900 transition-colors"
+                  >
+                  TVA 0% (Remboursement frais avec justificatif uniquement)
+                </span>
+                </p>
+              </div>
+
+              <div
+                class="flex justify-end gap-3 pt-4 md:pt-6 border-t border-gray-200"
+              >
+                <button
+                  type="button"
+                  (click)="toggleProductForm()"
+                  class="bg-gray-100 text-gray-700 font-medium text-sm rounded-lg px-3 py-1.5 md:px-4 md:py-2 hover:bg-gray-200 transition-all"
+                  hlmBtn
+                >
+                  Annuler
+                </button>
+                <button
+                  class="bg-primary text-white font-medium text-sm rounded-lg px-3 py-1.5 md:px-4 md:py-2 flex items-center gap-2 hover:bg-primary/90 transition-all"
+                  hlmBtn
+                  type="submit"
+                >
+                  <hlm-icon size="sm" name="lucideCheck" />
+                  Ajouter le service
+                </button>
+              </div>
+            </form>
+          </div>
+        }
+        </div>
+
+        <!-- Totals Section -->
+        <div class="border-t border-gray-200 pt-4 md:pt-6">
+          <div class="flex justify-end">
+            <div class="w-full md:w-72 space-y-3 md:space-y-4">
+              <p class="flex items-center gap-2 text-sm text-gray-700">
+                <hlm-checkbox
+                  [checked]="isTvaIncluded()"
+                  (checkedChange)="toggleTvaIncluded()"
+                  [disabled]="products().length === 0"
+                  class="rounded-md"
+                />
+                Montant TVA comprise
+              </p>
+
+              <div class="space-y-2 text-sm">
+                <div class="flex justify-between py-1.5 md:py-2">
+                  <span class="text-gray-600">Total HTVA</span>
+                  <span class="font-medium text-gray-900">{{
+                      totalHtva() | euroFormat
+                    }}</span>
+                </div>
+                <div class="flex justify-between py-1.5 md:py-2">
+                  <span class="text-gray-600">TVA 21%</span>
+                  <span class="font-medium text-gray-900">{{
+                      tva21() | euroFormat
+                    }}</span>
+                </div>
+                <div class="flex justify-between py-1.5 md:py-2">
+                  <span class="text-gray-600">TVA 6%</span>
+                  <span class="font-medium text-gray-900">{{
+                      tva6() | euroFormat
+                    }}</span>
+                </div>
+                <div
+                  class="flex justify-between py-1.5 md:py-2 border-t border-gray-200"
+                >
+                  <span class="font-medium text-gray-900">Total TTC</span>
+                  <span class="font-semibold text-gray-900">{{
+                      total() | euroFormat
+                    }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Commentaire Section -->
+        <div
+          class="space-y-2 bg-white rounded-xl p-6 shadow-sm border border-gray-100"
+        >
+          <label for="quote-comment" class="block">
+            <span class="text-sm font-medium text-gray-900">Commentaire</span>
+          </label>
+          <quill-editor
+            formControlName="comment"
+            id="quote-comment"
+            placeholder="Ajoutez un commentaire (conditions, infos...). Les liens sont acceptés."
+            class="[&_.ql-container]:min-h-[120px] [&_.ql-container]:rounded-b-lg [&_.ql-toolbar]:rounded-t-lg [&_.ql-toolbar]:border-gray-200 [&_.ql-container]:border-gray-200 [&_.ql-container]:border-t-0 mt-2 block w-full"
+            theme="snow"
+            [modules]="quillModules"
+          ></quill-editor>
+
+          <!-- Affichage des erreurs pour le commentaire -->
+          @if (createInvoiceForm.get('comment')?.invalid &&
+          createInvoiceForm.get('comment')?.touched) {
+            <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
+          <hlm-icon size="xs" name="lucideAlertCircle" />
+              @if (createInvoiceForm.get('comment')?.errors?.['maxlength']) { Le
+                commentaire ne peut pas dépasser
+                {{ createInvoiceForm.get('comment')?.errors?.['maxlength'].requiredLength }}
+                caractères. } @else { Le champ commentaire contient une erreur. }
+        </span>
+          }
+        </div>
+        <!-- Fin Commentaire Section -->
+
+        <!-- Fichier Section -->
+        <div
+          class="space-y-2 bg-white rounded-xl p-6 shadow-sm border border-gray-100"
+        >
+          <div class="flex justify-between items-center mb-4">
+            <span class="text-sm font-medium text-gray-900">Fichier</span>
+            <button
+              type="button"
+              (click)="toggleAttachmentModal()"
+              class="text-primary hover:text-primary/80 text-sm font-medium flex items-center gap-2"
+            >
+              <hlm-icon size="sm" name="lucideFolder" />
+              Mes pièces jointes
+            </button>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-4">
+            <!-- Zone de dépôt de fichier -->
+            <div
+              class="relative border-2 border-dashed rounded-lg transition-all"
+              [ngClass]="{
+              'border-primary bg-primary/5': isDragging,
+              'border-gray-200': !isDragging
+            }"
+              (dragover)="onDragOver($event)"
+              (dragleave)="onDragLeave($event)"
+              (drop)="onDrop($event)"
+            >
+              <input
+                #fileInput
+                id="quote-attachment"
+                type="file"
+                accept=".pdf"
+                (change)="onFileChange($event)"
+                class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                multiple
+              />
+              <div class="text-center p-6">
+                <hlm-icon
+                  size="lg"
+                  name="lucideUpload"
+                  class="mx-auto text-gray-400 mb-3"
+                />
+                <p class="text-sm text-gray-600">
+                <span class="font-medium text-primary"
+                >Cliquez pour télécharger</span
+                >
+                  ou glissez-déposez
+                </p>
+                <p class="text-xs text-gray-500 mt-1">PDF uniquement</p>
+              </div>
+            </div>
+
+            <!-- Aperçu des fichiers sélectionnés -->
+            <div class="bg-gray-50 rounded-lg p-4">
+              @if (!selectedFiles.length && !existingAttachments().length) {
+                <div class="h-full flex items-center justify-center">
+                  <p class="text-sm text-gray-500">Aucun fichier sélectionné</p>
+                </div>
+              } @else {
+                <div class="space-y-4">
+                  @if (existingAttachments().length > 0) { @for (attachment of
+                    existingAttachments(); track attachment.url) {
+                    <div class="flex items-start gap-3">
+                      <div class="shrink-0">
+                        <hlm-icon
+                          size="lg"
+                          name="lucideFileText"
+                          class="text-primary"
+                        />
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <p class="font-medium text-gray-900 truncate">
+                          {{ attachment.name }}
+                        </p>
+                        <p class="text-sm text-gray-500 mt-0.5">
+                          Pièce jointe existante
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        (click)="removeExistingAttachment(attachment)"
+                        class="shrink-0 text-gray-400 p-1 rounded-full hover:text-red-600 hover:bg-red-50 transition-all"
+                      >
+                        <hlm-icon size="sm" name="lucideX" />
+                      </button>
+                    </div>
+                  } } @if (selectedFiles.length > 0) { @for (file of selectedFiles;
+                  track $index) {
+                  <div class="flex items-start gap-3">
+                    <div class="shrink-0">
+                      <hlm-icon
+                        size="lg"
+                        name="lucideFileText"
+                        class="text-primary"
+                      />
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="font-medium text-gray-900 truncate">
+                        {{ file.name }}
+                      </p>
+                      <p class="text-sm text-gray-500 mt-0.5">
+                        {{ (file.size / 1024).toFixed(0) }} Ko
+                      </p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      @if (!isFileAlreadySaved(file.name)) {
+                        <button
+                          type="button"
+                          (click)="saveAsAttachment(file)"
+                          class="shrink-0 text-primary p-1 rounded-full hover:text-primary/80 hover:bg-primary/5 transition-all"
+                          title="Sauvegarder comme pièce jointe"
+                        >
+                          <hlm-icon size="sm" name="lucideSave" />
+                        </button>
+                      }
+                      <button
+                        type="button"
+                        (click)="removeFile($index)"
+                        class="shrink-0 text-gray-400 p-1 rounded-full hover:text-red-600 hover:bg-red-50 transition-all"
+                      >
+                        <hlm-icon size="sm" name="lucideX" />
+                      </button>
+                    </div>
+                  </div>
+                } }
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal pour les pièces jointes -->
+        @if (showAttachmentModal()) {
+          <div
+            class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center"
+          >
+            <div
+              class="bg-white rounded-xl p-6 max-w-4xl w-full mx-4 max-h-[80vh] flex flex-col"
+            >
+              <div
+                class="flex justify-between items-center border-b border-gray-200 pb-4"
+              >
+                <h3 class="text-lg font-semibold text-gray-900">
+                  Pièces jointes du projet
+                </h3>
+                <button
+                  type="button"
+                  (click)="toggleAttachmentModal()"
+                  class="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-all"
+                >
+                  <hlm-icon size="sm" name="lucideX" />
+                </button>
+              </div>
+
+              <div class="overflow-y-auto flex-1 mt-4">
+                @if (userAttachments().length === 0) {
+                  <div class="text-center text-gray-500 py-8">
+                    <hlm-icon
+                      size="lg"
+                      name="lucideFiles"
+                      class="mx-auto text-gray-400 mb-3"
+                    />
+                    <p>Aucune pièce jointe enregistrée</p>
+                    <p class="text-sm mt-1">
+                      Commencez par ajouter des fichiers que vous utilisez fréquemment
+                    </p>
+                  </div>
+                } @else {
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    @for (attachment of userAttachments(); track attachment.id) {
+                      <div
+                        class="flex items-start gap-3 p-4 rounded-lg hover:bg-gray-50 text-left transition-all border border-gray-100 cursor-pointer"
+                        [ngClass]="{
+                  'bg-primary/5': isAttachmentSelected(attachment)
+                }"
+                        (click)="selectUserAttachment(attachment)"
+                        (keydown.enter)="selectUserAttachment(attachment)"
+                        (keydown.space)="selectUserAttachment(attachment)"
+                        tabindex="0"
+                        role="button"
+                        [attr.aria-label]="'Sélectionner ' + attachment.name"
+                      >
+                        <div class="flex items-center gap-3">
+                          <hlm-checkbox
+                            [checked]="isAttachmentSelected(attachment)"
+                            class="rounded-md"
+                          />
+                          <div class="shrink-0">
+                            <hlm-icon
+                              size="lg"
+                              name="lucideFileText"
+                              class="text-primary"
+                            />
+                          </div>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                          <div class="flex items-center justify-between gap-2">
+                            <p class="font-medium text-gray-900 truncate">
+                              {{ attachment.name }}
+                            </p>
+                            <div class="flex items-center gap-1">
+                              <button
+                                type="button"
+                                (click)="previewAttachment(attachment, $event)"
+                                class="shrink-0 text-gray-400 p-1 rounded-full hover:text-primary hover:bg-primary/5 transition-all"
+                                title="Prévisualiser"
+                              >
+                                <hlm-icon size="sm" name="lucideEye" />
+                              </button>
+                              <button
+                                type="button"
+                                (click)="deleteAttachment(attachment.id, $event)"
+                                class="shrink-0 text-gray-400 p-1 rounded-full hover:text-red-600 hover:bg-red-50 transition-all"
+                                title="Supprimer"
+                              >
+                                <hlm-icon size="sm" name="lucideTrash" />
+                              </button>
+                            </div>
+                          </div>
+                          @if (attachment.description) {
+                            <p class="text-sm text-gray-500 mt-0.5">
+                              {{ attachment.description }}
+                            </p>
+                          }
+                          <p class="text-xs text-gray-400 mt-1">
+                            Ajouté le {{ attachment.created_at | date : "dd/MM/yyyy" }}
+                          </p>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+
+              <div
+                class="flex justify-end gap-3 pt-4 mt-4 border-t border-gray-200"
+              >
+                <button
+                  type="button"
+                  (click)="addSelectedAttachmentsToQuote()"
+                  class="bg-primary text-white font-medium text-sm rounded-lg px-4 py-2 flex items-center gap-2 hover:bg-primary/90 transition-all"
+                  hlmBtn
+                  [disabled]="selectedAttachments().length === 0"
+                >
+                  <hlm-icon size="sm" name="lucideCheck" />
+                  Ajouter les pièces jointes sélectionnées
+                </button>
+                <button
+                  type="button"
+                  (click)="toggleAttachmentModal()"
+                  class="bg-gray-100 text-gray-700 font-medium text-sm rounded-lg px-4 py-2 hover:bg-gray-200 transition-all"
+                  hlmBtn
+                >
+                  Fermer
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+
+        <div class="flex flex-col justify-end gap-2">
+          <!-- Interrupteur pour la double validation -->
+          <div class="flex items-center justify-end gap-3">
+          <span class="text-sm font-medium text-gray-700"
+          >Double validation</span
+          >
+            <button
+              type="button"
+              role="switch"
+              [attr.aria-checked]="isDoubleValidation()"
+              (click)="toggleDoubleValidation($event)"
+              class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+              [ngClass]="isDoubleValidation() ? 'bg-primary' : 'bg-gray-200'"
+            >
+              <span class="sr-only">Utiliser la double validation</span>
+              <span
+                aria-hidden="true"
+                class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                [ngClass]="
+                isDoubleValidation() ? 'translate-x-5' : 'translate-x-0'
+              "
+              ></span>
+            </button>
+          </div>
+          <!-- Fin Interrupteur -->
+
+          <!-- Submit Button -->
+          <div class="flex justify-end">
+            @if (isLoadingInvoice()) {
+              <button
+                class="bg-gray-700 text-gray-100 font-medium text-sm rounded-lg px-4 py-2 md:px-6 md:py-2.5 flex items-center gap-2 hover:bg-gray-200 transition-all w-full md:w-auto"
+                hlmBtn
+                type="submit"
+                disabled
+              >
+                <hlm-icon class="animate-spin" size="sm" name="lucideLoader" />
+                {{
+                  updatedQuoteId()
+                    ? "Modification de la facture..."
+                    : "Génération de la facture..."
+                }}
+              </button>
+            } @else {
+              <button
+                class="bg-primary text-white font-medium text-sm rounded-lg px-4 py-2 md:px-6 md:py-2.5 flex items-center gap-2 hover:bg-primary/90 transition-all w-full md:w-auto"
+                hlmBtn
+                type="submit"
+                (click)="isLoadingInvoice.set(true)"
+                [disabled]=""
+              >
+                <hlm-icon size="sm" name="lucideFileDown" />
+                {{ updatedQuoteId() ? "Modifier le devis" : "Générer le facture" }}
+              </button>
+            }
+          </div>
+        </div>
+      </form>
+      <hlm-toaster />
+
+    } @else {
+      <form
+        [formGroup]="createClientForm"
+        class="bg-white rounded-xl p-8 space-y-6 max-w-2xl mx-auto"
+        (ngSubmit)="client() ? updateClient() : createClient()"
+      >
+        <div
+          class="flex justify-between items-center border-b border-gray-200 pb-6"
+        >
+          <h2 class="text-xl font-bold text-gray-900">
+            {{ client() ? "Modifier le client" : "Nouveau client" }}
+          </h2>
+          <button
+            type="button"
+            (click)="toggleClientForm(false)"
+            class="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-all"
+          >
+            <hlm-icon size="sm" name="lucideXCircle" />
+          </button>
+        </div>
+
+        <div class="space-y-6">
+          <p class="block" hlmLabel>
+            <span class="text-sm font-medium text-gray-900">Pays</span>
+            <brn-select
+              formControlName="country"
+              class="mt-1.5"
+              placeholder="Belgique"
+            >
+              <hlm-select-trigger
+                class="w-full bg-white border-gray-200 text-sm rounded-lg"
+              >
+                <hlm-select-value />
+              </hlm-select-trigger>
+              <hlm-select-content class="w-full max-h-80">
+                @for (pays of paysEuropeens; track pays) {
+                  <hlm-option [value]="pays" class="text-sm">{{ pays }}</hlm-option>
+                }
+              </hlm-select-content>
+            </brn-select>
+          </p>
+
+          <p class="flex items-center gap-2 cursor-pointer group">
+            <hlm-checkbox
+              (checkedChange)="togglePhysicalPerson()"
+              [checked]="isPhysicalPerson()"
+              class="rounded-md group-hover:border-primary transition-colors"
+            />
+            <span
+              class="text-sm text-gray-700 group-hover:text-gray-900 transition-colors"
+            >
+            Personne physique ou association de fait ?
+          </span>
+          </p>
+
+          @if (!isPhysicalPerson()) {
+            <div class="space-y-4">
+              <div class="block" hlmLabel>
+            <span class="text-sm font-medium text-gray-900"
+            >Numéro d'entreprise</span
+            >
+                <div class="flex flex-col sm:flex-row gap-2 mt-1.5">
+                  <input
+                    [ngClass]="{
+                  'border-green-600 focus:ring-green-600':
+                    getIsValidBCENumber(),
+                  'border-red-600 focus:ring-red-600':
+                    getIsValidBCENumber() === false
+                }"
+                    formControlName="company_number"
+                    hlmInput
+                    placeholder="987 XXX XXX"
+                    class="flex-1 bg-white border-gray-200 text-sm rounded-lg disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  />
+                  <button
+                    (click)="checkBCE()"
+                    type="button"
+                    class="bg-primary text-white font-medium text-sm rounded-lg px-4 py-2 flex items-center justify-center gap-2 hover:bg-primary/90 transition-all"
+                    hlmBtn
+                  >
+                    Vérifier
+                    <hlm-icon size="sm" name="lucideCheck" />
+                  </button>
+                </div>
+              </div>
+
+              <p class="block" hlmLabel>
+            <span class="text-sm font-medium text-gray-900"
+            >Numéro de TVA (sans le préfixe)</span
+            >
+                <input
+                  formControlName="company_vat_number"
+                  hlmInput
+                  type="number"
+                  placeholder="XXXXXXXXXX"
+                  class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg disabled:bg-gray-100 disabled:cursor-not-allowed"
+                />
+              </p>
+
+              <div class="block" hlmLabel>
+            <span class="text-sm font-medium text-gray-900"
+            >Nom de l'entreprise*</span
+            >
+                <input
+                  formControlName="name"
+                  hlmInput
+                  placeholder="Nom de l'entreprise"
+                  class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg disabled:bg-gray-100 disabled:cursor-not-allowed"
+                />
+                @if (createClientForm.get('name')?.invalid &&
+                createClientForm.get('name')?.touched) {
+                  <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
+              <hlm-icon size="xs" name="lucideAlertCircle" />
+              Le nom de l'entreprise est requis
+            </span>
+                }
+              </div>
+            </div>
+          } @else {
+            <div class="space-y-4">
+              <p class="block" hlmLabel>
+            <span class="text-sm font-medium text-gray-900"
+            >Numéro national</span
+            >
+                <input
+                  formControlName="national_number"
+                  hlmInput
+                  placeholder="12345678910"
+                  class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg disabled:bg-gray-100 disabled:cursor-not-allowed"
+                />
+              </p>
+
+              <div class="grid md:grid-cols-2 gap-4">
+                <p class="block" hlmLabel>
+                  <span class="text-sm font-medium text-gray-900">Prénom*</span>
+                  <input
+                    formControlName="firstname"
+                    hlmInput
+                    placeholder="Prénom"
+                    class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  />
+                  @if (createClientForm.get('firstname')?.invalid &&
+                  createClientForm.get('firstname')?.touched) {
+                    <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
+                <hlm-icon size="xs" name="lucideAlertCircle" />
+                Le prénom est requis
+              </span>
+                  }
+                </p>
+
+                <p class="block" hlmLabel>
+                  <span class="text-sm font-medium text-gray-900">Nom*</span>
+                  <input
+                    formControlName="lastname"
+                    hlmInput
+                    placeholder="Nom"
+                    class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  />
+                  @if (createClientForm.get('lastname')?.invalid &&
+                  createClientForm.get('lastname')?.touched) {
+                    <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
+                <hlm-icon size="xs" name="lucideAlertCircle" />
+                Le nom est requis
+              </span>
+                  }
+                </p>
+              </div>
+            </div>
+          }
+
+          <div class="grid md:grid-cols-2 gap-4">
+            <p class="block" hlmLabel>
+              <span class="text-sm font-medium text-gray-900">Email*</span>
+              <input
+                class="w-full"
+                formControlName="email"
+                type="email"
+                hlmInput
+                placeholder="adresse@email.com"
+              />
+              @if (createClientForm.get('email')?.invalid &&
+              createClientForm.get('email')?.touched) {
+                <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
+              <hlm-icon size="xs" name="lucideAlertCircle" />
+                  @if (createClientForm.get('email')?.errors?.['required']) {
+                    L'email est requis } @else if
+                  (createClientForm.get('email')?.errors?.['email']) { L'email n'est
+                    pas valide }
+            </span>
+              }
+            </p>
+
+            <p class="block" hlmLabel>
+              <span class="text-sm font-medium text-gray-900">Téléphone*</span>
+              <input
+                class="w-full"
+                formControlName="phone"
+                type="tel"
+                hlmInput
+                placeholder="+32 XXX XX XX XX"
+              />
+              @if (createClientForm.get('phone')?.invalid &&
+              createClientForm.get('phone')?.touched) {
+                <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
+              <hlm-icon size="xs" name="lucideAlertCircle" />
+              Le numéro de téléphone est requis
+            </span>
+              }
+            </p>
+          </div>
+
+          <div class="space-y-4">
+            <div class="grid md:grid-cols-2 gap-4">
+              <p class="block" hlmLabel>
+                <span class="text-sm font-medium text-gray-900">Rue*</span>
+                <input
+                  formControlName="street"
+                  hlmInput
+                  placeholder="Rue"
+                  class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg disabled:bg-gray-100 disabled:cursor-not-allowed"
+                />
+                @if (createClientForm.get('street')?.invalid &&
+                createClientForm.get('street')?.touched) {
+                  <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
+                <hlm-icon size="xs" name="lucideAlertCircle" />
+                La rue est requise
+              </span>
+                }
+              </p>
+
+              <p class="block" hlmLabel>
+                <span class="text-sm font-medium text-gray-900">Numéro*</span>
+                <input
+                  formControlName="number"
+                  hlmInput
+                  placeholder="Numéro"
+                  class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg disabled:bg-gray-100 disabled:cursor-not-allowed"
+                />
+                @if (createClientForm.get('number')?.invalid &&
+                createClientForm.get('number')?.touched) {
+                  <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
+                <hlm-icon size="xs" name="lucideAlertCircle" />
+                Le numéro est requis
+              </span>
+                }
+              </p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-4">
+              <p class="block" hlmLabel>
+              <span class="text-sm font-medium text-gray-900"
+              >Code postal*</span
+              >
+                <input
+                  formControlName="postalCode"
+                  hlmInput
+                  placeholder="Code postal"
+                  class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg disabled:bg-gray-100 disabled:cursor-not-allowed"
+                />
+                @if (createClientForm.get('postalCode')?.invalid &&
+                createClientForm.get('postalCode')?.touched) {
+                  <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
+                <hlm-icon size="xs" name="lucideAlertCircle" />
+                Le code postal est requis
+              </span>
+                }
+              </p>
+
+              <p class="block md:col-span-2" hlmLabel>
+                <span class="text-sm font-medium text-gray-900">Ville*</span>
+                <input
+                  formControlName="city"
+                  hlmInput
+                  placeholder="Ville"
+                  class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg disabled:bg-gray-100 disabled:cursor-not-allowed"
+                />
+                @if (createClientForm.get('city')?.invalid &&
+                createClientForm.get('city')?.touched) {
+                  <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
+                <hlm-icon size="xs" name="lucideAlertCircle" />
+                La ville est requise
+              </span>
+                }
+              </p>
+            </div>
+          </div>
+
+          <div class="space-y-4">
+            <p class="block" hlmLabel>
+            <span class="text-sm font-medium text-gray-900"
+            >Délai de paiement par défaut (jours)*</span
+            >
+              <input
+                formControlName="default_payment_deadline"
+                type="number"
+                hlmInput
+                [min]="connectedUser()?.role === 'ADMIN' ? null : 10"
+                [max]="connectedUser()?.role === 'ADMIN' ? null : 30"
+                placeholder="Min: 10, Max: 30"
+                class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg disabled:bg-gray-100 disabled:cursor-not-allowed"
+              />
+              @if (createClientForm.get('default_payment_deadline')?.invalid &&
+              createClientForm.get('default_payment_deadline')?.touched) {
+                <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
+              <hlm-icon size="xs" name="lucideAlertCircle" />
+                  @if
+                  (createClientForm.get('default_payment_deadline')?.errors?.['required'])
+                  { Le délai est requis } @else if
+                  (createClientForm.get('default_payment_deadline')?.errors?.['min'])
+                  { @if (connectedUser()?.role === 'ADMIN') { Min. 1 jour } @else {
+                    Min. 10 jours } } @else if
+                  (createClientForm.get('default_payment_deadline')?.errors?.['max'])
+                  { @if (connectedUser()?.role !== 'ADMIN') { Max. 30 jours } }
+            </span>
+              }
+            </p>
+          </div>
+
+          <p class="flex items-center gap-2 cursor-pointer group">
+            <hlm-checkbox
+              formControlName="is_info_pending"
+              class="rounded-md group-hover:border-primary transition-colors"
+            />
+            <span
+              class="text-sm text-gray-700 group-hover:text-gray-900 transition-colors"
+            >
+            Laisser le client compléter ses informations (email requis
+            seulement)
+          </span>
+          </p>
+        </div>
+
+        <div class="flex justify-end gap-3 pt-6 border-t border-gray-200">
+          <button
+            type="button"
+            (click)="toggleClientForm(false)"
+            class="bg-gray-100 text-gray-700 font-medium text-sm rounded-lg px-4 py-2 hover:bg-gray-200 transition-all"
+            hlmBtn
+          >
+            Annuler
+          </button>
+          <button
+            class="bg-primary text-white font-medium text-sm rounded-lg px-4 py-2 flex items-center gap-2 hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            hlmBtn
+            type="submit"
+            [disabled]="!createClientForm.valid"
+          >
+            <hlm-icon size="sm" name="lucideCheck" />
+            {{ client() ? "Mettre à jour le client" : "Créer le client" }}
+          </button>
+        </div>
+      </form>
+    }
+  </div>
+</div>
+
+<!-- Double Validation Warning Modal -->
+@if (showDoubleValidationWarningModal()) {
+  <div
+    class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+  >
+    <div
+      class="bg-white rounded-xl p-6 max-w-md w-full mx-auto shadow-xl space-y-4"
+    >
+      <div class="flex items-center gap-3">
+        <hlm-icon size="lg" name="lucideAlertTriangle" class="text-amber-500" />
+        <h3 class="text-lg font-semibold text-gray-900">Attention</h3>
+      </div>
+      <p class="text-sm text-gray-600">
+        Décocher la double validation vaut pour signature pour votre projet (mais
+        pas pour le client). La double validation permet de consulter son équipe
+        avant de valider la prestation / livraison de votre côté.
+      </p>
+      <div class="flex justify-end gap-3 pt-4 border-t border-gray-200">
+        <button
+          type="button"
+          (click)="cancelDoubleValidationChange()"
+          class="bg-gray-100 text-gray-700 font-medium text-sm rounded-lg px-4 py-2 hover:bg-gray-200 transition-all"
+          hlmBtn
+        >
+          Annuler
+        </button>
+        <button
+          type="button"
+          (click)="confirmDoubleValidationChange()"
+          class="bg-amber-500 text-white font-medium text-sm rounded-lg px-4 py-2 flex items-center gap-2 hover:bg-amber-600 transition-all"
+          hlmBtn
+        >
+          <hlm-icon size="sm" name="lucideCheck" />
+          Confirmer
+        </button>
+      </div>
+    </div>
+  </div>
+}
+<!-- End Double Validation Warning Modal -->

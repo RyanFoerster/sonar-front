@@ -26,6 +26,14 @@ export default [
     canActivate: [authGuard],
   },
   {
+    path: ':id/facturation/new-invoice',
+    loadComponent: () =>
+      import('./facturation/new-invoice/new-invoice.component').then(
+        (m) => m.NewInvoiceComponent
+      ),
+    canActivate: [authGuard],
+  },
+  {
     path: ':id/facturation/new-credit-note',
     loadComponent: () =>
       import('./facturation/new-credit-note/new-credit-note.component').then(

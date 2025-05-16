@@ -28,8 +28,22 @@ export class InvoiceService {
     quote: QuoteEntity,
     params: { account_id: number; type: 'PRINCIPAL' | 'GROUP' }
   ): Observable<InvoiceEntity> {
+    console.log(quote);
     return this.httpClient.post<InvoiceEntity>(
       `${this.API_URL}/invoice`,
+      quote,
+      {
+        params,
+      }
+    );
+  }
+  createInvoiceWithoutQuote(
+    quote: QuoteEntity,
+    params: { account_id: number; type: 'PRINCIPAL' | 'GROUP' }
+  ): Observable<InvoiceEntity> {
+    console.log(quote);
+    return this.httpClient.post<InvoiceEntity>(
+      `${this.API_URL}/invoice/createInvoiceWithoutQuote`,
       quote,
       {
         params,

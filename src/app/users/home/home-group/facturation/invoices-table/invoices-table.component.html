@@ -130,28 +130,59 @@
                   class="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 flex-shrink-0 text-xs sm:text-sm"
                 >
                   {{
-                    doc.client.is_physical_person
-                      ? doc.client.firstname!.charAt(0).toUpperCase() +
-                        doc.client.lastname!.charAt(0).toUpperCase()
-                      : doc.client.name.charAt(0).toUpperCase() || "A"
+                    doc.client
+                      ? (
+                        doc.client.is_physical_person
+                          ? (
+                          (doc.client.firstname && doc.client.firstname.length > 0
+                            ? doc.client.firstname.charAt(0).toUpperCase()
+                            : '') +
+                          (doc.client.lastname && doc.client.lastname.length > 0
+                            ? doc.client.lastname.charAt(0).toUpperCase()
+                            : '')
+                        ) || (doc.client.email && doc.client.email.length > 0
+                          ? doc.client.email.charAt(0).toUpperCase()
+                          : 'A')
+                          : (
+                            (doc.client.name && doc.client.name.length > 0
+                              ? doc.client.name.charAt(0).toUpperCase()
+                              : '') || (doc.client.email && doc.client.email.length > 0
+                              ? doc.client.email.charAt(0).toUpperCase()
+                              : 'A')
+                          )
+                      )
+                      : 'A'
                   }}
+
                 </div>
                 <div class="min-w-0">
                   <div
                     class="font-medium text-gray-900 truncate text-xs sm:text-sm"
                   >
                     {{
-                      doc.client.is_physical_person
-                        ? doc.client.firstname + " " + doc.client.lastname
-                        : doc.client.name
+                      doc.client
+                        ? (
+                          doc.client.is_physical_person
+                            ? ((doc.client.firstname || '') + ' ' + (doc.client.lastname || ''))
+                            : (doc.client.name || '')
+                        )
+                        : 'Client non disponible'
                     }}
+
+
                   </div>
                   <div class="text-xs text-gray-500 truncate">
-                    {{ doc.client.email }}
+                    <span *ngIf="doc.client && doc.client.email; else noEmail">
+                      {{ doc.client.email }}
+                    </span>
+                    <ng-template #noEmail>Email non disponible</ng-template>
+
+
                   </div>
                 </div>
               </div>
             </td>
+
             <td
               class="px-2 sm:px-3 md:px-4 lg:px-6 py-1.5 sm:py-2 md:py-3 lg:py-4 flex lg:table-cell items-center justify-between lg:justify-start"
             >
@@ -266,7 +297,7 @@
                   />
                   <span>Créer note de crédit</span>
                 </button>
-                } 
+                }
               }  -->
                 @if (doc['linkedInvoiceId']) {
                 <button

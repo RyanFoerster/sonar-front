@@ -34,7 +34,8 @@
                 hlmInput
                 type="date"
                 [min]="notPastDate()"
-                (change)="updateValidationDeadline($event)"
+                (change)="updateValidationDeadline()"
+                readonly
               />
               @if (createInvoiceForm.get('invoice_date')?.invalid &&
               createInvoiceForm.get('invoice_date')?.touched) {
@@ -46,41 +47,7 @@
             </p>
           </div>
 
-          <div class="space-y-2">
-            <p class="font-medium text-gray-900 text-sm" hlmLabel>
-              Dernier jour de prestation / livraison
-              <span class="relative group">
-              <hlm-icon
-                size="xs"
-                name="lucideAlertCircle"
-                class="text-gray-400 cursor-help"
-              />
-              <span
-                class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-64 p-2 bg-gray-800 text-white text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10"
-              >
-                La facture sera automatiquement générée le jour suivant le
-                dernier jour de prestation / livraison. Vous avez aussi la
-                possibilité de la générer plus tôt en appuyant sur le bouton «
-                Générer la facture » une fois le devis accepté par toutes les
-                parties.
-              </span>
-            </span>
-              <input
-                formControlName="service_date"
-                class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
-                hlmInput
-                type="date"
-              />
-            </p>
 
-            @if (createInvoiceForm.get('service_date')?.invalid &&
-            createInvoiceForm.get('service_date')?.touched) {
-              <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
-            <hlm-icon size="xs" name="lucideAlertCircle" />
-            La date de prestation est requise
-          </span>
-            }
-          </div>
         </div>
 
         <!-- Délais Section -->
@@ -124,6 +91,7 @@
                 hlmInput
                 type="date"
                 [min]="notPastDate()"
+                readonly
               />
               @if (createInvoiceForm.get('validation_deadline')?.invalid &&
               createInvoiceForm.get('validation_deadline')?.touched) {

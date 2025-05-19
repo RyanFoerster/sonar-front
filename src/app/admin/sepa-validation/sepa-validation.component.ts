@@ -44,7 +44,7 @@ import {
   lucideChevronRight,
   lucideX,
   lucideMaximize2,
-  lucideInbox,
+
   lucideArrowUpDown,
   lucideSend,
   lucideLoader2,

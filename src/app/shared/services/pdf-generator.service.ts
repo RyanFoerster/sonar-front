@@ -880,19 +880,20 @@ export class PdfGeneratorService {
     const clientInfoX = contentRightMargin;
     doc.setFontSize(10); // Taille réduite
     doc.setFont('helvetica', 'bold');
+
     const clientNameMaxWidth = 60; // Max width for client name before wrapping
-    const clientNameLines = doc.splitTextToSize(
-      invoice.client.name!,
-      clientNameMaxWidth
-    );
+    const clientNameLines = doc.splitTextToSize(invoice.client.name!, clientNameMaxWidth);
     let clientNameY = 70;
+
+
     clientNameLines.forEach((line: string) => {
-      doc.text(line, clientInfoX, clientNameY);
-      clientNameY += 5; // Adjust line height as needed
+      doc.text(line, clientInfoX, clientNameY, { align: 'right' });
+      clientNameY += 5;
     });
 
     doc.setFont('helvetica', 'normal');
-    let clientAddressY = clientNameY; // Partir de la position Y après le nom du client
+    let clientAddressY = clientNameY;
+
     doc.text(
       `${invoice.client.street} ${invoice.client.number}`,
       clientInfoX,
@@ -900,6 +901,7 @@ export class PdfGeneratorService {
       { align: 'right' }
     );
     clientAddressY += 5;
+
     doc.text(
       `${invoice.client.postalCode} ${invoice.client.city}`,
       clientInfoX,
@@ -907,31 +909,33 @@ export class PdfGeneratorService {
       { align: 'right' }
     );
     clientAddressY += 5;
+
     doc.text(
-      invoice.client.country, // Ajout du pays
+      invoice.client.country,
       clientInfoX,
       clientAddressY,
       { align: 'right' }
     );
     clientAddressY += 5;
 
-    // Gestion du numéro de TVA selon les règles spécifiques
+// Gestion du numéro de TVA
     let vatText = 'Non assujetti';
 
     if (invoice.client.company_vat_number) {
-      // Si le pays est la Belgique, ajouter le préfixe "BE"
       if (invoice.client.country === 'Belgique') {
         vatText = `BE${invoice.client.company_vat_number}`;
       } else {
         vatText = invoice.client.company_vat_number;
       }
     } else if (invoice.client.company_number) {
-      // Si pas de TVA mais un numéro d'entreprise existe
       vatText = `${invoice.client.company_number}`;
     } else if (invoice.client.is_physical_person) {
-      // Si c'est une personne physique
       vatText = 'non assujeti';
     }
+
+// TVA (également aligné à droite si besoin)
+    doc.text(vatText, clientInfoX, clientAddressY, { align: 'right' });
+
 
     doc.text(
       `${

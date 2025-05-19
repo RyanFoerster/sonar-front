@@ -1,6 +1,6 @@
 import {
   Component,
-  ElementRef,
+  ElementRef, HostListener,
   OnDestroy,
   OnInit,
   ViewChild,
@@ -22,6 +22,7 @@ import {
   VolumeX,
   Volume2,
 } from 'lucide-angular';
+
 import { provideIcons } from '@spartan-ng/ui-icon-helm';
 import { HlmIconComponent } from '@spartan-ng/ui-icon-helm';
 import {
@@ -62,13 +63,15 @@ export class NotificationManagerComponent implements OnInit, OnDestroy {
   pageSize = 10;
   totalNotifications = 0;
   notificationSound = true;
-  currentFilter: 'all' | 'read' | 'unread' = 'all';
+  currentFilter: 'all' | 'read' | 'unread' = 'unread';
 
   @ViewChild('notificationList') notificationList?: ElementRef;
 
   private destroy$ = new Subject<void>();
   private scrollSubscription?: Subscription;
   private intersectionObserver?: IntersectionObserver;
+
+
   @ViewChild('loadMoreTrigger') loadMoreTrigger?: ElementRef;
 
   // Icônes
@@ -84,10 +87,12 @@ export class NotificationManagerComponent implements OnInit, OnDestroy {
   constructor(
     private notificationService: NotificationService,
     private router: Router,
-    private authService: AuthService
+    private authService: AuthService,
+    private eRef: ElementRef,
   ) {}
 
   ngOnInit(): void {
+
     // S'abonner aux nouveaux événements de notification pour la mise à jour en temps réel
     this.notificationService.notifications$
       .pipe(takeUntil(this.destroy$))
@@ -246,9 +251,12 @@ export class NotificationManagerComponent implements OnInit, OnDestroy {
    * Ouvre ou ferme le panneau de notifications
    */
   toggleNotificationPanel(): void {
+
     this.isOpen = !this.isOpen;
 
+
     if (this.isOpen) {
+
       // Recharger les notifications à l'ouverture
       this.loadNotifications();
       this.setupIntersectionObserver();
@@ -265,6 +273,13 @@ export class NotificationManagerComponent implements OnInit, OnDestroy {
       .markAsRead(notification.id, !notification.isRead)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
+        next: () => {
+          // Recharger les notifications après mise à jour
+          this.loadNotifications(this.currentPage);
+
+          // Recharger le compteur de notifications non lues
+          this.loadUnreadCount();
+        },
         error: (error) => {
           console.error(
             'Erreur lors du changement du statut de la notification',
@@ -273,7 +288,10 @@ export class NotificationManagerComponent implements OnInit, OnDestroy {
         },
       });
 
-    // Si c'est une notification de transaction, naviguer vers les détails de la transaction
+
+
+
+  // Si c'est une notification de transaction, naviguer vers les détails de la transaction
     // if (
     //   notification.type === 'transaction' &&
     //   notification.data &&
@@ -306,6 +324,13 @@ export class NotificationManagerComponent implements OnInit, OnDestroy {
       .markAllAsRead()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
+        next: () => {
+          // Recharger les notifications après mise à jour
+          this.loadNotifications(this.currentPage);
+
+          // Recharger le compteur de notifications non lues
+          this.loadUnreadCount();
+        },
         error: (error) => {
           console.error(
             'Erreur lors du marquage de toutes les notifications comme lues',
@@ -395,6 +420,7 @@ export class NotificationManagerComponent implements OnInit, OnDestroy {
 
     // Déléguer la navigation au service de notifications
     this.notificationService.handleNotificationClick(notification);
+
   }
 
   /**
@@ -412,4 +438,18 @@ export class NotificationManagerComponent implements OnInit, OnDestroy {
         return type.charAt(0).toUpperCase() + type.slice(1).replace('_', ' ');
     }
   }
+
+  /**
+   * Gère le clic en dehors du panneau de notifications
+   *
+   * @param event
+   */
+  @HostListener('document:click', ['$event'])
+  onClickOutside(event: MouseEvent) {
+    if (!this.eRef.nativeElement.contains(event.target)) {
+      this.isOpen = false;
+    }
+  }
+
+
 }

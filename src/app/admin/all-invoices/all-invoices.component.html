@@ -137,6 +137,7 @@
                 }
               </button>
             </th>
+            <th hlmTh class="px-3 py-3 sm:px-4 text-right">TVAC</th>
             <th hlmTh class="w-36 px-3 py-3 sm:px-4 text-center">Statut</th>
             <th hlmTh class="w-48 px-3 py-3 sm:px-4 text-right">Actions</th>
           </tr>
@@ -224,6 +225,19 @@
               <span
                 class="font-semibold text-sm whitespace-nowrap text-gray-800"
                 >{{ invoice.price_htva | euroFormat }}</span
+              >
+            </td>
+            <td
+              hlmTd
+              class="px-3 py-2 sm:px-4 lg:py-3 flex lg:table-cell items-center justify-between lg:justify-end lg:text-right border-b lg:border-none border-gray-100"
+            >
+              <span
+                class="font-medium lg:hidden text-xs text-gray-500 uppercase mr-2"
+              >Total TVAc :</span
+              >
+              <span
+                class="font-semibold text-sm whitespace-nowrap text-gray-800"
+              >{{ invoice.total | euroFormat }}</span
               >
             </td>
             <td

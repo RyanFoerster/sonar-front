@@ -338,7 +338,17 @@
               <hlm-icon size="sm" name="lucideAlertTriangle" />
               Veuillez sélectionner un client avant d'ajouter des services
             </div>
-          } @if (products().length > 0) {
+          }
+          @else if(products().length == 0 ){
+
+            <div
+              class="bg-amber-50 text-amber-600 p-4 rounded-lg text-sm flex items-center gap-2"
+            >
+              <hlm-icon size="sm" name="lucideAlertTriangle" />
+              Veuillez ajouter au moins un service avant de créer le devis
+            </div>
+
+          }@if (products().length > 0) {
           <div class="space-y-4">
             @if (isToggleEditProductForm()) {
               <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">

@@ -1170,51 +1170,66 @@ export class NewInvoiceComponent implements AfterViewInit, OnInit {
     return keys;
   }
   createInvoice() {
-    if(this.createInvoiceForm.valid) {
-      const invoice = {
-        ...this.createInvoiceForm.value,
-        products_id: this.products().map((product) => product.id!),
-        client_id: this.client()!.id,
-        isVatIncluded: this.isTvaIncluded(),
-        total: this.total(),
-        total_vat_21: this.tva21(),
-        total_vat_6: this.tva6(),
-        price_htva: this.totalHtva(),
-        attachment_keys: this.getAllAttachmentKeys(),
-        comment: this.createInvoiceForm.get('comment')?.value || '',
-        quote_date: new Date(this.createInvoiceForm.get('quote_date')?.value),
-
-
-      };
-      // Ajouter l'ID du compte en fonction du type de projet
-      if (this.typeOfProjet() === 'PRINCIPAL') {
-        invoice.main_account_id = this.id();
-      } else {
-        invoice.group_account_id = this.id();
-      }
-      console.log('Fichiers à envoyer:', this.selectedFiles);
-      this.invoiceService
-        .createInvoiceWithoutQuote(invoice,{
-          account_id: +this.id()!,
-          type: this.typeOfProjet() as 'PRINCIPAL' | 'GROUP',
-        })
-        .pipe(take(1))
-        .subscribe({
-          next: () => {
-            this.isLoadingInvoice.set(false);
-            this.location.back();
-          },
-          error: (error: Error) => {
-            this.isLoadingInvoice.set(false);
-            console.error('Error creating invoice:', error);
-            toast.error('Erreur lors de la création de la facture');
-          },
-        });
-
-    }
-    else {
-      this.isLoadingInvoice.set(false);
+    if (!this.createInvoiceForm.value.client_id) {
+      toast.error('Veuillez sélectionner un client avant de créer une facture.');
       window.scrollTo({ top: 0, behavior: 'smooth' });
+      this.createInvoiceForm.markAllAsTouched();
+      this.isLoadingInvoice.set(false);
+    }
+    else if(this.products().length==0) {
+      toast.error('Veuillez ajouter au moins un service avant de créer une facture.');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      this.createInvoiceForm.markAllAsTouched();
+      this.isLoadingInvoice.set(false);
+    }else {
+
+
+      if (this.createInvoiceForm.valid) {
+        const invoice = {
+          ...this.createInvoiceForm.value,
+          products_id: this.products().map((product) => product.id!),
+          client_id: this.client()!.id,
+          isVatIncluded: this.isTvaIncluded(),
+          total: this.total(),
+          total_vat_21: this.tva21(),
+          total_vat_6: this.tva6(),
+          price_htva: this.totalHtva(),
+          attachment_keys: this.getAllAttachmentKeys(),
+          comment: this.createInvoiceForm.get('comment')?.value || '',
+          quote_date: new Date(this.createInvoiceForm.get('quote_date')?.value),
+
+
+        };
+        // Ajouter l'ID du compte en fonction du type de projet
+        if (this.typeOfProjet() === 'PRINCIPAL') {
+          invoice.main_account_id = this.id();
+        } else {
+          invoice.group_account_id = this.id();
+        }
+        console.log('Fichiers à envoyer:', this.selectedFiles);
+        this.invoiceService
+          .createInvoiceWithoutQuote(invoice, {
+            account_id: +this.id()!,
+            type: this.typeOfProjet() as 'PRINCIPAL' | 'GROUP',
+          })
+          .pipe(take(1))
+          .subscribe({
+            next: () => {
+              this.isLoadingInvoice.set(false);
+              this.location.back();
+            },
+            error: (error: Error) => {
+              this.isLoadingInvoice.set(false);
+              console.error('Error creating invoice:', error);
+              toast.error('Erreur lors de la création de la facture');
+            },
+          });
+
+      } else {
+        this.isLoadingInvoice.set(false);
+        this.createInvoiceForm.markAllAsTouched();
+        window.scrollTo({top: 0, behavior: 'smooth'});
+      }
     }
   }
 

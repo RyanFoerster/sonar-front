@@ -68,10 +68,8 @@ import {HlmTableDirective} from "@spartan-ng/ui-table-helm";
     DatePipe,
     EuroFormatPipe,
     FormsModule,
-    BrnDialogComponent,
     BrnDialogContentDirective,
     BrnDialogTriggerDirective,
-    BrnDialogCloseDirective,
     HlmDialogComponent,
     HlmDialogContentComponent,
     HlmDialogDescriptionDirective,
@@ -79,7 +77,7 @@ import {HlmTableDirective} from "@spartan-ng/ui-table-helm";
     HlmDialogHeaderComponent,
     HlmDialogTitleDirective,
     PdfViewerComponent,
-    HlmToasterComponent,
+
 
     NgIf,
     NgClass,
@@ -128,7 +126,7 @@ export class SepaValidationComponent implements AfterViewInit {
   } | null>(null);
   isEditing = false;
   editedVirement: VirementSepaEntity | null = null;
-
+  lastChanged: 'tvac' | 'htva' | 'tva' | null = null;
   // Pagination and sorting for virementsSepaInPending
   protected currentPagePending = signal(1);
   protected itemsPerPagePending = signal(10); // Ou toute autre valeur par défaut
@@ -783,7 +781,10 @@ export class SepaValidationComponent implements AfterViewInit {
       communication?.trim() !== ''
     );
   }
-  lastChanged: 'tvac' | 'htva' | 'tva' | null = null;
+
+
+  // Méthodes pour gérer les changements de montant
+
 
   onTVACChange() {
     if (!this.editedVirement) return;

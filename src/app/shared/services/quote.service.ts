@@ -176,4 +176,13 @@ export class QuoteService {
   getById(id: number): Observable<QuoteEntity> {
     return this.http.get<QuoteEntity>(`${this.apiUrl}/${id}`);
   }
+
+  acceptQuoteGroupe($id: number) {
+    return this.http.patch<QuoteEntity>(
+      `${this.apiUrl}/${$id}/group_acceptance`,
+
+      {}
+    );
+
+  }
 }

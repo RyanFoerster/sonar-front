@@ -19,8 +19,12 @@
 <!-- Condition pour afficher le formulaire ou le devis -->
 @if (isClientInfoRequired() && role === 'CLIENT') {
 <!-- FORMULAIRE CLIENT -->
-<div class="container mx-auto px-4 py-8">
-  <div class="max-w-2xl mx-auto bg-white rounded-xl shadow-lg p-6 md:p-8">
+<div
+  class="fixed inset-0 flex flex-col justify-center items-center bg-gray-50 p-4 z-50"
+>
+  <div
+    class="max-w-2xl w-full bg-white rounded-xl shadow-lg p-6 md:p-8 overflow-y-auto max-h-full"
+  >
     <h2 class="text-xl font-bold text-gray-900 mb-6 border-b pb-4">
       Complétez vos informations
     </h2>

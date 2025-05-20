@@ -12,7 +12,7 @@ import { HlmButtonDirective } from '@spartan-ng/ui-button-helm';
 import { VirementSepaService } from '../../shared/services/virement-sepa.service';
 import { VirementSepaEntity } from '../../shared/entities/virement-sepa.entity';
 import { tap } from 'rxjs';
-import {DatePipe, NgClass, NgIf, CommonModule} from '@angular/common';
+import { DatePipe, NgClass, NgIf, CommonModule } from '@angular/common';
 import { EuroFormatPipe } from '../../shared/pipes/euro-format.pipe';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { HlmIconComponent } from '@spartan-ng/ui-icon-helm';
@@ -44,20 +44,19 @@ import {
   lucideChevronRight,
   lucideX,
   lucideMaximize2,
-
   lucideArrowUpDown,
   lucideSend,
   lucideLoader2,
   lucideSearch,
   lucideFileText,
-  lucideInbox, lucidePencil, lucideCheck,
-
+  lucideInbox,
+  lucidePencil,
+  lucideCheck,
 } from '@ng-icons/lucide';
 import { provideIcons } from '@ng-icons/core';
 import { PdfViewerComponent } from '../../shared/components/pdf-viewer/pdf-viewer.component';
 import {HlmInputDirective} from "@spartan-ng/ui-input-helm";
 import {HlmTableDirective} from "@spartan-ng/ui-table-helm";
-
 
 @Component({
   selector: 'app-sepa-validation',
@@ -113,7 +112,6 @@ import {HlmTableDirective} from "@spartan-ng/ui-table-helm";
   styleUrl: './sepa-validation.component.css',
 })
 export class SepaValidationComponent implements AfterViewInit {
-
   private virementSepaService: VirementSepaService =
     inject(VirementSepaService);
   private sanitizer = inject(DomSanitizer);
@@ -743,10 +741,10 @@ export class SepaValidationComponent implements AfterViewInit {
         return 'bg-gray-100 text-gray-800 border-gray-300';
     }
   }
-// Active le mode édition pour un virement spécifique
+  // Active le mode édition pour un virement spécifique
   handleModifieVirement(id: number) {
     this.isEditing = true;
-    this.editedVirement = {...this.currentVirement()!}; // clone pour édition sans affecter directement
+    this.editedVirement = { ...this.currentVirement()! }; // clone pour édition sans affecter directement
   }
 
   // Annule le mode édition
@@ -755,19 +753,28 @@ export class SepaValidationComponent implements AfterViewInit {
     this.editedVirement = null;
   }
 
-// Valide les modifications apportées au virement
+  // Valide les modifications apportées au virement
   validateEdit() {
-    const confirmation = confirm("Êtes-vous sûr de vouloir valider les modifications ? Si oui, la page sera rechargée pour afficher les changements.");
+    const confirmation = confirm(
+      'Êtes-vous sûr de vouloir valider les modifications ? Si oui, la page sera rechargée pour afficher les changements.'
+    );
     if (!confirmation || !this.editedVirement) return;
 
     // Appel API + reload se fait dans le service
     this.virementSepaService.update(this.editedVirement);
   }
-// Bloque le bouton de validation si le formulaire n'est pas valide
+  // Bloque le bouton de validation si le formulaire n'est pas valide
   isFormValid(): boolean {
     if (!this.editedVirement) return false;
 
-    const { iban, amount_total, amount_htva, amount_tva, communication, structured_communication } = this.editedVirement;
+    const {
+      iban,
+      amount_total,
+      amount_htva,
+      amount_tva,
+      communication,
+      structured_communication,
+    } = this.editedVirement;
 
     return (
       iban?.trim() !== '' &&

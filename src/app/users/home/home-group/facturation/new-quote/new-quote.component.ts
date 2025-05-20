@@ -34,6 +34,7 @@ import {
 } from '../../../../../shared/services/user-attachment.service';
 import { UserEntity } from '../../../../../shared/entities/user.entity';
 import { provideIcons } from '@ng-icons/core';
+import { QueryList, ViewChildren } from '@angular/core';
 import {
   lucideAlertCircle,
   lucideAlertTriangle,
@@ -141,6 +142,7 @@ import { QuillModule } from 'ngx-quill';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NewQuoteComponent implements AfterViewInit {
+  @ViewChildren('clientError, nameError, deadlineError, ...') formErrors!: QueryList<ElementRef>;
   private formBuilder: FormBuilder = inject(FormBuilder);
   private clientService: ClientService = inject(ClientService);
   private productService: ProductService = inject(ProductService);
@@ -1157,45 +1159,70 @@ export class NewQuoteComponent implements AfterViewInit {
   }
 
   createQuote() {
-    if (this.createQuoteForm.valid) {
-      const quote = {
-        ...this.createQuoteForm.value,
-        products_id: this.products().map((product) => product.id!),
-        client_id: this.client()!.id,
-        isVatIncluded: this.isTvaIncluded(),
-        total: this.total(),
-        tva21: this.tva21(),
-        tva6: this.tva6(),
-        totalHtva: this.totalHtva(),
-        attachment_keys: this.getAllAttachmentKeys(),
-      };
 
-      // Ajouter l'ID du compte en fonction du type de projet
-      if (this.typeOfProjet() === 'PRINCIPAL') {
-        quote.main_account_id = this.id();
-      } else {
-        quote.group_account_id = this.id();
-      }
-
-      console.log('Fichiers à envoyer:', this.selectedFiles);
-
-      this.quoteService
-        .createQuote(quote, this.selectedFiles, this.isDoubleValidation())
-        .pipe(take(1))
-        .subscribe({
-          next: () => {
-            this.isLoadingQuote.set(false);
-            this.location.back();
-          },
-          error: (error: Error) => {
-            this.isLoadingQuote.set(false);
-            console.error('Error creating quote:', error);
-            toast.error('Erreur lors de la création du devis');
-          },
-        });
-    } else {
-      this.isLoadingQuote.set(false);
+    if (!this.createQuoteForm.value.client_id) {
+      toast.error('Veuillez sélectionner un client avant de créer le devis.');
       window.scrollTo({ top: 0, behavior: 'smooth' });
+      this.createQuoteForm.markAllAsTouched();
+      this.isLoadingQuote.set(false);
+    }
+    else if(this.products().length==0) {
+      toast.error('Veuillez ajouter au moins un service avant de créer le devis.');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      this.createQuoteForm.markAllAsTouched();
+      this.isLoadingQuote.set(false);
+    }else {
+
+
+      if (this.createQuoteForm.valid) {
+        const quote = {
+          ...this.createQuoteForm.value,
+          products_id: this.products().map((product) => product.id!),
+          client_id: this.client()!.id,
+          isVatIncluded: this.isTvaIncluded(),
+          total: this.total(),
+          tva21: this.tva21(),
+          tva6: this.tva6(),
+          totalHtva: this.totalHtva(),
+          attachment_keys: this.getAllAttachmentKeys(),
+        };
+
+        // Ajouter l'ID du compte en fonction du type de projet
+        if (this.typeOfProjet() === 'PRINCIPAL') {
+          quote.main_account_id = this.id();
+        } else {
+          quote.group_account_id = this.id();
+        }
+
+        console.log('Fichiers à envoyer:', this.selectedFiles);
+
+        this.quoteService
+          .createQuote(quote, this.selectedFiles, this.isDoubleValidation())
+          .pipe(take(1))
+          .subscribe({
+            next: () => {
+              this.isLoadingQuote.set(false);
+              this.location.back();
+            },
+            error: (error: Error) => {
+              this.isLoadingQuote.set(false);
+              console.error('Error creating quote:', error);
+              toast.error('Erreur lors de la création du devis');
+            },
+          });
+      } else {
+        this.isLoadingQuote.set(false);
+        this.createQuoteForm.markAllAsTouched();
+
+        setTimeout(() => {
+          const firstInvalid = this.formErrors.find(el =>
+            el.nativeElement.querySelector('.ng-invalid')
+          );
+          if (firstInvalid) {
+            firstInvalid.nativeElement.scrollIntoView({behavior: 'smooth', block: 'center'});
+          }
+        });
+      }
     }
   }
 

@@ -55,6 +55,8 @@ import {
 } from '@ng-icons/lucide';
 import { provideIcons } from '@ng-icons/core';
 import { PdfViewerComponent } from '../../shared/components/pdf-viewer/pdf-viewer.component';
+import {HlmInputDirective} from "@spartan-ng/ui-input-helm";
+import {HlmTableDirective} from "@spartan-ng/ui-table-helm";
 
 
 @Component({
@@ -82,6 +84,9 @@ import { PdfViewerComponent } from '../../shared/components/pdf-viewer/pdf-viewe
 
     NgIf,
     NgClass,
+    HlmInputDirective,
+    HlmTableDirective,
+    HlmTableDirective,
   ],
   providers: [
     provideIcons({
@@ -768,12 +773,62 @@ export class SepaValidationComponent implements AfterViewInit {
       iban?.trim() !== '' &&
       amount_total !== null &&
       amount_htva !== null &&
-      amount_tva !== null &&
-      communication?.trim() !== '' &&
-      structured_communication?.trim() !== ''
+      communication?.trim() !== ''
     );
   }
+  lastChanged: 'tvac' | 'htva' | 'tva' | null = null;
 
+  onTVACChange() {
+    if (!this.editedVirement) return;
+
+    this.lastChanged = 'tvac';
+    const total = this.editedVirement.amount_total ?? 0;
+    const htva = this.editedVirement.amount_htva;
+    const tva = this.editedVirement.amount_tva;
+
+    if (htva != null) {
+      this.editedVirement.amount_tva = this.roundToTwo(total - htva);
+    } else if (tva != null) {
+      this.editedVirement.amount_htva = this.roundToTwo(total - tva);
+    }
+  }
+
+  onHTVAChange() {
+    if (!this.editedVirement) return;
+
+    this.lastChanged = 'htva';
+    const htva = this.editedVirement.amount_htva ?? 0;
+    const tva = this.editedVirement.amount_tva;
+    const tvac = this.editedVirement.amount_total;
+
+    if(tva == 0) {
+      this.editedVirement.amount_total = htva;
+    }
+    else if (tva != null) {
+      this.editedVirement.amount_total = this.roundToTwo(htva + tva);
+    } else if (tvac != null) {
+      this.editedVirement.amount_tva = this.roundToTwo(tvac - htva);
+    }
+  }
+
+  onTVAChange() {
+    if (!this.editedVirement) return;
+
+    this.lastChanged = 'tva';
+    const tva = this.editedVirement.amount_tva ?? 0;
+    const htva = this.editedVirement.amount_htva;
+    const tvac = this.editedVirement.amount_total;
+
+    if (htva != null) {
+      this.editedVirement.amount_total = this.roundToTwo(htva + tva);
+    } else if (tvac != null) {
+      this.editedVirement.amount_htva = this.roundToTwo(tvac - tva);
+    }
+  }
+
+  private roundToTwo(value: number): number {
+    return Math.round(value * 100) / 100;
+  }
 
 
 }

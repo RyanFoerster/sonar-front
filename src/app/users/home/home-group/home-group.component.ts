@@ -33,7 +33,7 @@ import {
   catchError,
   finalize,
   of,
-  map,
+  map, firstValueFrom,
 } from 'rxjs';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../shared/services/auth.service';
@@ -126,11 +126,12 @@ export class HomeGroupComponent implements AfterViewInit {
     successMessage: signal(''),
   };
 
-  protected updateNameForm: FormGroup;
+  protected updateGroupeForm: FormGroup;
 
   constructor(private location: Location, private formBuilder: FormBuilder) {
-    this.updateNameForm = this.formBuilder.group({
+    this.updateGroupeForm = this.formBuilder.group({
       username: ['', [Validators.required, Validators.minLength(3)]],
+      commission: [null, [Validators.required, Validators.min(0), Validators.max(100)]],
     });
   }
 
@@ -165,6 +166,7 @@ export class HomeGroupComponent implements AfterViewInit {
               return this.comptePrincipalService.getGroupById(projectId).pipe(
                 tap((data) => {
                   this.projet.set(data);
+                  this.fillUpdateForm(data);
                   this.cdr.detectChanges();
                 }),
                 switchMap(() => {
@@ -186,6 +188,7 @@ export class HomeGroupComponent implements AfterViewInit {
               return this.compteGroupeService.getGroupById(projectId).pipe(
                 tap((data) => {
                   this.projet.set(data);
+                  this.fillUpdateForm(data);
                   this.cdr.detectChanges(); // Force change detection
                 }),
                 switchMap(() => {
@@ -202,6 +205,7 @@ export class HomeGroupComponent implements AfterViewInit {
               return this.comptePrincipalService.getGroupById(projectId).pipe(
                 tap((data) => {
                   this.projet.set(data);
+                  this.fillUpdateForm(data);
                   this.cdr.detectChanges(); // Force change detection
                 }),
                 switchMap(() => {
@@ -240,6 +244,7 @@ export class HomeGroupComponent implements AfterViewInit {
               return this.compteGroupeService.getGroupById(projectId).pipe(
                 tap((data) => {
                   this.projet.set(data);
+                  this.fillUpdateForm(data);
                   this.cdr.detectChanges(); // Force change detection
                 }),
                 switchMap(() => {
@@ -352,42 +357,72 @@ export class HomeGroupComponent implements AfterViewInit {
     return false;
   }
 
-  protected updateGroupName(ctx: { close: () => void }): void {
-    if (this.updateNameForm.valid && this.projet()) {
-      this.state.isLoadingUpdateName.set(true);
-      this.state.errorMessage.set('');
-      this.state.successMessage.set('');
-      const newUsername = this.updateNameForm.get('username')?.value;
-      const projectId = this.id();
 
-      if (this.typeOfProjet() === 'GROUP' && projectId) {
-        this.compteGroupeService
-          .updateGroupName(projectId, newUsername)
-          .pipe(
-            switchMap(() => this.compteGroupeService.getGroupById(projectId)),
-            finalize(() => this.state.isLoadingUpdateName.set(false))
-          )
-          .subscribe({
-            next: (updatedGroup) => {
-              this.projet.set(updatedGroup);
-              this.updateNameForm.reset();
-              this.state.successMessage.set('Nom du groupe mis à jour.');
-              ctx.close();
-            },
-            error: (error) => {
-              console.error('Erreur lors de la mise à jour du nom:', error);
-              this.state.errorMessage.set(
-                error.error?.message || 'Une erreur est survenue'
-              );
-            },
-          });
-      } else {
-        this.state.isLoadingUpdateName.set(false);
-      }
+
+protected async updateGroupeInfo(ctx: { close: () => void }): Promise<void> {
+  if (this.updateGroupeForm.valid && this.projet()) {
+  this.state.isLoadingUpdateName.set(true);
+  this.state.errorMessage.set('');
+  this.state.successMessage.set('');
+
+  const formValue = this.updateGroupeForm.value;
+  const project = this.projet();
+  const projectId = this.id();
+
+  const updates: Promise<any>[] = [];
+
+  // Vérifie si le nom a changé
+  if (formValue.username !== project?.username) {
+    if (this.typeOfProjet() === 'GROUP' && projectId) {
+      updates.push(
+        firstValueFrom(this.compteGroupeService.updateGroupName(projectId, formValue.username))
+      );
+    }
+
+  }
+
+  // Vérifie si la commission a changé
+  const oldCommission = project?.commissionPourcentage ?? project?.commission ?? null;
+  if (formValue.commission !== oldCommission) {
+    if (this.typeOfProjet() === 'GROUP' && projectId) {
+      updates.push(
+        firstValueFrom(this.compteGroupeService.updateGroupCommission(projectId, formValue.commission))
+      );
+    }
+    if (this.typeOfProjet() === 'PRINCIPAL' && projectId) {
+      updates.push(
+        firstValueFrom(this.comptePrincipalService.updateGroupCommission(projectId, formValue.commission))
+      );
     }
   }
 
-  protected isCurrentUserMember(): boolean {
+  if (updates.length === 0) {
+    this.state.isLoadingUpdateName.set(false);
+    ctx.close();
+    return;
+  }
+
+  try {
+    await Promise.all(updates);
+    this.state.successMessage.set('Modifications enregistrées.');
+    ctx.close();
+    this.fetchInitialData();
+  } catch (error: any) {
+    console.error('Erreur lors de la mise à jour:', error);
+    this.state.errorMessage.set(
+      error.error?.message || 'Une erreur est survenue'
+    );
+  } finally {
+    this.state.isLoadingUpdateName.set(false);
+  }
+}
+}
+
+
+
+
+
+protected isCurrentUserMember(): boolean {
     const userId = this.connectedUser()?.id;
     if (!userId || this.typeOfProjet() !== 'GROUP') {
       return false;
@@ -477,4 +512,18 @@ export class HomeGroupComponent implements AfterViewInit {
         });
     }
   }
+  validateCommission(ctx: any) {
+    if (this.updateGroupeForm.valid) {
+      const value = this.updateGroupeForm.value.commission;
+      // TODO: Appeler le service pour sauvegarder la valeur
+      ctx.close();
+    }
+  }
+  private fillUpdateForm(project: CompteGroupeEntity | PrincipalAccountEntity): void {
+    this.updateGroupeForm.patchValue({
+      username: project.username,
+      commission: project.commissionPourcentage ?? project.commissionPourcentage ?? null,
+    });
+  }
+
 }

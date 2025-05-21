@@ -44,10 +44,9 @@
                 Entrez le nouveau nom pour ce groupe de projet.
               </p>
             </hlm-dialog-header>
-
             <form
-              [formGroup]="updateNameForm"
-              (ngSubmit)="updateGroupName(ctx)"
+              [formGroup]="updateGroupeForm"
+              (ngSubmit)="updateGroupeInfo(ctx)"
               class="flex flex-col gap-3 md:gap-4 py-3 md:py-4"
             >
               <div class="space-y-1 sm:space-y-2">
@@ -61,10 +60,37 @@
                 />
               </div>
 
+              @if (connectedUser()?.role === 'ADMIN') {
+                <div class="space-y-1 sm:space-y-2">
+                  <p hlmLabel>Pourcentage de commission</p>
+                  <div class="relative w-full">
+                    <input
+                      hlmInput
+                      type="number"
+                      formControlName="commission"
+                      min="0"
+                      max="100"
+                      step="1"
+                      placeholder="Ex: 10"
+                      class="w-full pr-8"
+                    />
+                    <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 text-sm pointer-events-none">%</span>
+                  </div>
+
+                  @if (updateGroupeForm.get('commission')?.invalid && updateGroupeForm.get('commission')?.touched) {
+                    <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
+                    <hlm-icon size="xs" name="lucideAlertCircle" />
+                      Le pourcentage doit être entre 0 et 100
+                    </span>
+                  }
+                </div>
+
+              }
+
               @if (state.errorMessage() && !state.isLoadingUpdateName()) {
-              <p class="mt-2 text-sm text-red-400">
-                {{ state.errorMessage() }}
-              </p>
+                <p class="mt-2 text-sm text-red-400">
+                  {{ state.errorMessage() }}
+                </p>
               }
 
               <div class="flex justify-end gap-2 sm:gap-3">
@@ -81,24 +107,19 @@
                 <button
                   type="submit"
                   hlmBtn
-                  [disabled]="
-                    !updateNameForm.valid || state.isLoadingUpdateName()
-                  "
+                  [disabled]="!updateGroupeForm.valid || state.isLoadingUpdateName()"
                   class="relative min-w-[80px] sm:min-w-[100px] text-xs sm:text-sm md:text-base"
                 >
-                  <span [class.opacity-0]="state.isLoadingUpdateName()"
-                    >Enregistrer</span
-                  >
+                  <span [class.opacity-0]="state.isLoadingUpdateName()">Enregistrer</span>
                   @if(state.isLoadingUpdateName()) {
-                  <div
-                    class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-                  >
-                    <hlm-spinner class="h-3 w-3 sm:h-4 sm:w-4" />
-                  </div>
+                    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                      <hlm-spinner class="h-3 w-3 sm:h-4 sm:w-4" />
+                    </div>
                   }
                 </button>
               </div>
             </form>
+
           </hlm-dialog-content>
         </hlm-dialog>
         }

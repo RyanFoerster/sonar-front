@@ -32,4 +32,12 @@ export class ComptePrincipalService {
       `${environment.API_URL}/compte-principal/${id}/members`
     );
   }
+
+  updateGroupCommission(projectId: number, commission: any) {
+    return this.httpClient.put(
+      `${environment.API_URL}/compte-principal/${projectId}/commission`,
+      { commission }
+    );
+
+  }
 }

@@ -13,4 +13,6 @@ export interface CompteGroupeEntity {
   transactions: TransactionEntity[];
   virementSepa: VirementSepaEntity[];
   userSecondaryAccount?: UserSecondaryAccountEntity[];
+  commissionPourcentage?: number;
+  commission?: number;
 }

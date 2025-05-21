@@ -43,6 +43,8 @@ export class RegisterComponent {
 
   registerForm!: FormGroup;
   errorMessage: string = '';
+  backendUserName: string = '';
+  backendEmail: string = '';
   isLoading: boolean = false;
   showPassword: boolean = false;
   showConfirmPassword: boolean = false;
@@ -110,6 +112,8 @@ export class RegisterComponent {
     if (this.registerForm.valid) {
       this.isLoading = true;
       this.errorMessage = '';
+      this.backendUserName = '';
+      this.backendEmail = '';
 
       const user: CreateUserDto = {
         username: this.username,
@@ -132,9 +136,16 @@ export class RegisterComponent {
           }),
           catchError((error) => {
             this.isLoading = false;
+            if(error?.error?.message === "Username already exists!" || error?.error?.message === "Ce nom de compte est déjà utilisé") {
+              this.backendUserName = "L'utilisateur existe déjà.";
+            }
+            if(error?.error?.message === "email already exists!" || error?.error?.message === "Cet email est déjà utilisé") {
+              this.backendEmail = "L'email existe déjà.";
+            }
             this.errorMessage =
               "Une erreur est survenue lors de l'inscription. Veuillez réessayer.";
             throw error;
+
           })
         )
         .subscribe();

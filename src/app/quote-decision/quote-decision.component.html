@@ -67,14 +67,15 @@
 
       <p class="flex items-center gap-2 cursor-pointer group">
         <hlm-checkbox
-          formControlName="is_physical_person"
           (checkedChange)="togglePhysicalPerson()"
+          [checked]="isPhysicalPerson()"
           class="rounded-md group-hover:border-primary transition-colors"
         />
         <span
           class="text-sm text-gray-700 group-hover:text-gray-900 transition-colors"
-          >Personne physique ou association de fait ?</span
         >
+            Personne physique ou association de fait ?
+          </span>
       </p>
 
       @if (!isPhysicalPerson()) {
@@ -266,35 +267,6 @@
         </div>
       </div>
 
-      <div class="space-y-4">
-        <p class="block" hlmLabel>
-          <span class="text-sm font-medium text-gray-900"
-            >Délai de paiement par défaut (jours)*</span
-          >
-          <input
-            formControlName="default_payment_deadline"
-            type="number"
-            hlmInput
-            [min]="10"
-            [max]="30"
-            placeholder="Min: 10, Max: 30"
-            class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
-          />
-          @if (clientInfoForm.get('default_payment_deadline')?.invalid &&
-          clientInfoForm.get('default_payment_deadline')?.touched) {
-          <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
-            <hlm-icon size="xs" name="lucideAlertCircle" />
-            @if
-            (clientInfoForm.get('default_payment_deadline')?.errors?.['required'])
-            { Le délai est requis } @else if
-            (clientInfoForm.get('default_payment_deadline')?.errors?.['min']) {
-            Min. 10 jours } @else if
-            (clientInfoForm.get('default_payment_deadline')?.errors?.['max']) {
-            Max. 30 jours }
-          </span>
-          }
-        </p>
-      </div>
       <!-- Fin Champs Formulaire -->
 
       <div class="flex justify-end pt-6 border-t border-gray-200">

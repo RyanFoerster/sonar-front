@@ -160,8 +160,6 @@ interface ProjectAccountState {
   selector: 'app-project-account',
   standalone: true,
   imports: [
-    BrnSelectImports,
-    HlmSelectImports,
     BrnDialogContentDirective,
     BrnDialogTriggerDirective,
     HlmButtonDirective,
@@ -193,6 +191,7 @@ interface ProjectAccountState {
     BrnPopoverContentDirective,
     BrnPopoverTriggerDirective,
     HlmPopoverContentDirective,
+    HlmTdComponent,
   ],
   providers: [
     provideIcons({
@@ -412,6 +411,7 @@ export class ProjectAccountComponent implements AfterViewInit {
         ...this.virementSepaForm.value,
         amount_total: this.virementSepaForm.value.amount_htva,
         amount_htva: this.amount_debited(),
+        transaction_type : "OUTGOING" // Type de transaction par défaut
       };
 
       // Créer ou mettre à jour le bénéficiaire si les champs sont remplis

@@ -100,11 +100,7 @@ interface ModalContext {
     HlmButtonDirective,
     HlmIconComponent,
     RouterLink,
-    HlmTableImports,
     FormsModule,
-    NgClass,
-    BrnSelectImports,
-    HlmSelectImports,
     QuotesTableComponent,
     InvoicesTableComponent,
     HlmTabsComponent,
@@ -460,12 +456,16 @@ export class FacturationComponent implements OnInit, OnDestroy {
   }
 
   private getFormattedInvoices() {
+    const groupAccount = this.groupAccount();
     return this.invoices
       .filter((inv) => inv.type === 'invoice')
       .map((invoice) => ({
         ...invoice,
         documentDate: invoice.invoice_date,
         documentType: 'invoice',
+        group_account: groupAccount
+          ? { id: groupAccount.id, username: groupAccount.username }
+          : undefined,
       }));
   }
 

@@ -5,9 +5,9 @@ import {
   EventEmitter,
   computed,
   signal,
-  input,
+  input, inject,
 } from '@angular/core';
-import { DatePipe, JsonPipe, NgClass } from '@angular/common';
+import {DatePipe, JsonPipe, NgClass, NgIf} from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 
@@ -44,6 +44,10 @@ import {
 import { EuroFormatPipe } from '../../../../../shared/pipes/euro-format.pipe';
 import { QuoteEntity } from '../../../../../shared/entities/quote.entity';
 import { UserEntity } from '../../../../../shared/entities/user.entity';
+import {quotes} from "html2canvas/dist/types/css/property-descriptors/quotes";
+import {QuoteService} from "../../../../../shared/services/quote.service";
+import {firstValueFrom} from "rxjs";
+import {toast} from "ngx-sonner";
 
 // Importing the Document interface from parent component
 interface Document {
@@ -93,7 +97,6 @@ export interface ModalContext {
     RouterLink,
     DatePipe,
     EuroFormatPipe,
-    HlmTableImports,
     HlmAlertDialogComponent,
     HlmAlertDialogContentComponent,
     HlmAlertDialogDescriptionDirective,
@@ -108,7 +111,8 @@ export interface ModalContext {
     HlmPaginationContentDirective,
     HlmPaginationItemDirective,
     HlmToasterComponent,
-    JsonPipe,
+    NgIf,
+
   ],
   providers: [
     provideIcons({
@@ -124,6 +128,9 @@ export interface ModalContext {
   styleUrl: './quotes-table.component.css',
 })
 export class QuotesTableComponent {
+  private readonly services = {quote: inject(QuoteService),}
+
+
   @Input() allQuotes = signal<Document[]>([]);
   @Input() pagination: {
     currentPage: () => number;
@@ -153,6 +160,7 @@ export class QuotesTableComponent {
     quote: QuoteEntity;
     ctx: ModalContext;
   }>();
+  //@Output() acceptQuoteGroupeEvent = new EventEmitter<number>();
 
   // Ajout des signaux pour la modal de commentaire
   protected isCommentModalOpen = signal(false);
@@ -182,6 +190,26 @@ export class QuotesTableComponent {
 
   onPageChange(page: number): void {
     this.pageChange.emit(page);
+  }
+  /**
+   * Accepte un devis.
+   * @param id L'ID du devis à accepter.
+   */
+  loadingAccept = signal<number | null>(null);
+
+  async acceptQuoteGroupe(id: number) {
+    this.loadingAccept.set(id);
+    try {
+      const updatedQuote = await firstValueFrom(this.services.quote.acceptQuoteGroupe(id));
+      this.allQuotes.update((quotes) =>
+        quotes.map((q) => q.id === id ? { ...q, group_acceptance: updatedQuote.group_acceptance } : q)
+      );
+      toast.success("Devis accepté avec succès.");
+    } catch (error) {
+      toast.error("Erreur lors de l'acceptation du devis.");
+    } finally {
+      this.loadingAccept.set(null);
+    }
   }
 
   filterList(

@@ -37,6 +37,9 @@
                 type="email"
                 placeholder="exemple@exemple.be"
               />
+              <div *ngIf="backendEmail" class="text-red-600 text-sm mt-1">
+                {{ backendEmail }}
+              </div>
             </label>
             @if (registerForm.get('email')?.invalid &&
             registerForm.get('email')?.touched) {
@@ -47,7 +50,7 @@
           <!-- Username (Projet) -->
           <div class="space-y-1.5">
             <label class="block text-sm font-medium text-gray-700" hlmLabel>
-              Projet
+              Nom d'utilisateur
               <input
                 formControlName="username"
                 class="w-full mt-1 transition-colors"
@@ -57,8 +60,11 @@
                 "
                 hlmInput
                 type="text"
-                placeholder="Votre nom de projet"
+                placeholder="Votre nom d'utilisateur"
               />
+              <div *ngIf="backendUserName" class="text-red-600 text-sm mt-1">
+                {{ backendUserName }}
+              </div>
             </label>
             <p class="text-xs text-gray-500">
               Le nom de votre projet artistique individuel

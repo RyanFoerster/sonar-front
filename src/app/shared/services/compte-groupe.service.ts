@@ -125,4 +125,13 @@ export class CompteGroupeService {
       { headers: this.getHeaders() }
     );
   }
+
+  updateGroupCommission(projectId: number, commission: any) {
+    return this.httpClient.patch<CompteGroupeEntity>(
+      `${environment.API_URL}/compte-groupe/${projectId}/commission`,
+      { commission }
+
+    );
+  }
+
 }

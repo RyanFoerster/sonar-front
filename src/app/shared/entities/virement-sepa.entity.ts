@@ -33,4 +33,6 @@ export interface VirementSepaEntity {
   projet_username: string;
 
   created_at: Date;
+
+  transaction_type: 'INCOMING' | 'OUTGOING';
 }

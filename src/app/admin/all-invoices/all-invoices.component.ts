@@ -6,8 +6,8 @@ import { BrnSelectImports } from '@spartan-ng/ui-select-brain';
 import { HlmSelectImports } from '@spartan-ng/ui-select-helm';
 import {
   HlmTableComponent,
-  HlmTdComponent,
-  HlmThComponent,
+  HlmTableDirective,
+  HlmTdComponent, HlmThComponent,
   HlmTrowComponent,
 } from '@spartan-ng/ui-table-helm';
 import { take, tap } from 'rxjs';
@@ -29,14 +29,23 @@ import { HlmToasterComponent } from '@spartan-ng/ui-sonner-helm';
 import {
   HlmPaginationContentDirective,
   HlmPaginationDirective,
-  HlmPaginationEllipsisComponent,
   HlmPaginationItemDirective,
-  HlmPaginationLinkDirective,
-  HlmPaginationNextComponent,
-  HlmPaginationPreviousComponent,
 } from '@spartan-ng/ui-pagination-helm';
 import { toast } from 'ngx-sonner';
 import { PdfGeneratorService } from '../../shared/services/pdf-generator.service';
+import {TransactionDto} from "../../shared/dtos/transaction.dto";
+import {TransactionService} from "../../shared/services/transaction.service";
+import {
+  HlmDialogComponent,
+  HlmDialogContentComponent, HlmDialogDescriptionDirective,
+  HlmDialogHeaderComponent,
+  HlmDialogTitleDirective
+} from "@spartan-ng/ui-dialog-helm";
+import {BrnDialogContentDirective, BrnDialogTriggerDirective} from "@spartan-ng/ui-dialog-brain";
+import {VirementSepaDto} from "../../shared/dtos/virement-sepa.dto";
+import {VirementSepaEntity} from "../../shared/entities/virement-sepa.entity";
+import {VirementSepaService} from "../../shared/services/virement-sepa.service";
+import {ComptePrincipalService} from "../../shared/services/compte-principal.service";
 
 type InvoiceStatus =
   | 'payment_pending'
@@ -73,10 +82,14 @@ interface QuoteLike {
     HlmPaginationDirective,
     HlmPaginationContentDirective,
     HlmPaginationItemDirective,
-    HlmPaginationPreviousComponent,
-    HlmPaginationLinkDirective,
-    HlmPaginationEllipsisComponent,
-    HlmPaginationNextComponent,
+    HlmDialogHeaderComponent,
+    HlmDialogContentComponent,
+    BrnDialogContentDirective,
+    HlmDialogComponent,
+    BrnDialogTriggerDirective,
+    HlmDialogTitleDirective,
+    HlmDialogDescriptionDirective,
+    HlmTableDirective,
   ],
   providers: [
     provideIcons({
@@ -91,7 +104,20 @@ interface QuoteLike {
   styleUrl: './all-invoices.component.css',
 })
 export class AllInvoicesComponent implements OnInit {
+  isEditing: any;
+
+  // Pour stocker le type choisi : 'percent' ou 'fixed'
+  commissionType: 'percent' | 'fixed' = 'percent';
+
+  // Valeurs éditées séparées
+  editedCommissionPercent: number | null = null;
+  editedCommissionFixed: number | null = null;
+
   private readonly invoiceService = inject(InvoiceService);
+  private readonly transactionService = inject(TransactionService);
+  private readonly virementService= inject(VirementSepaService)
+
+  private readonly principalAccountService = inject(ComptePrincipalService);
   private readonly usersService = inject(UsersService);
   private readonly pdfService = inject(PdfGeneratorService);
 
@@ -193,7 +219,9 @@ export class AllInvoicesComponent implements OnInit {
     return allFiltered.slice(start, end);
   });
 
+
   ngOnInit(): void {
+
     this.usersService
       .getInfo()
       .pipe(
@@ -246,25 +274,109 @@ export class AllInvoicesComponent implements OnInit {
   }
 
   markAsPaid(invoiceId: number): void {
-    this.invoiceService
-      .update(invoiceId, { status: 'paid' })
+    const invoice = this.allInvoices().find(inv => inv.id === invoiceId);
+    if (!invoice) {
+      toast.error('Facture introuvable.');
+      return;
+    }
+
+
+    // Calcul de la commission
+    const commission = this.calculateCommissionAmount(invoice);
+    const montant = invoice.price_htva;
+
+    // Préparation du DTO
+
+    const virementDto: VirementSepaDto = {
+      account_owner: invoice.client.name,
+      iban: " ",
+      amount_htva: montant,
+      amount_tva: 0,
+      amount_total: invoice.total,
+      communication: `Paiement facture ${invoice.invoice_number}`,
+      structured_communication: '',
+      transaction_type: 'INCOMING',
+
+
+    };
+    //verifie si c'est un virement de groupe ou de principal
+    let type : string = "";
+    let idAccount : number = 0;
+   if(invoice.main_account?.id){
+      type = "PRINCIPAL"
+     idAccount = invoice.main_account.id
+   }
+    else if(invoice.group_account?.id) {
+      type = "GROUP"
+     idAccount = invoice.group_account.id
+   }
+
+    this.virementService.createVirementSepaFromBank( virementDto, idAccount, type)
       .pipe(take(1))
       .subscribe({
-        next: () => {
-          this.allInvoices.update((invoices) =>
-            invoices.map((inv) =>
-              inv.id === invoiceId ? { ...inv, status: 'paid' } : inv
-            )
-          );
-          toast.success(`Facture ${invoiceId} marquée comme payée.`);
+        next: (virement: VirementSepaEntity) => {
+          toast.success('Virement SEPA créé et attribué au groupe.');
+          // Modification du statut de la facture
+          this.invoiceService
+            .update(invoice.id, { status: 'paid' })
+            .pipe(take(1))
+            .subscribe({
+              next: () => {
+                this.allInvoices.update((invoices) =>
+                  invoices.map((inv) =>
+                    inv.id === invoice.id ? { ...inv, status: 'paid' } : inv
+                  )
+                );
+                toast.success(`Facture ${invoice.id} marquée comme payée.`);
+                this.principalAccountService.getCommisionAccount()
+                  .pipe(take(1))
+                  .subscribe({
+                    next: (idCommisionAccount: number) => {
+                      const transactionDtoCommission: TransactionDto = {
+                        amount: commission,
+                        communication: `Commission pour la facture ${invoice.invoice_number}`,
+                        senderGroup: invoice.group_account?.id ?? null,
+                        senderPrincipal: invoice.main_account?.id ?? null,
+                        recipientPrincipal: [idCommisionAccount],
+                      };
+
+
+
+                      this.transactionService
+                        .createTransaction(transactionDtoCommission)
+                        .pipe(take(1))
+                        .subscribe({
+                          next: () => toast.success('Transaction de commission créée.'),
+                          error: (err: unknown) => {
+                            console.error('Erreur lors de la création de la transaction de commission:', err);
+                            toast.error('Erreur lors de la création de la transaction de commission.');
+                          }
+                        });
+                    },
+                    error: (err: unknown) => {
+                      console.error('Erreur lors de la récupération du compte commission:', err);
+                      toast.error('Erreur lors de la récupération du compte commission.');
+                    }
+                  });
+
+
+              },
+              error: (err: unknown) => {
+                console.error('Erreur lors de la mise à jour du statut:', err);
+                toast.error('Erreur lors de la mise à jour du statut de la facture.');
+              },
+            });
         },
         error: (err: unknown) => {
-          console.error('Erreur lors du marquage comme payé:', err);
-          toast.error('Erreur lors de la mise à jour du statut de la facture.');
-        },
+          console.error('Erreur lors de la création du virement SEPA :', err);
+          toast.error('Erreur lors de la création du virement SEPA.');
+        }
       });
-  }
 
+
+
+
+  }
   downloadInvoice(invoice: InvoiceEntity): void {
     console.log('invoice', invoice);
     this.pdfService.generateInvoicePDF(invoice);
@@ -390,5 +502,73 @@ export class AllInvoicesComponent implements OnInit {
 
     // Format: d-(année)/000(numéro)
     return `d-${currentYear}/${paddedNumber}`;
+  }
+
+  editCommission(invoice: InvoiceEntity) {
+    const account = invoice.main_account ?? invoice.group_account;
+
+    this.editedCommissionPercent = account?.commissionPourcentage ?? null;
+    this.editedCommissionFixed = account?.commission ?? null;
+
+    this.commissionType = this.editedCommissionPercent != null ? 'percent' : 'fixed';
+    this.isEditing = true;
+  }
+
+  cancelEdit() {
+    this.isEditing = false;
+    this.editedCommissionPercent = null;
+    this.editedCommissionFixed = null;
+  }
+
+  saveCommission(invoice: InvoiceEntity) {
+    const account = invoice.main_account ?? invoice.group_account;
+    if (!account) return;
+
+    if (this.commissionType === 'percent' && this.editedCommissionPercent != null) {
+      account.commissionPourcentage = this.editedCommissionPercent;
+      account.commission = undefined;
+    } else if (this.commissionType === 'fixed' && this.editedCommissionFixed != null) {
+      account.commission = this.editedCommissionFixed;
+      account.commissionPourcentage = undefined;
+    }
+
+    this.cancelEdit();
+  }
+
+  calculateCommissionAmount(invoice: InvoiceEntity): number {
+    const account = invoice.main_account ?? invoice.group_account;
+    const percent = account?.commissionPourcentage;
+    const fixed = account?.commission;
+    const priceHtva = invoice.price_htva ?? 0;
+
+    if (percent != null) {
+      return (priceHtva * percent) / 100;
+    } else if (fixed != null) {
+      return fixed;
+    } else {
+      return 0;
+    }
+  }
+
+  cancel(invoice: InvoiceEntity) {
+    //mettre à jour le statut de la facture
+    this.invoiceService
+      .update(invoice.id, { status: 'canceled' })
+      .pipe(take(1))
+      .subscribe({
+        next: () => {
+          this.allInvoices.update((invoices) =>
+            invoices.map((inv) =>
+              inv.id === invoice.id ? { ...inv, status: 'pending' } : inv
+            )
+          );
+          toast.success(`Facture ${invoice.id} annulée.`);
+        },
+        error: (err: unknown) => {
+          console.error('Erreur lors de la mise à jour du statut:', err);
+          toast.error('Erreur lors de la mise à jour du statut de la facture.');
+        },
+      });
+
   }
 }

@@ -723,7 +723,7 @@
                     </div>
                     @for (recipient of transaction.recipientGroup; track
                     recipient.id) { @if (recipient.username !==
-                    state.accountGroup()?.username) {
+                    state.accountGroup()?.username ) {
                     <div class="text-sm pl-2 py-0.5 border-l-2 border-blue-400">
                       {{ recipient.username }}
                     </div>
@@ -1037,8 +1037,8 @@
               }}</hlm-td>
               <hlm-td class="lg:w-[20%] text-sm">{{
                 transaction.senderPrincipal !== null
-                  ? transaction.senderPrincipal.username || ""
-                  : transaction.senderGroup.username || ""
+                  ? transaction?.senderPrincipal?.username || ""
+                  : transaction?.senderGroup?.username || ""
               }}</hlm-td>
               <hlm-td class="lg:w-[20%] text-sm">{{
                 state.accountPrincipal()?.username ||
@@ -1141,7 +1141,7 @@
 
   <div class="flex flex-col gap-5">
     <hlm-table class="overflow-x-auto p-4 bg-white rounded-xl shadow-lg">
-      <p class="text-lg font-semibold px-4 mb-2">Virement</p>
+      <p class="text-lg font-semibold px-4 mb-2">Virement sortant</p>
       <div class="overflow-auto touch-none w-full">
         <hlm-trow class="hidden lg:flex lg:justify-between">
           <hlm-th class="lg:w-[11%] text-sm font-semibold">Date</hlm-th>
@@ -1165,6 +1165,8 @@
 
         @if(state.accountPrincipal()) { @for(virement of
         state.accountPrincipal()?.virementSepa; track virement.id) {
+          @if (virement.transaction_type == "OUTGOING") {
+
         <hlm-trow
           class="flex flex-col lg:flex-row lg:justify-between border-b lg:border-none p-2 lg:p-0"
         >
@@ -1357,8 +1359,9 @@
             </hlm-td>
           </div>
         </hlm-trow>
-        } } @else if (state.accountGroup()) { @for(virement of
+        }} } @else if (state.accountGroup()) { @for(virement of
         state.accountGroup()?.virementSepa; track virement.id) {
+          @if (virement.transaction_type == "OUTGOING") {
         <hlm-trow
           class="flex flex-col lg:flex-row lg:justify-between border-b lg:border-none p-2 lg:p-0"
         >
@@ -1547,75 +1550,428 @@
             </hlm-td>
           </div>
         </hlm-trow>
-        } }
+        }}}
+      </div>
+    </hlm-table>
+  </div>
+
+  <div class="flex flex-col gap-5">
+    <hlm-table class="overflow-x-auto p-4 bg-white rounded-xl shadow-lg">
+      <p class="text-lg font-semibold px-4 mb-2">Virement entrant </p>
+      <div class="overflow-auto touch-none w-full">
+        <hlm-trow class="hidden lg:flex lg:justify-between">
+          <hlm-th class="lg:w-[11%] text-sm font-semibold">Date</hlm-th>
+          <hlm-th class="lg:w-[11%] text-sm font-semibold">Titulaire</hlm-th>
+          <hlm-th class="lg:w-[13%] text-sm font-semibold">IBAN</hlm-th>
+          <hlm-th class="lg:w-[13%] text-sm font-semibold"
+          >Communication</hlm-th
+          >
+          <hlm-th class="lg:w-[13%] text-sm font-semibold"
+          >Comm. structurée</hlm-th
+          >
+          <hlm-th class="lg:w-[11%] text-sm font-semibold"
+          >Montant ajouté</hlm-th
+          >
+
+          <hlm-th class="lg:w-[9%] text-sm font-semibold">Statut</hlm-th>
+        </hlm-trow>
+
+        @if(state.accountPrincipal()) { @for(virement of
+          state.accountPrincipal()?.virementSepa; track virement.id) {
+          @if (virement.transaction_type == "INCOMING") {
+          <hlm-trow
+            class="flex flex-col lg:flex-row lg:justify-between border-b lg:border-none p-2 lg:p-0"
+          >
+            <div class="flex flex-col gap-2 lg:hidden">
+              <div class="flex justify-between items-center">
+                <span class="text-sm font-semibold">Date:</span>
+                <span class="text-sm">{{
+                    virement.created_at | date : "dd/MM/yyyy"
+                  }}</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-sm font-semibold">Titulaire:</span>
+                <span class="text-sm">{{ virement.account_owner }}</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-sm font-semibold">IBAN:</span>
+                <span class="text-sm">{{ virement.iban }}</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-sm font-semibold">Communication:</span>
+                <brn-popover>
+                  <button
+                    brnPopoverTrigger
+                    class="text-sm truncate max-w-[150px] cursor-pointer hover:text-gray-600 text-left"
+                  >
+                    {{ virement.communication }}
+                  </button>
+                  <div
+                    class="p-2 text-sm max-w-[200px] bg-white rounded shadow-lg"
+                    hlmPopoverContent
+                    *brnPopoverContent="let ctx"
+                  >
+                    {{ virement.communication }}
+                  </div>
+                </brn-popover>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-sm font-semibold">Comm. structurée:</span>
+                <span class="text-sm">{{
+                    virement.structured_communication
+                  }}</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-sm font-semibold">Montant ajouté:</span>
+                <span class="text-sm">{{
+                    virement.amount_htva | euroFormat
+                  }}</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-sm font-semibold">Statut:</span>
+                <span
+                  class="text-sm px-2 py-1 rounded-full cursor-pointer"
+                  [ngClass]="{
+                  'bg-green-100 text-green-800':
+                    virement.status === 'ACCEPTED' ||
+                    virement.status === 'PAID',
+                  'bg-yellow-100 text-yellow-800':
+                    virement.status === 'PENDING',
+                  'bg-red-100 text-red-800': virement.status === 'REJECTED'
+                }"
+                >
+                @if (virement.status === 'REJECTED') {
+                  <brn-popover>
+                  <button brnPopoverTrigger class="flex items-center gap-1">
+                    Rejeté
+                    <hlm-icon name="lucideBell" size="sm" />
+                  </button>
+                  <div
+                    hlmPopoverContent
+                    class="p-2 text-sm bg-white rounded shadow-lg"
+                    *brnPopoverContent="let ctx"
+                  >
+                    {{
+                      virement.rejected_reason === null
+                        ? "Aucun motif de rejet"
+                        : virement.rejected_reason
+                    }}
+                  </div>
+                </brn-popover>
+                } @else {
+                  {{
+                    virement.status === "ACCEPTED"
+                      ? "Accepté"
+                      : virement.status === "PAID"
+                        ? "Payé"
+                        : "En attente"
+                  }}
+                }
+              </span>
+              </div>
+            </div>
+
+            <div class="hidden lg:flex lg:justify-between w-full">
+              <hlm-td class="lg:w-[11%] text-sm">{{
+                  virement.created_at | date : "dd/MM/yyyy"
+                }}</hlm-td>
+              <hlm-td class="lg:w-[11%] text-sm">{{
+                  virement.account_owner
+                }}</hlm-td>
+              <hlm-td class="lg:w-[13%] text-sm">{{ virement.iban }}</hlm-td>
+              <hlm-td class="lg:w-[13%] text-sm">
+                <brn-popover>
+                  <button
+                    brnPopoverTrigger
+                    class="truncate block max-w-[150px] cursor-pointer hover:text-gray-600 text-left"
+                  >
+                    {{ virement.communication }}
+                  </button>
+                  <div
+                    class="p-2 text-[10px] max-w-[200px] bg-white rounded shadow-lg"
+                    hlmPopoverContent
+                    *brnPopoverContent="let ctx"
+                  >
+                    {{ virement.communication }}
+                  </div>
+                </brn-popover>
+              </hlm-td>
+              <hlm-td class="lg:w-[13%] text-sm">{{
+                  virement.structured_communication
+                }}</hlm-td>
+              <hlm-td class="lg:w-[11%] text-sm">{{
+                  virement.amount_htva | euroFormat
+                }}</hlm-td>
+
+              <hlm-td class="lg:w-[9%] text-sm">
+              <span
+                class="px-2 py-1 rounded-full cursor-pointer"
+                [ngClass]="{
+                  'bg-green-100 text-green-800':
+                    virement.status === 'ACCEPTED' ||
+                    virement.status === 'PAID',
+                  'bg-yellow-100 text-yellow-800':
+                    virement.status === 'PENDING',
+                  'bg-red-100 text-red-800': virement.status === 'REJECTED'
+                }"
+              >
+                @if (virement.status === 'REJECTED') {
+                  <brn-popover>
+                  <button brnPopoverTrigger class="flex items-center gap-1">
+                    Rejeté
+                    <hlm-icon name="lucideBell" size="sm" />
+                  </button>
+                  <div
+                    hlmPopoverContent
+                    class="p-2 text-sm bg-white rounded shadow-lg"
+                    *brnPopoverContent="let ctx"
+                  >
+                    {{ virement.rejected_reason }}
+                  </div>
+                </brn-popover>
+                } @else {
+                  {{
+                    virement.status === "ACCEPTED"
+                      ? "Accepté"
+                      : virement.status === "PAID"
+                        ? "Payé"
+                        : "En attente"
+                  }}
+                }
+              </span>
+              </hlm-td>
+            </div>
+          </hlm-trow>
+        } }} @else if (state.accountGroup()) { @for(virement of
+          state.accountGroup()?.virementSepa; track virement.id) {
+          @if (virement.transaction_type == "INCOMING") {
+          <hlm-trow
+            class="flex flex-col lg:flex-row lg:justify-between border-b lg:border-none p-2 lg:p-0"
+          >
+            <div class="flex flex-col gap-2 lg:hidden">
+              <div class="flex justify-between items-center">
+                <span class="text-sm font-semibold">Date:</span>
+                <span class="text-sm">{{
+                    virement.created_at | date : "dd/MM/yyyy"
+                  }}</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-sm font-semibold">Titulaire:</span>
+                <span class="text-sm">{{ virement.account_owner }}</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-sm font-semibold">IBAN:</span>
+                <span class="text-sm">{{ virement.iban }}</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-sm font-semibold">Communication:</span>
+                <brn-popover>
+                  <button
+                    brnPopoverTrigger
+                    class="text-sm truncate max-w-[150px] cursor-pointer hover:text-gray-600 text-left"
+                  >
+                    {{ virement.communication }}
+                  </button>
+                  <div
+                    class="p-2 text-sm max-w-[200px] bg-white rounded shadow-lg"
+                    hlmPopoverContent
+                    *brnPopoverContent="let ctx"
+                  >
+                    {{ virement.communication }}
+                  </div>
+                </brn-popover>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-sm font-semibold">Comm. structurée:</span>
+                <span class="text-sm">{{
+                    virement.structured_communication
+                  }}</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-sm font-semibold">Montant débité:</span>
+                <span class="text-sm">{{
+                    virement.amount_htva | euroFormat
+                  }}</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-sm font-semibold">Statut:</span>
+                <span
+                  class="text-sm px-2 py-1 rounded-full cursor-pointer"
+                  [ngClass]="{
+                  'bg-green-100 text-green-800':
+                    virement.status === 'ACCEPTED' ||
+                    virement.status === 'PAID',
+                  'bg-yellow-100 text-yellow-800':
+                    virement.status === 'PENDING',
+                  'bg-red-100 text-red-800': virement.status === 'REJECTED'
+                }"
+                >
+                @if (virement.status === 'REJECTED') {
+                  <brn-popover>
+                  <button brnPopoverTrigger class="flex items-center gap-1">
+                    Rejeté
+                    <hlm-icon name="lucideBell" size="sm" />
+                  </button>
+                  <div
+                    hlmPopoverContent
+                    class="p-2 text-sm bg-white rounded shadow-lg"
+                    *brnPopoverContent="let ctx"
+                  >
+                    {{ virement.rejected_reason }}
+                  </div>
+                </brn-popover>
+                } @else {
+                  {{
+                    virement.status === "ACCEPTED"
+                      ? "Accepté"
+                      : virement.status === "PAID"
+                        ? "Payé"
+                        : "En attente"
+                  }}
+                }
+              </span>
+              </div>
+            </div>
+
+            <div class="hidden lg:flex lg:justify-between w-full">
+              <hlm-td class="lg:w-[11%] text-sm">{{
+                  virement.created_at | date : "dd/MM/yyyy"
+                }}</hlm-td>
+              <hlm-td class="lg:w-[11%] text-sm">{{
+                  virement.account_owner
+                }}</hlm-td>
+              <hlm-td class="lg:w-[13%] text-sm">{{ virement.iban }}</hlm-td>
+              <hlm-td class="lg:w-[13%] text-sm">
+                <brn-popover>
+                  <button
+                    brnPopoverTrigger
+                    class="truncate block max-w-[150px] cursor-pointer hover:text-gray-600 text-left"
+                  >
+                    {{ virement.communication }}
+                  </button>
+                  <div
+                    class="p-2 text-[10px] max-w-[200px] bg-white rounded shadow-lg"
+                    hlmPopoverContent
+                    *brnPopoverContent="let ctx"
+                  >
+                    {{ virement.communication }}
+                  </div>
+                </brn-popover>
+              </hlm-td>
+              <hlm-td class="lg:w-[13%] text-sm">{{
+                  virement.structured_communication
+                }}</hlm-td>
+              <hlm-td class="lg:w-[11%] text-sm">{{
+                  virement.amount_htva | euroFormat
+                }}</hlm-td>
+              <hlm-td class="lg:w-[9%] text-sm">
+              <span
+                class="px-2 py-1 rounded-full cursor-pointer"
+                [ngClass]="{
+                  'bg-green-100 text-green-800':
+                    virement.status === 'ACCEPTED' ||
+                    virement.status === 'PAID',
+                  'bg-yellow-100 text-yellow-800':
+                    virement.status === 'PENDING',
+                  'bg-red-100 text-red-800': virement.status === 'REJECTED'
+                }"
+              >
+                @if (virement.status === 'REJECTED') {
+                  <brn-popover>
+                  <button brnPopoverTrigger class="flex items-center gap-1">
+                    Rejeté
+                    <hlm-icon name="lucideBell" size="sm" />
+                  </button>
+                  <div
+                    hlmPopoverContent
+                    class="p-2 text-sm bg-white rounded shadow-lg"
+                    *brnPopoverContent="let ctx"
+                  >
+                    {{ virement.rejected_reason }}
+                  </div>
+                </brn-popover>
+                } @else {
+                  {{
+                    virement.status === "ACCEPTED"
+                      ? "Accepté"
+                      : virement.status === "PAID"
+                        ? "Payé"
+                        : "En attente"
+                  }}
+                }
+              </span>
+              </hlm-td>
+            </div>
+          </hlm-trow>
+        } }}
       </div>
     </hlm-table>
 
     @if (state.accountPrincipal()?.virementSepa?.length ||
     state.accountGroup()?.virementSepa?.length) {
-    <nav hlmPagination class="mt-4 flex justify-center">
-      <ul
-        hlmPaginationContent
-        class="flex flex-wrap gap-1 justify-center items-center"
-      >
-        <li hlmPaginationItem class="md:mx-1">
-          <button
-            class="px-3 py-1.5 text-sm font-medium transition-colors hover:bg-gray-100 rounded-md"
-            [class.opacity-50]="pagination.virement.currentPage() === 1"
-            [disabled]="pagination.virement.currentPage() === 1"
-            (click)="
+      <nav hlmPagination class="mt-4 flex justify-center">
+        <ul
+          hlmPaginationContent
+          class="flex flex-wrap gap-1 justify-center items-center"
+        >
+          <li hlmPaginationItem class="md:mx-1">
+            <button
+              class="px-3 py-1.5 text-sm font-medium transition-colors hover:bg-gray-100 rounded-md"
+              [class.opacity-50]="pagination.virement.currentPage() === 1"
+              [disabled]="pagination.virement.currentPage() === 1"
+              (click)="
               pagination.virement.currentPage() > 1 &&
                 onPageChangeVirement(pagination.virement.currentPage() - 1)
             "
-          >
-            Précédent
-          </button>
-        </li>
+            >
+              Précédent
+            </button>
+          </li>
 
-        @for (page of getVisiblePages(pagination.virement.currentPage(),
-        pagination.virement.totalPages()); track $index) { @if (page ===
-        'ellipsis') {
-        <li hlmPaginationItem class="md:mx-1">
-          <span class="px-3 py-1.5">...</span>
-        </li>
-        } @else {
-        <li hlmPaginationItem class="md:mx-1">
-          <button
-            class="min-w-[40px] h-9 px-3 py-1.5 text-sm font-medium transition-colors rounded-md"
-            [class.bg-zinc-800]="pagination.virement.currentPage() === page"
-            [class.text-white]="pagination.virement.currentPage() === page"
-            [class.hover:bg-gray-100]="
+          @for (page of getVisiblePages(pagination.virement.currentPage(),
+            pagination.virement.totalPages()); track $index) { @if (page ===
+          'ellipsis') {
+            <li hlmPaginationItem class="md:mx-1">
+              <span class="px-3 py-1.5">...</span>
+            </li>
+          } @else {
+            <li hlmPaginationItem class="md:mx-1">
+              <button
+                class="min-w-[40px] h-9 px-3 py-1.5 text-sm font-medium transition-colors rounded-md"
+                [class.bg-zinc-800]="pagination.virement.currentPage() === page"
+                [class.text-white]="pagination.virement.currentPage() === page"
+                [class.hover:bg-gray-100]="
               pagination.virement.currentPage() !== page
             "
-            (click)="onPageChangeVirement(page)"
-          >
-            {{ page }}
-          </button>
-        </li>
-        } }
+                (click)="onPageChangeVirement(page)"
+              >
+                {{ page }}
+              </button>
+            </li>
+          } }
 
-        <li hlmPaginationItem class="md:mx-1">
-          <button
-            class="px-3 py-1.5 text-sm font-medium transition-colors hover:bg-gray-100 rounded-md"
-            [class.opacity-50]="
+          <li hlmPaginationItem class="md:mx-1">
+            <button
+              class="px-3 py-1.5 text-sm font-medium transition-colors hover:bg-gray-100 rounded-md"
+              [class.opacity-50]="
               pagination.virement.currentPage() ===
               pagination.virement.totalPages()
             "
-            [disabled]="
+              [disabled]="
               pagination.virement.currentPage() ===
               pagination.virement.totalPages()
             "
-            (click)="
+              (click)="
               pagination.virement.currentPage() <
                 pagination.virement.totalPages() &&
                 onPageChangeVirement(pagination.virement.currentPage() + 1)
             "
-          >
-            Suivant
-          </button>
-        </li>
-      </ul>
-    </nav>
+            >
+              Suivant
+            </button>
+          </li>
+        </ul>
+      </nav>
     }
   </div>
 </div>

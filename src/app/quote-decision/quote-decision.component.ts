@@ -161,10 +161,7 @@ export class QuoteDecisionComponent implements AfterViewInit, OnInit {
       number: [null, Validators.required],
       city: [null, Validators.required],
       postalCode: [null, Validators.required],
-      default_payment_deadline: [
-        10,
-        [Validators.required, Validators.min(10), Validators.max(30)],
-      ],
+
     });
     this.updateClientFormValidators();
   }

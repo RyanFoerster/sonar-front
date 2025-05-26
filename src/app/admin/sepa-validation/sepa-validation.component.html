@@ -164,15 +164,15 @@
                       <p class="text-sm font-medium text-gray-500">TVAC</p>
                       <ng-container *ngIf="isEditing && editedVirement; else tvacView">
                         <input
-                          type="number"
+                          type="number" step="0.01" min="0"
                           [(ngModel)]="editedVirement.amount_total"
+                          (ngModelChange)="onTVACChange()"
                           name="amount_total"
-                          required
                           class="w-full text-sm text-gray-900 border rounded px-2 py-1"
                           [ngClass]="{
-          'border-red-500': editedVirement.amount_total === null || editedVirement.amount_total === undefined,
-          'border-gray-300': editedVirement.amount_total !== null && editedVirement.amount_total !== undefined
-        }"
+                              'border-red-500': editedVirement.amount_total === null || editedVirement.amount_total === undefined,
+                              'border-gray-300': editedVirement.amount_total !== null && editedVirement.amount_total !== undefined
+                          }"
                         />
                         <div *ngIf="editedVirement.amount_total === null || editedVirement.amount_total === undefined" class="text-red-500 text-xs mt-1">
                           Le montant TVAC est requis.
@@ -190,15 +190,15 @@
                       <p class="text-sm font-medium text-gray-500">HTVA</p>
                       <ng-container *ngIf="isEditing && editedVirement; else htvaView">
                         <input
-                          type="number"
+                          type="number" step="0.01" min="0"
                           [(ngModel)]="editedVirement.amount_htva"
+                          (ngModelChange)="onHTVAChange()"
                           name="amount_htva"
-                          required
                           class="w-full text-sm text-gray-900 border rounded px-2 py-1"
                           [ngClass]="{
-          'border-red-500': editedVirement.amount_htva === null || editedVirement.amount_htva === undefined,
-          'border-gray-300': editedVirement.amount_htva !== null && editedVirement.amount_htva !== undefined
-        }"
+                               'border-red-500': editedVirement.amount_htva === null || editedVirement.amount_htva === undefined,
+                               'border-gray-300': editedVirement.amount_htva !== null && editedVirement.amount_htva !== undefined
+                           }"
                         />
                         <div *ngIf="editedVirement.amount_htva === null || editedVirement.amount_htva === undefined" class="text-red-500 text-xs mt-1">
                           Le montant HTVA est requis.
@@ -216,19 +216,14 @@
                       <p class="text-sm font-medium text-gray-500">TVA</p>
                       <ng-container *ngIf="isEditing && editedVirement; else tvaView">
                         <input
-                          type="number"
+                          type="number" step="0.01" min="0"
                           [(ngModel)]="editedVirement.amount_tva"
+                          (ngModelChange)="onTVAChange()"
                           name="amount_tva"
-                          required
                           class="w-full text-sm text-gray-900 border rounded px-2 py-1"
-                          [ngClass]="{
-          'border-red-500': editedVirement.amount_tva === null || editedVirement.amount_tva === undefined,
-          'border-gray-300': editedVirement.amount_tva !== null && editedVirement.amount_tva !== undefined
-        }"
+
                         />
-                        <div *ngIf="editedVirement.amount_tva === null || editedVirement.amount_tva === undefined" class="text-red-500 text-xs mt-1">
-                          Le montant TVA est requis.
-                        </div>
+
                       </ng-container>
                       <ng-template #tvaView>
                         <p class="text-sm text-gray-900">
@@ -255,9 +250,9 @@
                           required
                           class="w-full text-sm text-gray-900 border rounded px-2 py-1 break-all"
                           [ngClass]="{
-          'border-red-500': editedVirement.communication?.trim() === '',
-          'border-gray-300': editedVirement.communication?.trim() !== ''
-        }"
+                             'border-red-500': editedVirement.communication?.trim() === '',
+                             'border-gray-300': editedVirement.communication?.trim() !== ''
+                         }"
                         />
                         <div *ngIf="editedVirement.communication?.trim() === ''" class="text-red-500 text-xs mt-1">
                           La communication est requise.
@@ -278,16 +273,11 @@
                           type="text"
                           [(ngModel)]="editedVirement.structured_communication"
                           name="structured_communication"
-                          required
+
                           class="w-full text-sm text-gray-900 border rounded px-2 py-1"
-                          [ngClass]="{
-          'border-red-500': editedVirement.structured_communication?.trim() === '',
-          'border-gray-300': editedVirement.structured_communication?.trim() !== ''
-        }"
+
                         />
-                        <div *ngIf="editedVirement.structured_communication?.trim() === ''" class="text-red-500 text-xs mt-1">
-                          La communication structurée est requise.
-                        </div>
+
                       </ng-container>
                       <ng-template #structuredCommView>
                         <p class="text-sm text-gray-900">
@@ -334,7 +324,7 @@
                         hlmBtn
                       >
                         <hlm-icon name="lucideCheck" class="w-4 h-4 mr-1" size="sm" />
-                        Valider
+                        Valider les modifications
                       </button>
 
                     </ng-container>

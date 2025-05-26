@@ -263,6 +263,7 @@ export class NewQuoteComponent implements AfterViewInit {
       ['link'], // Uniquement le bouton pour les liens
     ],
   };
+  private nextQuoteNumber: string | undefined;
 
   constructor() {
     this.searchControl.valueChanges
@@ -1822,5 +1823,31 @@ export class NewQuoteComponent implements AfterViewInit {
   // Fonction pour annuler depuis la modale
   cancelEditProduct() {
     this.showEditProductConfirmationModal.set(false); // Ferme la modale
+  }
+
+
+  // Ajoute ces propriétés dans la classe
+  showMailPreview = false;
+  mailPreview = { to: '', subject: '', body: '' };
+
+// Méthode pour ouvrir la modale d’aperçu
+  openMailPreview() {
+    this.mailPreview = this.generateMailPreview();
+    this.showMailPreview = true;
+  }
+
+// Génère le contenu du mail à partir du devis courant
+  generateMailPreview() {
+    return {
+      to: this.client()?.email ?? '',
+      subject: `Votre devis n°${this.nextQuoteNumber ?? ''}`,
+      body: `Bonjour ${this.client()?.firstname || this.client()?.name},\n\nVeuillez trouver en pièce jointe votre devis.\n\nCordialement,\n${this.connectedUser()?.firstName || ''}`
+    };
+  }
+
+// Envoie le devis et ferme la modale
+  sendQuoteAndMail() {
+    this.showMailPreview = false;
+    this.createQuote(); // ou updateQuote() selon le contexte
   }
 }

@@ -13,4 +13,6 @@ export interface PrincipalAccountEntity {
   transactions: TransactionEntity[];
   virementSepa: VirementSepaEntity[];
   user?: UserEntity;
+  commissionPourcentage?: number;
+  commission?: number;
 }

@@ -39,7 +39,26 @@ export class VirementSepaService {
       }
     );
   }
+  createVirementSepaFromBank(createVirementSepaDto: VirementSepaDto,id: number, typeOfProjet: string) {
+    const form = new FormData();
 
+    // Ajouter chaque champ non-null du formulaire
+    Object.entries(createVirementSepaDto).forEach(([key, value]) => {
+      if (value !== null && value !== undefined) {
+        form.append(key, value.toString());
+      }
+    });
+    return this.httpClient.post<VirementSepaEntity>(
+      `${environment.API_URL}/virement-sepa/FromBank`,
+      form,
+      {
+        params: {
+          id: id,
+          typeOfProjet: typeOfProjet,
+        },
+      }
+    );
+  }
   getAll() {
     return this.httpClient.get<VirementSepaEntity[]>(
       `${environment.API_URL}/virement-sepa`

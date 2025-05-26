@@ -1126,16 +1126,16 @@
             }}
           </button>
           } @else {
-          <button
-            class="bg-primary text-white font-medium text-sm rounded-lg px-4 py-2 md:px-6 md:py-2.5 flex items-center gap-2 hover:bg-primary/90 transition-all w-full md:w-auto"
-            hlmBtn
-            type="submit"
-            (click)="isLoadingQuote.set(true)"
-            [disabled]=""
-          >
-            <hlm-icon size="sm" name="lucideFileDown" />
-            {{ updatedQuoteId() ? "Modifier le devis" : "Générer le devis" }}
-          </button>
+            <button
+              class="bg-primary text-white font-medium text-sm rounded-lg px-4 py-2 md:px-6 md:py-2.5 flex items-center gap-2 hover:bg-primary/90 transition-all w-full md:w-auto"
+              hlmBtn
+              type="button"
+              (click)="openMailPreview()"
+              [disabled]="isLoadingQuote()"
+            >
+              <hlm-icon size="sm" name="lucideFileDown" />
+              {{ updatedQuoteId() ? "Modifier le devis" : "Générer le devis" }}
+            </button>
           }
         </div>
       </div>
@@ -1497,6 +1497,23 @@
     }
   </div>
 </div>
+
+
+@if (showMailPreview) {
+  <div class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl p-6 max-w-lg w-full mx-auto shadow-xl space-y-4">
+      <h2 class="text-lg font-semibold text-gray-900 mb-2">Aperçu du mail</h2>
+      <p><strong>À :</strong> {{ mailPreview.to }}</p>
+      <p><strong>Objet :</strong> {{ mailPreview.subject }}</p>
+      <p class="mb-2"><strong>Message :</strong></p>
+      <div class="border p-2 bg-gray-50 whitespace-pre-line text-sm">{{ mailPreview.body }}</div>
+      <div class="flex justify-end gap-2 mt-4">
+        <button (click)="sendQuoteAndMail()" class="bg-primary text-white rounded-lg px-4 py-2" hlmBtn>Envoyer</button>
+        <button (click)="showMailPreview = false" class="bg-gray-100 text-gray-700 rounded-lg px-4 py-2 hover:bg-gray-200 transition-all" hlmBtn>Annuler</button>
+      </div>
+    </div>
+  </div>
+}
 
 <!-- Double Validation Warning Modal -->
 @if (showDoubleValidationWarningModal()) {

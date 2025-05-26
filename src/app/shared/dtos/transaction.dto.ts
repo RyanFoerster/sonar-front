@@ -7,7 +7,7 @@ export interface TransactionDto {
 
   senderPrincipal?: number;
 
-  recipientGroup?: number[];
+  recipientGroup?: number[] ;
 
   recipientPrincipal?: number[];
 }

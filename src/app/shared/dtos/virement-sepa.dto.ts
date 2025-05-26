@@ -13,5 +13,7 @@ export interface VirementSepaDto {
 
   structured_communication?: string;
 
-  invoice: File;
+  invoice?: File;
+
+  transaction_type : 'INCOMING' | 'OUTGOING';
 }

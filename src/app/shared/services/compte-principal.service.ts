@@ -40,4 +40,11 @@ export class ComptePrincipalService {
     );
 
   }
+
+  getCommisionAccount() {
+    return this.httpClient.get<any>(
+      `${environment.API_URL}/compte-principal/commission`
+    );
+
+  }
 }

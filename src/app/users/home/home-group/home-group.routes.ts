@@ -1,6 +1,5 @@
 import { Routes } from '@angular/router';
 import { authGuard } from '../../../shared/guards/auth.guard';
-import { adminGuard } from '../../../shared/guards/admin.guard';
 
 export default [
   {
@@ -60,9 +59,7 @@ export default [
   {
     path: ':id/agenda',
     loadComponent: () =>
-      import('../../../components/agenda/agenda.component').then(
-        (m) => m.AgendaComponent
-      ),
+      import('./agenda/agenda.component').then((m) => m.AgendaComponent),
     canActivate: [authGuard],
   },
 ] as Routes;

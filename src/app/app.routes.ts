@@ -155,6 +155,13 @@ export const routes: Routes = [
     canActivate: [maintenanceGuard, authGuard],
   },
   {
+    path: 'event-invitation',
+    loadComponent: () =>
+      import('./components/event-invitation/event-invitation.component').then(
+        (m) => m.EventInvitationComponent
+      ),
+  },
+  {
     path: '**',
     redirectTo: 'home',
     pathMatch: 'full',

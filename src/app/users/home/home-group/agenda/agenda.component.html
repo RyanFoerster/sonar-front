@@ -312,7 +312,7 @@
         "
       >
         <button
-          class="px-4 py-2 text-sm font-medium rounded-md bg-green-600 hover:bg-green-700 text-white transition"
+          class="px-3 py-1.5 text-xs font-medium rounded-md bg-green-600 hover:bg-green-700 text-white transition"
           (click)="updateEventStatus(selectedEvent, EventStatus.CONFIRMED)"
           [class.opacity-50]="selectedEvent.status === EventStatus.CONFIRMED"
           [disabled]="selectedEvent.status === EventStatus.CONFIRMED"
@@ -320,7 +320,7 @@
           Confirmer
         </button>
         <button
-          class="px-4 py-2 text-sm font-medium rounded-md bg-yellow-600 hover:bg-yellow-700 text-white transition"
+          class="px-3 py-1.5 text-xs font-medium rounded-md bg-yellow-600 hover:bg-yellow-700 text-white transition"
           (click)="updateEventStatus(selectedEvent, EventStatus.PENDING)"
           [class.opacity-50]="selectedEvent.status === EventStatus.PENDING"
           [disabled]="selectedEvent.status === EventStatus.PENDING"
@@ -328,7 +328,7 @@
           En attente
         </button>
         <button
-          class="px-4 py-2 text-sm font-medium rounded-md bg-red-600 hover:bg-red-700 text-white transition"
+          class="px-3 py-1.5 text-xs font-medium rounded-md bg-red-600 hover:bg-red-700 text-white transition"
           (click)="updateEventStatus(selectedEvent, EventStatus.CANCELLED)"
         >
           Annuler
@@ -343,7 +343,7 @@
         "
       >
         <button
-          class="px-4 py-2 text-sm font-medium rounded-md bg-green-600 hover:bg-green-700 text-white transition"
+          class="px-3 py-1.5 text-xs font-medium rounded-md bg-green-600 hover:bg-green-700 text-white transition"
           (click)="
             respondToInvitation(selectedEvent, InvitationStatus.ACCEPTED)
           "
@@ -357,7 +357,7 @@
           Accepter
         </button>
         <button
-          class="px-4 py-2 text-sm font-medium rounded-md bg-red-600 hover:bg-red-700 text-white transition"
+          class="px-3 py-1.5 text-xs font-medium rounded-md bg-red-600 hover:bg-red-700 text-white transition"
           (click)="
             respondToInvitation(selectedEvent, InvitationStatus.DECLINED)
           "
@@ -380,7 +380,7 @@
         "
       >
         <div
-          class="px-4 py-2 text-sm font-medium rounded-md bg-red-50 text-red-700"
+          class="px-3 py-1.5 text-xs font-medium rounded-md bg-red-50 text-red-700"
         >
           Cet événement a été annulé
         </div>
@@ -389,36 +389,69 @@
       <!-- Boutons réservés aux administrateurs de l'agenda -->
       <ng-container *ngIf="hasManagementRightsForEvent(selectedEvent)">
         <button
-          class="px-4 py-2 text-sm font-medium rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 transition"
+          class="px-3 py-1.5 text-xs font-medium rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 transition"
           (click)="openInviteParticipantsModal()"
         >
           Invitation(s)
         </button>
         <button
-          class="px-4 py-2 text-sm font-medium rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 transition"
+          class="px-3 py-1.5 text-xs font-medium rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 transition"
           (click)="openDuplicateModal(selectedEvent)"
         >
           Dupliquer
         </button>
         <button
-          class="px-4 py-2 text-sm font-medium rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 transition"
+          class="px-3 py-1.5 text-xs font-medium rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 transition"
           (click)="openEditModal(selectedEvent)"
         >
           Modifier
         </button>
         <button
-          class="px-4 py-2 text-sm font-medium rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 transition"
+          class="px-3 py-1.5 text-xs font-medium rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 transition"
           (click)="sendReminders(selectedEvent.id)"
         >
           Envoyer un rappel
         </button>
         <button
-          class="px-4 py-2 text-sm font-medium rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 transition"
+          class="px-3 py-1.5 text-xs font-medium rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 transition"
           (click)="deleteEvent()"
         >
           Mémo
         </button>
       </ng-container>
+
+      <!-- Bouton pour ajouter l'événement à Google Calendar - Visible pour tous les utilisateurs -->
+      <button
+        class="px-3 py-1.5 text-xs font-medium rounded-md bg-blue-600 hover:bg-blue-700 text-white transition flex items-center gap-1"
+        (click)="openAddToGoogleCalendarModal()"
+        [class.bg-blue-500]="isEventInGoogleCalendar(selectedEvent.id)"
+        [class.hover:bg-blue-600]="isEventInGoogleCalendar(selectedEvent.id)"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="14"
+          height="14"
+          fill="currentColor"
+          viewBox="0 0 16 16"
+        >
+          <path
+            *ngIf="!isEventInGoogleCalendar(selectedEvent?.id)"
+            d="M8.5 10c-.276 0-.5-.224-.5-.5v-2h-2c-.276 0-.5-.224-.5-.5s.224-.5.5-.5h2v-2c0-.276.224-.5.5-.5s.5.224.5.5v2h2c.276 0 .5.224.5.5s-.224.5-.5.5h-2v2c0 .276-.224.5-.5.5z"
+          />
+          <path
+            *ngIf="isEventInGoogleCalendar(selectedEvent?.id)"
+            d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"
+          />
+          <path
+            d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0ZM1 8a7 7 0 1 1 14 0A7 7 0 0 1 1 8Z"
+          />
+        </svg>
+        <span>{{
+          isEventInGoogleCalendar(selectedEvent.id)
+            ? "Synchronisé"
+            : "Google Calendar"
+        }}</span>
+      </button>
     </div>
 
     <!-- Contenu de l'événement avec layout adaptatif -->
@@ -431,39 +464,201 @@
           <p class="text-gray-700">{{ selectedEvent.description }}</p>
         </div>
 
-        <!-- Fil de discussion -->
+        <!-- Chat Section -->
         <div class="border border-gray-200 rounded-lg overflow-hidden">
           <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
-            <h3 class="font-medium text-gray-900">Fil de discussion</h3>
+            <h3 class="font-medium text-gray-900">Chat de l'événement</h3>
           </div>
-          <div class="p-4 h-80 overflow-y-auto">
-            <p class="text-gray-500 text-center text-sm">
-              Aucun message pour le moment
-            </p>
-          </div>
+
+          <!-- Messages du chat -->
           <div
-            class="px-4 py-3 border-t border-gray-200 flex items-center gap-2"
+            class="h-80 overflow-y-auto p-4 overflow-x-hidden"
+            id="chat-messages"
           >
-            <input
-              type="text"
-              placeholder="Écrivez ici..."
-              class="flex-1 border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-            />
-            <button
-              class="bg-indigo-600 hover:bg-indigo-700 text-white p-2 rounded-md"
+            <!-- Indicateur de chargement initial -->
+            <div
+              *ngIf="loadingChatMessages"
+              class="flex justify-center items-center py-4"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                fill="currentColor"
-                viewBox="0 0 16 16"
+              <div
+                class="w-6 h-6 border-2 border-t-blue-500 border-gray-200 rounded-full animate-spin"
+              ></div>
+            </div>
+
+            <!-- Indicateur de chargement des messages plus anciens -->
+            <div
+              *ngIf="loadingMoreChatMessages"
+              class="flex justify-center items-center py-3 mb-3"
+            >
+              <div
+                class="w-5 h-5 border-2 border-t-blue-500 border-gray-200 rounded-full animate-spin mr-2"
+              ></div>
+              <span class="text-xs text-gray-500"
+                >Chargement des messages...</span
               >
-                <path
-                  d="M15.964.686a.5.5 0 0 0-.65-.65L.767 5.855a.5.5 0 0 0-.287.515h.01l.867 5.876a.5.5 0 0 0 .5.5l4.084-.059a.5.5 0 0 0 .484-.29H6.4l1.6 2.693a.5.5 0 0 0 .8.13l7.15-6.804a.5.5 0 0 0 .14-.6l-.624-1.25Z"
-                />
-              </svg>
-            </button>
+            </div>
+
+            <!-- Bouton pour charger plus de messages -->
+            <div
+              *ngIf="
+                !loadingChatMessages &&
+                !loadingMoreChatMessages &&
+                chatPaginationState?.hasMoreMessages
+              "
+              class="flex flex-col items-center mb-4"
+            >
+              <div class="text-xs text-gray-500 mb-1">
+                {{ chatMessages.length }} sur
+                {{ chatPaginationState?.totalMessages }} messages
+              </div>
+              <button
+                class="px-3 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 rounded-md text-gray-700 transition"
+                (click)="loadMoreMessages()"
+              >
+                Charger les messages précédents
+              </button>
+            </div>
+
+            <!-- Aucun message -->
+            <div
+              *ngIf="!loadingChatMessages && chatMessages.length === 0"
+              class="py-4 text-center text-gray-500 text-sm"
+            >
+              Aucun message dans le chat
+            </div>
+
+            <!-- Liste des messages -->
+            <div
+              *ngFor="let message of chatMessages; let i = index"
+              class="mb-4 last:mb-0"
+              [ngClass]="{
+                'animate-fade-in':
+                  i === chatMessages.length - 1 && chatMessages.length > 0
+              }"
+            >
+              <div class="flex items-start">
+                <div class="flex-shrink-0">
+                  <div
+                    class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-700 text-sm"
+                    [class.bg-blue-100]="
+                      message.senderId === authService.getUser()?.id
+                    "
+                    [class.text-blue-700]="
+                      message.senderId === authService.getUser()?.id
+                    "
+                  >
+                    {{
+                      getInitials({
+                        name: message.senderName,
+                        email: message.senderEmail
+                      })
+                    }}
+                  </div>
+                </div>
+                <div class="ml-3 max-w-[85%] break-words overflow-hidden">
+                  <div class="flex items-center">
+                    <div
+                      class="font-medium text-sm text-gray-900"
+                      [class.text-blue-700]="
+                        message.senderId === authService.getUser()?.id
+                      "
+                    >
+                      {{ message.senderName || message.senderEmail }}
+                      <span
+                        *ngIf="message.senderId === authService.getUser()?.id"
+                        class="text-xs text-blue-600 ml-1"
+                        >(vous)</span
+                      >
+                    </div>
+                    <div class="ml-2 text-xs text-gray-500">
+                      {{ formatDate(message.createdAt) }}
+                    </div>
+                  </div>
+                  <div
+                    class="mt-1 text-sm text-gray-700 p-2 rounded-lg message-content"
+                    [class.bg-blue-50]="
+                      message.senderId === authService.getUser()?.id
+                    "
+                    [class.bg-gray-50]="
+                      message.senderId !== authService.getUser()?.id
+                    "
+                  >
+                    {{ message.content }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Formulaire d'envoi de message -->
+          <div class="p-3 border-t border-gray-200">
+            <!-- Indicateur de frappe -->
+            <div
+              *ngIf="isAnyoneTyping()"
+              class="mb-2 text-xs text-gray-500 font-italic typing-indicator"
+            >
+              {{ getTypingUsersText() }}
+            </div>
+
+            <div class="flex">
+              <input
+                #chatInput
+                id="chatInput"
+                type="text"
+                [(ngModel)]="newChatMessage"
+                placeholder="Écrivez votre message..."
+                class="flex-1 px-3 py-2 rounded-l-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                (keyup.enter)="sendChatMessage()"
+                (keyup)="onChatInputTyping()"
+                (focus)="onChatInputFocus()"
+                (blur)="onChatInputBlur()"
+                maxlength="500"
+              />
+              <button
+                class="px-4 py-2 text-white rounded-r-lg transition-colors"
+                [ngClass]="{
+                  'bg-blue-600 hover:bg-blue-700': !isTyping,
+                  'bg-green-600 hover:bg-green-700': isTyping
+                }"
+                [disabled]="!newChatMessage.trim()"
+                (click)="sendChatMessage()"
+              >
+                <svg
+                  *ngIf="!isTyping"
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                  />
+                </svg>
+                <svg
+                  *ngIf="isTyping"
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
+                  />
+                </svg>
+              </button>
+            </div>
+            <!-- Compteur de caractères -->
+            <div class="mt-1 text-xs text-right text-gray-500">
+              {{ 500 - newChatMessage.length }} caractères restants
+            </div>
           </div>
         </div>
       </div>
@@ -1801,4 +1996,311 @@
       />
     </svg>
   </button>
+</div>
+
+<!-- Modal Google Calendar -->
+<div class="modal-overlay" *ngIf="showAddToGoogleCalendarModal">
+  <div class="modal-container">
+    <div class="modal-header">
+      <h2>
+        {{
+          isEventInGoogleCalendar(selectedEvent?.id)
+            ? "Mettre à jour dans Google Calendar"
+            : "Ajouter à Google Calendar"
+        }}
+      </h2>
+      <button class="close-btn" (click)="closeGoogleCalendarModal()">
+        &times;
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="space-y-6">
+        <!-- Si événement déjà dans Google Calendar -->
+        <div
+          *ngIf="isEventInGoogleCalendar(selectedEvent?.id)"
+          class="p-4 bg-green-50 rounded-lg text-green-700 mb-4"
+        >
+          <div class="flex items-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="20"
+              height="20"
+              fill="currentColor"
+              viewBox="0 0 16 16"
+              class="mr-2"
+            >
+              <path
+                d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z"
+              />
+            </svg>
+            <p>
+              Cet événement est déjà synchronisé avec Google Calendar. Les
+              modifications que vous ferez ici seront automatiquement
+              synchronisées.
+            </p>
+          </div>
+        </div>
+
+        <!-- Étape de connexion (si non connecté) -->
+        <div
+          *ngIf="!googleLinked"
+          class="p-6 bg-blue-50 rounded-lg text-center space-y-4"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="mx-auto h-12 w-12 text-blue-600"
+            fill="currentColor"
+            viewBox="0 0 16 16"
+          >
+            <path
+              d="M15.545 6.558a9.42 9.42 0 0 1 .139 1.626c0 2.434-.87 4.492-2.384 5.885h.002C11.978 15.292 10.158 16 8 16A8 8 0 1 1 8 0a7.689 7.689 0 0 1 5.352 2.082l-2.284 2.284A4.347 4.347 0 0 0 8 3.166c-2.087 0-3.86 1.408-4.492 3.304a4.792 4.792 0 0 0 0 3.063h.003c.635 1.893 2.405 3.301 4.492 3.301 1.078 0 2.004-.276 2.722-.764h-.003a3.702 3.702 0 0 0 1.599-2.431H8v-3.08h7.545z"
+            />
+          </svg>
+          <h3 class="text-lg font-semibold text-blue-900">
+            Connexion à Google Calendar requise
+          </h3>
+          <p class="text-blue-700">
+            Pour ajouter cet événement à votre agenda Google, vous devez d'abord
+            connecter votre compte Google.
+          </p>
+          <button
+            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium shadow-sm transition"
+            (click)="linkGoogleAccount()"
+          >
+            Connecter avec Google
+          </button>
+        </div>
+
+        <!-- Sélection du calendrier (si connecté) -->
+        <div *ngIf="googleLinked" class="space-y-6">
+          <!-- Barre de recherche -->
+          <div class="relative">
+            <input
+              type="text"
+              [(ngModel)]="googleCalendarSearchQuery"
+              (ngModelChange)="filterGoogleCalendars()"
+              placeholder="Rechercher un calendrier..."
+              class="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+          </div>
+
+          <!-- Liste des calendriers -->
+          <div class="border border-gray-200 rounded-lg overflow-hidden">
+            <div
+              class="p-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center"
+            >
+              <h3 class="font-medium text-gray-900">
+                Sélectionnez un calendrier
+              </h3>
+              <button
+                class="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                (click)="showCreateCalendarForm = !showCreateCalendarForm"
+                (keydown.enter)="
+                  showCreateCalendarForm = !showCreateCalendarForm
+                "
+                tabindex="0"
+                role="button"
+                aria-label="Créer un nouveau calendrier"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  fill="currentColor"
+                  viewBox="0 0 16 16"
+                >
+                  <path
+                    d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"
+                  />
+                </svg>
+                Nouveau calendrier
+              </button>
+            </div>
+
+            <!-- Chargement -->
+            <div
+              *ngIf="loadingGoogleCalendars"
+              class="flex justify-center items-center py-6"
+            >
+              <div
+                class="w-8 h-8 border-2 border-gray-200 border-t-blue-500 rounded-full animate-spin"
+              ></div>
+            </div>
+
+            <!-- Message si aucun calendrier -->
+            <div
+              *ngIf="
+                !loadingGoogleCalendars && filteredGoogleCalendars.length === 0
+              "
+              class="p-6 text-center text-gray-500"
+            >
+              Aucun calendrier trouvé
+            </div>
+
+            <!-- Liste des calendriers -->
+            <div
+              *ngIf="
+                !loadingGoogleCalendars && filteredGoogleCalendars.length > 0
+              "
+              class="max-h-60 overflow-y-auto"
+            >
+              <div
+                *ngFor="let calendar of filteredGoogleCalendars"
+                class="p-4 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 cursor-pointer"
+                [class.bg-blue-50]="selectedGoogleCalendar === calendar.id"
+                (click)="selectedGoogleCalendar = calendar.id"
+                tabindex="0"
+                role="button"
+                (keydown.enter)="selectedGoogleCalendar = calendar.id"
+              >
+                <div class="flex items-center">
+                  <div
+                    class="w-4 h-4 mr-3 rounded-full"
+                    [style.backgroundColor]="
+                      calendar.backgroundColor || '#4285F4'
+                    "
+                  ></div>
+                  <div>
+                    <div class="font-medium text-gray-900">
+                      {{ calendar.summary }}
+                    </div>
+                    <div
+                      *ngIf="calendar.description"
+                      class="text-xs text-gray-500"
+                    >
+                      {{ calendar.description }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Formulaire de création de calendrier -->
+          <div
+            *ngIf="showCreateCalendarForm"
+            class="border border-gray-200 rounded-lg p-4 bg-gray-50"
+          >
+            <h3 class="font-medium text-gray-900 mb-4">
+              Créer un nouveau calendrier
+            </h3>
+            <form
+              [formGroup]="newCalendarForm"
+              (ngSubmit)="createGoogleCalendar()"
+            >
+              <div class="space-y-4">
+                <div>
+                  <label
+                    for="summary"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                    >Nom du calendrier *</label
+                  >
+                  <input
+                    type="text"
+                    id="summary"
+                    formControlName="summary"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    required
+                  />
+                </div>
+                <div>
+                  <label
+                    for="description"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                    >Description</label
+                  >
+                  <textarea
+                    id="description"
+                    formControlName="description"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    rows="2"
+                  ></textarea>
+                </div>
+                <div class="flex justify-end">
+                  <button
+                    type="submit"
+                    class="px-3 py-1.5 text-xs font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+                    [disabled]="!newCalendarForm.valid || loading"
+                  >
+                    <span *ngIf="!loading">Créer</span>
+                    <span *ngIf="loading">Création en cours...</span>
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Actions du bas -->
+        <div class="flex justify-between pt-4 border-t border-gray-100">
+          <div *ngIf="googleLinked" class="flex items-center">
+            <button
+              class="text-red-600 hover:text-red-800 text-sm flex items-center gap-1"
+              (click)="unlinkGoogleAccount()"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                fill="currentColor"
+                viewBox="0 0 16 16"
+              >
+                <path
+                  d="M10.79 12.912l-1.614-1.615a3.5 3.5 0 0 1-4.474-4.474l-2.06-2.06C.938 6.278 0 8 0 8s3 5.5 8 5.5a7.029 7.029 0 0 0 2.79-.588zM5.21 3.088A7.028 7.028 0 0 1 8 2.5c5 0 8 5.5 8 5.5s-.939 1.721-2.641 3.238l-2.062-2.062a3.5 3.5 0 0 0-4.474-4.474L5.21 3.089z"
+                />
+                <path
+                  d="M5.525 7.646a2.5 2.5 0 0 0 2.829 2.829l-2.83-2.829zm4.95.708l-2.829-2.83a2.5 2.5 0 0 1 2.829 2.829zm-3.693 6.728A8 8 0 0 1 .939 8.003a5.995 5.995 0 0 1 .304-.535l1.217 1.217a7.023 7.023 0 0 0-.846 1.32 6.967 6.967 0 0 0 3.021 2.833l1.318 1.318a7.962 7.962 0 0 1-2.17.337zm6.728-6.728a2.5 2.5 0 0 0-2.828-2.829l2.829 2.829zm3.555-3.521A.5.5 0 0 1 16 5.5v-.001a.5.5 0 0 1-.5.5h-.001a.5.5 0 0 1-.465-.401l-.054-.22a.5.5 0 0 1 .401-.58l.22-.054a.5.5 0 0 1 .548.8z"
+                />
+              </svg>
+              <span>Déconnecter</span>
+            </button>
+          </div>
+          <div class="space-x-3">
+            <button
+              class="px-3 py-1.5 text-xs font-medium border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition"
+              (click)="closeGoogleCalendarModal()"
+            >
+              Annuler
+            </button>
+            <button
+              *ngIf="googleLinked"
+              class="px-3 py-1.5 text-xs font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+              [disabled]="!selectedGoogleCalendar || loading"
+              (click)="addToGoogleCalendar()"
+            >
+              <span *ngIf="!loading">{{
+                isEventInGoogleCalendar(selectedEvent?.id)
+                  ? "Mettre à jour"
+                  : "Ajouter à Google Calendar"
+              }}</span>
+              <span *ngIf="loading" class="flex items-center">
+                <div
+                  class="w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin mr-2"
+                ></div>
+                {{
+                  isEventInGoogleCalendar(selectedEvent?.id)
+                    ? "Mise à jour..."
+                    : "Ajout en cours..."
+                }}
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>

@@ -819,3 +819,68 @@ textarea.form-control {
     opacity: 1;
   }
 }
+
+/* Animation pour les nouveaux messages */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+/* Styles pour le chat */
+#chat-messages {
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db transparent;
+}
+
+#chat-messages::-webkit-scrollbar {
+  width: 6px;
+}
+
+#chat-messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#chat-messages::-webkit-scrollbar-thumb {
+  background-color: #d1d5db;
+  border-radius: 20px;
+}
+
+/* Assurer que les messages longs tiennent dans le conteneur */
+.message-content {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+  max-width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  max-height: 300px; /* Limiter la hauteur des messages très longs */
+}
+
+/* Animation de l'indicateur de frappe */
+.typing-indicator {
+  position: relative;
+  padding-left: 20px;
+}
+
+.typing-indicator::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 6px;
+  background-image: url("data:image/svg+xml,%3Csvg width='16' height='6' viewBox='0 0 16 6' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='2' cy='3' r='2' fill='%23999'%3E%3Canimate attributeName='opacity' values='0.5;1;0.5' dur='1s' repeatCount='indefinite' /%3E%3C/circle%3E%3Ccircle cx='8' cy='3' r='2' fill='%23999'%3E%3Canimate attributeName='opacity' values='0.5;1;0.5' dur='1s' begin='0.3s' repeatCount='indefinite' /%3E%3C/circle%3E%3Ccircle cx='14' cy='3' r='2' fill='%23999'%3E%3Canimate attributeName='opacity' values='0.5;1;0.5' dur='1s' begin='0.6s' repeatCount='indefinite' /%3E%3C/circle%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+}

@@ -251,127 +251,6 @@
         <p class="text-[9px] md:text-sm">{{ connectedUser()?.address }}</p>
       </div>
 
-      <!-- Section Connexions Externes -->
-      @if(connectedUser()?.role === 'ADMIN') {
-      <div class="flex items-center pt-2 border-t border-gray-600 mt-2">
-        <p class="font-bold text-[9px] md:text-sm w-28 md:w-56">Connexions</p>
-        <div class="flex items-center gap-2">
-          <!-- Affichage conditionnel basé sur googleId -->
-          <ng-container
-            *ngIf="connectedUser()?.googleId; else linkGoogleButton"
-          >
-            <!-- Compte Google Lié -->
-            <div class="flex items-center gap-1 text-green-500">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                fill="currentColor"
-                class="bi bi-check-circle-fill"
-                viewBox="0 0 16 16"
-              >
-                <path
-                  d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"
-                />
-              </svg>
-              <span class="text-[9px] md:text-sm font-medium"
-                >Compte Google lié</span
-              >
-              <!-- Bouton pour délier -->
-              <button
-                hlmBtn
-                variant="link"
-                class="p-1 h-auto text-xs text-red-500 hover:text-red-700 ml-2"
-                (click)="unlinkGoogleAccount()"
-                title="Délier votre compte Google"
-              >
-                (Délier)
-              </button>
-            </div>
-          </ng-container>
-
-          <ng-template #linkGoogleButton>
-            <!-- Bouton pour lier le compte Google -->
-            <button
-              hlmBtn
-              variant="outline"
-              class="flex items-center gap-2 text-xs md:text-sm"
-              (click)="linkGoogleAccount()"
-              title="Lier votre compte Google Agenda pour synchroniser les événements"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                fill="currentColor"
-                class="bi bi-google"
-                viewBox="0 0 16 16"
-              >
-                <path
-                  d="M15.545 6.558a9.42 9.42 0 0 1 .139 1.626c0 2.434-.87 4.492-2.384 5.885h.002C11.978 15.292 10.158 16 8 16A8 8 0 1 1 8 0a7.689 7.689 0 0 1 5.352 2.082l-2.284 2.284A4.347 4.347 0 0 0 8 3.166c-2.087 0-3.86 1.408-4.492 3.304a4.792 4.792 0 0 0 0 3.063h.003c.635 1.893 2.405 3.301 4.492 3.301 1.078 0 2.004-.276 2.722-.764h-.003a3.702 3.702 0 0 0 1.599-2.431H8v-3.08h7.545z"
-                />
-              </svg>
-              <span>Lier le compte Google</span>
-            </button>
-          </ng-template>
-        </div>
-      </div>
-      <!-- FIN Section Connexions Externes -->
-      }
-
-      <!-- Section Test Calendriers Google (visible si lié) -->
-      <div
-        *ngIf="connectedUser()?.googleId"
-        class="pt-2 border-t border-gray-600 mt-2"
-      >
-        <p class="font-bold text-[9px] md:text-sm w-28 md:w-56">
-          Calendriers Google
-        </p>
-        <div class="flex flex-col gap-2">
-          <button
-            hlmBtn
-            variant="outline"
-            size="sm"
-            class="w-fit"
-            (click)="fetchGoogleCalendars()"
-            [disabled]="isLoadingCalendars()"
-          >
-            <span *ngIf="!isLoadingCalendars()">Afficher mes calendriers</span>
-            <span *ngIf="isLoadingCalendars()" class="flex items-center">
-              <div
-                class="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-2"
-              ></div>
-              Chargement...
-            </span>
-          </button>
-
-          <!-- Zone d'affichage des résultats -->
-          <div *ngIf="googleCalendarsFetchAttempted()" class="mt-2">
-            <ul
-              *ngIf="googleCalendars() && googleCalendars()!.length > 0"
-              class="list-disc list-inside text-xs md:text-sm"
-            >
-              <li *ngFor="let calendar of googleCalendars()">
-                {{ calendar.summary }}
-              </li>
-            </ul>
-            <p
-              *ngIf="googleCalendars() && googleCalendars()!.length === 0"
-              class="text-xs md:text-sm text-gray-500"
-            >
-              Aucun calendrier trouvé.
-            </p>
-            <p
-              *ngIf="googleCalendarsError()"
-              class="text-xs md:text-sm text-red-500"
-            >
-              Erreur: {{ googleCalendarsError() }}
-            </p>
-          </div>
-        </div>
-      </div>
-      <!-- FIN Section Test Calendriers Google -->
-
       <div class="flex pt-2 border-t border-gray-600 mt-2">
         <p class="font-bold text-[9px] md:text-sm w-28 md:w-56">
           Notifications
@@ -596,7 +475,7 @@
 
   <!-- Nouvelle section pour les événements de l'utilisateur -->
   <div
-    class="bg-gray-sonar flex flex-col mx-10 md:w-3/5 rounded-3xl overflow-hidden mt-5 events-section"
+    class="bg-gray-sonar flex flex-col mx-10 md:w-3/5 rounded-3xl overflow-hidden events-section"
   >
     <div class="flex justify-between px-5 py-4 border-b border-gray-200">
       <div class="flex items-center">
@@ -757,6 +636,859 @@
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section Google Calendar (uniquement pour les admins) -->
+  <div
+    *ngIf="isAdmin()"
+    class="bg-gray-sonar flex flex-col mx-10 md:w-3/5 rounded-3xl overflow-hidden"
+  >
+    <div class="flex justify-between px-5 py-4 border-b border-gray-200">
+      <div class="flex items-center">
+        <hlm-icon
+          name="lucideCalendarClock"
+          class="w-5 h-5 text-primary mr-2"
+        ></hlm-icon>
+        <p class="text-xl font-bold">Google Calendar</p>
+      </div>
+    </div>
+
+    <div class="p-5">
+      <!-- Statut de la liaison Google -->
+      <div class="mb-6">
+        <h3 class="text-lg font-medium mb-3">Liaison avec Google</h3>
+
+        <!-- Affichage du statut de chargement -->
+        <div *ngIf="isLoadingGoogleStatus()" class="flex items-center">
+          <div
+            class="animate-spin h-5 w-5 border-2 border-primary rounded-full border-t-transparent mr-2"
+          ></div>
+          <p class="text-sm">Vérification du statut...</p>
+        </div>
+
+        <!-- Affichage quand la liaison est établie -->
+        <div
+          *ngIf="!isLoadingGoogleStatus() && isGoogleLinked()"
+          class="flex flex-col"
+        >
+          <div class="flex items-center mb-3">
+            <div
+              class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-medium flex items-center"
+            >
+              <svg
+                class="w-3 h-3 mr-1"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M20 6L9 17L4 12"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              Compte lié
+            </div>
+          </div>
+          <div class="flex space-x-2 mt-2">
+            <button
+              (click)="loadGoogleCalendars()"
+              class="py-1.5 px-4 rounded-full text-xs border border-primary text-primary hover:bg-primary-50 transition-colors flex items-center"
+              [disabled]="isLoadingCalendars()"
+            >
+              <hlm-icon
+                name="lucideCalendarClock"
+                class="w-3 h-3 mr-1"
+              ></hlm-icon>
+              <span>Actualiser les calendriers</span>
+            </button>
+            <button
+              (click)="unlinkGoogleAccount()"
+              class="py-1.5 px-4 rounded-full text-xs border border-red-500 text-red-500 hover:bg-red-50 transition-colors"
+              [disabled]="isGoogleLinking()"
+            >
+              <span>Délier le compte</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Affichage quand la liaison n'est pas établie -->
+        <div
+          *ngIf="!isLoadingGoogleStatus() && !isGoogleLinked()"
+          class="flex flex-col"
+        >
+          <p class="text-sm mb-3">
+            Liez votre compte Google pour accéder à vos calendriers
+          </p>
+          <button
+            (click)="initiateGoogleLink()"
+            class="flex items-center py-2 px-4 rounded-full text-sm bg-primary text-white hover:bg-primary-dark transition-colors w-fit shadow-sm"
+            [disabled]="isGoogleLinking()"
+          >
+            <svg
+              class="w-4 h-4 mr-2"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M21.8055 10.0415H21V10H12V14H17.6515C16.827 16.3285 14.6115 18 12 18C8.6865 18 6 15.3135 6 12C6 8.6865 8.6865 6 12 6C13.5295 6 14.921 6.577 15.9805 7.5195L18.809 4.691C17.023 3.0265 14.634 2 12 2C6.4775 2 2 6.4775 2 12C2 17.5225 6.4775 22 12 22C17.5225 22 22 17.5225 22 12C22 11.3295 21.931 10.675 21.8055 10.0415Z"
+                fill="white"
+              />
+            </svg>
+            <span *ngIf="!isGoogleLinking()">Lier mon compte Google</span>
+            <div *ngIf="isGoogleLinking()" class="flex items-center">
+              <div
+                class="animate-spin h-4 w-4 border-2 border-white rounded-full border-t-transparent mr-2"
+              ></div>
+              <span>Liaison en cours...</span>
+            </div>
+          </button>
+
+          <!-- Affichage des erreurs -->
+          <div
+            *ngIf="googleLinkError()"
+            class="mt-3 p-3 bg-red-100 text-red-800 rounded-md text-sm"
+          >
+            {{ googleLinkError() }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Affichage des calendriers et création -->
+      <div
+        *ngIf="isGoogleLinked() && googleCalendars().length > 0"
+        class="mt-6"
+      >
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg font-medium">Mes calendriers</h3>
+          <div class="flex space-x-2">
+            <button
+              (click)="createNewCalendar()"
+              class="py-1.5 px-4 rounded-full text-xs bg-primary text-white hover:bg-primary-dark transition-colors flex items-center shadow-sm"
+            >
+              <svg
+                class="w-3 h-3 mr-1"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M12 5V19M5 12H19"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              <span>Nouveau calendrier</span>
+            </button>
+            <button
+              (click)="showEventCreationForm = true"
+              class="py-1.5 px-4 rounded-full text-xs bg-green-600 text-white hover:bg-green-700 transition-colors flex items-center shadow-sm"
+            >
+              <svg
+                class="w-3 h-3 mr-1"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M12 5V19M5 12H19"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              <span>Nouvel événement</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Formulaire de création d'événement -->
+        <div
+          *ngIf="showEventCreationForm"
+          class="mb-6 bg-white p-5 rounded-lg border border-gray-200 shadow-md"
+        >
+          <div class="flex justify-between items-start mb-4">
+            <h3 class="text-lg font-medium flex items-center">
+              <hlm-icon
+                name="lucideCalendarClock"
+                class="w-4 h-4 mr-2 text-primary"
+              ></hlm-icon>
+              Créer un nouvel événement
+            </h3>
+            <button
+              (click)="showEventCreationForm = false"
+              class="text-gray-400 hover:text-gray-600"
+              aria-label="Fermer le formulaire"
+            >
+              <svg
+                class="w-5 h-5"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M18 6L6 18M6 6L18 18"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </button>
+          </div>
+
+          <form
+            [formGroup]="eventForm"
+            (ngSubmit)="createEvent()"
+            class="space-y-4"
+          >
+            <!-- Champ du titre -->
+            <div>
+              <label
+                for="event-title"
+                class="block text-sm font-medium mb-1 text-gray-700"
+              >
+                Titre de l'événement *
+              </label>
+              <input
+                id="event-title"
+                type="text"
+                formControlName="title"
+                class="w-full px-4 py-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent"
+                placeholder="Ajouter un titre"
+              />
+              <div
+                *ngIf="eventForm.get('title')?.errors?.['required'] && eventForm.get('title')?.touched"
+                class="text-xs text-red-500 mt-1"
+              >
+                Le titre est requis
+              </div>
+            </div>
+
+            <!-- Sélection du calendrier -->
+            <div>
+              <label
+                for="event-calendar"
+                class="block text-sm font-medium mb-1 text-gray-700"
+              >
+                Calendrier *
+              </label>
+              <div class="relative">
+                <select
+                  id="event-calendar"
+                  formControlName="calendarId"
+                  class="w-full px-4 py-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent appearance-none pr-10"
+                >
+                  <option [ngValue]="null" disabled>
+                    Choisir un calendrier
+                  </option>
+                  <option
+                    *ngFor="let calendar of googleCalendars()"
+                    [value]="calendar.id"
+                  >
+                    {{ calendar.summary }}
+                    {{ calendar.primary ? "(principal)" : "" }}
+                  </option>
+                </select>
+                <div
+                  class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-500"
+                >
+                  <svg
+                    class="w-4 h-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M6 9L12 15L18 9"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </div>
+              </div>
+              <div
+                *ngIf="eventForm.get('calendarId')?.errors?.['required'] && eventForm.get('calendarId')?.touched"
+                class="text-xs text-red-500 mt-1"
+              >
+                Veuillez sélectionner un calendrier
+              </div>
+            </div>
+
+            <!-- Dates et heures -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label
+                  for="event-start"
+                  class="block text-sm font-medium mb-1 text-gray-700"
+                >
+                  Date et heure de début *
+                </label>
+                <input
+                  id="event-start"
+                  type="datetime-local"
+                  formControlName="startDateTime"
+                  class="w-full px-4 py-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent"
+                />
+                <div
+                  *ngIf="eventForm.get('startDateTime')?.errors?.['required'] && eventForm.get('startDateTime')?.touched"
+                  class="text-xs text-red-500 mt-1"
+                >
+                  La date de début est requise
+                </div>
+              </div>
+              <div>
+                <label
+                  for="event-end"
+                  class="block text-sm font-medium mb-1 text-gray-700"
+                >
+                  Date et heure de fin *
+                </label>
+                <input
+                  id="event-end"
+                  type="datetime-local"
+                  formControlName="endDateTime"
+                  class="w-full px-4 py-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent"
+                />
+                <div
+                  *ngIf="eventForm.get('endDateTime')?.errors?.['required'] && eventForm.get('endDateTime')?.touched"
+                  class="text-xs text-red-500 mt-1"
+                >
+                  La date de fin est requise
+                </div>
+                <div
+                  *ngIf="eventForm.errors?.['endDateBeforeStart']"
+                  class="text-xs text-red-500 mt-1"
+                >
+                  La date de fin doit être postérieure à la date de début
+                </div>
+              </div>
+            </div>
+
+            <!-- Champ du lieu avec recherche Nominatim -->
+            <div>
+              <label
+                for="event-location"
+                class="block text-sm font-medium mb-1 text-gray-700"
+              >
+                Lieu
+              </label>
+              <div class="relative">
+                <input
+                  id="event-location"
+                  type="text"
+                  formControlName="location"
+                  class="w-full px-4 py-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent"
+                  placeholder="Rechercher une adresse..."
+                  (input)="searchLocation($any($event.target).value)"
+                  (focus)="
+                    showLocationResults.set(locationSearchResults().length > 0)
+                  "
+                  (blur)="hideLocationResults()"
+                />
+                <div
+                  class="absolute right-2 top-1/2 transform -translate-y-1/2"
+                >
+                  <div
+                    *ngIf="isSearchingLocation()"
+                    class="animate-spin h-4 w-4 border-2 border-primary rounded-full border-t-transparent"
+                  ></div>
+                  <svg
+                    *ngIf="!isSearchingLocation()"
+                    class="h-4 w-4 text-gray-400"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </div>
+                <!-- Résultats de recherche -->
+                <div
+                  *ngIf="
+                    showLocationResults() && locationSearchResults().length > 0
+                  "
+                  class="absolute left-0 right-0 mt-1 max-h-60 overflow-y-auto bg-white shadow-lg border border-gray-300 rounded-md z-10"
+                >
+                  <ul class="py-1" role="listbox">
+                    <li
+                      *ngFor="
+                        let result of locationSearchResults();
+                        let i = index
+                      "
+                      class="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                      (click)="selectLocation(result)"
+                      (keydown.enter)="selectLocation(result)"
+                      tabindex="0"
+                      role="option"
+                      [attr.aria-selected]="false"
+                      [attr.aria-label]="'Sélectionner ' + result.display_name"
+                      [id]="'location-result-' + i"
+                    >
+                      <div class="font-medium">{{ result.display_name }}</div>
+                      <div class="text-xs text-gray-500 truncate">
+                        {{ result.address?.road ?? "" }}
+                        {{
+                          result.address && result.address.house_number
+                            ? ", " + result.address.house_number
+                            : ""
+                        }}
+                        {{
+                          result.address && result.address.postcode
+                            ? ", " + result.address.postcode
+                            : ""
+                        }}
+                        {{
+                          result.address && result.address.city
+                            ? " " + result.address.city
+                            : ""
+                        }}
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              <!-- Champs cachés pour les coordonnées -->
+              <input type="hidden" formControlName="latitude" />
+              <input type="hidden" formControlName="longitude" />
+            </div>
+
+            <!-- Description -->
+            <div>
+              <label
+                for="event-description"
+                class="block text-sm font-medium mb-1 text-gray-700"
+              >
+                Description
+              </label>
+              <textarea
+                id="event-description"
+                formControlName="description"
+                rows="4"
+                class="w-full px-4 py-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
+                placeholder="Ajouter une description"
+              ></textarea>
+            </div>
+
+            <!-- Participants (emails) -->
+            <div>
+              <label
+                for="event-attendees"
+                class="block text-sm font-medium mb-1 text-gray-700"
+              >
+                Participants (emails séparés par des virgules)
+              </label>
+              <input
+                id="event-attendees"
+                type="text"
+                formControlName="attendees"
+                class="w-full px-4 py-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent"
+                placeholder="email1@exemple.com, email2@exemple.com"
+              />
+              <div
+                *ngIf="eventForm.get('attendees')?.errors?.['pattern']"
+                class="text-xs text-red-500 mt-1"
+              >
+                Format d'emails invalide
+              </div>
+            </div>
+
+            <!-- Couleur de l'événement -->
+            <div>
+              <label
+                for="event-color"
+                class="block text-sm font-medium mb-2 text-gray-700"
+              >
+                Couleur de l'événement
+              </label>
+              <div id="event-color" class="flex flex-wrap gap-2">
+                <button
+                  *ngFor="let colorId of getColorIds()"
+                  type="button"
+                  [style.background-color]="getEventColor(colorId)"
+                  class="w-6 h-6 rounded-full cursor-pointer hover:ring-2 hover:ring-offset-2 hover:ring-gray-400"
+                  [class.ring-2]="eventForm.get('colorId')?.value === colorId"
+                  [class.ring-offset-2]="
+                    eventForm.get('colorId')?.value === colorId
+                  "
+                  [class.ring-primary]="
+                    eventForm.get('colorId')?.value === colorId
+                  "
+                  (click)="eventForm.get('colorId')?.setValue(colorId)"
+                  [attr.aria-label]="'Sélectionner la couleur ' + colorId"
+                ></button>
+              </div>
+            </div>
+
+            <!-- Boutons d'actions -->
+            <div
+              class="flex justify-end space-x-3 pt-3 border-t border-gray-100"
+            >
+              <button
+                type="button"
+                (click)="showEventCreationForm = false"
+                class="py-2 px-4 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                Annuler
+              </button>
+              <button
+                type="submit"
+                class="py-2 px-4 rounded-md bg-primary text-white hover:bg-primary-dark transition-colors flex items-center"
+                [disabled]="eventForm.invalid || isCreatingEvent"
+              >
+                <div
+                  *ngIf="isCreatingEvent"
+                  class="animate-spin h-4 w-4 border-2 border-white rounded-full border-t-transparent mr-2"
+                ></div>
+                <span>Créer l'événement</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Sélecteur de calendrier amélioré -->
+        <div *ngIf="!isLoadingCalendars()" class="mb-6">
+          <label for="calendar-select" class="block text-sm font-medium mb-2"
+            >Sélectionner un calendrier :</label
+          >
+          <div class="flex gap-3">
+            <div class="relative w-full md:w-2/3">
+              <select
+                #calendarSelect
+                id="calendar-select"
+                [value]="selectedCalendarId() || ''"
+                (change)="loadCalendarEvents(calendarSelect.value)"
+                class="w-full px-4 py-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent appearance-none pr-10"
+              >
+                <option value="" disabled>Choisir un calendrier</option>
+                <option
+                  *ngFor="let calendar of googleCalendars()"
+                  [value]="calendar.id"
+                >
+                  {{ calendar.summary }}
+                  {{ calendar.primary ? "(principal)" : "" }}
+                </option>
+              </select>
+              <div
+                class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-500"
+              >
+                <svg
+                  class="w-4 h-4"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M6 9L12 15L18 9"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </div>
+            </div>
+
+            <button
+              (click)="loadGoogleCalendars()"
+              class="px-4 rounded-md border border-primary text-primary hover:bg-primary-50 transition-colors shadow-sm"
+              [disabled]="isLoadingCalendars()"
+            >
+              <div class="flex items-center">
+                <div
+                  *ngIf="isLoadingCalendars()"
+                  class="animate-spin h-4 w-4 border-2 border-primary rounded-full border-t-transparent mr-2"
+                ></div>
+                <span>Actualiser</span>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Filtres pour les événements -->
+        <div
+          *ngIf="selectedCalendarId() && !isLoadingEvents()"
+          class="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200"
+        >
+          <h4 class="text-sm font-medium mb-3 text-gray-600">
+            Filtres des événements
+          </h4>
+          <div class="flex flex-col md:flex-row gap-3">
+            <div class="w-full md:w-1/2">
+              <label
+                for="event-filter"
+                class="block text-xs font-medium mb-1 text-gray-600"
+                >Période :</label
+              >
+              <div class="relative">
+                <select
+                  id="event-filter"
+                  [(ngModel)]="eventTimeFilter"
+                  (change)="filterCalendarEvents()"
+                  class="w-full px-4 py-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent appearance-none pr-10 text-sm"
+                >
+                  <option value="upcoming">Événements à venir</option>
+                  <option value="past">Événements passés</option>
+                  <option value="all">Tous les événements</option>
+                  <option value="today">Aujourd'hui</option>
+                  <option value="week">Cette semaine</option>
+                  <option value="month">Ce mois</option>
+                </select>
+                <div
+                  class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-500"
+                >
+                  <svg
+                    class="w-4 h-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M6 9L12 15L18 9"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <div class="w-full md:w-1/2">
+              <label
+                for="event-search"
+                class="block text-xs font-medium mb-1 text-gray-600"
+                >Recherche :</label
+              >
+              <div class="relative">
+                <input
+                  id="event-search"
+                  type="text"
+                  [(ngModel)]="eventSearchQuery"
+                  (input)="filterCalendarEvents()"
+                  placeholder="Rechercher un événement..."
+                  class="w-full px-4 py-2 rounded-md border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent pl-10 text-sm"
+                />
+                <div
+                  class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-500"
+                >
+                  <svg
+                    class="w-4 h-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Affichage des événements filtrés -->
+        <div
+          *ngIf="selectedCalendarId() && filteredCalendarEvents().length > 0"
+          class="mt-6"
+        >
+          <h3 class="text-lg font-medium mb-4 flex items-center">
+            <hlm-icon
+              name="lucideCalendar"
+              class="w-4 h-4 mr-2 text-primary"
+            ></hlm-icon>
+            Événements {{ getEventFilterLabel() }}
+            <span class="text-sm font-normal text-gray-500 ml-2">
+              ({{ filteredCalendarEvents().length }} événement{{
+                filteredCalendarEvents().length > 1 ? "s" : ""
+              }})
+            </span>
+          </h3>
+
+          <!-- Liste des événements -->
+          <div *ngIf="!isLoadingEvents()" class="space-y-3">
+            <div
+              *ngFor="let event of filteredCalendarEvents()"
+              class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow border-l-4"
+              [style.border-color]="getEventColor(event.colorId)"
+            >
+              <div class="flex justify-between items-start">
+                <div class="flex-1">
+                  <h4 class="font-medium">{{ event.summary }}</h4>
+                  <p
+                    *ngIf="event.description"
+                    class="text-sm text-gray-600 mt-1 line-clamp-2"
+                  >
+                    {{ event.description }}
+                  </p>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span
+                    *ngIf="event.status"
+                    class="text-xs px-2 py-0.5 rounded-full ml-2 flex-shrink-0"
+                    [ngClass]="{
+                      'bg-green-100 text-green-800':
+                        event.status === 'confirmed',
+                      'bg-red-100 text-red-800': event.status === 'cancelled',
+                      'bg-yellow-100 text-yellow-800':
+                        event.status === 'tentative'
+                    }"
+                  >
+                    {{ getEventStatusLabel(event.status) }}
+                  </span>
+                  <button
+                    *ngIf="event.status !== 'cancelled'"
+                    (click)="editEvent(event, selectedCalendarId() || '')"
+                    class="p-1 text-blue-600 hover:bg-blue-50 rounded-full"
+                    [attr.aria-label]="'Modifier l\'événement ' + event.summary"
+                  >
+                    <svg
+                      class="w-4 h-4"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                      <path
+                        d="M18.5 2.5C18.8978 2.10217 19.4374 1.87868 20 1.87868C20.5626 1.87868 21.1022 2.10217 21.5 2.5C21.8978 2.89782 22.1213 3.43739 22.1213 4C22.1213 4.56261 21.8978 5.10217 21.5 5.5L12 15L8 16L9 12L18.5 2.5Z"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <div class="flex flex-wrap gap-y-2 mt-3 text-xs">
+                <div
+                  *ngIf="event.location"
+                  class="flex items-center text-gray-500 mr-4 bg-gray-50 px-2 py-1 rounded"
+                >
+                  <hlm-icon name="lucideMapPin" class="w-3 h-3 mr-1"></hlm-icon>
+                  <span>{{ event.location }}</span>
+                </div>
+                <div
+                  class="flex items-center text-gray-500 mr-4 bg-gray-50 px-2 py-1 rounded"
+                >
+                  <hlm-icon
+                    name="lucideCalendar"
+                    class="w-3 h-3 mr-1"
+                  ></hlm-icon>
+                  <span>{{
+                    formatGoogleEventDate(
+                      event.start.dateTime || event.start.date || ""
+                    )
+                  }}</span>
+                </div>
+              </div>
+
+              <div
+                *ngIf="event.attendees && event.attendees.length > 0"
+                class="mt-3 pt-2 border-t border-gray-100"
+              >
+                <p class="text-xs text-gray-500 mb-1">Participants :</p>
+                <div class="flex flex-wrap gap-1 mt-1">
+                  <div
+                    *ngFor="let attendee of event.attendees.slice(0, 3)"
+                    class="text-xs px-2 py-1 rounded-full flex items-center"
+                    [ngClass]="{
+                      'bg-green-50 text-green-700':
+                        attendee.responseStatus === 'accepted',
+                      'bg-yellow-50 text-yellow-700':
+                        attendee.responseStatus === 'tentative',
+                      'bg-red-50 text-red-700':
+                        attendee.responseStatus === 'declined',
+                      'bg-gray-50 text-gray-700':
+                        !attendee.responseStatus ||
+                        attendee.responseStatus === 'needsAction'
+                    }"
+                  >
+                    <div
+                      class="w-2 h-2 rounded-full mr-1"
+                      [ngClass]="{
+                        'bg-green-500': attendee.responseStatus === 'accepted',
+                        'bg-yellow-500':
+                          attendee.responseStatus === 'tentative',
+                        'bg-red-500': attendee.responseStatus === 'declined',
+                        'bg-gray-400':
+                          !attendee.responseStatus ||
+                          attendee.responseStatus === 'needsAction'
+                      }"
+                    ></div>
+                    {{ attendee.displayName || attendee.email }}
+                  </div>
+                  <div
+                    *ngIf="event.attendees.length > 3"
+                    class="text-xs px-2 py-1 rounded-full bg-gray-100"
+                  >
+                    +{{ event.attendees.length - 3 }} plus
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Aucun événement -->
+        <div
+          *ngIf="
+            selectedCalendarId() &&
+            !isLoadingEvents() &&
+            filteredCalendarEvents().length === 0
+          "
+          class="mt-6 py-8 flex flex-col items-center justify-center bg-gray-50 rounded-lg border border-gray-200"
+        >
+          <hlm-icon
+            name="lucideCalendarX"
+            class="w-12 h-12 text-gray-400 mb-3"
+          ></hlm-icon>
+          <p class="text-sm text-gray-500 font-medium">
+            Aucun événement trouvé
+          </p>
+          <p
+            *ngIf="eventSearchQuery || eventTimeFilter !== 'all'"
+            class="text-xs text-gray-400 mt-1"
+          >
+            Essayez de modifier vos filtres
+          </p>
+        </div>
+
+        <!-- Chargement des événements -->
+        <div *ngIf="isLoadingEvents()" class="flex justify-center py-8">
+          <div
+            class="animate-spin w-8 h-8 border-3 border-primary border-t-transparent rounded-full"
+          ></div>
         </div>
       </div>
     </div>

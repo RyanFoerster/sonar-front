@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { Subscription } from 'rxjs';
 import {
   Event,
   EventStatus,
@@ -8,8 +9,19 @@ import {
   UpdateEventRequest,
   InvitationStatus,
   InvitedPerson,
-} from '../../shared/models/event.model';
-import { EventService } from '../../services/event.service';
+} from '../../../../shared/models/event.model';
+import { EventService } from '../../../../services/event.service';
+import { GoogleCalendarService } from '../../../../services/google-calendar.service';
+import {
+  EventChatService,
+  ChatMessage,
+  UserTyping,
+  ChatPaginationState,
+} from '../../../../services/event-chat.service';
+import {
+  GoogleCalendar,
+  EventCreateData,
+} from '../../../../shared/models/google-calendar.model';
 import {
   FormBuilder,
   FormGroup,
@@ -17,10 +29,10 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { UserEntity } from '../../shared/entities/user.entity';
-import { CompteGroupeService } from '../../shared/services/compte-groupe.service';
-import { UsersService } from '../../shared/services/users.service';
-import { AuthService } from '../../shared/services/auth.service';
+import { UserEntity } from '../../../../shared/entities/user.entity';
+import { CompteGroupeService } from '../../../../shared/services/compte-groupe.service';
+import { UsersService } from '../../../../shared/services/users.service';
+import { AuthService } from '../../../../shared/services/auth.service';
 
 @Component({
   selector: 'app-agenda',
@@ -93,10 +105,40 @@ export class AgendaComponent implements OnInit, OnDestroy {
   window = window;
 
   // Utilisation d'inject pour AuthService au lieu de l'injecter via le constructeur
-  private authService = inject(AuthService);
+  public authService = inject(AuthService);
+
+  // Google Calendar properties
+  googleCalendars: GoogleCalendar[] = [];
+  loadingGoogleCalendars = false;
+  showAddToGoogleCalendarModal = false;
+  selectedGoogleCalendar: string | null = null;
+  googleCalendarSearchQuery = '';
+  filteredGoogleCalendars: GoogleCalendar[] = [];
+  showCreateCalendarForm = false;
+  newCalendarForm: FormGroup;
+  googleLinked = false;
+  googleEventMapping = new Map<
+    string,
+    { calendarId: string; eventId: string }
+  >();
+
+  // Chat properties
+  chatMessages: ChatMessage[] = [];
+  newChatMessage = '';
+  loadingChatMessages = false;
+  loadingMoreChatMessages = false;
+  chatSubscription?: Subscription;
+  paginationSubscription?: Subscription;
+  chatPaginationState?: ChatPaginationState;
+  isTyping = false;
+  typingUsers: UserTyping[] = [];
+  typingUsersSubscription?: Subscription;
+  typingTimeout?: ReturnType<typeof setTimeout>;
 
   constructor(
     private eventService: EventService,
+    private googleCalendarService: GoogleCalendarService,
+    private eventChatService: EventChatService,
     private compteGroupeService: CompteGroupeService,
     private usersService: UsersService,
     private route: ActivatedRoute,
@@ -130,6 +172,13 @@ export class AgendaComponent implements OnInit, OnDestroy {
       startDateTime: ['', Validators.required],
       endDateTime: ['', Validators.required],
       meetupDateTime: ['', Validators.required],
+    });
+
+    // Initialize new calendar form
+    this.newCalendarForm = this.fb.group({
+      summary: ['', Validators.required],
+      description: [''],
+      timeZone: ['Europe/Paris'],
     });
   }
 
@@ -198,11 +247,38 @@ export class AgendaComponent implements OnInit, OnDestroy {
 
     // Ajouter un écouteur de redimensionnement pour mettre à jour la vue
     window.addEventListener('resize', this.onResize.bind(this));
+
+    // Vérifier la connexion Google Calendar
+    this.checkGoogleLinkStatus();
+
+    // Charger le mapping des événements Google Calendar
+    this.loadGoogleEventMapping();
   }
 
   ngOnDestroy(): void {
     // Nettoyer l'écouteur lors de la destruction du composant
     window.removeEventListener('resize', this.onResize.bind(this));
+
+    // Nettoyer les abonnements
+    if (this.chatSubscription) {
+      this.chatSubscription.unsubscribe();
+    }
+    if (this.typingUsersSubscription) {
+      this.typingUsersSubscription.unsubscribe();
+    }
+    if (this.paginationSubscription) {
+      this.paginationSubscription.unsubscribe();
+    }
+    // Nettoyer les timeouts
+    if (this.typingTimeout) {
+      clearTimeout(this.typingTimeout);
+    }
+
+    // Déconnecter le chat WebSocket
+    if (this.selectedEvent && this.selectedEvent.id) {
+      this.eventChatService.leaveEventRoom(this.selectedEvent.id);
+    }
+    this.eventChatService.disconnect();
   }
 
   // Méthode pour gérer le redimensionnement
@@ -380,6 +456,9 @@ export class AgendaComponent implements OnInit, OnDestroy {
       this.loadEventParticipants(event.id);
       this.loadEventOrganizers(event);
 
+      // Charger et se connecter au chat de l'événement
+      this.loadEventChat(event.id);
+
       // Ajouter l'ID de l'événement dans les paramètres de l'URL sans recharger la page
       // this.router.navigate([], {
       //   relativeTo: this.route,
@@ -387,6 +466,151 @@ export class AgendaComponent implements OnInit, OnDestroy {
       //   queryParamsHandling: 'merge', // Conserver les autres paramètres d'URL
       //   replaceUrl: true, // Remplacer l'URL actuelle au lieu d'ajouter une entrée dans l'historique
       // });
+    }
+  }
+
+  /**
+   * Charge les messages du chat pour un événement et établit la connexion WebSocket
+   */
+  loadEventChat(eventId: string): void {
+    // Nettoyer l'ancienne connexion si elle existe
+    if (this.chatSubscription) {
+      this.chatSubscription.unsubscribe();
+    }
+    if (this.typingUsersSubscription) {
+      this.typingUsersSubscription.unsubscribe();
+    }
+    if (this.paginationSubscription) {
+      this.paginationSubscription.unsubscribe();
+    }
+
+    this.loadingChatMessages = true;
+
+    // Rejoindre la room WebSocket pour cet événement
+    this.eventChatService.joinEventRoom(eventId);
+
+    // S'abonner à l'état de pagination pour les messages
+    this.paginationSubscription =
+      this.eventChatService.paginationState$.subscribe({
+        next: (state) => {
+          this.chatPaginationState = state;
+          this.chatMessages = state.messages;
+          this.loadingChatMessages = state.loading && state.currentPage === 1;
+          this.loadingMoreChatMessages = state.loading && state.currentPage > 1;
+
+          // Faire défiler jusqu'au dernier message seulement lors du chargement initial ou de nouveaux messages
+          // Ne pas faire défiler lors du chargement de messages précédents (page > 1)
+          if (
+            !this.loadingMoreChatMessages &&
+            !state.loading &&
+            state.currentPage === 1
+          ) {
+            setTimeout(() => {
+              this.scrollChatToBottom();
+              this.focusChatInput();
+            }, 100);
+          }
+        },
+        error: (err) => {
+          console.error("Erreur avec l'état de pagination du chat:", err);
+          this.loadingChatMessages = false;
+          this.loadingMoreChatMessages = false;
+          this.showErrorMessage('Impossible de charger les messages du chat');
+        },
+      });
+
+    // S'abonner au flux de messages (pour la compatibilité avec le code existant)
+    this.chatSubscription = this.eventChatService.messages$.subscribe({
+      next: (messages) => {
+        this.chatMessages = messages;
+      },
+      error: (err) => {
+        console.error('Erreur lors du chargement des messages du chat:', err);
+        this.showErrorMessage('Impossible de charger les messages du chat');
+        this.loadingChatMessages = false;
+      },
+    });
+
+    // S'abonner aux indicateurs de frappe
+    this.typingUsersSubscription = this.eventChatService.typingUsers$.subscribe(
+      {
+        next: (users) => {
+          this.typingUsers = users;
+        },
+        error: (err) => {
+          console.error('Erreur avec les indicateurs de frappe:', err);
+        },
+      }
+    );
+  }
+
+  /**
+   * Charge plus de messages anciens
+   */
+  loadMoreMessages(): void {
+    if (
+      this.chatPaginationState &&
+      this.chatPaginationState.hasMoreMessages &&
+      !this.loadingMoreChatMessages
+    ) {
+      // Enregistrer la position de défilement actuelle
+      const chatContainer = document.getElementById('chat-messages');
+      const scrollHeight = chatContainer?.scrollHeight || 0;
+      const scrollPosition = chatContainer?.scrollTop || 0;
+
+      this.eventChatService.loadMoreMessages();
+
+      // Après le chargement, maintenir la position relative de défilement
+      if (chatContainer) {
+        const checkNewHeight = () => {
+          if (this.loadingMoreChatMessages) {
+            // Si toujours en chargement, vérifier à nouveau plus tard
+            setTimeout(checkNewHeight, 50);
+            return;
+          }
+
+          // Calculer la nouvelle position pour garder la même vue relative
+          // Les nouveaux messages sont ajoutés en haut, donc la différence de hauteur
+          const newScrollHeight = chatContainer.scrollHeight;
+          const heightDifference = newScrollHeight - scrollHeight;
+
+          // Régler la position de défilement pour maintenir la même vue
+          chatContainer.scrollTop = scrollPosition + heightDifference;
+        };
+
+        // Démarrer les vérifications
+        setTimeout(checkNewHeight, 50);
+      }
+    }
+  }
+
+  /**
+   * Fait défiler la fenêtre de chat jusqu'au dernier message
+   */
+  private scrollChatToBottom(): void {
+    try {
+      const chatContainer = document.getElementById('chat-messages');
+      if (chatContainer) {
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+      }
+    } catch (err) {
+      console.error('Erreur lors du défilement du chat:', err);
+    }
+  }
+
+  /**
+   * Met le focus sur le champ de saisie du chat
+   */
+  private focusChatInput(): void {
+    try {
+      const chatInput = document.querySelector(
+        '#chatInput'
+      ) as HTMLInputElement;
+      if (chatInput) {
+        chatInput.focus();
+      }
+    } catch (err) {
+      console.error('Erreur lors du focus sur le champ de saisie:', err);
     }
   }
 
@@ -922,9 +1146,6 @@ export class AgendaComponent implements OnInit, OnDestroy {
           );
           if (index !== -1) {
             this.events[index] = updatedEvent;
-
-            // Appliquer les filtres pour mettre à jour l'affichage
-            this.applyFilters();
           }
 
           // Mettre à jour l'événement sélectionné
@@ -1004,6 +1225,9 @@ export class AgendaComponent implements OnInit, OnDestroy {
               ];
               this.selectedEvent = event;
             }
+
+            // Si l'événement est déjà dans Google Calendar, le mettre à jour
+            this.updateGoogleCalendarEventIfExists(event);
 
             this.applyFilters();
             this.closeEditModal();
@@ -1289,7 +1513,14 @@ export class AgendaComponent implements OnInit, OnDestroy {
    * Ferme la vue détaillée d'un événement et met à jour l'URL
    */
   closeSelectedEvent() {
+    // Si l'événement est sélectionné, quitter la room du chat
+    if (this.selectedEvent && this.selectedEvent.id) {
+      this.eventChatService.leaveEventRoom(this.selectedEvent.id);
+    }
+
     this.selectedEvent = null;
+
+    // Supprimer le paramètre de l'URL
     this.router.navigate([], {
       relativeTo: this.route,
       queryParams: { selectedEventId: null },
@@ -1475,5 +1706,478 @@ export class AgendaComponent implements OnInit, OnDestroy {
     return this.events.some(
       (event) => event.organizers && event.organizers.includes(currentUser.id)
     );
+  }
+
+  /**
+   * Vérifie si le compte utilisateur est lié à Google Calendar
+   */
+  checkGoogleLinkStatus(): void {
+    this.googleCalendarService.checkGoogleLinkStatus().subscribe({
+      next: (response) => {
+        this.googleLinked = response.linked;
+      },
+      error: (err) => {
+        console.error('Erreur lors de la vérification du statut Google:', err);
+        this.googleLinked = false;
+      },
+    });
+  }
+
+  /**
+   * Ouvre la fenêtre d'autorisation Google dans un nouvel onglet
+   */
+  linkGoogleAccount(): void {
+    this.googleCalendarService.getGoogleAuthUrl().subscribe({
+      next: (response) => {
+        window.open(response.url, '_blank');
+      },
+      error: (err) => {
+        console.error(
+          "Erreur lors de la récupération de l'URL d'autorisation Google:",
+          err
+        );
+        this.showErrorMessage('Impossible de se connecter à Google Calendar');
+      },
+    });
+  }
+
+  /**
+   * Charge la liste des calendriers Google
+   */
+  loadGoogleCalendars(): void {
+    this.loadingGoogleCalendars = true;
+    this.googleCalendarService.getCalendars().subscribe({
+      next: (response) => {
+        this.googleCalendars = response.items;
+        this.filteredGoogleCalendars = [...this.googleCalendars];
+        this.loadingGoogleCalendars = false;
+      },
+      error: (err) => {
+        console.error('Erreur lors du chargement des calendriers Google:', err);
+        this.showErrorMessage('Impossible de charger les calendriers Google');
+        this.loadingGoogleCalendars = false;
+      },
+    });
+  }
+
+  /**
+   * Filtre les calendriers Google en fonction de la recherche
+   */
+  filterGoogleCalendars(): void {
+    if (!this.googleCalendarSearchQuery.trim()) {
+      this.filteredGoogleCalendars = [...this.googleCalendars];
+      return;
+    }
+
+    const searchTerm = this.googleCalendarSearchQuery.toLowerCase().trim();
+    this.filteredGoogleCalendars = this.googleCalendars.filter(
+      (calendar) =>
+        calendar.summary.toLowerCase().includes(searchTerm) ||
+        (calendar.description &&
+          calendar.description.toLowerCase().includes(searchTerm))
+    );
+  }
+
+  /**
+   * Ouvre la modal d'ajout à Google Calendar et charge les calendriers si nécessaire
+   */
+  openAddToGoogleCalendarModal(): void {
+    this.showAddToGoogleCalendarModal = true;
+
+    // Réinitialiser les valeurs si un événement n'est pas déjà synchronisé
+    if (
+      !(
+        this.selectedEvent &&
+        this.isEventInGoogleCalendar(this.selectedEvent.id)
+      )
+    ) {
+      this.selectedGoogleCalendar = null;
+    }
+
+    this.googleCalendarSearchQuery = '';
+    this.showCreateCalendarForm = false;
+
+    // Vérifier si l'utilisateur est connecté à Google Calendar
+    this.checkGoogleLinkStatus();
+
+    // Si l'événement est déjà synchronisé, pré-sélectionner le calendrier
+    if (
+      this.selectedEvent &&
+      this.isEventInGoogleCalendar(this.selectedEvent.id)
+    ) {
+      const googleEventInfo = this.getGoogleEventInfo(this.selectedEvent.id);
+      if (googleEventInfo) {
+        this.selectedGoogleCalendar = googleEventInfo.calendarId;
+      }
+    }
+
+    // Si l'utilisateur est connecté à Google et que les calendriers ne sont pas encore chargés
+    if (this.googleLinked && this.googleCalendars.length === 0) {
+      this.loadGoogleCalendars();
+    }
+  }
+
+  /**
+   * Ferme la modale Google Calendar
+   */
+  closeGoogleCalendarModal(): void {
+    this.showAddToGoogleCalendarModal = false;
+    this.selectedGoogleCalendar = null;
+    this.newCalendarForm.reset({
+      timeZone: 'Europe/Paris',
+    });
+    this.showCreateCalendarForm = false;
+  }
+
+  /**
+   * Crée un nouveau calendrier Google
+   */
+  createGoogleCalendar(): void {
+    if (this.newCalendarForm.valid) {
+      this.loading = true;
+      this.googleCalendarService
+        .createCalendar(this.newCalendarForm.value)
+        .subscribe({
+          next: (calendar) => {
+            this.loading = false;
+            this.googleCalendars.push(calendar);
+            this.filteredGoogleCalendars = [...this.googleCalendars];
+            this.selectedGoogleCalendar = calendar.id;
+            this.showCreateCalendarForm = false;
+            this.showSuccessMessage('Nouveau calendrier créé avec succès');
+          },
+          error: (err) => {
+            console.error('Erreur lors de la création du calendrier:', err);
+            this.showErrorMessage('Impossible de créer le calendrier');
+            this.loading = false;
+          },
+        });
+    }
+  }
+
+  /**
+   * Ajoute ou met à jour l'événement sélectionné dans Google Calendar
+   */
+  addToGoogleCalendar(): void {
+    if (!this.selectedEvent || !this.selectedGoogleCalendar) {
+      this.showErrorMessage('Veuillez sélectionner un calendrier');
+      return;
+    }
+
+    this.loading = true;
+
+    // Formatage de l'événement pour l'API Google Calendar
+    const googleEvent = this.formatEventForGoogleCalendar(this.selectedEvent);
+
+    // Vérifier si l'événement existe déjà dans Google Calendar
+    if (this.isEventInGoogleCalendar(this.selectedEvent.id)) {
+      // Mise à jour de l'événement existant
+      const googleEventInfo = this.getGoogleEventInfo(this.selectedEvent.id);
+
+      if (googleEventInfo) {
+        this.googleCalendarService
+          .updateEvent(
+            googleEventInfo.calendarId,
+            googleEventInfo.eventId,
+            googleEvent
+          )
+          .subscribe({
+            next: () => {
+              this.loading = false;
+              this.closeGoogleCalendarModal();
+              this.showSuccessMessage(
+                'Événement mis à jour dans Google Calendar avec succès'
+              );
+            },
+            error: (err) => {
+              console.error(
+                "Erreur lors de la mise à jour de l'événement dans Google Calendar:",
+                err
+              );
+              this.showErrorMessage(
+                "Impossible de mettre à jour l'événement dans Google Calendar"
+              );
+              this.loading = false;
+            },
+          });
+      }
+    } else {
+      // Création d'un nouvel événement
+      this.googleCalendarService
+        .createEvent(this.selectedGoogleCalendar, googleEvent)
+        .subscribe({
+          next: (response) => {
+            // Sauvegarder l'association entre l'événement local et l'événement Google
+            if (this.selectedEvent?.id) {
+              this.saveGoogleEventMapping(
+                this.selectedEvent.id,
+                this.selectedGoogleCalendar as string,
+                response.id
+              );
+            }
+
+            this.loading = false;
+            this.closeGoogleCalendarModal();
+            this.showSuccessMessage(
+              'Événement ajouté à Google Calendar avec succès'
+            );
+          },
+          error: (err) => {
+            console.error(
+              "Erreur lors de l'ajout de l'événement à Google Calendar:",
+              err
+            );
+            this.showErrorMessage(
+              "Impossible d'ajouter l'événement à Google Calendar"
+            );
+            this.loading = false;
+          },
+        });
+    }
+  }
+
+  /**
+   * Formate un événement pour l'API Google Calendar
+   */
+  private formatEventForGoogleCalendar(event: Event): EventCreateData {
+    return {
+      summary: event.title,
+      description: event.description || '',
+      start: {
+        dateTime: new Date(event.startDateTime).toISOString(),
+        timeZone: 'Europe/Paris',
+      },
+      end: {
+        dateTime: new Date(event.endDateTime).toISOString(),
+        timeZone: 'Europe/Paris',
+      },
+      location: event.location || '',
+      attendees: this.eventParticipants
+        .filter((p) => p.email !== undefined && p.email !== null)
+        .map((p) => ({
+          email: p.email as string,
+          displayName: p.name || '',
+        })),
+    };
+  }
+
+  /**
+   * Vérifie si l'événement a déjà été ajouté à Google Calendar
+   */
+  isEventInGoogleCalendar(eventId: string | undefined): boolean {
+    if (!eventId) return false;
+    return this.googleEventMapping.has(eventId);
+  }
+
+  /**
+   * Récupère les informations de l'événement Google Calendar associé
+   */
+  getGoogleEventInfo(
+    eventId: string | undefined
+  ): { calendarId: string; eventId: string } | null {
+    if (!eventId) return null;
+    return this.googleEventMapping.get(eventId) || null;
+  }
+
+  /**
+   * Enregistre la relation entre un événement local et un événement Google Calendar
+   */
+  saveGoogleEventMapping(
+    localEventId: string,
+    calendarId: string,
+    googleEventId: string
+  ): void {
+    this.googleEventMapping.set(localEventId, {
+      calendarId,
+      eventId: googleEventId,
+    });
+
+    // Persister le mapping dans le localStorage pour le conserver entre les sessions
+    try {
+      const existingMapping = JSON.parse(
+        localStorage.getItem('googleEventMapping') || '{}'
+      );
+      existingMapping[localEventId] = { calendarId, eventId: googleEventId };
+      localStorage.setItem(
+        'googleEventMapping',
+        JSON.stringify(existingMapping)
+      );
+    } catch (error) {
+      console.error(
+        'Erreur lors de la sauvegarde du mapping Google Calendar:',
+        error
+      );
+    }
+  }
+
+  /**
+   * Charge le mapping des événements depuis le localStorage
+   */
+  loadGoogleEventMapping(): void {
+    try {
+      const savedMapping = localStorage.getItem('googleEventMapping');
+      if (savedMapping) {
+        const mappingObject = JSON.parse(savedMapping);
+        this.googleEventMapping = new Map(Object.entries(mappingObject));
+      }
+    } catch (error) {
+      console.error(
+        'Erreur lors du chargement du mapping Google Calendar:',
+        error
+      );
+    }
+  }
+
+  /**
+   * Met à jour l'événement dans Google Calendar s'il existe déjà
+   */
+  private updateGoogleCalendarEventIfExists(event: Event): void {
+    if (!event.id) return;
+
+    const googleEventInfo = this.getGoogleEventInfo(event.id);
+    if (googleEventInfo) {
+      const googleEvent = this.formatEventForGoogleCalendar(event);
+
+      this.googleCalendarService
+        .updateEvent(
+          googleEventInfo.calendarId,
+          googleEventInfo.eventId,
+          googleEvent
+        )
+        .subscribe({
+          next: () => {
+            console.log('Événement Google Calendar mis à jour avec succès');
+          },
+          error: (err) => {
+            console.error(
+              "Erreur lors de la mise à jour de l'événement dans Google Calendar:",
+              err
+            );
+            // Ne pas afficher d'erreur à l'utilisateur car c'est une opération secondaire
+          },
+        });
+    }
+  }
+
+  /**
+   * Déconnecte le compte Google
+   */
+  unlinkGoogleAccount(): void {
+    if (confirm('Êtes-vous sûr de vouloir déconnecter votre compte Google ?')) {
+      this.loading = true;
+      this.googleCalendarService.unlinkGoogleAccount().subscribe({
+        next: () => {
+          this.loading = false;
+          this.googleLinked = false;
+          this.googleCalendars = [];
+          this.filteredGoogleCalendars = [];
+          this.showSuccessMessage('Compte Google déconnecté avec succès');
+        },
+        error: (err) => {
+          console.error('Erreur lors de la déconnexion du compte Google:', err);
+          this.showErrorMessage('Impossible de déconnecter le compte Google');
+          this.loading = false;
+        },
+      });
+    }
+  }
+
+  /**
+   * Envoie un message dans le chat de l'événement
+   */
+  sendChatMessage(): void {
+    if (!this.newChatMessage.trim() || !this.selectedEvent?.id) {
+      return;
+    }
+
+    this.eventChatService.sendMessage(this.newChatMessage.trim());
+    this.newChatMessage = '';
+
+    // Réinitialiser le statut de frappe
+    this.isTyping = false;
+    // Annuler le timeout si existant
+    if (this.typingTimeout) {
+      clearTimeout(this.typingTimeout);
+    }
+
+    // Faire défiler jusqu'au dernier message après envoi
+    setTimeout(() => {
+      this.scrollChatToBottom();
+    }, 300);
+  }
+
+  /**
+   * Gère l'événement d'entrée dans le champ de texte
+   */
+  onChatInputFocus(): void {
+    // Ne pas activer l'indicateur au simple focus
+    // L'état de frappe sera activé uniquement lors de la frappe
+  }
+
+  /**
+   * Gère l'événement de sortie du champ de texte
+   */
+  onChatInputBlur(): void {
+    // Si l'utilisateur quitte le champ, désactiver l'état de frappe
+    if (this.isTyping) {
+      this.isTyping = false;
+      this.eventChatService.sendTypingStatus(false);
+    }
+  }
+
+  /**
+   * Gère les événements de frappe dans le champ de texte
+   */
+  onChatInputTyping(): void {
+    // Activer l'état de frappe seulement lorsque l'utilisateur tape du texte
+    if (!this.isTyping && this.newChatMessage.trim().length > 0) {
+      this.isTyping = true;
+      this.eventChatService.sendTypingStatus(true);
+    }
+
+    // Réinitialiser le timeout à chaque frappe
+    if (this.typingTimeout) {
+      clearTimeout(this.typingTimeout);
+    }
+
+    // Définir un timeout pour arrêter l'indicateur de frappe après un délai
+    this.typingTimeout = setTimeout(() => {
+      this.isTyping = false;
+      this.eventChatService.sendTypingStatus(false);
+    }, 2000); // 2 secondes sans frappe = arrêt de frappe
+  }
+
+  /**
+   * Vérifie si un utilisateur autre que l'utilisateur courant est en train d'écrire
+   */
+  isAnyoneTyping(): boolean {
+    const currentUser = this.authService.getUser();
+    if (!currentUser || this.typingUsers.length === 0) {
+      return false;
+    }
+
+    return this.typingUsers.some((user) => user.userId !== currentUser.id);
+  }
+
+  /**
+   * Retourne les noms des personnes qui écrivent
+   */
+  getTypingUsersText(): string {
+    const currentUser = this.authService.getUser();
+    if (!currentUser) return '';
+
+    const otherTypingUsers = this.typingUsers.filter(
+      (user) => user.userId !== currentUser.id
+    );
+
+    if (otherTypingUsers.length === 0) {
+      return '';
+    } else if (otherTypingUsers.length === 1) {
+      return `${otherTypingUsers[0].userName} est en train d'écrire...`;
+    } else if (otherTypingUsers.length === 2) {
+      return `${otherTypingUsers[0].userName} et ${otherTypingUsers[1].userName} sont en train d'écrire...`;
+    } else {
+      return `${otherTypingUsers.length} personnes sont en train d'écrire...`;
+    }
   }
 }

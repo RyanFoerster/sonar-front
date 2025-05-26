@@ -34,10 +34,21 @@ import { CompteGroupeService } from '../../../../shared/services/compte-groupe.s
 import { UsersService } from '../../../../shared/services/users.service';
 import { AuthService } from '../../../../shared/services/auth.service';
 
+// Import des nouveaux composants
+import { EventListComponent } from './components/event-list/event-list.component';
+import { EventDetailComponent } from './components/event-detail/event-detail.component';
+
 @Component({
   selector: 'app-agenda',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, ReactiveFormsModule],
+  imports: [
+    CommonModule,
+    RouterModule,
+    FormsModule,
+    ReactiveFormsModule,
+    EventListComponent,
+    EventDetailComponent,
+  ],
   templateUrl: './agenda.component.html',
   styleUrls: ['./agenda.component.css'],
 })
@@ -62,6 +73,7 @@ export class AgendaComponent implements OnInit, OnDestroy {
   showDuplicateEventModal = false;
   showInviteParticipantsModal = false;
   showCancelInvitationDialog = false;
+  showSendRemindersModal = false;
 
   // Données de l'événement sélectionné
   selectedEvent: Event | null = null;
@@ -134,6 +146,11 @@ export class AgendaComponent implements OnInit, OnDestroy {
   typingUsers: UserTyping[] = [];
   typingUsersSubscription?: Subscription;
   typingTimeout?: ReturnType<typeof setTimeout>;
+
+  // Reminder properties
+  reminderTiming = 'now';
+  customReminderDate = '';
+  customReminderMessage = '';
 
   constructor(
     private eventService: EventService,
@@ -364,6 +381,20 @@ export class AgendaComponent implements OnInit, OnDestroy {
         this.loadingOrganizers = false;
       },
     });
+  }
+
+  /**
+   * Gère les changements de filtres depuis le composant EventList
+   */
+  onFiltersChange(filters: {
+    searchQuery: string;
+    statusFilter: string;
+    dateFilter: string;
+  }): void {
+    this.searchQuery = filters.searchQuery;
+    this.statusFilter = filters.statusFilter;
+    this.dateFilter = filters.dateFilter;
+    this.applyFilters();
   }
 
   applyFilters() {
@@ -698,6 +729,9 @@ export class AgendaComponent implements OnInit, OnDestroy {
       case 'cancelInvitation':
         this.showCancelInvitationDialog = false;
         this.selectedParticipant = null;
+        break;
+      case 'reminders':
+        this.closeSendRemindersModal();
         break;
     }
   }
@@ -1308,29 +1342,142 @@ export class AgendaComponent implements OnInit, OnDestroy {
   sendReminders(eventId: string | undefined): void {
     if (!eventId) return;
 
+    // Ouvrir la modal de programmation des rappels
+    this.openSendRemindersModal();
+  }
+
+  /**
+   * Ouvre la modal de programmation des rappels
+   */
+  openSendRemindersModal(): void {
+    this.showSendRemindersModal = true;
+    this.reminderTiming = 'now';
+    this.customReminderDate = '';
+    this.customReminderMessage = '';
+  }
+
+  /**
+   * Ferme la modal de programmation des rappels
+   */
+  closeSendRemindersModal(): void {
+    this.showSendRemindersModal = false;
+    this.reminderTiming = 'now';
+    this.customReminderDate = '';
+    this.customReminderMessage = '';
+  }
+
+  /**
+   * Récupère la liste des participants qui ont confirmé leur présence
+   */
+  getConfirmedParticipants(): InvitedPerson[] {
+    if (!this.eventParticipants || this.eventParticipants.length === 0) {
+      return [];
+    }
+
+    return this.eventParticipants.filter(
+      (participant) => participant.status === InvitationStatus.ACCEPTED
+    );
+  }
+
+  /**
+   * Soumet la demande d'envoi de rappels
+   */
+  submitSendReminders(): void {
+    if (!this.selectedEvent?.id) return;
+
+    const confirmedParticipants = this.getConfirmedParticipants();
+    if (confirmedParticipants.length === 0) {
+      this.showErrorMessage('Aucun participant confirmé pour cet événement');
+      return;
+    }
+
+    // Calculer la date d'envoi selon le timing sélectionné
+    let scheduledDate: Date | null = null;
+    const eventStartDate = new Date(this.selectedEvent.startDateTime);
+
+    switch (this.reminderTiming) {
+      case 'now':
+        scheduledDate = new Date();
+        break;
+      case '1hour':
+        scheduledDate = new Date(eventStartDate.getTime() - 60 * 60 * 1000);
+        break;
+      case '1day':
+        scheduledDate = new Date(
+          eventStartDate.getTime() - 24 * 60 * 60 * 1000
+        );
+        break;
+      case 'custom':
+        if (!this.customReminderDate) {
+          this.showErrorMessage('Veuillez sélectionner une date personnalisée');
+          return;
+        }
+        scheduledDate = new Date(this.customReminderDate);
+        break;
+    }
+
+    if (!scheduledDate) {
+      this.showErrorMessage('Erreur dans la configuration de la date');
+      return;
+    }
+
+    // Vérifier que la date programmée n'est pas dans le passé (sauf pour "maintenant")
+    if (this.reminderTiming !== 'now' && scheduledDate < new Date()) {
+      this.showErrorMessage('La date de rappel ne peut pas être dans le passé');
+      return;
+    }
+
     this.loading = true;
-    // Créer l'objet de demande de rappel (par exemple, envoyer à tous les participants)
+
     const reminderRequest = {
-      eventId: eventId,
-      recipientIds: [], // Vide pour le moment, vous pourriez permettre la sélection des destinataires
+      eventId: this.selectedEvent.id,
+      recipientIds: confirmedParticipants.map((p) => p.personId),
+      scheduledDate: scheduledDate.toISOString(),
+      customMessage: this.customReminderMessage || undefined,
+      timing: this.reminderTiming,
     };
 
     this.eventService
-      .sendReminders(this.groupId, eventId, reminderRequest)
+      .sendReminders(this.groupId, this.selectedEvent.id, reminderRequest)
       .subscribe({
         next: () => {
           this.loading = false;
-          this.showSuccessMessage('Rappels envoyés avec succès');
+          this.closeSendRemindersModal();
+
+          const timingText = this.getReminderTimingText();
+          this.showSuccessMessage(
+            `Rappels ${
+              this.reminderTiming === 'now' ? 'envoyés' : 'programmés'
+            } avec succès ${timingText}`
+          );
         },
         error: (error) => {
           this.loading = false;
           this.showErrorMessage(
-            `Erreur lors de l'envoi des rappels: ${
-              error.message || 'Veuillez réessayer plus tard'
-            }`
+            `Erreur lors de ${
+              this.reminderTiming === 'now' ? "l'envoi" : 'la programmation'
+            } des rappels: ${error.message || 'Veuillez réessayer plus tard'}`
           );
         },
       });
+  }
+
+  /**
+   * Retourne le texte descriptif du timing sélectionné
+   */
+  private getReminderTimingText(): string {
+    switch (this.reminderTiming) {
+      case 'now':
+        return '';
+      case '1hour':
+        return "(1 heure avant l'événement)";
+      case '1day':
+        return "(1 jour avant l'événement)";
+      case 'custom':
+        return `(le ${this.formatDate(this.customReminderDate)})`;
+      default:
+        return '';
+    }
   }
 
   showSuccessMessage(message: string) {
@@ -2083,7 +2230,30 @@ export class AgendaComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Envoie un message dans le chat de l'événement
+   * Envoie un message dans le chat de l'événement (appelé depuis le composant EventDetailComponent)
+   */
+  onSendChatMessage(message: string): void {
+    if (!message.trim() || !this.selectedEvent?.id) {
+      return;
+    }
+
+    this.eventChatService.sendMessage(message.trim());
+
+    // Réinitialiser le statut de frappe
+    this.isTyping = false;
+    // Annuler le timeout si existant
+    if (this.typingTimeout) {
+      clearTimeout(this.typingTimeout);
+    }
+
+    // Faire défiler jusqu'au dernier message après envoi
+    setTimeout(() => {
+      this.scrollChatToBottom();
+    }, 300);
+  }
+
+  /**
+   * Envoie un message dans le chat de l'événement (méthode legacy)
    */
   sendChatMessage(): void {
     if (!this.newChatMessage.trim() || !this.selectedEvent?.id) {

@@ -8,250 +8,19 @@
     [class.h-full]="!selectedEvent || window.innerWidth >= 768"
     [class.h-auto]="selectedEvent && window.innerWidth < 768"
   >
-    <div class="p-4 md:p-5">
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="text-xl font-semibold">Listes des événements</h2>
-        <!-- Bouton retour sur mobile quand un événement est sélectionné -->
-        <button
-          *ngIf="selectedEvent && window.innerWidth < 768"
-          class="md:hidden p-2 rounded-lg hover:bg-gray-100"
-          (click)="closeSelectedEvent()"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </button>
-      </div>
-
-      <!-- Bouton de création d'événement (visible uniquement pour les admins) -->
-      <button
-        *ngIf="hasAdminRightsForAgenda()"
-        class="w-full bg-black hover:bg-gray-800 text-white font-medium py-2.5 px-4 rounded-lg transition"
-        (click)="openCreateModal()"
-      >
-        Créer un nouvel événement
-      </button>
-
-      <!-- Message informatif pour les utilisateurs sans droits d'admin -->
-      <div
-        *ngIf="!hasAdminRightsForAgenda() && !isOrganizerOfAnyEvent()"
-        class="w-full text-gray-500 text-sm text-center py-2.5 px-4 bg-gray-50 rounded-lg mb-4"
-      >
-        Vous avez un accès en lecture seule à l'agenda
-      </div>
-
-      <!-- Section des filtres avec nouvelle organisation -->
-      <div class="mt-6 space-y-4">
-        <!-- Barre de recherche -->
-        <div class="relative">
-          <input
-            type="text"
-            [(ngModel)]="searchQuery"
-            (ngModelChange)="applyFilters()"
-            placeholder="Rechercher par nom ou lieu..."
-            class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-          />
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            class="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            />
-          </svg>
-        </div>
-
-        <!-- Filtre par date -->
-        <div>
-          <select
-            [(ngModel)]="dateFilter"
-            (ngModelChange)="applyFilters()"
-            class="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white appearance-none cursor-pointer"
-          >
-            <option value="all">Toutes les dates</option>
-            <option value="today">Aujourd'hui</option>
-            <option value="tomorrow">Demain</option>
-            <option value="week">Cette semaine</option>
-            <option value="month">Ce mois</option>
-            <option value="past">Événements passés</option>
-          </select>
-        </div>
-
-        <!-- Filtres de statut avec nouvelle présentation -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          <button
-            class="flex items-center justify-center px-4 py-2 rounded-lg border transition-all duration-200 ease-in-out"
-            [class.bg-blue-50]="statusFilter === 'all'"
-            [class.text-blue-700]="statusFilter === 'all'"
-            [class.border-blue-200]="statusFilter === 'all'"
-            [class.hover:bg-blue-50]="statusFilter !== 'all'"
-            [class.hover:border-blue-200]="statusFilter !== 'all'"
-            [class.bg-white]="statusFilter !== 'all'"
-            [class.border-gray-200]="statusFilter !== 'all'"
-            (click)="statusFilter = 'all'; applyFilters()"
-          >
-            <span class="text-sm font-medium">Tout</span>
-          </button>
-          <button
-            class="flex items-center justify-center px-4 py-2 rounded-lg border transition-all duration-200 ease-in-out"
-            [class.bg-green-50]="statusFilter === 'CONFIRMED'"
-            [class.text-green-700]="statusFilter === 'CONFIRMED'"
-            [class.border-green-200]="statusFilter === 'CONFIRMED'"
-            [class.hover:bg-green-50]="statusFilter !== 'CONFIRMED'"
-            [class.hover:border-green-200]="statusFilter !== 'CONFIRMED'"
-            [class.bg-white]="statusFilter !== 'CONFIRMED'"
-            [class.border-gray-200]="statusFilter !== 'CONFIRMED'"
-            (click)="statusFilter = 'CONFIRMED'; applyFilters()"
-          >
-            <span class="text-sm font-medium">Confirmés</span>
-          </button>
-          <button
-            class="flex items-center justify-center px-4 py-2 rounded-lg border transition-all duration-200 ease-in-out"
-            [class.bg-yellow-50]="statusFilter === 'PENDING'"
-            [class.text-yellow-700]="statusFilter === 'PENDING'"
-            [class.border-yellow-200]="statusFilter === 'PENDING'"
-            [class.hover:bg-yellow-50]="statusFilter !== 'PENDING'"
-            [class.hover:border-yellow-200]="statusFilter !== 'PENDING'"
-            [class.bg-white]="statusFilter !== 'PENDING'"
-            [class.border-gray-200]="statusFilter !== 'PENDING'"
-            (click)="statusFilter = 'PENDING'; applyFilters()"
-          >
-            <span class="text-sm font-medium">En attente</span>
-          </button>
-          <button
-            class="flex items-center justify-center px-4 py-2 rounded-lg border transition-all duration-200 ease-in-out"
-            [class.bg-red-50]="statusFilter === 'CANCELLED'"
-            [class.text-red-700]="statusFilter === 'CANCELLED'"
-            [class.border-red-200]="statusFilter === 'CANCELLED'"
-            [class.hover:bg-red-50]="statusFilter !== 'CANCELLED'"
-            [class.hover:border-red-200]="statusFilter !== 'CANCELLED'"
-            [class.bg-white]="statusFilter !== 'CANCELLED'"
-            [class.border-gray-200]="statusFilter !== 'CANCELLED'"
-            (click)="statusFilter = 'CANCELLED'; applyFilters()"
-          >
-            <span class="text-sm font-medium">Annulés</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Séparateur -->
-      <div class="my-6 border-t border-gray-200"></div>
-    </div>
-
-    <!-- Liste des événements -->
-    <div
-      class="px-4 md:px-5 pb-5 overflow-y-auto"
-      [class.hidden]="selectedEvent && window.innerWidth < 768"
-    >
-      <div *ngIf="loading" class="flex justify-center items-center py-6">
-        <div
-          class="w-8 h-8 border-2 border-gray-200 border-t-indigo-600 rounded-full animate-spin"
-        ></div>
-      </div>
-
-      <div
-        *ngIf="!loading && filteredEvents.length === 0"
-        class="py-6 px-4 text-center bg-gray-50 rounded-lg text-gray-500 text-sm"
-      >
-        Aucun événement trouvé
-      </div>
-
-      <div
-        *ngFor="let event of filteredEvents"
-        class="mb-3 p-4 bg-white border border-gray-200 rounded-lg cursor-pointer hover:border-gray-300 hover:shadow-sm transition"
-        (click)="openViewModal(event)"
-        (keydown.enter)="openViewModal(event)"
-        (keydown.space)="openViewModal(event); $event.preventDefault()"
-        tabindex="0"
-        role="button"
-        [attr.aria-label]="'Voir les détails de l\'événement: ' + event.title"
-      >
-        <div class="flex justify-between items-center mb-2">
-          <h3 class="text-base font-semibold text-gray-900">
-            {{ event.title }}
-          </h3>
-          <span
-            class="text-xs px-2 py-1 rounded-full"
-            [class.bg-green-50]="event.status === EventStatus.CONFIRMED"
-            [class.text-green-700]="event.status === EventStatus.CONFIRMED"
-            [class.bg-yellow-50]="event.status === EventStatus.PENDING"
-            [class.text-yellow-700]="event.status === EventStatus.PENDING"
-            [class.bg-red-50]="event.status === EventStatus.CANCELLED"
-            [class.text-red-700]="event.status === EventStatus.CANCELLED"
-          >
-            {{ getStatusLabel(event.status) }}
-          </span>
-        </div>
-
-        <div class="text-sm text-gray-600 mb-2">
-          {{ formatDate(event.startDateTime) }}
-        </div>
-
-        <div class="flex justify-between items-center text-xs text-gray-500">
-          <div *ngIf="event.location" class="flex items-center gap-1">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="14"
-              height="14"
-              fill="currentColor"
-              viewBox="0 0 16 16"
-            >
-              <path
-                d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10zm0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"
-              />
-            </svg>
-            {{ event.location }}
-          </div>
-
-          <div
-            class="flex items-center gap-1"
-            *ngIf="event.organizers && event.organizers.length > 0"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="14"
-              height="14"
-              fill="currentColor"
-              viewBox="0 0 16 16"
-            >
-              <path
-                d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3Zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"
-              />
-            </svg>
-            {{ event.organizers.length }} organisateur{{
-              event.organizers.length > 1 ? "s" : ""
-            }}
-          </div>
-        </div>
-
-        <!-- Raison d'annulation si applicable -->
-        <div
-          *ngIf="
-            event.status === EventStatus.CANCELLED && event.cancellationReason
-          "
-          class="mt-2 pt-2 text-xs text-red-700 border-t border-gray-100"
-        >
-          <strong>Raison :</strong> {{ event.cancellationReason }}
-        </div>
-      </div>
-    </div>
+    <!-- Composant liste des événements -->
+    <app-event-list
+      [events]="events"
+      [filteredEvents]="filteredEvents"
+      [loading]="loading"
+      [selectedEvent]="selectedEvent"
+      [hasAdminRights]="hasAdminRightsForAgenda()"
+      [isOrganizerOfAnyEvent]="isOrganizerOfAnyEvent()"
+      (eventSelect)="openViewModal($event)"
+      (createEvent)="openCreateModal()"
+      (closeSelectedEvent)="closeSelectedEvent()"
+      (filtersChange)="onFiltersChange($event)"
+    ></app-event-list>
   </div>
 
   <!-- Contenu principal avec gestion de la visibilité sur mobile -->
@@ -260,686 +29,38 @@
     *ngIf="selectedEvent"
     [class.hidden]="!selectedEvent && window.innerWidth < 768"
   >
-    <!-- Hero section avec hauteur adaptative -->
-    <div
-      class="h-40 md:h-60 bg-black bg-[url('https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80')] bg-cover bg-center relative"
-    >
-      <div
-        class="absolute inset-0 bg-gradient-to-b from-black/20 to-black/70 flex flex-col justify-end p-4 md:p-6"
-      >
-        <h1 class="text-xl md:text-3xl font-bold mb-2 !text-white">
-          {{ selectedEvent.title }}
-        </h1>
-        <div
-          class="flex flex-wrap items-center gap-2 md:gap-4 text-white/90 text-sm"
-        >
-          <span>{{ formatDate(selectedEvent.startDateTime) }}</span>
-          <span *ngIf="selectedEvent.location">{{
-            selectedEvent.location
-          }}</span>
-          <span
-            class="text-xs px-2 py-1 rounded-full"
-            [class.bg-green-100]="
-              selectedEvent.status === EventStatus.CONFIRMED
-            "
-            [class.text-green-800]="
-              selectedEvent.status === EventStatus.CONFIRMED
-            "
-            [class.bg-yellow-100]="selectedEvent.status === EventStatus.PENDING"
-            [class.text-yellow-800]="
-              selectedEvent.status === EventStatus.PENDING
-            "
-            [class.bg-red-100]="selectedEvent.status === EventStatus.CANCELLED"
-            [class.text-red-800]="
-              selectedEvent.status === EventStatus.CANCELLED
-            "
-          >
-            {{ getStatusLabel(selectedEvent.status) }}
-          </span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Boutons d'action avec scroll horizontal sur mobile -->
-    <div
-      class="flex gap-2 p-4 md:px-6 md:py-4 border-b border-gray-200 overflow-x-auto"
-    >
-      <!-- Boutons pour les organisateurs OU administrateurs - Visibles quel que soit le statut de l'événement (sauf annulé) -->
-      <ng-container
-        *ngIf="
-          hasManagementRightsForEvent(selectedEvent) &&
-          selectedEvent?.status !== EventStatus.CANCELLED
-        "
-      >
-        <button
-          class="px-3 py-1.5 text-xs font-medium rounded-md bg-green-600 hover:bg-green-700 text-white transition"
-          (click)="updateEventStatus(selectedEvent, EventStatus.CONFIRMED)"
-          [class.opacity-50]="selectedEvent.status === EventStatus.CONFIRMED"
-          [disabled]="selectedEvent.status === EventStatus.CONFIRMED"
-        >
-          Confirmer
-        </button>
-        <button
-          class="px-3 py-1.5 text-xs font-medium rounded-md bg-yellow-600 hover:bg-yellow-700 text-white transition"
-          (click)="updateEventStatus(selectedEvent, EventStatus.PENDING)"
-          [class.opacity-50]="selectedEvent.status === EventStatus.PENDING"
-          [disabled]="selectedEvent.status === EventStatus.PENDING"
-        >
-          En attente
-        </button>
-        <button
-          class="px-3 py-1.5 text-xs font-medium rounded-md bg-red-600 hover:bg-red-700 text-white transition"
-          (click)="updateEventStatus(selectedEvent, EventStatus.CANCELLED)"
-        >
-          Annuler
-        </button>
-      </ng-container>
-
-      <!-- Boutons pour les invités - Visibles sauf si l'événement est annulé -->
-      <ng-container
-        *ngIf="
-          isCurrentUserInvited() &&
-          selectedEvent?.status !== EventStatus.CANCELLED
-        "
-      >
-        <button
-          class="px-3 py-1.5 text-xs font-medium rounded-md bg-green-600 hover:bg-green-700 text-white transition"
-          (click)="
-            respondToInvitation(selectedEvent, InvitationStatus.ACCEPTED)
-          "
-          [class.opacity-50]="
-            getCurrentUserInvitationStatus() === InvitationStatus.ACCEPTED
-          "
-          [disabled]="
-            getCurrentUserInvitationStatus() === InvitationStatus.ACCEPTED
-          "
-        >
-          Accepter
-        </button>
-        <button
-          class="px-3 py-1.5 text-xs font-medium rounded-md bg-red-600 hover:bg-red-700 text-white transition"
-          (click)="
-            respondToInvitation(selectedEvent, InvitationStatus.DECLINED)
-          "
-          [class.opacity-50]="
-            getCurrentUserInvitationStatus() === InvitationStatus.DECLINED
-          "
-          [disabled]="
-            getCurrentUserInvitationStatus() === InvitationStatus.DECLINED
-          "
-        >
-          Refuser
-        </button>
-      </ng-container>
-
-      <!-- Message quand l'événement est annulé pour les participants -->
-      <ng-container
-        *ngIf="
-          isCurrentUserInvited() &&
-          selectedEvent?.status === EventStatus.CANCELLED
-        "
-      >
-        <div
-          class="px-3 py-1.5 text-xs font-medium rounded-md bg-red-50 text-red-700"
-        >
-          Cet événement a été annulé
-        </div>
-      </ng-container>
-
-      <!-- Boutons réservés aux administrateurs de l'agenda -->
-      <ng-container *ngIf="hasManagementRightsForEvent(selectedEvent)">
-        <button
-          class="px-3 py-1.5 text-xs font-medium rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 transition"
-          (click)="openInviteParticipantsModal()"
-        >
-          Invitation(s)
-        </button>
-        <button
-          class="px-3 py-1.5 text-xs font-medium rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 transition"
-          (click)="openDuplicateModal(selectedEvent)"
-        >
-          Dupliquer
-        </button>
-        <button
-          class="px-3 py-1.5 text-xs font-medium rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 transition"
-          (click)="openEditModal(selectedEvent)"
-        >
-          Modifier
-        </button>
-        <button
-          class="px-3 py-1.5 text-xs font-medium rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 transition"
-          (click)="sendReminders(selectedEvent.id)"
-        >
-          Envoyer un rappel
-        </button>
-        <button
-          class="px-3 py-1.5 text-xs font-medium rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 transition"
-          (click)="deleteEvent()"
-        >
-          Mémo
-        </button>
-      </ng-container>
-
-      <!-- Bouton pour ajouter l'événement à Google Calendar - Visible pour tous les utilisateurs -->
-      <button
-        class="px-3 py-1.5 text-xs font-medium rounded-md bg-blue-600 hover:bg-blue-700 text-white transition flex items-center gap-1"
-        (click)="openAddToGoogleCalendarModal()"
-        [class.bg-blue-500]="isEventInGoogleCalendar(selectedEvent.id)"
-        [class.hover:bg-blue-600]="isEventInGoogleCalendar(selectedEvent.id)"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="14"
-          height="14"
-          fill="currentColor"
-          viewBox="0 0 16 16"
-        >
-          <path
-            *ngIf="!isEventInGoogleCalendar(selectedEvent?.id)"
-            d="M8.5 10c-.276 0-.5-.224-.5-.5v-2h-2c-.276 0-.5-.224-.5-.5s.224-.5.5-.5h2v-2c0-.276.224-.5.5-.5s.5.224.5.5v2h2c.276 0 .5.224.5.5s-.224.5-.5.5h-2v2c0 .276-.224.5-.5.5z"
-          />
-          <path
-            *ngIf="isEventInGoogleCalendar(selectedEvent?.id)"
-            d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"
-          />
-          <path
-            d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0ZM1 8a7 7 0 1 1 14 0A7 7 0 0 1 1 8Z"
-          />
-        </svg>
-        <span>{{
-          isEventInGoogleCalendar(selectedEvent.id)
-            ? "Synchronisé"
-            : "Google Calendar"
-        }}</span>
-      </button>
-    </div>
-
-    <!-- Contenu de l'événement avec layout adaptatif -->
-    <div class="p-4 md:p-6 grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-      <!-- Détails de l'événement (2 colonnes sur grand écran) -->
-      <div class="lg:col-span-2 space-y-6 overflow-y-auto pr-2">
-        <!-- Description -->
-        <div *ngIf="selectedEvent.description" class="mb-6">
-          <h3 class="text-lg font-semibold text-gray-900 mb-4">Description</h3>
-          <p class="text-gray-700">{{ selectedEvent.description }}</p>
-        </div>
-
-        <!-- Chat Section -->
-        <div class="border border-gray-200 rounded-lg overflow-hidden">
-          <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
-            <h3 class="font-medium text-gray-900">Chat de l'événement</h3>
-          </div>
-
-          <!-- Messages du chat -->
-          <div
-            class="h-80 overflow-y-auto p-4 overflow-x-hidden"
-            id="chat-messages"
-          >
-            <!-- Indicateur de chargement initial -->
-            <div
-              *ngIf="loadingChatMessages"
-              class="flex justify-center items-center py-4"
-            >
-              <div
-                class="w-6 h-6 border-2 border-t-blue-500 border-gray-200 rounded-full animate-spin"
-              ></div>
-            </div>
-
-            <!-- Indicateur de chargement des messages plus anciens -->
-            <div
-              *ngIf="loadingMoreChatMessages"
-              class="flex justify-center items-center py-3 mb-3"
-            >
-              <div
-                class="w-5 h-5 border-2 border-t-blue-500 border-gray-200 rounded-full animate-spin mr-2"
-              ></div>
-              <span class="text-xs text-gray-500"
-                >Chargement des messages...</span
-              >
-            </div>
-
-            <!-- Bouton pour charger plus de messages -->
-            <div
-              *ngIf="
-                !loadingChatMessages &&
-                !loadingMoreChatMessages &&
-                chatPaginationState?.hasMoreMessages
-              "
-              class="flex flex-col items-center mb-4"
-            >
-              <div class="text-xs text-gray-500 mb-1">
-                {{ chatMessages.length }} sur
-                {{ chatPaginationState?.totalMessages }} messages
-              </div>
-              <button
-                class="px-3 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 rounded-md text-gray-700 transition"
-                (click)="loadMoreMessages()"
-              >
-                Charger les messages précédents
-              </button>
-            </div>
-
-            <!-- Aucun message -->
-            <div
-              *ngIf="!loadingChatMessages && chatMessages.length === 0"
-              class="py-4 text-center text-gray-500 text-sm"
-            >
-              Aucun message dans le chat
-            </div>
-
-            <!-- Liste des messages -->
-            <div
-              *ngFor="let message of chatMessages; let i = index"
-              class="mb-4 last:mb-0"
-              [ngClass]="{
-                'animate-fade-in':
-                  i === chatMessages.length - 1 && chatMessages.length > 0
-              }"
-            >
-              <div class="flex items-start">
-                <div class="flex-shrink-0">
-                  <div
-                    class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-700 text-sm"
-                    [class.bg-blue-100]="
-                      message.senderId === authService.getUser()?.id
-                    "
-                    [class.text-blue-700]="
-                      message.senderId === authService.getUser()?.id
-                    "
-                  >
-                    {{
-                      getInitials({
-                        name: message.senderName,
-                        email: message.senderEmail
-                      })
-                    }}
-                  </div>
-                </div>
-                <div class="ml-3 max-w-[85%] break-words overflow-hidden">
-                  <div class="flex items-center">
-                    <div
-                      class="font-medium text-sm text-gray-900"
-                      [class.text-blue-700]="
-                        message.senderId === authService.getUser()?.id
-                      "
-                    >
-                      {{ message.senderName || message.senderEmail }}
-                      <span
-                        *ngIf="message.senderId === authService.getUser()?.id"
-                        class="text-xs text-blue-600 ml-1"
-                        >(vous)</span
-                      >
-                    </div>
-                    <div class="ml-2 text-xs text-gray-500">
-                      {{ formatDate(message.createdAt) }}
-                    </div>
-                  </div>
-                  <div
-                    class="mt-1 text-sm text-gray-700 p-2 rounded-lg message-content"
-                    [class.bg-blue-50]="
-                      message.senderId === authService.getUser()?.id
-                    "
-                    [class.bg-gray-50]="
-                      message.senderId !== authService.getUser()?.id
-                    "
-                  >
-                    {{ message.content }}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Formulaire d'envoi de message -->
-          <div class="p-3 border-t border-gray-200">
-            <!-- Indicateur de frappe -->
-            <div
-              *ngIf="isAnyoneTyping()"
-              class="mb-2 text-xs text-gray-500 font-italic typing-indicator"
-            >
-              {{ getTypingUsersText() }}
-            </div>
-
-            <div class="flex">
-              <input
-                #chatInput
-                id="chatInput"
-                type="text"
-                [(ngModel)]="newChatMessage"
-                placeholder="Écrivez votre message..."
-                class="flex-1 px-3 py-2 rounded-l-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                (keyup.enter)="sendChatMessage()"
-                (keyup)="onChatInputTyping()"
-                (focus)="onChatInputFocus()"
-                (blur)="onChatInputBlur()"
-                maxlength="500"
-              />
-              <button
-                class="px-4 py-2 text-white rounded-r-lg transition-colors"
-                [ngClass]="{
-                  'bg-blue-600 hover:bg-blue-700': !isTyping,
-                  'bg-green-600 hover:bg-green-700': isTyping
-                }"
-                [disabled]="!newChatMessage.trim()"
-                (click)="sendChatMessage()"
-              >
-                <svg
-                  *ngIf="!isTyping"
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
-                  />
-                </svg>
-                <svg
-                  *ngIf="isTyping"
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
-                  />
-                </svg>
-              </button>
-            </div>
-            <!-- Compteur de caractères -->
-            <div class="mt-1 text-xs text-right text-gray-500">
-              {{ 500 - newChatMessage.length }} caractères restants
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Barre latérale de l'événement (1 colonne) -->
-      <div class="space-y-6 overflow-y-auto">
-        <!-- Détails -->
-        <div>
-          <h3 class="text-lg font-semibold text-gray-900 mb-4">Détails</h3>
-
-          <div class="space-y-4">
-            <div class="flex">
-              <div class="text-gray-500 mr-3 mt-0.5">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  fill="currentColor"
-                  viewBox="0 0 16 16"
-                >
-                  <path
-                    d="M11 6.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1zm-3 0a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1zm-5 3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1zm3 0a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1z"
-                  />
-                  <path
-                    d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z"
-                  />
-                </svg>
-              </div>
-              <div>
-                <div class="text-xs text-gray-500 mb-1">Date de début</div>
-                <div class="text-gray-900">
-                  {{ formatDate(selectedEvent.startDateTime) }}
-                </div>
-              </div>
-            </div>
-
-            <div class="flex">
-              <div class="text-gray-500 mr-3 mt-0.5">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  fill="currentColor"
-                  viewBox="0 0 16 16"
-                >
-                  <path
-                    d="M11 6.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1zm-3 0a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1zm-5 3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1zm3 0a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1z"
-                  />
-                  <path
-                    d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z"
-                  />
-                </svg>
-              </div>
-              <div>
-                <div class="text-xs text-gray-500 mb-1">Date de fin</div>
-                <div class="text-gray-900">
-                  {{ formatDate(selectedEvent.endDateTime) }}
-                </div>
-              </div>
-            </div>
-
-            <div class="flex">
-              <div class="text-gray-500 mr-3 mt-0.5">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  fill="currentColor"
-                  viewBox="0 0 16 16"
-                >
-                  <path
-                    d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"
-                  />
-                  <path
-                    d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"
-                  />
-                </svg>
-              </div>
-              <div>
-                <div class="text-xs text-gray-500 mb-1">
-                  Heure de rendez-vous
-                </div>
-                <div class="text-gray-900">
-                  {{ formatDate(selectedEvent.meetupDateTime) }}
-                </div>
-              </div>
-            </div>
-
-            <div class="flex" *ngIf="selectedEvent.location">
-              <div class="text-gray-500 mr-3 mt-0.5">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  fill="currentColor"
-                  viewBox="0 0 16 16"
-                >
-                  <path
-                    d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10zm0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"
-                  />
-                </svg>
-              </div>
-              <div>
-                <div class="text-xs text-gray-500 mb-1">Lieu</div>
-                <div class="text-gray-900">{{ selectedEvent.location }}</div>
-              </div>
-            </div>
-
-            <div
-              class="flex"
-              *ngIf="
-                selectedEvent.status === EventStatus.CANCELLED &&
-                selectedEvent.cancellationReason
-              "
-            >
-              <div class="text-gray-500 mr-3 mt-0.5">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  fill="currentColor"
-                  viewBox="0 0 16 16"
-                >
-                  <path
-                    d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"
-                  />
-                  <path
-                    d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995z"
-                  />
-                </svg>
-              </div>
-              <div>
-                <div class="text-xs text-gray-500 mb-1">
-                  Raison d'annulation
-                </div>
-                <div class="text-gray-900">
-                  {{ selectedEvent.cancellationReason }}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Organisateurs -->
-        <div
-          *ngIf="eventOrganizers && eventOrganizers.length > 0"
-          class="border border-gray-200 rounded-lg overflow-hidden"
-        >
-          <div
-            class="bg-gray-50 px-4 py-3 border-b border-gray-200 flex justify-between items-center"
-          >
-            <h3 class="font-medium text-gray-900">
-              {{
-                eventOrganizers.length > 1 ? "Organisateurs" : "Organisateur"
-              }}
-            </h3>
-          </div>
-          <div class="max-h-64 overflow-y-auto">
-            <div
-              *ngIf="loadingOrganizers"
-              class="flex justify-center items-center py-4"
-            >
-              <div
-                class="w-6 h-6 border-2 border-gray-200 border-t-indigo-600 rounded-full animate-spin"
-              ></div>
-            </div>
-            <div
-              *ngIf="!loadingOrganizers && eventOrganizers.length === 0"
-              class="py-4 px-4 text-center text-gray-500 text-sm"
-            >
-              Aucun organisateur spécifié
-            </div>
-            <div
-              *ngFor="let organizer of eventOrganizers"
-              class="flex items-center px-4 py-3 border-b border-gray-200 last:border-b-0"
-            >
-              <div
-                class="flex items-center justify-center w-8 h-8 bg-gray-100 rounded-full mr-3 text-sm text-gray-700"
-              >
-                {{ getInitials(organizer) }}
-              </div>
-              <div class="flex-1">
-                <div class="text-sm font-medium text-gray-900">
-                  {{ organizer.firstName }} {{ organizer.name }}
-                </div>
-                <div class="text-xs text-gray-500">{{ organizer.email }}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Participants -->
-        <div class="border border-gray-200 rounded-lg overflow-hidden">
-          <div
-            class="bg-gray-50 px-4 py-3 border-b border-gray-200 flex justify-between items-center"
-          >
-            <h3 class="font-medium text-gray-900">Participation(s)</h3>
-            <button
-              *ngIf="hasManagementRightsForEvent(selectedEvent)"
-              class="text-xs px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition"
-              (click)="openInviteParticipantsModal()"
-            >
-              Inviter des participants
-            </button>
-          </div>
-          <div class="max-h-64 overflow-y-auto">
-            <div
-              *ngIf="loadingParticipants"
-              class="flex justify-center items-center py-4"
-            >
-              <div
-                class="w-6 h-6 border-2 border-t-blue-500 border-gray-200 rounded-full animate-spin mr-2"
-              ></div>
-            </div>
-            <div
-              *ngIf="!loadingParticipants && eventParticipants.length === 0"
-              class="py-4 px-4 text-center text-gray-500 text-sm"
-            >
-              Aucun participant pour le moment
-            </div>
-            <div
-              *ngFor="let participant of eventParticipants"
-              class="flex items-center px-4 py-3 border-b border-gray-200 last:border-b-0"
-            >
-              <div
-                class="flex items-center justify-center w-8 h-8 bg-gray-100 rounded-full mr-3 text-sm text-gray-700"
-              >
-                {{ getInitials(participant) }}
-              </div>
-              <div class="flex-1">
-                <div class="text-sm font-medium text-gray-900">
-                  {{
-                    participant.name ||
-                      (participant.isExternal
-                        ? participant.personId
-                        : "Anonyme")
-                  }}
-                </div>
-                <div *ngIf="participant.email" class="text-xs text-gray-500">
-                  {{ participant.email }}
-                </div>
-              </div>
-              <span
-                class="text-xs px-2 py-0.5 rounded-full"
-                [class.bg-green-50]="participant.status === 'ACCEPTED'"
-                [class.text-green-700]="participant.status === 'ACCEPTED'"
-                [class.bg-red-50]="participant.status === 'DECLINED'"
-                [class.text-red-700]="participant.status === 'DECLINED'"
-                [class.bg-yellow-50]="participant.status === 'PENDING'"
-                [class.text-yellow-700]="participant.status === 'PENDING'"
-              >
-                {{ getParticipantStatusLabel(participant.status) }}
-              </span>
-              <button
-                *ngIf="
-                  participant.status === 'PENDING' &&
-                  hasManagementRightsForEvent(selectedEvent)
-                "
-                class="ml-2 text-xs text-red-600 hover:text-red-800 flex items-center"
-                title="Annuler l'invitation"
-                (click)="
-                  cancelInvitation(participant); $event.stopPropagation()
-                "
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  fill="currentColor"
-                  viewBox="0 0 16 16"
-                >
-                  <path
-                    d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <!-- Composant détail de l'événement -->
+    <app-event-detail
+      [event]="selectedEvent"
+      [hasManagementRights]="hasManagementRightsForEvent(selectedEvent)"
+      [isCurrentUserInvited]="isCurrentUserInvited()"
+      [currentUserInvitationStatus]="getCurrentUserInvitationStatus()"
+      [isEventInGoogleCalendar]="isEventInGoogleCalendar(selectedEvent?.id)"
+      [eventOrganizers]="eventOrganizers"
+      [eventParticipants]="eventParticipants"
+      [loadingOrganizers]="loadingOrganizers"
+      [loadingParticipants]="loadingParticipants"
+      [chatMessages]="chatMessages"
+      [loadingChatMessages]="loadingChatMessages"
+      [loadingMoreChatMessages]="loadingMoreChatMessages"
+      [chatPaginationState]="chatPaginationState"
+      [typingUsers]="typingUsers"
+      [isTyping]="isTyping"
+      (updateStatus)="updateEventStatus(selectedEvent, $event)"
+      (respondToInvitation)="respondToInvitation(selectedEvent, $event)"
+      (inviteParticipants)="openInviteParticipantsModal()"
+      (duplicateEvent)="openDuplicateModal(selectedEvent)"
+      (editEvent)="openEditModal(selectedEvent)"
+      (sendReminders)="sendReminders(selectedEvent?.id)"
+      (deleteEvent)="deleteEvent()"
+      (addToGoogleCalendar)="openAddToGoogleCalendarModal()"
+      (cancelInvitation)="cancelInvitation($event)"
+      (sendChatMessage)="onSendChatMessage($event)"
+      (loadMoreChatMessages)="loadMoreMessages()"
+      (chatTyping)="onChatInputTyping()"
+      (chatInputFocus)="onChatInputFocus()"
+      (chatInputBlur)="onChatInputBlur()"
+    ></app-event-detail>
   </div>
 
   <!-- Message si aucun événement n'est sélectionné -->
@@ -1996,6 +1117,201 @@
       />
     </svg>
   </button>
+</div>
+
+<!-- Modal de programmation de rappels -->
+<div class="modal-overlay" *ngIf="showSendRemindersModal">
+  <div class="modal-container">
+    <div class="modal-header">
+      <h2>Programmer des rappels</h2>
+      <button class="close-btn" (click)="closeSendRemindersModal()">
+        &times;
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="space-y-6">
+        <p class="p-4 bg-blue-50 text-blue-700 rounded-lg text-sm">
+          Envoyer des rappels pour l'événement
+          <span class="font-medium">"{{ selectedEvent?.title }}"</span>
+          aux participants qui ont confirmé leur présence.
+        </p>
+
+        <!-- Options de programmation -->
+        <div class="space-y-4">
+          <fieldset>
+            <legend class="text-sm font-medium text-gray-700 mb-2 block">
+              Quand envoyer le rappel ?
+            </legend>
+            <div class="space-y-2">
+              <label for="timing-now" class="flex items-center">
+                <input
+                  id="timing-now"
+                  type="radio"
+                  name="reminderTiming"
+                  value="now"
+                  [(ngModel)]="reminderTiming"
+                  class="mr-2"
+                />
+                <span class="text-sm">Maintenant</span>
+              </label>
+              <label for="timing-1hour" class="flex items-center">
+                <input
+                  id="timing-1hour"
+                  type="radio"
+                  name="reminderTiming"
+                  value="1hour"
+                  [(ngModel)]="reminderTiming"
+                  class="mr-2"
+                />
+                <span class="text-sm">1 heure avant l'événement</span>
+              </label>
+              <label for="timing-1day" class="flex items-center">
+                <input
+                  id="timing-1day"
+                  type="radio"
+                  name="reminderTiming"
+                  value="1day"
+                  [(ngModel)]="reminderTiming"
+                  class="mr-2"
+                />
+                <span class="text-sm">1 jour avant l'événement</span>
+              </label>
+              <label for="timing-custom" class="flex items-center">
+                <input
+                  id="timing-custom"
+                  type="radio"
+                  name="reminderTiming"
+                  value="custom"
+                  [(ngModel)]="reminderTiming"
+                  class="mr-2"
+                />
+                <span class="text-sm">Date personnalisée</span>
+              </label>
+            </div>
+          </fieldset>
+
+          <!-- Date personnalisée -->
+          <div *ngIf="reminderTiming === 'custom'" class="ml-6">
+            <label
+              for="customReminderDate"
+              class="text-sm font-medium text-gray-700 mb-1 block"
+            >
+              Date et heure d'envoi
+            </label>
+            <input
+              type="datetime-local"
+              id="customReminderDate"
+              [(ngModel)]="customReminderDate"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+
+          <!-- Message personnalisé -->
+          <div>
+            <label
+              for="reminderMessage"
+              class="text-sm font-medium text-gray-700 mb-1 block"
+            >
+              Message personnalisé (optionnel)
+            </label>
+            <textarea
+              id="reminderMessage"
+              [(ngModel)]="customReminderMessage"
+              rows="3"
+              placeholder="Ajoutez un message personnalisé qui sera inclus dans le rappel..."
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              maxlength="500"
+            ></textarea>
+            <div class="text-xs text-gray-500 mt-1">
+              {{ 500 - (customReminderMessage?.length || 0) }} caractères
+              restants
+            </div>
+          </div>
+        </div>
+
+        <!-- Liste des participants confirmés -->
+        <div class="border border-gray-200 rounded-lg overflow-hidden">
+          <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
+            <h3 class="font-medium text-gray-900">
+              Participants confirmés ({{ getConfirmedParticipants().length }})
+            </h3>
+          </div>
+          <div class="max-h-48 overflow-y-auto">
+            <div
+              *ngIf="getConfirmedParticipants().length === 0"
+              class="p-4 text-center text-gray-500 text-sm"
+            >
+              Aucun participant n'a encore confirmé sa présence
+            </div>
+            <div
+              *ngFor="let participant of getConfirmedParticipants()"
+              class="flex items-center px-4 py-3 border-b border-gray-200 last:border-b-0"
+            >
+              <div
+                class="flex items-center justify-center w-8 h-8 bg-green-100 rounded-full mr-3 text-sm text-green-700"
+              >
+                {{ getInitials(participant) }}
+              </div>
+              <div class="flex-1">
+                <div class="text-sm font-medium text-gray-900">
+                  {{
+                    participant.name ||
+                      (participant.isExternal
+                        ? participant.personId
+                        : "Participant")
+                  }}
+                </div>
+                <div *ngIf="participant.email" class="text-xs text-gray-500">
+                  {{ participant.email }}
+                </div>
+              </div>
+              <span
+                class="text-xs px-2 py-0.5 rounded-full bg-green-50 text-green-700"
+              >
+                Confirmé
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+          <button
+            type="button"
+            class="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-colors"
+            (click)="closeSendRemindersModal()"
+          >
+            Annuler
+          </button>
+          <button
+            type="button"
+            class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+            (click)="submitSendReminders()"
+            [disabled]="
+              getConfirmedParticipants().length === 0 ||
+              !reminderTiming ||
+              (reminderTiming === 'custom' && !customReminderDate) ||
+              loading
+            "
+          >
+            <span *ngIf="!loading">
+              {{
+                reminderTiming === "now"
+                  ? "Envoyer maintenant"
+                  : "Programmer le rappel"
+              }}
+            </span>
+            <span *ngIf="loading" class="flex items-center justify-center">
+              <div
+                class="w-5 h-5 border-2 border-t-white border-white/30 rounded-full animate-spin mr-2"
+              ></div>
+              {{ reminderTiming === "now" ? "Envoi..." : "Programmation..." }}
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Modal Google Calendar -->

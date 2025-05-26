@@ -921,29 +921,28 @@ export class NewInvoiceComponent implements AfterViewInit, OnInit {
     }
   }
 
+
   setClient(clientId: number | null) {
     if (clientId === null) {
       this.client.set(null);
       this.selectedClient.set(null);
       this.createInvoiceForm.patchValue({ client_id: '' });
+
       return;
     }
+
     this.clientService
       .getOneById(clientId)
       .pipe(
         tap((data) => {
           this.client.set(data);
           this.createInvoiceForm.patchValue({ client_id: data.id });
-          this.products.set([]);
-          this.tva6.set(0);
-          this.tva21.set(0);
-          this.totalHtva.set(0);
-          this.total.set(0);
-          // Pré-remplir le délai de paiement du devis avec celui du client, sinon 10 jours
           const paymentDeadline = data.default_payment_deadline ?? 10;
           this.createInvoiceForm.patchValue({
             payment_deadline: paymentDeadline,
           });
+
+          this.calculateTotals();
         })
       )
       .subscribe();

@@ -16,6 +16,8 @@ import {
   lucideCalendarX,
   lucideMapPin,
   lucideClock,
+  lucideCalendarClock,
+  lucidePlus,
 } from '@ng-icons/lucide';
 import { HlmAspectRatioDirective } from '@spartan-ng/ui-aspectratio-helm';
 import { HlmButtonDirective } from '@spartan-ng/ui-button-helm';
@@ -39,6 +41,9 @@ import {
   FormGroup,
   ReactiveFormsModule,
   Validators,
+  FormsModule,
+  AbstractControl,
+  ValidationErrors,
 } from '@angular/forms';
 import { UpdateUserDto } from '../../shared/dtos/update-user.dto';
 import {
@@ -64,14 +69,73 @@ import {
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
+import { GoogleCalendarService } from '../../services/google-calendar.service';
+import {
+  NominatimService,
+  NominatimResult,
+} from '../../services/nominatim.service';
+import { Subject, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
 
-// Interface simple pour les calendriers Google
+// Interface pour l'événement à créer
+interface EventCreateData {
+  summary: string;
+  description?: string;
+  start: {
+    dateTime: string;
+    timeZone?: string;
+  };
+  end: {
+    dateTime: string;
+    timeZone?: string;
+  };
+  location?: string;
+  colorId?: string;
+  attendees?: {
+    email: string;
+    displayName?: string;
+    optional?: boolean;
+  }[];
+  reminders?: {
+    useDefault: boolean;
+    overrides?: {
+      method: string;
+      minutes: number;
+    }[];
+  };
+}
+
+// Interfaces pour les types de données Google
 interface GoogleCalendar {
   id: string;
-  summary: string; // Nom du calendrier
+  summary: string;
   description?: string;
+  timeZone: string;
+  accessRole: string;
   primary?: boolean;
-  // Ajouter d'autres champs si nécessaire
+}
+
+interface GoogleEventDateTime {
+  dateTime: string;
+  timeZone?: string;
+  date?: string; // Ajout du champ date manquant
+}
+
+interface GoogleEvent {
+  id: string;
+  summary: string;
+  description?: string;
+  start: GoogleEventDateTime;
+  end: GoogleEventDateTime;
+  location?: string;
+  status: string;
+  created: string;
+  updated: string;
+  colorId?: string;
+  attendees?: {
+    email: string;
+    displayName?: string;
+    responseStatus?: string;
+  }[];
 }
 
 // Constants pour les types de notification
@@ -103,6 +167,7 @@ const TOAST_TYPES = {
     CommonModule,
     HlmLabelDirective,
     DatePipe,
+    FormsModule,
   ],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.css',
@@ -117,6 +182,8 @@ const TOAST_TYPES = {
       lucideCalendarX,
       lucideMapPin,
       lucideClock,
+      lucideCalendarClock,
+      lucidePlus,
     }),
   ],
 })
@@ -143,17 +210,59 @@ export class ProfileComponent implements OnInit {
   protected pendingEventCount = signal<number>(0);
   protected isProcessingEventResponse: Record<string, boolean> = {};
 
-  // Google Calendar Test Section
-  protected isLoadingCalendars = signal<boolean>(false);
-  protected googleCalendarsFetchAttempted = signal<boolean>(false); // Pour savoir si on doit afficher la zone de résultat
-  protected googleCalendars = signal<GoogleCalendar[] | null>(null);
-  protected googleCalendarsError = signal<string | null>(null);
-
   protected eventTabs = [
     { label: 'À venir', value: 'upcoming' },
     { label: 'Passés', value: 'past' },
     { label: 'Invitations', value: 'pending' },
   ];
+
+  // Google Calendar
+  protected isAdmin = signal<boolean>(false);
+  protected isGoogleLinked = signal<boolean>(false);
+  protected isGoogleLinking = signal<boolean>(false);
+  protected isLoadingGoogleStatus = signal<boolean>(false);
+  protected googleCalendars = signal<GoogleCalendar[]>([]);
+  protected selectedCalendarId = signal<string | null>(null);
+  protected calendarEvents = signal<GoogleEvent[]>([]);
+  protected isLoadingCalendars = signal<boolean>(false);
+  protected googleLinkError = signal<string | null>(null);
+
+  // Propriétés pour le filtre des événements Google Calendar
+  protected eventTimeFilter = 'upcoming';
+  protected eventSearchQuery = '';
+  protected filteredCalendarEventsData = signal<GoogleEvent[]>([]);
+
+  // Mapping des couleurs d'événements Google
+  private eventColors: Record<string, string> = {
+    '1': '#7986cb', // Bleu lavande
+    '2': '#33b679', // Vert sauge
+    '3': '#8e24aa', // Violet prune
+    '4': '#e67c73', // Rouge flamand
+    '5': '#f6c026', // Jaune banane
+    '6': '#f5511d', // Orange mandarine
+    '7': '#039be5', // Bleu cobalt
+    '8': '#616161', // Gris graphite
+    '9': '#3f51b5', // Bleu indigo
+    '10': '#0b8043', // Vert basilic
+    '11': '#d60000', // Rouge tomate
+  };
+
+  // Gestion du formulaire de création d'événement
+  protected showEventCreationForm = false;
+  protected eventForm!: FormGroup;
+  protected isCreatingEvent = false;
+
+  // Propriétés pour la recherche d'adresses
+  protected locationSearchResults = signal<NominatimResult[]>([]);
+  protected isSearchingLocation = signal<boolean>(false);
+  protected showLocationResults = signal<boolean>(false);
+  private searchTerms = new Subject<string>();
+
+  // Propriétés pour l'édition d'événement
+  protected isEditMode = signal<boolean>(false);
+  protected editingEventId = signal<string | null>(null);
+  protected editingCalendarId = signal<string | null>(null);
+  protected isLoadingEventDetails = signal<boolean>(false);
 
   private usersService: UsersService = inject(UsersService);
   private authService: AuthService = inject(AuthService);
@@ -168,6 +277,8 @@ export class ProfileComponent implements OnInit {
   private route: ActivatedRoute = inject(ActivatedRoute);
   private router: Router = inject(Router);
   private http: HttpClient = inject(HttpClient);
+  private googleCalendarService = inject(GoogleCalendarService);
+  private nominatimService = inject(NominatimService);
 
   // Définir l'URL de base de l'API
   readonly apiUrl = environment.API_URL; // Utiliser l'URL de l'environnement
@@ -226,6 +337,12 @@ export class ProfileComponent implements OnInit {
         allowSignalWrites: true,
       }
     );
+
+    // Initialiser le formulaire de création d'événement
+    this.initEventForm();
+
+    // Initialiser la recherche d'adresses
+    this.setupLocationSearch();
   }
 
   ngOnInit(): void {
@@ -270,82 +387,19 @@ export class ProfileComponent implements OnInit {
     // Charger les événements de l'utilisateur
     this.loadUserEvents();
 
-    // Gérer les queryParams pour les onglets et le succès de la liaison Google
-    this.route.queryParams.subscribe((params) => {
-      // Vérifier si la liaison Google vient de réussir
-      if (params['google_linked'] === 'success') {
-        console.log(
-          'Google account linked successfully, refreshing user data...'
-        );
-        // Forcer le rafraîchissement via UsersService.getInfo()
-        this.usersService.getInfo().subscribe(
-          (updatedUser: UserEntity) => {
-            console.log('User data refreshed:', updatedUser);
-            // Mettre à jour l'état d'authentification global
-            this.authService.setUser(updatedUser);
-            // Le signal connectedUser devrait se mettre à jour via l'effect
-            // this.connectedUser.set(updatedUser); // Normalement plus nécessaire grâce à l'effect
+    // Vérifier si l'utilisateur est admin
+    this.authService.getCurrentUser().subscribe((user) => {
+      this.isAdmin.set(user?.role === 'ADMIN');
 
-            // Afficher un toast de succès
-            this.notificationService.showToast(
-              TOAST_TYPES.SUCCESS,
-              'Compte Google lié',
-              'Votre compte Google a été lié avec succès.'
-            );
-            // Nettoyer l'URL (supprimer le query param)
-            // Utiliser replaceUrl pour éviter d'ajouter une entrée dans l'historique
-            this.router.navigate([], {
-              relativeTo: this.route,
-              queryParams: { google_linked: null }, // Met à null pour le supprimer
-              queryParamsHandling: 'merge', // Conserve les autres params éventuels
-              replaceUrl: true, // Remplace l'entrée actuelle dans l'historique
-            });
-          },
-          (error) => {
-            console.error(
-              'Error refreshing user data after Google link:',
-              error
-            );
-            this.notificationService.showToast(
-              TOAST_TYPES.ERROR,
-              'Erreur',
-              'Impossible de rafraîchir les informations utilisateur.'
-            );
-          }
-        );
-      }
+      // Si l'URL contient un code d'authentification Google, lier le compte
+      this.route.queryParams.subscribe((params) => {
+        if (params['code'] && this.isAdmin()) {
+          this.linkGoogleAccount(params['code']);
+        }
+      });
 
-      // Si on a un paramètre 'tab' pour indiquer qu'il faut afficher l'onglet événements
-      if (params['tab'] === 'event') {
-        // Scroller jusqu'à la section des événements
-        setTimeout(() => {
-          const eventSection = document.querySelector('.events-section');
-          if (eventSection) {
-            eventSection.scrollIntoView({ behavior: 'smooth' });
-          }
-
-          // Sélectionner l'onglet approprié
-          if (params['eventTab']) {
-            this.filterEvents(params['eventTab']);
-          }
-
-          // Si on a un ID d'événement à mettre en surbrillance
-          if (params['highlight']) {
-            setTimeout(() => {
-              const eventElement = document.querySelector(
-                `[data-event-id="${params['highlight']}"]`
-              );
-              if (eventElement) {
-                eventElement.classList.add('highlight-event');
-                // Retirer la surbrillance après quelques secondes
-                setTimeout(() => {
-                  eventElement.classList.remove('highlight-event');
-                }, 3000);
-              }
-            }, 500);
-          }
-        }, 300);
-      }
+      // Vérifier si le compte est lié à Google
+      this.checkGoogleLinkStatus();
     });
   }
 
@@ -954,132 +1008,797 @@ export class ProfileComponent implements OnInit {
   }
 
   /**
-   * Initiate Google account linking by calling the backend to get the
-   * specific Google OAuth URL for the authenticated user, then redirects.
+   * Vérifie si le compte de l'utilisateur est lié à Google
    */
-  linkGoogleAccount(): void {
-    // Call the backend endpoint to get the Google Auth URL
-    this.http
-      .get<{ googleAuthUrl: string }>(`${this.apiUrl}/auth/google/get-auth-url`)
+  protected checkGoogleLinkStatus(): void {
+    if (!this.isAdmin()) return;
+
+    this.isLoadingGoogleStatus.set(true);
+    this.googleCalendarService
+      .checkGoogleLinkStatus()
+      .pipe(finalize(() => this.isLoadingGoogleStatus.set(false)))
+      .subscribe({
+        next: (result) => {
+          this.isGoogleLinked.set(result.linked);
+
+          // Si le compte est lié, charger les calendriers
+          if (result.linked) {
+            this.loadGoogleCalendars();
+          }
+        },
+        error: (error) => {
+          console.error(
+            'Erreur lors de la vérification du statut Google:',
+            error
+          );
+          this.notificationService.showToast(
+            'error',
+            'Erreur',
+            'Impossible de vérifier le statut de liaison Google'
+          );
+        },
+      });
+  }
+
+  /**
+   * Initie le processus de liaison d'un compte Google
+   */
+  protected initiateGoogleLink(): void {
+    if (!this.isAdmin()) return;
+
+    this.isGoogleLinking.set(true);
+    this.googleCalendarService
+      .getGoogleAuthUrl()
+      .pipe(finalize(() => this.isGoogleLinking.set(false)))
       .subscribe({
         next: (response) => {
-          if (response && response.googleAuthUrl) {
-            // Redirect the user's browser to the URL provided by the backend
-            window.location.href = response.googleAuthUrl;
-          } else {
-            console.error('Invalid response from backend for Google Auth URL');
+          // Rediriger vers l'URL d'authentification Google
+          window.location.href = response.url;
+        },
+        error: (error) => {
+          console.error("Erreur lors de l'obtention de l'URL Google:", error);
+          this.googleLinkError.set(
+            "Impossible d'obtenir l'URL d'authentification Google"
+          );
+          this.notificationService.showToast(
+            'error',
+            'Erreur',
+            "Impossible de démarrer l'authentification Google"
+          );
+        },
+      });
+  }
+
+  /**
+   * Finalise la liaison d'un compte Google après redirection
+   */
+  protected linkGoogleAccount(code: string): void {
+    if (!this.isAdmin()) return;
+
+    this.isGoogleLinking.set(true);
+    this.googleLinkError.set(null);
+
+    this.googleCalendarService
+      .linkGoogleAccount(code)
+      .pipe(finalize(() => this.isGoogleLinking.set(false)))
+      .subscribe({
+        next: (result) => {
+          if (result.success) {
+            this.isGoogleLinked.set(true);
             this.notificationService.showToast(
-              TOAST_TYPES.ERROR,
+              'success',
+              'Compte Google lié',
+              'Votre compte Google a été lié avec succès'
+            );
+
+            // Charger les calendriers après liaison réussie
+            this.loadGoogleCalendars();
+
+            // Supprimer le code de l'URL
+            const url = new URL(window.location.href);
+            url.searchParams.delete('code');
+            url.searchParams.delete('scope');
+            url.searchParams.delete('state');
+            window.history.replaceState({}, document.title, url.toString());
+          } else {
+            this.googleLinkError.set(
+              result.message || 'Échec de la liaison du compte Google'
+            );
+            this.notificationService.showToast(
+              'error',
               'Erreur',
-              "Impossible d'initier la connexion avec Google (réponse invalide)."
+              'Échec de la liaison du compte Google'
             );
           }
         },
-        error: (error: HttpErrorResponse) => {
-          console.error('Error fetching Google Auth URL:', error);
+        error: (error) => {
+          console.error('Erreur lors de la liaison du compte Google:', error);
+          this.googleLinkError.set(
+            error.error?.message || 'Erreur inconnue lors de la liaison Google'
+          );
           this.notificationService.showToast(
-            TOAST_TYPES.ERROR,
+            'error',
             'Erreur',
-            `Impossible d'initier la connexion avec Google: ${error.message}`
+            'Impossible de lier le compte Google'
           );
         },
       });
   }
 
   /**
-   * Initiates the process to unlink the Google account.
+   * Supprime la liaison avec Google
    */
-  unlinkGoogleAccount(): void {
-    // Optionnel: Ajouter une confirmation
+  protected unlinkGoogleAccount(): void {
+    if (!this.isAdmin()) return;
+
     if (
-      !confirm(
-        'Êtes-vous sûr de vouloir délier votre compte Google ? Cette action ne peut pas être annulée.'
+      confirm(
+        "Êtes-vous sûr de vouloir supprimer la liaison avec votre compte Google ? Vous n'aurez plus accès à vos calendriers Google."
       )
     ) {
+      this.isGoogleLinking.set(true);
+
+      this.googleCalendarService
+        .unlinkGoogleAccount()
+        .pipe(finalize(() => this.isGoogleLinking.set(false)))
+        .subscribe({
+          next: (result) => {
+            if (result.success) {
+              this.isGoogleLinked.set(false);
+              this.googleCalendars.set([]);
+              this.selectedCalendarId.set(null);
+              this.calendarEvents.set([]);
+
+              this.notificationService.showToast(
+                'success',
+                'Compte Google délié',
+                'La liaison avec votre compte Google a été supprimée'
+              );
+            } else {
+              this.notificationService.showToast(
+                'error',
+                'Erreur',
+                'Échec de la suppression de la liaison Google'
+              );
+            }
+          },
+          error: (error) => {
+            console.error(
+              'Erreur lors de la suppression de la liaison Google:',
+              error
+            );
+            this.notificationService.showToast(
+              'error',
+              'Erreur',
+              'Impossible de supprimer la liaison Google'
+            );
+          },
+        });
+    }
+  }
+
+  /**
+   * Charge les calendriers Google de l'utilisateur
+   */
+  protected loadGoogleCalendars(): void {
+    if (!this.isAdmin() || !this.isGoogleLinked()) return;
+
+    this.isLoadingCalendars.set(true);
+    this.googleCalendarService
+      .getCalendars()
+      .pipe(finalize(() => this.isLoadingCalendars.set(false)))
+      .subscribe({
+        next: (response) => {
+          this.googleCalendars.set(response.items || []);
+
+          // Sélectionner le calendrier principal par défaut s'il existe
+          const primaryCalendar = response.items?.find((cal) => cal.primary);
+          if (primaryCalendar) {
+            this.selectedCalendarId.set(primaryCalendar.id);
+            this.loadCalendarEvents(primaryCalendar.id);
+          } else if (response.items?.length > 0) {
+            this.selectedCalendarId.set(response.items[0].id);
+            this.loadCalendarEvents(response.items[0].id);
+          }
+        },
+        error: (error) => {
+          console.error('Erreur lors du chargement des calendriers:', error);
+          this.notificationService.showToast(
+            'error',
+            'Erreur',
+            'Impossible de charger vos calendriers Google'
+          );
+        },
+      });
+  }
+
+  /**
+   * Charge les événements d'un calendrier spécifique
+   */
+  protected loadCalendarEvents(
+    calendarIdOrEvent: string | { target: HTMLSelectElement }
+  ): void {
+    if (!this.isAdmin() || !this.isGoogleLinked()) return;
+
+    let calendarId: string;
+
+    // Déterminer si l'argument est un événement ou directement un ID
+    if (typeof calendarIdOrEvent === 'string') {
+      calendarId = calendarIdOrEvent;
+    } else {
+      // C'est un événement de formulaire
+      calendarId = calendarIdOrEvent.target.value;
+    }
+
+    if (!calendarId) return;
+
+    this.isLoadingEvents.set(true);
+    this.selectedCalendarId.set(calendarId);
+
+    this.googleCalendarService
+      .getCalendarEvents(calendarId)
+      .pipe(finalize(() => this.isLoadingEvents.set(false)))
+      .subscribe({
+        next: (response) => {
+          this.calendarEvents.set(response.items || []);
+          // Initialiser les événements filtrés après chargement
+          this.filterCalendarEvents();
+        },
+        error: (error) => {
+          console.error('Erreur lors du chargement des événements:', error);
+          this.notificationService.showToast(
+            'error',
+            'Erreur',
+            'Impossible de charger les événements du calendrier'
+          );
+        },
+      });
+  }
+
+  /**
+   * Formate la date d'un événement Google pour l'affichage
+   */
+  protected formatGoogleEventDate(dateTimeString: string): string {
+    const date = new Date(dateTimeString);
+    return date.toLocaleString('fr-FR', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
+
+  /**
+   * Crée un nouveau calendrier Google
+   */
+  protected createNewCalendar(): void {
+    if (!this.isAdmin() || !this.isGoogleLinked()) return;
+
+    // Demander les informations du calendrier
+    const calendarName = prompt('Nom du nouveau calendrier:');
+    if (!calendarName) return;
+
+    const calendarDescription = prompt('Description (optionnelle):');
+
+    const calendarData = {
+      summary: calendarName,
+      description: calendarDescription || undefined,
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    };
+
+    this.googleCalendarService.createCalendar(calendarData).subscribe({
+      next: (response) => {
+        this.notificationService.showToast(
+          'success',
+          'Calendrier créé',
+          `Le calendrier "${response.summary}" a été créé avec succès`
+        );
+
+        // Recharger la liste des calendriers
+        this.loadGoogleCalendars();
+      },
+      error: (error) => {
+        console.error('Erreur lors de la création du calendrier:', error);
+        this.notificationService.showToast(
+          'error',
+          'Erreur',
+          'Impossible de créer le calendrier'
+        );
+      },
+    });
+  }
+
+  // Méthode utilitaire pour obtenir la date d'événement Google avec sécurité de type
+  private getEventDate(eventDateTime: GoogleEventDateTime): Date {
+    return new Date(eventDateTime.dateTime || eventDateTime.date || '');
+  }
+
+  // Filtrer les événements du calendrier selon les critères
+  protected filterCalendarEvents(): void {
+    if (!this.selectedCalendarId()) return;
+
+    const now = new Date();
+    const query = this.eventSearchQuery.toLowerCase();
+
+    let filtered = this.calendarEvents();
+
+    // Filtrer par période
+    switch (this.eventTimeFilter) {
+      case 'upcoming':
+        filtered = filtered.filter(
+          (event) => this.getEventDate(event.start) >= now
+        );
+        break;
+      case 'past':
+        filtered = filtered.filter(
+          (event) => this.getEventDate(event.start) < now
+        );
+        break;
+      case 'today': {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+
+        filtered = filtered.filter((event) => {
+          const eventDate = this.getEventDate(event.start);
+          return eventDate >= today && eventDate < tomorrow;
+        });
+        break;
+      }
+      case 'week': {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const startOfWeek = new Date(today);
+        startOfWeek.setDate(today.getDate() - today.getDay());
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 7);
+
+        filtered = filtered.filter((event) => {
+          const eventDate = this.getEventDate(event.start);
+          return eventDate >= startOfWeek && eventDate < endOfWeek;
+        });
+        break;
+      }
+      case 'month': {
+        const today = new Date();
+        const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        const endOfMonth = new Date(
+          today.getFullYear(),
+          today.getMonth() + 1,
+          0
+        );
+
+        filtered = filtered.filter((event) => {
+          const eventDate = this.getEventDate(event.start);
+          return eventDate >= startOfMonth && eventDate <= endOfMonth;
+        });
+        break;
+      }
+      // 'all' ne nécessite pas de filtrage supplémentaire
+    }
+
+    // Filtrer par recherche textuelle
+    if (query) {
+      filtered = filtered.filter(
+        (event) =>
+          event.summary?.toLowerCase().includes(query) ||
+          event.description?.toLowerCase().includes(query) ||
+          event.location?.toLowerCase().includes(query)
+      );
+    }
+
+    // Trier par date
+    if (this.eventTimeFilter === 'past') {
+      filtered.sort(
+        (a, b) =>
+          this.getEventDate(b.start).getTime() -
+          this.getEventDate(a.start).getTime()
+      );
+    } else {
+      filtered.sort(
+        (a, b) =>
+          this.getEventDate(a.start).getTime() -
+          this.getEventDate(b.start).getTime()
+      );
+    }
+
+    this.filteredCalendarEventsData.set(filtered);
+  }
+
+  // Méthode pour accéder aux événements filtrés
+  protected filteredCalendarEvents(): GoogleEvent[] {
+    return this.filteredCalendarEventsData();
+  }
+
+  // Obtenir le libellé du filtre actuel
+  protected getEventFilterLabel(): string {
+    switch (this.eventTimeFilter) {
+      case 'upcoming':
+        return 'à venir';
+      case 'past':
+        return 'passés';
+      case 'today':
+        return "d'aujourd'hui";
+      case 'week':
+        return 'de cette semaine';
+      case 'month':
+        return 'de ce mois';
+      case 'all':
+        return 'tous';
+      default:
+        return '';
+    }
+  }
+
+  // Obtenir la couleur d'un événement selon son ID de couleur
+  protected getEventColor(colorId: string | undefined): string {
+    if (!colorId) return '#4285F4'; // Couleur par défaut (bleu Google)
+    return this.eventColors[colorId] || '#4285F4';
+  }
+
+  // Obtenir le libellé du statut d'un événement Google
+  protected getEventStatusLabel(status: string): string {
+    switch (status) {
+      case 'confirmed':
+        return 'Confirmé';
+      case 'tentative':
+        return 'Provisoire';
+      case 'cancelled':
+        return 'Annulé';
+      default:
+        return 'Non spécifié';
+    }
+  }
+
+  /**
+   * Configure la recherche d'adresses avec debounce
+   */
+  private setupLocationSearch(): void {
+    this.searchTerms
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        switchMap((term: string) => {
+          if (term.length < 3) {
+            this.locationSearchResults.set([]);
+            this.isSearchingLocation.set(false);
+            return [];
+          }
+
+          this.isSearchingLocation.set(true);
+          return this.nominatimService.searchPlaces(term);
+        })
+      )
+      .subscribe({
+        next: (results) => {
+          this.locationSearchResults.set(results);
+          this.isSearchingLocation.set(false);
+          this.showLocationResults.set(results.length > 0);
+        },
+        error: (error) => {
+          console.error("Erreur lors de la recherche d'adresses", error);
+          this.isSearchingLocation.set(false);
+          this.showLocationResults.set(false);
+        },
+      });
+  }
+
+  /**
+   * Recherche d'adresses lorsque l'utilisateur tape
+   */
+  protected searchLocation(term: string): void {
+    this.searchTerms.next(term);
+  }
+
+  /**
+   * Sélectionne une adresse dans les résultats
+   */
+  protected selectLocation(result: NominatimResult): void {
+    this.eventForm.get('location')?.setValue(result.display_name);
+    this.eventForm.get('latitude')?.setValue(result.lat);
+    this.eventForm.get('longitude')?.setValue(result.lon);
+    this.showLocationResults.set(false);
+  }
+
+  /**
+   * Initialise le formulaire de création d'événement
+   */
+  private initEventForm(): void {
+    this.eventForm = this.formBuilder.group(
+      {
+        title: ['', Validators.required],
+        calendarId: [null, Validators.required],
+        startDateTime: [this.getDefaultStartDate(), Validators.required],
+        endDateTime: [this.getDefaultEndDate(), Validators.required],
+        location: [''],
+        latitude: [''],
+        longitude: [''],
+        description: [''],
+        attendees: [
+          '',
+          Validators.pattern(
+            /^(\s*[^\s,]+@[^\s,]+\.[^\s,]+\s*,\s*)*([^\s,]+@[^\s,]+\.[^\s,]+\s*)?$/
+          ),
+        ],
+        colorId: ['1'],
+        eventId: [''], // Champ caché pour stocker l'ID de l'événement en mode édition
+      },
+      { validators: this.validateEventDates }
+    );
+  }
+
+  /**
+   * Obtient la date et heure par défaut pour le début de l'événement (heure actuelle arrondie à l'heure suivante)
+   */
+  private getDefaultStartDate(): string {
+    const date = new Date();
+    date.setHours(date.getHours() + 1);
+    date.setMinutes(0);
+    date.setSeconds(0);
+    date.setMilliseconds(0);
+    return this.formatDateForInput(date);
+  }
+
+  /**
+   * Obtient la date et heure par défaut pour la fin de l'événement (1 heure après le début)
+   */
+  private getDefaultEndDate(): string {
+    const date = new Date();
+    date.setHours(date.getHours() + 2);
+    date.setMinutes(0);
+    date.setSeconds(0);
+    date.setMilliseconds(0);
+    return this.formatDateForInput(date);
+  }
+
+  /**
+   * Formate une date pour un champ input datetime-local
+   */
+  private formatDateForInput(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  }
+
+  /**
+   * Validateur personnalisé pour vérifier que la date de fin est après la date de début
+   */
+  private validateEventDates(
+    control: AbstractControl
+  ): ValidationErrors | null {
+    const startDateTime = new Date(control.get('startDateTime')?.value);
+    const endDateTime = new Date(control.get('endDateTime')?.value);
+
+    if (startDateTime && endDateTime) {
+      if (endDateTime <= startDateTime) {
+        return { endDateBeforeStart: true };
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Retourne les IDs de couleurs disponibles pour les événements Google
+   */
+  protected getColorIds(): string[] {
+    return Object.keys(this.eventColors);
+  }
+
+  /**
+   * Lance l'édition d'un événement existant
+   */
+  protected editEvent(event: GoogleEvent, calendarId: string): void {
+    this.isLoadingEventDetails.set(true);
+    this.editingEventId.set(event.id);
+    this.editingCalendarId.set(calendarId);
+    this.isEditMode.set(true);
+
+    // Récupérer les détails complets de l'événement
+    this.googleCalendarService
+      .getEvent(calendarId, event.id)
+      .pipe(finalize(() => this.isLoadingEventDetails.set(false)))
+      .subscribe({
+        next: (eventDetails) => {
+          // Extraire les participants s'il y en a
+          let attendeesString = '';
+          const eventAttendees = eventDetails as unknown as {
+            attendees?: { email: string }[];
+          };
+          if (eventAttendees.attendees && eventAttendees.attendees.length > 0) {
+            attendeesString = eventAttendees.attendees
+              .map((attendee: { email: string }) => attendee.email)
+              .join(', ');
+          }
+
+          // Extraire les dates en format local
+          const startDate = new Date(eventDetails.start.dateTime);
+          const endDate = new Date(eventDetails.end.dateTime);
+
+          // Rechercher les coordonnées dans la description si elles existent
+          let latitude = '';
+          let longitude = '';
+
+          if (eventDetails.description) {
+            const coordsMatch = eventDetails.description.match(
+              /Coordonnées: ([-\d.]+),([-\d.]+)/
+            );
+            if (coordsMatch && coordsMatch.length === 3) {
+              latitude = coordsMatch[1];
+              longitude = coordsMatch[2];
+            }
+          }
+
+          // Remplir le formulaire avec les données de l'événement
+          this.eventForm.patchValue({
+            title: eventDetails.summary,
+            calendarId: calendarId,
+            startDateTime: this.formatDateForInput(startDate),
+            endDateTime: this.formatDateForInput(endDate),
+            location: eventDetails.location || '',
+            latitude: latitude,
+            longitude: longitude,
+            description: eventDetails.description
+              ? this.cleanDescription(eventDetails.description)
+              : '',
+            attendees: attendeesString,
+            colorId:
+              (eventDetails as unknown as { colorId?: string }).colorId || '1',
+            eventId: eventDetails.id,
+          });
+
+          // Afficher le formulaire d'édition
+          this.showEventCreationForm = true;
+        },
+        error: (error) => {
+          console.error(
+            "Erreur lors de la récupération des détails de l'événement",
+            error
+          );
+          this.notificationService.showToast(
+            'error',
+            'Erreur',
+            "Impossible de charger les détails de l'événement"
+          );
+          this.isEditMode.set(false);
+          this.editingEventId.set(null);
+          this.editingCalendarId.set(null);
+        },
+      });
+  }
+
+  /**
+   * Nettoie la description des informations de localisation ajoutées automatiquement
+   */
+  private cleanDescription(description: string): string {
+    // Enlever les informations de localisation ajoutées
+    return description.replace(
+      /\n\nLieu: .*\nCoordonnées: .*\nCarte: .*$/s,
+      ''
+    );
+  }
+
+  /**
+   * Réinitialise le formulaire et sort du mode édition
+   */
+  protected cancelEdit(): void {
+    this.isEditMode.set(false);
+    this.editingEventId.set(null);
+    this.editingCalendarId.set(null);
+    this.showEventCreationForm = false;
+    this.initEventForm();
+  }
+
+  /**
+   * Crée ou met à jour un événement Google Calendar selon le mode (création ou édition)
+   */
+  protected createEvent(): void {
+    if (this.eventForm.invalid) {
+      // Marquer tous les champs comme touchés pour afficher les erreurs
+      Object.keys(this.eventForm.controls).forEach((key) => {
+        const control = this.eventForm.get(key);
+        control?.markAsTouched();
+      });
       return;
     }
 
-    console.log('Unlinking Google Account...');
+    this.isCreatingEvent = true;
 
-    this.http
-      .delete<{ message: string }>(`${this.apiUrl}/auth/google/unlink`)
+    const formValues = this.eventForm.value;
+    const calendarId = formValues.calendarId;
+    const isEdit = this.isEditMode() && formValues.eventId;
+
+    // Préparer les données de l'événement
+    const eventData: EventCreateData = {
+      summary: formValues.title,
+      location: formValues.location,
+      description: formValues.description,
+      start: {
+        dateTime: new Date(formValues.startDateTime).toISOString(),
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      },
+      end: {
+        dateTime: new Date(formValues.endDateTime).toISOString(),
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      },
+      colorId: formValues.colorId,
+    };
+
+    // Ajouter les coordonnées géographiques si disponibles
+    if (formValues.latitude && formValues.longitude) {
+      // Ajout des coordonnées au format geo:latitude,longitude dans la description
+      const geoLink = `https://maps.google.com/?q=${formValues.latitude},${formValues.longitude}`;
+      const locationInfo = `\n\nLieu: ${formValues.location}\nCoordonnées: ${formValues.latitude},${formValues.longitude}\nCarte: ${geoLink}`;
+
+      eventData.description = (eventData.description || '') + locationInfo;
+    }
+
+    // Ajouter les participants si spécifiés
+    if (formValues.attendees && formValues.attendees.trim()) {
+      const attendeesEmails = formValues.attendees
+        .split(',')
+        .map((email: string) => email.trim());
+      eventData.attendees = attendeesEmails.map((email: string) => ({ email }));
+    }
+
+    // Créer ou mettre à jour l'événement selon le mode
+    const operation = isEdit
+      ? this.googleCalendarService.updateEvent(
+          calendarId,
+          formValues.eventId,
+          eventData
+        )
+      : this.googleCalendarService.createEvent(calendarId, eventData);
+
+    operation
+      .pipe(
+        finalize(() => {
+          this.isCreatingEvent = false;
+          if (isEdit) {
+            this.isEditMode.set(false);
+            this.editingEventId.set(null);
+            this.editingCalendarId.set(null);
+          }
+        })
+      )
       .subscribe({
         next: (response) => {
-          console.log(
-            'Google account unlinked successfully:',
-            response.message
-          );
-          // Rafraîchir les données utilisateur pour mettre à jour l'UI
-          this.usersService.getInfo().subscribe(
-            (updatedUser: UserEntity) => {
-              this.authService.setUser(updatedUser);
-              // Afficher un toast de succès
-              this.notificationService.showToast(
-                TOAST_TYPES.SUCCESS,
-                'Compte Google délié',
-                'Votre compte Google a été dissocié avec succès.'
-              );
-              // Pas besoin de nettoyer l'URL ici
-            },
-            (error) => {
-              console.error(
-                'Error refreshing user data after Google unlink:',
-                error
-              );
-              // Afficher un toast même si le rafraîchissement échoue, car la dissociation a réussi
-              this.notificationService.showToast(
-                TOAST_TYPES.INFO,
-                'Compte Google délié',
-                'Compte dissocié, mais erreur lors du rafraîchissement des informations.'
-              );
-            }
-          );
-        },
-        error: (error: HttpErrorResponse) => {
-          console.error('Error unlinking Google account:', error);
+          const actionMsg = isEdit ? 'modifié' : 'créé';
           this.notificationService.showToast(
-            TOAST_TYPES.ERROR,
-            'Erreur de dissociation',
-            `Impossible de délier le compte Google: ${
-              error.error?.message || error.message
-            }`
+            'success',
+            isEdit ? 'Événement modifié' : 'Événement créé',
+            `L'événement "${response.summary}" a été ${actionMsg} avec succès`
+          );
+
+          // Fermer le formulaire et rafraîchir les événements
+          this.showEventCreationForm = false;
+          this.initEventForm(); // Réinitialiser le formulaire
+          this.loadCalendarEvents(calendarId);
+        },
+        error: (error) => {
+          const actionMsg = isEdit ? 'la modification' : 'la création';
+          console.error(`Erreur lors de ${actionMsg} de l'événement:`, error);
+          this.notificationService.showToast(
+            'error',
+            'Erreur',
+            `Impossible de ${isEdit ? 'modifier' : 'créer'} l'événement`
           );
         },
       });
   }
 
   /**
-   * Fetches the list of Google Calendars from the backend.
+   * Cache les résultats de recherche après un délai
    */
-  fetchGoogleCalendars(): void {
-    this.isLoadingCalendars.set(true);
-    this.googleCalendarsFetchAttempted.set(true); // Marquer que la tentative a été faite
-    this.googleCalendars.set(null); // Réinitialiser les résultats précédents
-    this.googleCalendarsError.set(null); // Réinitialiser l'erreur précédente
-
-    this.http
-      .get<GoogleCalendar[]>(`${this.apiUrl}/auth/google/calendars`) // Utiliser l'interface
-      .pipe(finalize(() => this.isLoadingCalendars.set(false))) // Assure que le chargement s'arrête
-      .subscribe({
-        next: (calendars) => {
-          console.log('Fetched Google Calendars:', calendars);
-          this.googleCalendars.set(calendars);
-        },
-        error: (error: HttpErrorResponse) => {
-          console.error('Error fetching Google Calendars:', error);
-          this.googleCalendarsError.set(
-            error.error?.message ||
-              error.message ||
-              'Une erreur inconnue est survenue.'
-          );
-          // Afficher un toast d'erreur
-          this.notificationService.showToast(
-            TOAST_TYPES.ERROR,
-            'Erreur Calendriers Google',
-            this.googleCalendarsError() ||
-              'Impossible de récupérer les calendriers.'
-          );
-        },
-      });
+  protected hideLocationResults(): void {
+    setTimeout(() => {
+      this.showLocationResults.set(false);
+    }, 200);
   }
 }

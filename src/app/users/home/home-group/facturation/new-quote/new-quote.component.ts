@@ -142,7 +142,8 @@ import { QuillModule } from 'ngx-quill';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NewQuoteComponent implements AfterViewInit {
-  @ViewChildren('clientError, nameError, deadlineError, ...') formErrors!: QueryList<ElementRef>;
+  @ViewChildren('clientError, nameError, deadlineError, ...')
+  formErrors!: QueryList<ElementRef>;
   private formBuilder: FormBuilder = inject(FormBuilder);
   private clientService: ClientService = inject(ClientService);
   private productService: ProductService = inject(ProductService);
@@ -577,6 +578,11 @@ export class NewQuoteComponent implements AfterViewInit {
 
   toggleProductForm() {
     this.isToggleProductForm.set(!this.isToggleProductForm());
+    if (this.isToggleProductForm()) {
+      // Réinitialiser les signaux TVA quand on ouvre le formulaire
+      this.isArtisticPerformance.set(false);
+      this.isTva0.set(false);
+    }
   }
 
   toggleEditProductForm() {
@@ -591,8 +597,13 @@ export class NewQuoteComponent implements AfterViewInit {
     this.isToggleEditProductForm.set(!this.isToggleEditProductForm());
   }
 
-  toggleArtisticPerformance() {
-    this.isArtisticPerformance.set(!this.isArtisticPerformance());
+  toggleArtisticPerformance(checked?: boolean) {
+    const newValue =
+      checked !== undefined ? checked : !this.isArtisticPerformance();
+    this.isArtisticPerformance.set(newValue);
+    if (newValue) {
+      this.isTva0.set(false);
+    }
   }
 
   togglePhysicalPerson() {
@@ -643,8 +654,12 @@ export class NewQuoteComponent implements AfterViewInit {
     this.checkTvaIncluded();
   }
 
-  toggleTva0() {
-    this.isTva0.set(!this.isTva0());
+  toggleTva0(checked?: boolean) {
+    const newValue = checked !== undefined ? checked : !this.isTva0();
+    this.isTva0.set(newValue);
+    if (newValue) {
+      this.isArtisticPerformance.set(false);
+    }
   }
 
   setTvaIncluded() {
@@ -946,7 +961,7 @@ export class NewQuoteComponent implements AfterViewInit {
       description: formValues.description,
       price: +formValues.price,
       quantity: +formValues.quantity,
-      vat: this.isTva0() ? 0 : formValues.vat ? 0.06 : 0.21,
+      vat: this.isTva0() ? 0 : this.isArtisticPerformance() ? 0.06 : 0.21,
     };
 
     // Calcul des montants en fonction de isTvaIncluded
@@ -993,6 +1008,7 @@ export class NewQuoteComponent implements AfterViewInit {
           this.createProductForm.patchValue({ quantity: 1, vat: false });
           this.toggleProductForm();
           this.isTva0.set(false);
+          this.isArtisticPerformance.set(false);
         })
       )
       .subscribe();
@@ -1160,21 +1176,25 @@ export class NewQuoteComponent implements AfterViewInit {
   }
 
   createQuote() {
-
     if (!this.createQuoteForm.value.client_id) {
       toast.error('Veuillez sélectionner un client avant de créer le devis.');
       window.scrollTo({ top: 0, behavior: 'smooth' });
       this.createQuoteForm.markAllAsTouched();
       this.isLoadingQuote.set(false);
-    }
-    else if(this.products().length==0) {
-      toast.error('Veuillez ajouter au moins un service avant de créer le devis.');
+    } else if (this.products().length == 0) {
+      toast.error(
+        'Veuillez ajouter au moins un service avant de créer le devis.'
+      );
       window.scrollTo({ top: 0, behavior: 'smooth' });
       this.createQuoteForm.markAllAsTouched();
       this.isLoadingQuote.set(false);
-    }else {
-
-
+    } else if (!this.isAtLeastOneAttachmentSelected()) {
+      toast.error(
+        'Une pièce jointe est requise car le devis contient au moins un service avec TVA 0%.'
+      );
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      this.isLoadingQuote.set(false);
+    } else {
       if (this.createQuoteForm.valid) {
         const quote = {
           ...this.createQuoteForm.value,
@@ -1216,11 +1236,14 @@ export class NewQuoteComponent implements AfterViewInit {
         this.createQuoteForm.markAllAsTouched();
 
         setTimeout(() => {
-          const firstInvalid = this.formErrors.find(el =>
+          const firstInvalid = this.formErrors.find((el) =>
             el.nativeElement.querySelector('.ng-invalid')
           );
           if (firstInvalid) {
-            firstInvalid.nativeElement.scrollIntoView({behavior: 'smooth', block: 'center'});
+            firstInvalid.nativeElement.scrollIntoView({
+              behavior: 'smooth',
+              block: 'center',
+            });
           }
         });
       }
@@ -1705,6 +1728,11 @@ export class NewQuoteComponent implements AfterViewInit {
       // La fonction retourne true, et la désactivation du bouton dépendra uniquement de la validité du formulaire.
       return true;
     }
+  }
+
+  // Fonction pour vérifier s'il y a des produits avec TVA 0%
+  hasProductsWithZeroVat(): boolean {
+    return this.products().some((product) => product.vat === 0);
   }
 
   // Nouvelle méthode pour gérer la validation dynamique

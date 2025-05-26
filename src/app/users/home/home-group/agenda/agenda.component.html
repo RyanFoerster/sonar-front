@@ -35,7 +35,7 @@
       [hasManagementRights]="hasManagementRightsForEvent(selectedEvent)"
       [isCurrentUserInvited]="isCurrentUserInvited()"
       [currentUserInvitationStatus]="getCurrentUserInvitationStatus()"
-      [isEventInGoogleCalendar]="isEventInGoogleCalendar(selectedEvent?.id)"
+      [isEventInGoogleCalendar]="isEventInGoogleCalendar(selectedEvent.id)"
       [eventOrganizers]="eventOrganizers"
       [eventParticipants]="eventParticipants"
       [loadingOrganizers]="loadingOrganizers"
@@ -51,7 +51,7 @@
       (inviteParticipants)="openInviteParticipantsModal()"
       (duplicateEvent)="openDuplicateModal(selectedEvent)"
       (editEvent)="openEditModal(selectedEvent)"
-      (sendReminders)="sendReminders(selectedEvent?.id)"
+      (sendReminders)="sendReminders(selectedEvent.id)"
       (deleteEvent)="deleteEvent()"
       (addToGoogleCalendar)="openAddToGoogleCalendarModal()"
       (cancelInvitation)="cancelInvitation($event)"
@@ -1223,7 +1223,7 @@
               maxlength="500"
             ></textarea>
             <div class="text-xs text-gray-500 mt-1">
-              {{ 500 - (customReminderMessage?.length || 0) }} caractères
+              {{ 500 - (customReminderMessage.length || 0) }} caractères
               restants
             </div>
           </div>

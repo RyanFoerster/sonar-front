@@ -1812,6 +1812,10 @@ export class AgendaComponent implements OnInit, OnDestroy {
       return false;
     }
 
+    if (currentUser.role === 'ADMIN') {
+      return true;
+    }
+
     // Filtrer les comptes secondaires pour trouver celui associé au groupe actuel
     const secondaryAccountForCurrentGroup =
       currentUser.userSecondaryAccounts.find(

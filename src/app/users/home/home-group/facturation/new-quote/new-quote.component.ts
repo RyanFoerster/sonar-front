@@ -1187,6 +1187,12 @@ export class NewQuoteComponent implements AfterViewInit {
       window.scrollTo({ top: 0, behavior: 'smooth' });
       this.createQuoteForm.markAllAsTouched();
       this.isLoadingQuote.set(false);
+    } else if (!this.isAtLeastOneAttachmentSelected()) {
+      toast.error(
+        'Une pièce jointe est requise car le devis contient au moins un service avec TVA 0%.'
+      );
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      this.isLoadingQuote.set(false);
     } else {
       if (this.createQuoteForm.valid) {
         const quote = {
@@ -1721,6 +1727,11 @@ export class NewQuoteComponent implements AfterViewInit {
       // La fonction retourne true, et la désactivation du bouton dépendra uniquement de la validité du formulaire.
       return true;
     }
+  }
+
+  // Fonction pour vérifier s'il y a des produits avec TVA 0%
+  hasProductsWithZeroVat(): boolean {
+    return this.products().some((product) => product.vat === 0);
   }
 
   // Nouvelle méthode pour gérer la validation dynamique

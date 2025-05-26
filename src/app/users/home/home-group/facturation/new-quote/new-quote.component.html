@@ -115,7 +115,7 @@
           </p>
         </div>
 
-        <div  class="space-y-2">
+        <div class="space-y-2">
           <p class="font-medium text-gray-900 text-sm" hlmLabel>
             Devis valable jusqu'au
             <input
@@ -137,7 +137,7 @@
       </div>
 
       <!-- Client Section -->
-      <div  class="space-y-4">
+      <div class="space-y-4">
         <div
           class="flex flex-col md:flex-row md:justify-between md:items-center gap-4"
         >
@@ -371,9 +371,7 @@
           Veuillez ajouter au moins un service avant de créer le devis
         </div>
 
-        }
-
-        @if (products().length > 0) {
+        } @if (products().length > 0) {
         <div class="space-y-4">
           @if (isToggleEditProductForm()) {
           <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
@@ -694,9 +692,9 @@
 
               <p class="flex items-center gap-2 cursor-pointer group">
                 <hlm-checkbox
-                  (click)="toggleArtisticPerformance()"
+                  (checkedChange)="toggleArtisticPerformance()"
                   [disabled]="isTva0()"
-                  formControlName="vat"
+                  [checked]="isArtisticPerformance()"
                   class="rounded-md group-hover:border-primary transition-colors"
                 />
                 <span
@@ -708,9 +706,9 @@
 
               <p class="flex items-center gap-2 cursor-pointer group">
                 <hlm-checkbox
-                  (click)="toggleTva0()"
+                  (checkedChange)="toggleTva0()"
                   [disabled]="isArtisticPerformance()"
-                  formControlName="vat"
+                  [checked]="isTva0()"
                   class="rounded-md group-hover:border-primary transition-colors"
                 />
                 <span

@@ -669,228 +669,362 @@
     </div>
   </div>
 
-  <div class="md:flex md:gap-5 w-full flex flex-col gap-5">
-    <div class="flex flex-col gap-5">
-      <hlm-table class="overflow-x-auto p-4 bg-white rounded-xl shadow-lg">
-        <p class="font-bold px-4 text-sm">Transfert sortant</p>
-        <div class="overflow-auto touch-none w-full">
-          <hlm-trow class="hidden lg:flex lg:justify-between">
-            <hlm-th class="lg:w-[20%] text-sm font-semibold">Date</hlm-th>
-            <hlm-th class="lg:w-[20%] text-sm font-semibold">Expéditeur</hlm-th>
-            <hlm-th class="lg:w-[20%] text-sm font-semibold"
-              >Destinataire</hlm-th
-            >
-            <hlm-th class="lg:w-[20%] text-sm font-semibold"
-              >Communication</hlm-th
-            >
-            <hlm-th class="lg:w-[20%] text-sm font-semibold">Montant</hlm-th>
-          </hlm-trow>
-          @for (transaction of state.transactionSender(); track transaction.id)
-          {
-          <hlm-trow
-            class="flex flex-col lg:flex-row lg:justify-between border-b lg:border-none p-2 lg:p-0"
+
+
+  <div class="flex flex-col gap-5">
+    <hlm-table class="overflow-x-auto p-4 bg-white rounded-xl shadow-lg">
+      <p class="text-lg font-semibold px-4 mb-2">Virement entrant </p>
+      <div class="overflow-auto touch-none w-full">
+        <hlm-trow class="hidden lg:flex lg:justify-between">
+          <hlm-th class="lg:w-[11%] text-sm font-semibold">Date</hlm-th>
+          <hlm-th class="lg:w-[11%] text-sm font-semibold">Titulaire</hlm-th>
+          <hlm-th class="lg:w-[13%] text-sm font-semibold">IBAN</hlm-th>
+          <hlm-th class="lg:w-[13%] text-sm font-semibold"
+          >Communication</hlm-th
           >
-            <div class="flex flex-col gap-2 lg:hidden">
-              <div class="flex justify-between items-center">
-                <span class="text-sm font-semibold">Date:</span>
-                <span class="text-sm">{{
-                  transaction.date | date : "dd/MM/yyyy"
-                }}</span>
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-sm font-semibold">Expéditeur:</span>
-                <span class="text-sm">{{
-                  transaction.senderPrincipal !== null
-                    ? transaction.senderPrincipal.username || ""
-                    : transaction.senderGroup.username || ""
-                }}</span>
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-sm font-semibold">Destinataire:</span>
-                @if (transaction.recipientGroup.length > 1 ||
-                transaction.recipientPrincipal.length > 1 ||
-                (transaction.recipientGroup.length +
-                transaction.recipientPrincipal.length > 1)) {
-                <div class="text-right">
-                  <span
-                    class="text-sm font-semibold text-gray-600 bg-gray-100 px-2 py-1 rounded-full"
-                    >Destinataires multiples</span
-                  >
-                  <div class="mt-2 space-y-1 bg-white p-2 rounded-lg shadow-sm">
-                    @if (transaction.recipientGroup.length > 0) {
-                    <div class="text-xs text-gray-500 font-medium mb-1">
-                      Projets de groupe:
-                    </div>
-                    @for (recipient of transaction.recipientGroup; track
-                    recipient.id) { @if (recipient.username !==
-                    state.accountGroup()?.username ) {
-                    <div class="text-sm pl-2 py-0.5 border-l-2 border-blue-400">
-                      {{ recipient.username }}
-                    </div>
-                    } } } @if (transaction.recipientPrincipal.length > 0) {
-                    <div class="text-xs text-gray-500 font-medium mb-1 mt-2">
-                      Projets individuels:
-                    </div>
-                    @for (recipient of transaction.recipientPrincipal; track
-                    recipient.id) { @if (recipient.username !==
-                    state.accountPrincipal()?.username) {
-                    <div
-                      class="text-sm pl-2 py-0.5 border-l-2 border-green-400"
-                    >
-                      {{ recipient.username }}
-                    </div>
-                    } } }
-                  </div>
+          <hlm-th class="lg:w-[13%] text-sm font-semibold"
+          >Comm. structurée</hlm-th
+          >
+          <hlm-th class="lg:w-[11%] text-sm font-semibold"
+          >Montant ajouté</hlm-th
+          >
+
+          <hlm-th class="lg:w-[9%] text-sm font-semibold">Statut</hlm-th>
+        </hlm-trow>
+
+        @if(state.accountPrincipal()) { @for(virement of
+          state.accountPrincipal()?.virementSepa; track virement.id) {
+          @if (virement.transaction_type == "INCOMING") {
+            <hlm-trow
+              class="flex flex-col lg:flex-row lg:justify-between border-b lg:border-none p-2 lg:p-0"
+            >
+              <div class="flex flex-col gap-2 lg:hidden">
+                <div class="flex justify-between items-center">
+                  <span class="text-sm font-semibold">Date:</span>
+                  <span class="text-sm">{{
+                      virement.created_at | date : "dd/MM/yyyy"
+                    }}</span>
                 </div>
-                } @else {
-                <span class="text-sm">
-                  @if(transaction.recipientGroup!.length > 0 &&
-                  transaction.recipientGroup[0]) {
-                  {{ transaction.recipientGroup[0].username || "" }}
-                  } @else if(transaction.recipientPrincipal!.length > 0 &&
-                  transaction.recipientPrincipal[0]) {
-                  {{ transaction.recipientPrincipal[0].username || "" }}
-                  } @else {
-                  {{ "" }}
-                  }
-                </span>
-                }
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-sm font-semibold">Communication:</span>
-                <brn-popover>
-                  <button
-                    brnPopoverTrigger
-                    class="text-sm truncate max-w-[150px] cursor-pointer hover:text-gray-600 text-left"
-                  >
-                    {{ transaction.communication }}
-                  </button>
-                  <div
-                    class="p-2 text-sm max-w-[200px] bg-white rounded shadow-lg"
-                    hlmPopoverContent
-                    *brnPopoverContent="let ctx"
-                  >
-                    {{ transaction.communication }}
-                  </div>
-                </brn-popover>
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-sm font-semibold">Montant:</span>
-                <span class="text-sm text-red-400"
-                  >-{{
-                    transaction.amount *
-                      (transaction.recipientGroup.length +
-                        transaction.recipientPrincipal.length) | euroFormat
-                  }}</span
-                >
-              </div>
-            </div>
-
-            <div class="hidden lg:flex lg:justify-between w-full">
-              <hlm-td class="lg:w-[20%] text-sm">{{
-                transaction.date | date : "dd/MM/yyyy"
-              }}</hlm-td>
-              <hlm-td class="lg:w-[20%] text-sm">{{
-                transaction.senderPrincipal !== null
-                  ? transaction.senderPrincipal.username || ""
-                  : transaction.senderGroup.username || ""
-              }}</hlm-td>
-
-              @if (transaction.recipientGroup.length > 1 ||
-              transaction.recipientPrincipal.length > 1 ||
-              (transaction.recipientGroup.length +
-              transaction.recipientPrincipal.length > 1)) {
-              <hlm-td class="lg:w-[20%]">
-                <div hlmAccordion>
-                  <div class="border-b-0" hlmAccordionItem>
+                <div class="flex justify-between items-center">
+                  <span class="text-sm font-semibold">Titulaire:</span>
+                  <span class="text-sm">{{ virement.account_owner }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-sm font-semibold">IBAN:</span>
+                  <span class="text-sm">{{ virement.iban }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-sm font-semibold">Communication:</span>
+                  <brn-popover>
                     <button
-                      class="hover:no-underline font-medium text-sm bg-gray-100 px-3 py-1 rounded-full flex items-center gap-2 text-gray-600 w-full justify-center"
-                      hlmAccordionTrigger
+                      brnPopoverTrigger
+                      class="text-sm truncate max-w-[150px] cursor-pointer hover:text-gray-600 text-left"
                     >
-                      Destinataires multiples
-                      <hlm-icon name="lucideChevronDown" size="sm" />
+                      {{ virement.communication }}
                     </button>
-                    <hlm-accordion-content class="" hlmAccordionContent>
-                      @if (transaction.recipientGroup.length > 0) {
-                      <div class="text-xs text-gray-500 font-medium">
-                        Projets de groupe:
-                      </div>
-                      <div class="space-y-1">
-                        @for (recipient of transaction.recipientGroup; track
-                        recipient.id) { @if (recipient.username !==
-                        state.accountGroup()?.username) {
-                        <div
-                          class="text-sm pl-2 py-0.5 border-l-2 border-blue-400"
-                        >
-                          {{ recipient.username }}
-                        </div>
-                        } }
-                      </div>
-                      } @if (transaction.recipientPrincipal.length > 0) {
-                      <div class="text-xs text-gray-500 font-medium mt-2">
-                        Projets individuels:
-                      </div>
-                      <div class="space-y-1">
-                        @for (recipient of transaction.recipientPrincipal; track
-                        recipient.id) { @if (recipient.username !==
-                        state.accountPrincipal()?.username) {
-                        <div
-                          class="text-sm pl-2 py-0.5 border-l-2 border-green-400"
-                        >
-                          {{ recipient.username }}
-                        </div>
-                        } }
-                      </div>
-                      }
-                    </hlm-accordion-content>
-                  </div>
+                    <div
+                      class="p-2 text-sm max-w-[200px] bg-white rounded shadow-lg"
+                      hlmPopoverContent
+                      *brnPopoverContent="let ctx"
+                    >
+                      {{ virement.communication }}
+                    </div>
+                  </brn-popover>
                 </div>
-              </hlm-td>
-              } @else {
-              <hlm-th class="lg:w-[20%] font-bold text-[10px]">
-                @if(transaction.recipientGroup!.length > 0 &&
-                transaction.recipientGroup![0]) {
-                {{ transaction.recipientGroup![0].username || "" }}
-                } @else if(transaction.recipientPrincipal!.length > 0 &&
-                transaction.recipientPrincipal![0]) {
-                {{ transaction.recipientPrincipal![0].username || "" }}
+                <div class="flex justify-between items-center">
+                  <span class="text-sm font-semibold">Comm. structurée:</span>
+                  <span class="text-sm">{{
+                      virement.structured_communication
+                    }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-sm font-semibold">Montant ajouté:</span>
+                  <span class="text-sm">{{
+                      virement.amount_htva | euroFormat
+                    }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-sm font-semibold">Statut:</span>
+                  <span
+                    class="text-sm px-2 py-1 rounded-full cursor-pointer"
+                    [ngClass]="{
+                  'bg-green-100 text-green-800':
+                    virement.status === 'ACCEPTED' ||
+                    virement.status === 'PAID',
+                  'bg-yellow-100 text-yellow-800':
+                    virement.status === 'PENDING',
+                  'bg-red-100 text-red-800': virement.status === 'REJECTED'
+                }"
+                  >
+                @if (virement.status === 'REJECTED') {
+                  <brn-popover>
+                  <button brnPopoverTrigger class="flex items-center gap-1">
+                    Rejeté
+                    <hlm-icon name="lucideBell" size="sm" />
+                  </button>
+                  <div
+                    hlmPopoverContent
+                    class="p-2 text-sm bg-white rounded shadow-lg"
+                    *brnPopoverContent="let ctx"
+                  >
+                    {{
+                      virement.rejected_reason === null
+                        ? "Aucun motif de rejet"
+                        : virement.rejected_reason
+                    }}
+                  </div>
+                </brn-popover>
                 } @else {
-                {{ "" }}
+                  {{
+                    virement.status === "ACCEPTED"
+                      ? "Accepté"
+                      : virement.status === "PAID"
+                        ? "Payé"
+                        : "En attente"
+                  }}
                 }
-              </hlm-th>
-              }
+              </span>
+                </div>
+              </div>
 
-              <hlm-th class="lg:w-[20%] font-bold text-[10px]">
-                <brn-popover>
-                  <button
-                    brnPopoverTrigger
-                    class="truncate block max-w-[150px] cursor-pointer hover:text-gray-600 text-left"
-                  >
-                    {{ transaction.communication }}
-                  </button>
-                  <div
-                    class="p-2 text-[10px] max-w-[200px] bg-white rounded shadow-lg"
-                    hlmPopoverContent
-                    *brnPopoverContent="let ctx"
-                  >
-                    {{ transaction.communication }}
-                  </div>
-                </brn-popover>
-              </hlm-th>
-              <hlm-th class="lg:w-[20%] font-bold text-[10px] text-red-400"
-                >-{{
-                  transaction.amount *
-                    (transaction.recipientGroup.length +
-                      transaction.recipientPrincipal.length) | euroFormat
-                }}</hlm-th
+              <div class="hidden lg:flex lg:justify-between w-full">
+                <hlm-td class="lg:w-[11%] text-sm">{{
+                    virement.created_at | date : "dd/MM/yyyy"
+                  }}</hlm-td>
+                <hlm-td class="lg:w-[11%] text-sm">{{
+                    virement.account_owner
+                  }}</hlm-td>
+                <hlm-td class="lg:w-[13%] text-sm">{{ virement.iban }}</hlm-td>
+                <hlm-td class="lg:w-[13%] text-sm">
+                  <brn-popover>
+                    <button
+                      brnPopoverTrigger
+                      class="truncate block max-w-[150px] cursor-pointer hover:text-gray-600 text-left"
+                    >
+                      {{ virement.communication }}
+                    </button>
+                    <div
+                      class="p-2 text-[10px] max-w-[200px] bg-white rounded shadow-lg"
+                      hlmPopoverContent
+                      *brnPopoverContent="let ctx"
+                    >
+                      {{ virement.communication }}
+                    </div>
+                  </brn-popover>
+                </hlm-td>
+                <hlm-td class="lg:w-[13%] text-sm">{{
+                    virement.structured_communication
+                  }}</hlm-td>
+                <hlm-td class="lg:w-[11%] text-sm">{{
+                    virement.amount_htva | euroFormat
+                  }}</hlm-td>
+
+                <hlm-td class="lg:w-[9%] text-sm">
+              <span
+                class="px-2 py-1 rounded-full cursor-pointer"
+                [ngClass]="{
+                  'bg-green-100 text-green-800':
+                    virement.status === 'ACCEPTED' ||
+                    virement.status === 'PAID',
+                  'bg-yellow-100 text-yellow-800':
+                    virement.status === 'PENDING',
+                  'bg-red-100 text-red-800': virement.status === 'REJECTED'
+                }"
               >
-            </div>
-          </hlm-trow>
-          }
-        </div>
-      </hlm-table>
+                @if (virement.status === 'REJECTED') {
+                  <brn-popover>
+                  <button brnPopoverTrigger class="flex items-center gap-1">
+                    Rejeté
+                    <hlm-icon name="lucideBell" size="sm" />
+                  </button>
+                  <div
+                    hlmPopoverContent
+                    class="p-2 text-sm bg-white rounded shadow-lg"
+                    *brnPopoverContent="let ctx"
+                  >
+                    {{ virement.rejected_reason }}
+                  </div>
+                </brn-popover>
+                } @else {
+                  {{
+                    virement.status === "ACCEPTED"
+                      ? "Accepté"
+                      : virement.status === "PAID"
+                        ? "Payé"
+                        : "En attente"
+                  }}
+                }
+              </span>
+                </hlm-td>
+              </div>
+            </hlm-trow>
+          } }} @else if (state.accountGroup()) { @for(virement of
+          state.accountGroup()?.virementSepa; track virement.id) {
+          @if (virement.transaction_type == "INCOMING") {
+            <hlm-trow
+              class="flex flex-col lg:flex-row lg:justify-between border-b lg:border-none p-2 lg:p-0"
+            >
+              <div class="flex flex-col gap-2 lg:hidden">
+                <div class="flex justify-between items-center">
+                  <span class="text-sm font-semibold">Date:</span>
+                  <span class="text-sm">{{
+                      virement.created_at | date : "dd/MM/yyyy"
+                    }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-sm font-semibold">Titulaire:</span>
+                  <span class="text-sm">{{ virement.account_owner }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-sm font-semibold">IBAN:</span>
+                  <span class="text-sm">{{ virement.iban }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-sm font-semibold">Communication:</span>
+                  <brn-popover>
+                    <button
+                      brnPopoverTrigger
+                      class="text-sm truncate max-w-[150px] cursor-pointer hover:text-gray-600 text-left"
+                    >
+                      {{ virement.communication }}
+                    </button>
+                    <div
+                      class="p-2 text-sm max-w-[200px] bg-white rounded shadow-lg"
+                      hlmPopoverContent
+                      *brnPopoverContent="let ctx"
+                    >
+                      {{ virement.communication }}
+                    </div>
+                  </brn-popover>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-sm font-semibold">Comm. structurée:</span>
+                  <span class="text-sm">{{
+                      virement.structured_communication
+                    }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-sm font-semibold">Montant débité:</span>
+                  <span class="text-sm">{{
+                      virement.amount_htva | euroFormat
+                    }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-sm font-semibold">Statut:</span>
+                  <span
+                    class="text-sm px-2 py-1 rounded-full cursor-pointer"
+                    [ngClass]="{
+                  'bg-green-100 text-green-800':
+                    virement.status === 'ACCEPTED' ||
+                    virement.status === 'PAID',
+                  'bg-yellow-100 text-yellow-800':
+                    virement.status === 'PENDING',
+                  'bg-red-100 text-red-800': virement.status === 'REJECTED'
+                }"
+                  >
+                @if (virement.status === 'REJECTED') {
+                  <brn-popover>
+                  <button brnPopoverTrigger class="flex items-center gap-1">
+                    Rejeté
+                    <hlm-icon name="lucideBell" size="sm" />
+                  </button>
+                  <div
+                    hlmPopoverContent
+                    class="p-2 text-sm bg-white rounded shadow-lg"
+                    *brnPopoverContent="let ctx"
+                  >
+                    {{ virement.rejected_reason }}
+                  </div>
+                </brn-popover>
+                } @else {
+                  {{
+                    virement.status === "ACCEPTED"
+                      ? "Accepté"
+                      : virement.status === "PAID"
+                        ? "Payé"
+                        : "En attente"
+                  }}
+                }
+              </span>
+                </div>
+              </div>
 
-      @if (state.transactionSender()?.length) {
+              <div class="hidden lg:flex lg:justify-between w-full">
+                <hlm-td class="lg:w-[11%] text-sm">{{
+                    virement.created_at | date : "dd/MM/yyyy"
+                  }}</hlm-td>
+                <hlm-td class="lg:w-[11%] text-sm">{{
+                    virement.account_owner
+                  }}</hlm-td>
+                <hlm-td class="lg:w-[13%] text-sm">{{ virement.iban }}</hlm-td>
+                <hlm-td class="lg:w-[13%] text-sm">
+                  <brn-popover>
+                    <button
+                      brnPopoverTrigger
+                      class="truncate block max-w-[150px] cursor-pointer hover:text-gray-600 text-left"
+                    >
+                      {{ virement.communication }}
+                    </button>
+                    <div
+                      class="p-2 text-[10px] max-w-[200px] bg-white rounded shadow-lg"
+                      hlmPopoverContent
+                      *brnPopoverContent="let ctx"
+                    >
+                      {{ virement.communication }}
+                    </div>
+                  </brn-popover>
+                </hlm-td>
+                <hlm-td class="lg:w-[13%] text-sm">{{
+                    virement.structured_communication
+                  }}</hlm-td>
+                <hlm-td class="lg:w-[11%] text-sm">{{
+                    virement.amount_htva | euroFormat
+                  }}</hlm-td>
+                <hlm-td class="lg:w-[9%] text-sm">
+              <span
+                class="px-2 py-1 rounded-full cursor-pointer"
+                [ngClass]="{
+                  'bg-green-100 text-green-800':
+                    virement.status === 'ACCEPTED' ||
+                    virement.status === 'PAID',
+                  'bg-yellow-100 text-yellow-800':
+                    virement.status === 'PENDING',
+                  'bg-red-100 text-red-800': virement.status === 'REJECTED'
+                }"
+              >
+                @if (virement.status === 'REJECTED') {
+                  <brn-popover>
+                  <button brnPopoverTrigger class="flex items-center gap-1">
+                    Rejeté
+                    <hlm-icon name="lucideBell" size="sm" />
+                  </button>
+                  <div
+                    hlmPopoverContent
+                    class="p-2 text-sm bg-white rounded shadow-lg"
+                    *brnPopoverContent="let ctx"
+                  >
+                    {{ virement.rejected_reason }}
+                  </div>
+                </brn-popover>
+                } @else {
+                  {{
+                    virement.status === "ACCEPTED"
+                      ? "Accepté"
+                      : virement.status === "PAID"
+                        ? "Payé"
+                        : "En attente"
+                  }}
+                }
+              </span>
+                </hlm-td>
+              </div>
+            </hlm-trow>
+          } }}
+      </div>
+    </hlm-table>
+
+    @if (state.accountPrincipal()?.virementSepa?.length ||
+    state.accountGroup()?.virementSepa?.length) {
       <nav hlmPagination class="mt-4 flex justify-center">
         <ul
           hlmPaginationContent
@@ -899,244 +1033,62 @@
           <li hlmPaginationItem class="md:mx-1">
             <button
               class="px-3 py-1.5 text-sm font-medium transition-colors hover:bg-gray-100 rounded-md"
-              [class.opacity-50]="pagination.sender.currentPage() === 1"
-              [disabled]="pagination.sender.currentPage() === 1"
+              [class.opacity-50]="pagination.virement.currentPage() === 1"
+              [disabled]="pagination.virement.currentPage() === 1"
               (click)="
-                pagination.sender.currentPage() > 1 &&
-                  onPageChangeSender(pagination.sender.currentPage() - 1)
-              "
+              pagination.virement.currentPage() > 1 &&
+                onPageChangeVirement(pagination.virement.currentPage() - 1)
+            "
             >
               Précédent
             </button>
           </li>
 
-          @for (page of getVisiblePages(pagination.sender.currentPage(),
-          pagination.sender.totalPages()); track $index) { @if (page ===
+          @for (page of getVisiblePages(pagination.virement.currentPage(),
+            pagination.virement.totalPages()); track $index) { @if (page ===
           'ellipsis') {
-          <li hlmPaginationItem class="md:mx-1">
-            <span class="px-3 py-1.5">...</span>
-          </li>
+            <li hlmPaginationItem class="md:mx-1">
+              <span class="px-3 py-1.5">...</span>
+            </li>
           } @else {
-          <li hlmPaginationItem class="md:mx-1">
-            <button
-              class="min-w-[40px] h-9 px-3 py-1.5 text-sm font-medium transition-colors rounded-md"
-              [class.bg-zinc-800]="pagination.sender.currentPage() === page"
-              [class.text-white]="pagination.sender.currentPage() === page"
-              [class.hover:bg-gray-100]="
-                pagination.sender.currentPage() !== page
-              "
-              (click)="onPageChangeSender(page)"
-            >
-              {{ page }}
-            </button>
-          </li>
+            <li hlmPaginationItem class="md:mx-1">
+              <button
+                class="min-w-[40px] h-9 px-3 py-1.5 text-sm font-medium transition-colors rounded-md"
+                [class.bg-zinc-800]="pagination.virement.currentPage() === page"
+                [class.text-white]="pagination.virement.currentPage() === page"
+                [class.hover:bg-gray-100]="
+              pagination.virement.currentPage() !== page
+            "
+                (click)="onPageChangeVirement(page)"
+              >
+                {{ page }}
+              </button>
+            </li>
           } }
 
           <li hlmPaginationItem class="md:mx-1">
             <button
               class="px-3 py-1.5 text-sm font-medium transition-colors hover:bg-gray-100 rounded-md"
               [class.opacity-50]="
-                pagination.sender.currentPage() ===
-                pagination.sender.totalPages()
-              "
+              pagination.virement.currentPage() ===
+              pagination.virement.totalPages()
+            "
               [disabled]="
-                pagination.sender.currentPage() ===
-                pagination.sender.totalPages()
-              "
+              pagination.virement.currentPage() ===
+              pagination.virement.totalPages()
+            "
               (click)="
-                pagination.sender.currentPage() <
-                  pagination.sender.totalPages() &&
-                  onPageChangeSender(pagination.sender.currentPage() + 1)
-              "
+              pagination.virement.currentPage() <
+                pagination.virement.totalPages() &&
+                onPageChangeVirement(pagination.virement.currentPage() + 1)
+            "
             >
               Suivant
             </button>
           </li>
         </ul>
       </nav>
-      }
-    </div>
-
-    <div class="flex flex-col gap-5">
-      <hlm-table class="overflow-x-auto p-4 bg-white rounded-xl shadow-lg">
-        <p class="text-lg font-semibold px-4 mb-2">Transfert entrant</p>
-        <div class="overflow-auto touch-none w-full">
-          <hlm-trow class="hidden lg:flex lg:justify-between">
-            <hlm-th class="lg:w-[20%] text-sm font-semibold">Date</hlm-th>
-            <hlm-th class="lg:w-[20%] text-sm font-semibold">Expéditeur</hlm-th>
-            <hlm-th class="lg:w-[20%] text-sm font-semibold"
-              >Destinataire</hlm-th
-            >
-            <hlm-th class="lg:w-[20%] text-sm font-semibold"
-              >Communication</hlm-th
-            >
-            <hlm-th class="lg:w-[20%] text-sm font-semibold">Montant</hlm-th>
-          </hlm-trow>
-
-          @for (transaction of state.transactionRecipient(); track
-          transaction.id) {
-          <hlm-trow
-            class="flex flex-col lg:flex-row lg:justify-between border-b lg:border-none p-2 lg:p-0"
-          >
-            <div class="flex flex-col gap-2 lg:hidden">
-              <div class="flex justify-between items-center">
-                <span class="text-sm font-semibold">Date:</span>
-                <span class="text-sm">{{
-                  transaction.date | date : "dd/MM/yyyy"
-                }}</span>
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-sm font-semibold">Expéditeur:</span>
-                <span class="text-sm">
-                  @if(transaction.senderGroup !== null) {
-                  {{ transaction.senderGroup.username || "" }}
-                  } @else if(transaction.senderPrincipal !== null) {
-                  {{ transaction.senderPrincipal.username || "" }}
-                  } @else {
-                  {{ "" }}
-                  }
-                </span>
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-sm font-semibold">Destinataire:</span>
-                <span class="text-sm">{{
-                  state.accountPrincipal()?.username ||
-                    state.accountGroup()?.username ||
-                    ""
-                }}</span>
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-sm font-semibold">Communication:</span>
-                <brn-popover>
-                  <button
-                    brnPopoverTrigger
-                    class="text-sm truncate max-w-[150px] cursor-pointer hover:text-gray-600 text-left"
-                  >
-                    {{ transaction.communication }}
-                  </button>
-                  <div
-                    class="p-2 text-sm max-w-[200px] bg-white rounded shadow-lg"
-                    hlmPopoverContent
-                    *brnPopoverContent="let ctx"
-                  >
-                    {{ transaction.communication }}
-                  </div>
-                </brn-popover>
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-sm font-semibold">Montant:</span>
-                <span class="text-sm text-green-400">{{
-                  transaction.amount | euroFormat
-                }}</span>
-              </div>
-            </div>
-
-            <div class="hidden lg:flex lg:justify-between w-full">
-              <hlm-td class="lg:w-[20%] text-sm">{{
-                transaction.date | date : "dd/MM/yyyy"
-              }}</hlm-td>
-              <hlm-td class="lg:w-[20%] text-sm">{{
-                transaction.senderPrincipal !== null
-                  ? transaction?.senderPrincipal?.username || ""
-                  : transaction?.senderGroup?.username || ""
-              }}</hlm-td>
-              <hlm-td class="lg:w-[20%] text-sm">{{
-                state.accountPrincipal()?.username ||
-                  state.accountGroup()?.username ||
-                  ""
-              }}</hlm-td>
-              <hlm-td class="lg:w-[20%] font-bold text-[10px]">
-                <brn-popover>
-                  <button
-                    brnPopoverTrigger
-                    class="truncate block max-w-[150px] cursor-pointer hover:text-gray-600 text-left"
-                  >
-                    {{ transaction.communication }}
-                  </button>
-                  <div
-                    class="p-2 text-[10px] max-w-[200px] bg-white rounded shadow-lg"
-                    hlmPopoverContent
-                    *brnPopoverContent="let ctx"
-                  >
-                    {{ transaction.communication }}
-                  </div>
-                </brn-popover>
-              </hlm-td>
-              <hlm-td class="lg:w-[20%] font-bold text-[10px] text-green-400">{{
-                transaction.amount | euroFormat
-              }}</hlm-td>
-            </div>
-          </hlm-trow>
-          }
-        </div>
-      </hlm-table>
-
-      @if (state.transactionRecipient()?.length) {
-      <nav hlmPagination class="mt-4 flex justify-center">
-        <ul
-          hlmPaginationContent
-          class="flex flex-wrap gap-1 justify-center items-center"
-        >
-          <li hlmPaginationItem class="md:mx-1">
-            <button
-              class="px-3 py-1.5 text-sm font-medium transition-colors hover:bg-gray-100 rounded-md"
-              [class.opacity-50]="pagination.recipient.currentPage() === 1"
-              [disabled]="pagination.recipient.currentPage() === 1"
-              (click)="
-                pagination.recipient.currentPage() > 1 &&
-                  onPageChangeRecipient(pagination.recipient.currentPage() - 1)
-              "
-            >
-              Précédent
-            </button>
-          </li>
-
-          @for (page of getVisiblePages(pagination.recipient.currentPage(),
-          pagination.recipient.totalPages()); track $index) { @if (page ===
-          'ellipsis') {
-          <li hlmPaginationItem class="md:mx-1">
-            <span class="px-3 py-1.5">...</span>
-          </li>
-          } @else {
-          <li hlmPaginationItem class="md:mx-1">
-            <button
-              class="min-w-[40px] h-9 px-3 py-1.5 text-sm font-medium transition-colors rounded-md"
-              [class.bg-zinc-800]="pagination.recipient.currentPage() === page"
-              [class.text-white]="pagination.recipient.currentPage() === page"
-              [class.hover:bg-gray-100]="
-                pagination.recipient.currentPage() !== page
-              "
-              (click)="onPageChangeRecipient(page)"
-            >
-              {{ page }}
-            </button>
-          </li>
-          } }
-
-          <li hlmPaginationItem class="md:mx-1">
-            <button
-              class="px-3 py-1.5 text-sm font-medium transition-colors hover:bg-gray-100 rounded-md"
-              [class.opacity-50]="
-                pagination.recipient.currentPage() ===
-                pagination.recipient.totalPages()
-              "
-              [disabled]="
-                pagination.recipient.currentPage() ===
-                pagination.recipient.totalPages()
-              "
-              (click)="
-                pagination.recipient.currentPage() <
-                  pagination.recipient.totalPages() &&
-                  onPageChangeRecipient(pagination.recipient.currentPage() + 1)
-              "
-            >
-              Suivant
-            </button>
-          </li>
-        </ul>
-      </nav>
-      }
-    </div>
+    }
   </div>
 
   <div class="flex flex-col gap-5">
@@ -1555,30 +1507,25 @@
     </hlm-table>
   </div>
 
+
   <div class="flex flex-col gap-5">
     <hlm-table class="overflow-x-auto p-4 bg-white rounded-xl shadow-lg">
-      <p class="text-lg font-semibold px-4 mb-2">Virement entrant </p>
+      <p class="text-lg font-semibold px-4 mb-2">Transfert entrant</p>
       <div class="overflow-auto touch-none w-full">
         <hlm-trow class="hidden lg:flex lg:justify-between">
-          <hlm-th class="lg:w-[11%] text-sm font-semibold">Date</hlm-th>
-          <hlm-th class="lg:w-[11%] text-sm font-semibold">Titulaire</hlm-th>
-          <hlm-th class="lg:w-[13%] text-sm font-semibold">IBAN</hlm-th>
-          <hlm-th class="lg:w-[13%] text-sm font-semibold"
+          <hlm-th class="lg:w-[20%] text-sm font-semibold">Date</hlm-th>
+          <hlm-th class="lg:w-[20%] text-sm font-semibold">Expéditeur</hlm-th>
+          <hlm-th class="lg:w-[20%] text-sm font-semibold"
+          >Destinataire</hlm-th
+          >
+          <hlm-th class="lg:w-[20%] text-sm font-semibold"
           >Communication</hlm-th
           >
-          <hlm-th class="lg:w-[13%] text-sm font-semibold"
-          >Comm. structurée</hlm-th
-          >
-          <hlm-th class="lg:w-[11%] text-sm font-semibold"
-          >Montant ajouté</hlm-th
-          >
-
-          <hlm-th class="lg:w-[9%] text-sm font-semibold">Statut</hlm-th>
+          <hlm-th class="lg:w-[20%] text-sm font-semibold">Montant</hlm-th>
         </hlm-trow>
 
-        @if(state.accountPrincipal()) { @for(virement of
-          state.accountPrincipal()?.virementSepa; track virement.id) {
-          @if (virement.transaction_type == "INCOMING") {
+        @for (transaction of state.transactionRecipient(); track
+          transaction.id) {
           <hlm-trow
             class="flex flex-col lg:flex-row lg:justify-between border-b lg:border-none p-2 lg:p-0"
           >
@@ -1586,16 +1533,28 @@
               <div class="flex justify-between items-center">
                 <span class="text-sm font-semibold">Date:</span>
                 <span class="text-sm">{{
-                    virement.created_at | date : "dd/MM/yyyy"
+                    transaction.date | date : "dd/MM/yyyy"
                   }}</span>
               </div>
               <div class="flex justify-between items-center">
-                <span class="text-sm font-semibold">Titulaire:</span>
-                <span class="text-sm">{{ virement.account_owner }}</span>
+                <span class="text-sm font-semibold">Expéditeur:</span>
+                <span class="text-sm">
+                  @if(transaction.senderGroup !== null) {
+                    {{ transaction.senderGroup.username || "" }}
+                  } @else if(transaction.senderPrincipal !== null) {
+                    {{ transaction.senderPrincipal.username || "" }}
+                  } @else {
+                    {{ "" }}
+                  }
+                </span>
               </div>
               <div class="flex justify-between items-center">
-                <span class="text-sm font-semibold">IBAN:</span>
-                <span class="text-sm">{{ virement.iban }}</span>
+                <span class="text-sm font-semibold">Destinataire:</span>
+                <span class="text-sm">{{
+                    state.accountPrincipal()?.username ||
+                    state.accountGroup()?.username ||
+                    ""
+                  }}</span>
               </div>
               <div class="flex justify-between items-center">
                 <span class="text-sm font-semibold">Communication:</span>
@@ -1604,311 +1563,66 @@
                     brnPopoverTrigger
                     class="text-sm truncate max-w-[150px] cursor-pointer hover:text-gray-600 text-left"
                   >
-                    {{ virement.communication }}
+                    {{ transaction.communication }}
                   </button>
                   <div
                     class="p-2 text-sm max-w-[200px] bg-white rounded shadow-lg"
                     hlmPopoverContent
                     *brnPopoverContent="let ctx"
                   >
-                    {{ virement.communication }}
+                    {{ transaction.communication }}
                   </div>
                 </brn-popover>
               </div>
               <div class="flex justify-between items-center">
-                <span class="text-sm font-semibold">Comm. structurée:</span>
-                <span class="text-sm">{{
-                    virement.structured_communication
+                <span class="text-sm font-semibold">Montant:</span>
+                <span class="text-sm text-green-400">{{
+                    transaction.amount | euroFormat
                   }}</span>
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-sm font-semibold">Montant ajouté:</span>
-                <span class="text-sm">{{
-                    virement.amount_htva | euroFormat
-                  }}</span>
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-sm font-semibold">Statut:</span>
-                <span
-                  class="text-sm px-2 py-1 rounded-full cursor-pointer"
-                  [ngClass]="{
-                  'bg-green-100 text-green-800':
-                    virement.status === 'ACCEPTED' ||
-                    virement.status === 'PAID',
-                  'bg-yellow-100 text-yellow-800':
-                    virement.status === 'PENDING',
-                  'bg-red-100 text-red-800': virement.status === 'REJECTED'
-                }"
-                >
-                @if (virement.status === 'REJECTED') {
-                  <brn-popover>
-                  <button brnPopoverTrigger class="flex items-center gap-1">
-                    Rejeté
-                    <hlm-icon name="lucideBell" size="sm" />
-                  </button>
-                  <div
-                    hlmPopoverContent
-                    class="p-2 text-sm bg-white rounded shadow-lg"
-                    *brnPopoverContent="let ctx"
-                  >
-                    {{
-                      virement.rejected_reason === null
-                        ? "Aucun motif de rejet"
-                        : virement.rejected_reason
-                    }}
-                  </div>
-                </brn-popover>
-                } @else {
-                  {{
-                    virement.status === "ACCEPTED"
-                      ? "Accepté"
-                      : virement.status === "PAID"
-                        ? "Payé"
-                        : "En attente"
-                  }}
-                }
-              </span>
               </div>
             </div>
 
             <div class="hidden lg:flex lg:justify-between w-full">
-              <hlm-td class="lg:w-[11%] text-sm">{{
-                  virement.created_at | date : "dd/MM/yyyy"
+              <hlm-td class="lg:w-[20%] text-sm">{{
+                  transaction.date | date : "dd/MM/yyyy"
                 }}</hlm-td>
-              <hlm-td class="lg:w-[11%] text-sm">{{
-                  virement.account_owner
+              <hlm-td class="lg:w-[20%] text-sm">{{
+                  transaction.senderPrincipal !== null
+                    ? transaction?.senderPrincipal?.username || ""
+                    : transaction?.senderGroup?.username || ""
                 }}</hlm-td>
-              <hlm-td class="lg:w-[13%] text-sm">{{ virement.iban }}</hlm-td>
-              <hlm-td class="lg:w-[13%] text-sm">
+              <hlm-td class="lg:w-[20%] text-sm">{{
+                  state.accountPrincipal()?.username ||
+                  state.accountGroup()?.username ||
+                  ""
+                }}</hlm-td>
+              <hlm-td class="lg:w-[20%] font-bold text-[10px]">
                 <brn-popover>
                   <button
                     brnPopoverTrigger
                     class="truncate block max-w-[150px] cursor-pointer hover:text-gray-600 text-left"
                   >
-                    {{ virement.communication }}
+                    {{ transaction.communication }}
                   </button>
                   <div
                     class="p-2 text-[10px] max-w-[200px] bg-white rounded shadow-lg"
                     hlmPopoverContent
                     *brnPopoverContent="let ctx"
                   >
-                    {{ virement.communication }}
+                    {{ transaction.communication }}
                   </div>
                 </brn-popover>
               </hlm-td>
-              <hlm-td class="lg:w-[13%] text-sm">{{
-                  virement.structured_communication
+              <hlm-td class="lg:w-[20%] font-bold text-[10px] text-green-400">{{
+                  transaction.amount | euroFormat
                 }}</hlm-td>
-              <hlm-td class="lg:w-[11%] text-sm">{{
-                  virement.amount_htva | euroFormat
-                }}</hlm-td>
-
-              <hlm-td class="lg:w-[9%] text-sm">
-              <span
-                class="px-2 py-1 rounded-full cursor-pointer"
-                [ngClass]="{
-                  'bg-green-100 text-green-800':
-                    virement.status === 'ACCEPTED' ||
-                    virement.status === 'PAID',
-                  'bg-yellow-100 text-yellow-800':
-                    virement.status === 'PENDING',
-                  'bg-red-100 text-red-800': virement.status === 'REJECTED'
-                }"
-              >
-                @if (virement.status === 'REJECTED') {
-                  <brn-popover>
-                  <button brnPopoverTrigger class="flex items-center gap-1">
-                    Rejeté
-                    <hlm-icon name="lucideBell" size="sm" />
-                  </button>
-                  <div
-                    hlmPopoverContent
-                    class="p-2 text-sm bg-white rounded shadow-lg"
-                    *brnPopoverContent="let ctx"
-                  >
-                    {{ virement.rejected_reason }}
-                  </div>
-                </brn-popover>
-                } @else {
-                  {{
-                    virement.status === "ACCEPTED"
-                      ? "Accepté"
-                      : virement.status === "PAID"
-                        ? "Payé"
-                        : "En attente"
-                  }}
-                }
-              </span>
-              </hlm-td>
             </div>
           </hlm-trow>
-        } }} @else if (state.accountGroup()) { @for(virement of
-          state.accountGroup()?.virementSepa; track virement.id) {
-          @if (virement.transaction_type == "INCOMING") {
-          <hlm-trow
-            class="flex flex-col lg:flex-row lg:justify-between border-b lg:border-none p-2 lg:p-0"
-          >
-            <div class="flex flex-col gap-2 lg:hidden">
-              <div class="flex justify-between items-center">
-                <span class="text-sm font-semibold">Date:</span>
-                <span class="text-sm">{{
-                    virement.created_at | date : "dd/MM/yyyy"
-                  }}</span>
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-sm font-semibold">Titulaire:</span>
-                <span class="text-sm">{{ virement.account_owner }}</span>
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-sm font-semibold">IBAN:</span>
-                <span class="text-sm">{{ virement.iban }}</span>
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-sm font-semibold">Communication:</span>
-                <brn-popover>
-                  <button
-                    brnPopoverTrigger
-                    class="text-sm truncate max-w-[150px] cursor-pointer hover:text-gray-600 text-left"
-                  >
-                    {{ virement.communication }}
-                  </button>
-                  <div
-                    class="p-2 text-sm max-w-[200px] bg-white rounded shadow-lg"
-                    hlmPopoverContent
-                    *brnPopoverContent="let ctx"
-                  >
-                    {{ virement.communication }}
-                  </div>
-                </brn-popover>
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-sm font-semibold">Comm. structurée:</span>
-                <span class="text-sm">{{
-                    virement.structured_communication
-                  }}</span>
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-sm font-semibold">Montant débité:</span>
-                <span class="text-sm">{{
-                    virement.amount_htva | euroFormat
-                  }}</span>
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-sm font-semibold">Statut:</span>
-                <span
-                  class="text-sm px-2 py-1 rounded-full cursor-pointer"
-                  [ngClass]="{
-                  'bg-green-100 text-green-800':
-                    virement.status === 'ACCEPTED' ||
-                    virement.status === 'PAID',
-                  'bg-yellow-100 text-yellow-800':
-                    virement.status === 'PENDING',
-                  'bg-red-100 text-red-800': virement.status === 'REJECTED'
-                }"
-                >
-                @if (virement.status === 'REJECTED') {
-                  <brn-popover>
-                  <button brnPopoverTrigger class="flex items-center gap-1">
-                    Rejeté
-                    <hlm-icon name="lucideBell" size="sm" />
-                  </button>
-                  <div
-                    hlmPopoverContent
-                    class="p-2 text-sm bg-white rounded shadow-lg"
-                    *brnPopoverContent="let ctx"
-                  >
-                    {{ virement.rejected_reason }}
-                  </div>
-                </brn-popover>
-                } @else {
-                  {{
-                    virement.status === "ACCEPTED"
-                      ? "Accepté"
-                      : virement.status === "PAID"
-                        ? "Payé"
-                        : "En attente"
-                  }}
-                }
-              </span>
-              </div>
-            </div>
-
-            <div class="hidden lg:flex lg:justify-between w-full">
-              <hlm-td class="lg:w-[11%] text-sm">{{
-                  virement.created_at | date : "dd/MM/yyyy"
-                }}</hlm-td>
-              <hlm-td class="lg:w-[11%] text-sm">{{
-                  virement.account_owner
-                }}</hlm-td>
-              <hlm-td class="lg:w-[13%] text-sm">{{ virement.iban }}</hlm-td>
-              <hlm-td class="lg:w-[13%] text-sm">
-                <brn-popover>
-                  <button
-                    brnPopoverTrigger
-                    class="truncate block max-w-[150px] cursor-pointer hover:text-gray-600 text-left"
-                  >
-                    {{ virement.communication }}
-                  </button>
-                  <div
-                    class="p-2 text-[10px] max-w-[200px] bg-white rounded shadow-lg"
-                    hlmPopoverContent
-                    *brnPopoverContent="let ctx"
-                  >
-                    {{ virement.communication }}
-                  </div>
-                </brn-popover>
-              </hlm-td>
-              <hlm-td class="lg:w-[13%] text-sm">{{
-                  virement.structured_communication
-                }}</hlm-td>
-              <hlm-td class="lg:w-[11%] text-sm">{{
-                  virement.amount_htva | euroFormat
-                }}</hlm-td>
-              <hlm-td class="lg:w-[9%] text-sm">
-              <span
-                class="px-2 py-1 rounded-full cursor-pointer"
-                [ngClass]="{
-                  'bg-green-100 text-green-800':
-                    virement.status === 'ACCEPTED' ||
-                    virement.status === 'PAID',
-                  'bg-yellow-100 text-yellow-800':
-                    virement.status === 'PENDING',
-                  'bg-red-100 text-red-800': virement.status === 'REJECTED'
-                }"
-              >
-                @if (virement.status === 'REJECTED') {
-                  <brn-popover>
-                  <button brnPopoverTrigger class="flex items-center gap-1">
-                    Rejeté
-                    <hlm-icon name="lucideBell" size="sm" />
-                  </button>
-                  <div
-                    hlmPopoverContent
-                    class="p-2 text-sm bg-white rounded shadow-lg"
-                    *brnPopoverContent="let ctx"
-                  >
-                    {{ virement.rejected_reason }}
-                  </div>
-                </brn-popover>
-                } @else {
-                  {{
-                    virement.status === "ACCEPTED"
-                      ? "Accepté"
-                      : virement.status === "PAID"
-                        ? "Payé"
-                        : "En attente"
-                  }}
-                }
-              </span>
-              </hlm-td>
-            </div>
-          </hlm-trow>
-        } }}
+        }
       </div>
     </hlm-table>
 
-    @if (state.accountPrincipal()?.virementSepa?.length ||
-    state.accountGroup()?.virementSepa?.length) {
+    @if (state.transactionRecipient()?.length) {
       <nav hlmPagination class="mt-4 flex justify-center">
         <ul
           hlmPaginationContent
@@ -1917,19 +1631,19 @@
           <li hlmPaginationItem class="md:mx-1">
             <button
               class="px-3 py-1.5 text-sm font-medium transition-colors hover:bg-gray-100 rounded-md"
-              [class.opacity-50]="pagination.virement.currentPage() === 1"
-              [disabled]="pagination.virement.currentPage() === 1"
+              [class.opacity-50]="pagination.recipient.currentPage() === 1"
+              [disabled]="pagination.recipient.currentPage() === 1"
               (click)="
-              pagination.virement.currentPage() > 1 &&
-                onPageChangeVirement(pagination.virement.currentPage() - 1)
-            "
+                pagination.recipient.currentPage() > 1 &&
+                  onPageChangeRecipient(pagination.recipient.currentPage() - 1)
+              "
             >
               Précédent
             </button>
           </li>
 
-          @for (page of getVisiblePages(pagination.virement.currentPage(),
-            pagination.virement.totalPages()); track $index) { @if (page ===
+          @for (page of getVisiblePages(pagination.recipient.currentPage(),
+            pagination.recipient.totalPages()); track $index) { @if (page ===
           'ellipsis') {
             <li hlmPaginationItem class="md:mx-1">
               <span class="px-3 py-1.5">...</span>
@@ -1938,12 +1652,12 @@
             <li hlmPaginationItem class="md:mx-1">
               <button
                 class="min-w-[40px] h-9 px-3 py-1.5 text-sm font-medium transition-colors rounded-md"
-                [class.bg-zinc-800]="pagination.virement.currentPage() === page"
-                [class.text-white]="pagination.virement.currentPage() === page"
+                [class.bg-zinc-800]="pagination.recipient.currentPage() === page"
+                [class.text-white]="pagination.recipient.currentPage() === page"
                 [class.hover:bg-gray-100]="
-              pagination.virement.currentPage() !== page
-            "
-                (click)="onPageChangeVirement(page)"
+                pagination.recipient.currentPage() !== page
+              "
+                (click)="onPageChangeRecipient(page)"
               >
                 {{ page }}
               </button>
@@ -1954,18 +1668,18 @@
             <button
               class="px-3 py-1.5 text-sm font-medium transition-colors hover:bg-gray-100 rounded-md"
               [class.opacity-50]="
-              pagination.virement.currentPage() ===
-              pagination.virement.totalPages()
-            "
+                pagination.recipient.currentPage() ===
+                pagination.recipient.totalPages()
+              "
               [disabled]="
-              pagination.virement.currentPage() ===
-              pagination.virement.totalPages()
-            "
+                pagination.recipient.currentPage() ===
+                pagination.recipient.totalPages()
+              "
               (click)="
-              pagination.virement.currentPage() <
-                pagination.virement.totalPages() &&
-                onPageChangeVirement(pagination.virement.currentPage() + 1)
-            "
+                pagination.recipient.currentPage() <
+                  pagination.recipient.totalPages() &&
+                  onPageChangeRecipient(pagination.recipient.currentPage() + 1)
+              "
             >
               Suivant
             </button>
@@ -1974,6 +1688,299 @@
       </nav>
     }
   </div>
+
+  <div class="md:flex md:gap-5 w-full flex flex-col gap-5">
+    <div class="flex flex-col gap-5">
+      <hlm-table class="overflow-x-auto p-4 bg-white rounded-xl shadow-lg">
+        <p class="font-bold px-4 text-sm">Transfert sortant</p>
+        <div class="overflow-auto touch-none w-full">
+          <hlm-trow class="hidden lg:flex lg:justify-between">
+            <hlm-th class="lg:w-[20%] text-sm font-semibold">Date</hlm-th>
+            <hlm-th class="lg:w-[20%] text-sm font-semibold">Expéditeur</hlm-th>
+            <hlm-th class="lg:w-[20%] text-sm font-semibold"
+            >Destinataire</hlm-th
+            >
+            <hlm-th class="lg:w-[20%] text-sm font-semibold"
+            >Communication</hlm-th
+            >
+            <hlm-th class="lg:w-[20%] text-sm font-semibold">Montant</hlm-th>
+          </hlm-trow>
+          @for (transaction of state.transactionSender(); track transaction.id)
+          {
+            <hlm-trow
+              class="flex flex-col lg:flex-row lg:justify-between border-b lg:border-none p-2 lg:p-0"
+            >
+              <div class="flex flex-col gap-2 lg:hidden">
+                <div class="flex justify-between items-center">
+                  <span class="text-sm font-semibold">Date:</span>
+                  <span class="text-sm">{{
+                      transaction.date | date : "dd/MM/yyyy"
+                    }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-sm font-semibold">Expéditeur:</span>
+                  <span class="text-sm">{{
+                      transaction.senderPrincipal !== null
+                        ? transaction.senderPrincipal.username || ""
+                        : transaction.senderGroup.username || ""
+                    }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-sm font-semibold">Destinataire:</span>
+                  @if (transaction.recipientGroup.length > 1 ||
+                  transaction.recipientPrincipal.length > 1 ||
+                  (transaction.recipientGroup.length +
+                    transaction.recipientPrincipal.length > 1)) {
+                    <div class="text-right">
+                  <span
+                    class="text-sm font-semibold text-gray-600 bg-gray-100 px-2 py-1 rounded-full"
+                  >Destinataires multiples</span
+                  >
+                      <div class="mt-2 space-y-1 bg-white p-2 rounded-lg shadow-sm">
+                        @if (transaction.recipientGroup.length > 0) {
+                          <div class="text-xs text-gray-500 font-medium mb-1">
+                            Projets de groupe:
+                          </div>
+                          @for (recipient of transaction.recipientGroup; track
+                            recipient.id) { @if (recipient.username !==
+                          state.accountGroup()?.username ) {
+                            <div class="text-sm pl-2 py-0.5 border-l-2 border-blue-400">
+                              {{ recipient.username }}
+                            </div>
+                          } } } @if (transaction.recipientPrincipal.length > 0) {
+                        <div class="text-xs text-gray-500 font-medium mb-1 mt-2">
+                          Projets individuels:
+                        </div>
+                        @for (recipient of transaction.recipientPrincipal; track
+                          recipient.id) { @if (recipient.username !==
+                        state.accountPrincipal()?.username) {
+                          <div
+                            class="text-sm pl-2 py-0.5 border-l-2 border-green-400"
+                          >
+                            {{ recipient.username }}
+                          </div>
+                        } } }
+                      </div>
+                    </div>
+                  } @else {
+                    <span class="text-sm">
+                  @if(transaction.recipientGroup!.length > 0 &&
+                  transaction.recipientGroup[0]) {
+                    {{ transaction.recipientGroup[0].username || "" }}
+                  } @else if(transaction.recipientPrincipal!.length > 0 &&
+                  transaction.recipientPrincipal[0]) {
+                    {{ transaction.recipientPrincipal[0].username || "" }}
+                  } @else {
+                    {{ "" }}
+                  }
+                </span>
+                  }
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-sm font-semibold">Communication:</span>
+                  <brn-popover>
+                    <button
+                      brnPopoverTrigger
+                      class="text-sm truncate max-w-[150px] cursor-pointer hover:text-gray-600 text-left"
+                    >
+                      {{ transaction.communication }}
+                    </button>
+                    <div
+                      class="p-2 text-sm max-w-[200px] bg-white rounded shadow-lg"
+                      hlmPopoverContent
+                      *brnPopoverContent="let ctx"
+                    >
+                      {{ transaction.communication }}
+                    </div>
+                  </brn-popover>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-sm font-semibold">Montant:</span>
+                  <span class="text-sm text-red-400"
+                  >-{{
+                      transaction.amount *
+                      (transaction.recipientGroup.length +
+                        transaction.recipientPrincipal.length) | euroFormat
+                    }}</span
+                  >
+                </div>
+              </div>
+
+              <div class="hidden lg:flex lg:justify-between w-full">
+                <hlm-td class="lg:w-[20%] text-sm">{{
+                    transaction.date | date : "dd/MM/yyyy"
+                  }}</hlm-td>
+                <hlm-td class="lg:w-[20%] text-sm">{{
+                    transaction.senderPrincipal !== null
+                      ? transaction.senderPrincipal.username || ""
+                      : transaction.senderGroup.username || ""
+                  }}</hlm-td>
+
+                @if (transaction.recipientGroup.length > 1 ||
+                transaction.recipientPrincipal.length > 1 ||
+                (transaction.recipientGroup.length +
+                  transaction.recipientPrincipal.length > 1)) {
+                  <hlm-td class="lg:w-[20%]">
+                    <div hlmAccordion>
+                      <div class="border-b-0" hlmAccordionItem>
+                        <button
+                          class="hover:no-underline font-medium text-sm bg-gray-100 px-3 py-1 rounded-full flex items-center gap-2 text-gray-600 w-full justify-center"
+                          hlmAccordionTrigger
+                        >
+                          Destinataires multiples
+                          <hlm-icon name="lucideChevronDown" size="sm" />
+                        </button>
+                        <hlm-accordion-content class="" hlmAccordionContent>
+                          @if (transaction.recipientGroup.length > 0) {
+                            <div class="text-xs text-gray-500 font-medium">
+                              Projets de groupe:
+                            </div>
+                            <div class="space-y-1">
+                              @for (recipient of transaction.recipientGroup; track
+                                recipient.id) { @if (recipient.username !==
+                              state.accountGroup()?.username) {
+                                <div
+                                  class="text-sm pl-2 py-0.5 border-l-2 border-blue-400"
+                                >
+                                  {{ recipient.username }}
+                                </div>
+                              } }
+                            </div>
+                          } @if (transaction.recipientPrincipal.length > 0) {
+                          <div class="text-xs text-gray-500 font-medium mt-2">
+                            Projets individuels:
+                          </div>
+                          <div class="space-y-1">
+                            @for (recipient of transaction.recipientPrincipal; track
+                              recipient.id) { @if (recipient.username !==
+                            state.accountPrincipal()?.username) {
+                              <div
+                                class="text-sm pl-2 py-0.5 border-l-2 border-green-400"
+                              >
+                                {{ recipient.username }}
+                              </div>
+                            } }
+                          </div>
+                        }
+                        </hlm-accordion-content>
+                      </div>
+                    </div>
+                  </hlm-td>
+                } @else {
+                  <hlm-th class="lg:w-[20%] font-bold text-[10px]">
+                    @if(transaction.recipientGroup!.length > 0 &&
+                    transaction.recipientGroup![0]) {
+                      {{ transaction.recipientGroup![0].username || "" }}
+                    } @else if(transaction.recipientPrincipal!.length > 0 &&
+                    transaction.recipientPrincipal![0]) {
+                      {{ transaction.recipientPrincipal![0].username || "" }}
+                    } @else {
+                      {{ "" }}
+                    }
+                  </hlm-th>
+                }
+
+                <hlm-th class="lg:w-[20%] font-bold text-[10px]">
+                  <brn-popover>
+                    <button
+                      brnPopoverTrigger
+                      class="truncate block max-w-[150px] cursor-pointer hover:text-gray-600 text-left"
+                    >
+                      {{ transaction.communication }}
+                    </button>
+                    <div
+                      class="p-2 text-[10px] max-w-[200px] bg-white rounded shadow-lg"
+                      hlmPopoverContent
+                      *brnPopoverContent="let ctx"
+                    >
+                      {{ transaction.communication }}
+                    </div>
+                  </brn-popover>
+                </hlm-th>
+                <hlm-th class="lg:w-[20%] font-bold text-[10px] text-red-400"
+                >-{{
+                    transaction.amount *
+                    (transaction.recipientGroup.length +
+                      transaction.recipientPrincipal.length) | euroFormat
+                  }}</hlm-th
+                >
+              </div>
+            </hlm-trow>
+          }
+        </div>
+      </hlm-table>
+
+      @if (state.transactionSender()?.length) {
+        <nav hlmPagination class="mt-4 flex justify-center">
+          <ul
+            hlmPaginationContent
+            class="flex flex-wrap gap-1 justify-center items-center"
+          >
+            <li hlmPaginationItem class="md:mx-1">
+              <button
+                class="px-3 py-1.5 text-sm font-medium transition-colors hover:bg-gray-100 rounded-md"
+                [class.opacity-50]="pagination.sender.currentPage() === 1"
+                [disabled]="pagination.sender.currentPage() === 1"
+                (click)="
+                pagination.sender.currentPage() > 1 &&
+                  onPageChangeSender(pagination.sender.currentPage() - 1)
+              "
+              >
+                Précédent
+              </button>
+            </li>
+
+            @for (page of getVisiblePages(pagination.sender.currentPage(),
+              pagination.sender.totalPages()); track $index) { @if (page ===
+            'ellipsis') {
+              <li hlmPaginationItem class="md:mx-1">
+                <span class="px-3 py-1.5">...</span>
+              </li>
+            } @else {
+              <li hlmPaginationItem class="md:mx-1">
+                <button
+                  class="min-w-[40px] h-9 px-3 py-1.5 text-sm font-medium transition-colors rounded-md"
+                  [class.bg-zinc-800]="pagination.sender.currentPage() === page"
+                  [class.text-white]="pagination.sender.currentPage() === page"
+                  [class.hover:bg-gray-100]="
+                pagination.sender.currentPage() !== page
+              "
+                  (click)="onPageChangeSender(page)"
+                >
+                  {{ page }}
+                </button>
+              </li>
+            } }
+
+            <li hlmPaginationItem class="md:mx-1">
+              <button
+                class="px-3 py-1.5 text-sm font-medium transition-colors hover:bg-gray-100 rounded-md"
+                [class.opacity-50]="
+                pagination.sender.currentPage() ===
+                pagination.sender.totalPages()
+              "
+                [disabled]="
+                pagination.sender.currentPage() ===
+                pagination.sender.totalPages()
+              "
+                (click)="
+                pagination.sender.currentPage() <
+                  pagination.sender.totalPages() &&
+                  onPageChangeSender(pagination.sender.currentPage() + 1)
+              "
+              >
+                Suivant
+              </button>
+            </li>
+          </ul>
+        </nav>
+      }
+    </div>
+
+
+  </div>
+
+
 </div>
 } @else {
 <hlm-spinner class="mx-auto" />

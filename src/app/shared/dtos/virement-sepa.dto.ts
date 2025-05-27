@@ -16,4 +16,6 @@ export interface VirementSepaDto {
   invoice?: File;
 
   transaction_type : 'INCOMING' | 'OUTGOING';
+
+  invoice_id?: number;
 }

@@ -35,4 +35,6 @@ export interface VirementSepaEntity {
   created_at: Date;
 
   transaction_type: 'INCOMING' | 'OUTGOING';
+
+  invoiceId?: number;
 }

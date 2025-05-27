@@ -137,9 +137,17 @@ export class VirementSepaService {
     });
   }
 
+  deleteVirementSepa(id: number) {
+    return this.httpClient.delete(
+      `${environment.API_URL}/virement-sepa/${id}`
+    );
 
+  }
 
+  getVirementSepaByInvoiceId(id: number) {
+    return this.httpClient.get<VirementSepaEntity>(
+      `${environment.API_URL}/virement-sepa/invoice/${id}`
+    );
 
-
-
+  }
 }

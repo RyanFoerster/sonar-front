@@ -800,6 +800,9 @@ export class NewQuoteComponent implements AfterViewInit {
       console.log('dataToSend', dataToSend);
     }
 
+    if (clientData.is_physical_person) {
+      clientData.name = `${clientData.firstname} ${clientData.lastname}`.trim();
+    }
     this.clientService
       .create(dataToSend as Partial<ClientEntity>)
       .pipe(take(1))

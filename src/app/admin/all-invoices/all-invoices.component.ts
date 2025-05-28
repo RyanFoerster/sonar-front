@@ -10,7 +10,7 @@ import {
   HlmTdComponent, HlmThComponent,
   HlmTrowComponent,
 } from '@spartan-ng/ui-table-helm';
-import { take, tap } from 'rxjs';
+import {of, switchMap, take, tap, throwError} from 'rxjs';
 import { InvoiceEntity } from '../../shared/entities/invoice.entity';
 import { UserEntity } from '../../shared/entities/user.entity';
 import { EuroFormatPipe } from '../../shared/pipes/euro-format.pipe';
@@ -557,153 +557,65 @@ export class AllInvoicesComponent implements OnInit {
   }
 
   cancel(invoice: InvoiceEntity) {
-    //mettre à jour le statut de la facture
-    this.invoiceService
-      .update(invoice.id, { status: 'canceled' })
-      .pipe(take(1))
-      .subscribe({
-        next: () => {
-          this.allInvoices.update((invoices) =>
-            invoices.map((inv) =>
-              inv.id === invoice.id ? { ...inv, status: 'pending' } : inv,
+    let virementBackup: VirementSepaEntity | null = null;
+    let transactionBackup: TransactionEntity | null = null;
 
-            )
-          );
-          this.deleteTransactionCommission(invoice);
-          this.reverseVirement(invoice);
+    // On vérifie d'abord la présence du virement et de la transaction
+    this.virementService.getVirementSepaByInvoiceId(invoice.id).pipe(
+      take(1),
+      switchMap((virement: VirementSepaEntity | null) => {
+        if (!virement) return throwError(() => new Error('Aucun virement SEPA trouvé.'));
+        virementBackup = virement;
+        return this.transactionService.getTransactionByInvoiceId(invoice.id).pipe(
+          take(1),
+          switchMap((transaction: TransactionEntity | null) => {
+            if (!transaction) return throwError(() => new Error('Aucune transaction trouvée.'));
+            transactionBackup = transaction;
 
-          toast.success(`Facture ${invoice.id} annulée.`);
-        },
-        error: (err: unknown) => {
-          console.error('Erreur lors de la mise à jour du statut:', err);
-          toast.error('Erreur lors de la mise à jour du statut de la facture.');
-        },
-      });
-
+            // Toutes les entités existent, on peut commencer les modifications
+            // 1. Reverse virement (décrémente le solde et supprime le virement)
+            let updateSolde$ = invoice.group_account
+              ? this.groupAccountService.updateGroupeSolde(invoice.group_account.id, -virement.amount_htva).pipe(take(1))
+              : this.principalAccountService.updatePrincipalSolde(invoice.main_account.id, -virement.amount_htva).pipe(take(1));
+            return updateSolde$.pipe(
+              switchMap(() => this.virementService.deleteVirementSepa(virement.id).pipe(take(1))),
+              // 2. Suppression de la transaction et update soldes
+              switchMap(() => this.transactionService.deleteTransaction(transaction.id).pipe(take(1))),
+              switchMap(() => {
+                let updateSolde2$ = invoice.group_account
+                  ? this.groupAccountService.updateGroupeSolde(invoice.group_account.id, transaction.amount).pipe(take(1))
+                  : this.principalAccountService.updatePrincipalSolde(invoice.main_account.id, transaction.amount).pipe(take(1));
+                const updateCommission$ = this.principalAccountService.getCommisionAccount().pipe(
+                  take(1),
+                  switchMap((idCommisionAccount: number) =>
+                    this.principalAccountService.updatePrincipalSolde(idCommisionAccount, -transaction.amount).pipe(take(1))
+                  )
+                );
+                return (updateSolde2$ ? updateSolde2$ : updateCommission$).pipe(
+                  switchMap(() => updateCommission$)
+                );
+              }),
+              // 3. Mise à jour du statut de la facture
+              switchMap(() => this.invoiceService.update(invoice.id, { status: 'payment_pending' }).pipe(take(1)))
+            );
+          })
+        );
+      })
+    ).subscribe({
+      next: () => {
+        this.allInvoices.update((invoices) =>
+          invoices.map((inv) =>
+            inv.id === invoice.id ? { ...inv, status: 'pending' } : inv
+          )
+        );
+        toast.success(`Facture ${invoice.id} annulée.`);
+      },
+      error: (err) => {
+        toast.error('Erreur lors de l\'annulation : ' + (err?.message || err));
+        console.error('Erreur lors de l\'annulation :', err);
+      }
+    });
   }
-
-  private reverseVirement(invoice: InvoiceEntity): void {
-    this.virementService.getVirementSepaByInvoiceId(invoice.id)
-      .pipe(take(1))
-      .subscribe({
-        next: (virement: VirementSepaEntity) => {
-          if (virement) {
-            // Retirer le montant du solde du groupe ou principal AVANT suppression du virement
-            let updateSolde$;
-            if (invoice.group_account) {
-              updateSolde$ = this.groupAccountService.updateGroupeSolde(
-                invoice.group_account.id,
-                -virement.amount_htva
-
-              ).pipe(take(1));
-            } else if (invoice.main_account) {
-              updateSolde$ = this.principalAccountService.updatePrincipalSolde(
-                invoice.main_account.id,
-                -virement.amount_htva
-              ).pipe(take(1));
-            } else {
-              updateSolde$ = undefined;
-            }
-
-            if (updateSolde$) {
-              updateSolde$.subscribe({
-                next: () => {
-                  console.log('Solde mis à jour avant suppression du virement.');
-                  this.virementService.deleteVirementSepa(virement.id)
-                    .pipe(take(1))
-                    .subscribe({
-                      next: () => {
-                        toast.success('Virement SEPA annulé.');
-                      },
-                      error: (err: unknown) => {
-                        console.error('Erreur lors de la suppression du virement SEPA:', err);
-                        toast.error('Erreur lors de la suppression du virement SEPA.');
-                      }
-                    });
-                },
-                error: (err: unknown) => {
-                  console.error('Erreur lors de la mise à jour du solde:', err);
-                  toast.error('Erreur lors de la mise à jour du solde.');
-                }
-              });
-            } else {
-              // Aucun compte trouvé, suppression directe
-              this.virementService.deleteVirementSepa(virement.id)
-                .pipe(take(1))
-                .subscribe({
-                  next: () => {
-                    toast.success('Virement SEPA annulé.');
-                  },
-                  error: (err: unknown) => {
-                    console.error('Erreur lors de la suppression du virement SEPA:', err);
-                    toast.error('Erreur lors de la suppression du virement SEPA.');
-                  }
-                });
-            }
-          } else {
-            console.warn('Aucun virement SEPA trouvé pour cette facture.');
-          }
-        },
-        error: (err: unknown) => {
-          console.error('Erreur lors de la récupération du virement SEPA:', err);
-          toast.error('Erreur lors de la récupération du virement SEPA.');
-        }
-      });
-  }
-
-
-  deleteTransactionCommission(invoice: InvoiceEntity) {
-    this.transactionService.getTransactionByInvoiceId(invoice.id)
-      .pipe(take(1))
-      .subscribe({
-        next: (transaction: TransactionEntity) => {
-          if (transaction) {
-            this.transactionService.deleteTransaction(transaction.id)
-              .pipe(take(1))
-              .subscribe({
-                next: () => {
-                  toast.success('Transaction de commission supprimée.');
-
-                  // Mise à jour des soldes
-                  if (invoice.group_account) {
-                    this.groupAccountService.updateGroupeSolde(
-                      invoice.group_account.id,
-                      transaction.amount
-                    ).pipe(take(1)).subscribe();
-                  } else if (invoice.main_account) {
-                    this.principalAccountService.updatePrincipalSolde(
-                      invoice.main_account.id,
-                      transaction.amount
-                    ).pipe(take(1)).subscribe();
-                  }
-
-                  this.principalAccountService.getCommisionAccount()
-                    .pipe(take(1))
-                    .subscribe({
-                      next: (idCommisionAccount: number) => {
-                        this.principalAccountService.updatePrincipalSolde(
-                          idCommisionAccount,
-                          -transaction.amount
-                        ).pipe(take(1)).subscribe();
-                      },
-                      error: (err: unknown) => {
-                        console.error('Erreur lors de la récupération du compte commission:', err);
-                        toast.error('Erreur lors de la récupération du compte commission.');
-                      }
-                    });
-                },
-                error: (err: unknown) => {
-                  console.error('Erreur lors de la suppression de la transaction de commission:', err);
-                  toast.error('Erreur lors de la suppression de la transaction de commission.');
-                }
-              });
-          } else {
-            console.warn('Aucune transaction trouvée pour cette facture.');
-          }
-        }
-      });
-  }
-
 
 
 }

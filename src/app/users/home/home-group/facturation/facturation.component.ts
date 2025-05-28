@@ -428,21 +428,40 @@ export class FacturationComponent implements OnInit, OnDestroy {
 
   // Ajout du champ commissionPourcentage dans le mapping du groupe
   private getFormattedInvoices() {
-    const groupAccount = this.groupAccount();
-    return this.invoices
-      .filter((inv) => inv.type === 'invoice')
-      .map((invoice) => ({
-        ...invoice,
-        documentDate: invoice.invoice_date,
-        documentType: 'invoice',
-        group_account: groupAccount
-          ? {
-            id: groupAccount.id,
-            username: groupAccount.username,
-            commissionPourcentage: groupAccount.commissionPourcentage,
-          }
-          : undefined,
-      }));
+    if (this.typeOfProjet() === 'PRINCIPAL') {
+      const principal = this.accountPrincipal;
+      return this.invoices
+        .filter((inv) => inv.type === 'invoice')
+        .map((invoice) => ({
+          ...invoice,
+          documentDate: invoice.invoice_date,
+          documentType: 'invoice',
+          main_account: principal
+            ? {
+              id: principal.id,
+              username: principal.username,
+              commissionPourcentage: principal.commissionPourcentage,
+              commission: principal.commission,
+            }
+            : undefined,
+        }));
+    } else {
+      const groupAccount = this.groupAccount();
+      return this.invoices
+        .filter((inv) => inv.type === 'invoice')
+        .map((invoice) => ({
+          ...invoice,
+          documentDate: invoice.invoice_date,
+          documentType: 'invoice',
+          group_account: groupAccount
+            ? {
+              id: groupAccount.id,
+              username: groupAccount.username,
+              commissionPourcentage: groupAccount.commissionPourcentage,
+            }
+            : undefined,
+        }));
+    }
   }
 
   private filterDocuments(docs: any[]) {

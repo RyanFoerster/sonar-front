@@ -251,6 +251,7 @@
                   hlmBtn
                   variant="ghost"
                   size="sm"
+                  title="Télécharger la facture"
                   class="flex items-center justify-center gap-1.5 w-full lg:w-auto text-xs whitespace-nowrap px-2 py-1.5 border border-transparent hover:border-gray-200 hover:bg-gray-100 text-gray-600 hover:text-gray-800"
                   (click)="generateInvoicePDF(asInvoiceEntity(doc))"
                 >
@@ -274,6 +275,7 @@
                     size="sm"
                     class="flex items-center justify-center gap-1.5 w-full lg:w-auto text-xs whitespace-nowrap px-2 py-1.5 border border-transparent hover:border-green-200 hover:bg-green-50 text-green-600 hover:text-green-700"
                     brnDialogTrigger
+                    title="Récapitulatif de la facture"
                   >
                     <hlm-icon
                       size="sm"
@@ -444,6 +446,7 @@
                     </div>
                   </hlm-dialog-content>
                 </hlm-dialog>
+                }
                 <button
                   *ngIf="doc.status === 'paid'"
                   hlmBtn
@@ -451,11 +454,12 @@
                   size="sm"
                   class="flex items-center justify-center gap-1.5 w-full lg:w-auto text-xs whitespace-nowrap px-2 py-1.5 border border-transparent hover:border-gray-200 hover:bg-gray-100 text-gray-600 hover:text-gray-800"
                   (click)="cancel(doc)"
+                  title="Annuler la facture"
                 >
                   ❌
                   <span class="lg:hidden">Annuler</span>
                 </button>
-                }
+
 
               </div>
 

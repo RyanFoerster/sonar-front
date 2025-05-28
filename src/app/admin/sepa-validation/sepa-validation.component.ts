@@ -751,7 +751,6 @@ export class SepaValidationComponent implements AfterViewInit {
     this.editedVirement = null;
   }
 
-  // Valide les modifications apportées au virement
   validateEdit() {
     const confirmation = confirm(
       'Êtes-vous sûr de vouloir valider les modifications ? Si oui, la page sera rechargée pour afficher les changements.'
@@ -783,60 +782,77 @@ export class SepaValidationComponent implements AfterViewInit {
   }
 
 
+
+
+
   // Méthodes pour gérer les changements de montant
-
-
-  onTVACChange() {
-    if (!this.editedVirement) return;
-
-    this.lastChanged = 'tvac';
-    const total = this.editedVirement.amount_total ?? 0;
-    const htva = this.editedVirement.amount_htva;
-    const tva = this.editedVirement.amount_tva;
-
-    if (htva != null) {
-      this.editedVirement.amount_tva = this.roundToTwo(total - htva);
-    } else if (tva != null) {
-      this.editedVirement.amount_htva = this.roundToTwo(total - tva);
-    }
-  }
 
   onHTVAChange() {
     if (!this.editedVirement) return;
+    let htva = Math.max(0, this.editedVirement.amount_htva ?? 0);
+    let tvac = Math.max(0, this.editedVirement.amount_total ?? 0);
 
-    this.lastChanged = 'htva';
-    const htva = this.editedVirement.amount_htva ?? 0;
-    const tva = this.editedVirement.amount_tva;
-    const tvac = this.editedVirement.amount_total;
+    // La TVA devient la différence entre TVAC et HTVA
+    let tva = this.roundToTwo(tvac - htva);
+    if (tva < 0) tva = 0;
 
-    if(tva == 0) {
-      this.editedVirement.amount_total = htva;
-    }
-    else if (tva != null) {
-      this.editedVirement.amount_total = this.roundToTwo(htva + tva);
-    } else if (tvac != null) {
-      this.editedVirement.amount_tva = this.roundToTwo(tvac - htva);
-    }
+    this.editedVirement.amount_htva = htva;
+    this.editedVirement.amount_tva = tva;
+    this.editedVirement.amount_total = this.roundToTwo(htva + tva);
   }
 
   onTVAChange() {
     if (!this.editedVirement) return;
+    let tva = Math.max(0, this.editedVirement.amount_tva ?? 0);
+    let tvac = Math.max(0, this.editedVirement.amount_total ?? 0);
 
-    this.lastChanged = 'tva';
-    const tva = this.editedVirement.amount_tva ?? 0;
-    const htva = this.editedVirement.amount_htva;
-    const tvac = this.editedVirement.amount_total;
+    // Le HTVA devient la différence entre TVAC et TVA
+    let htva = this.roundToTwo(tvac - tva);
+    if (htva < 0) htva = 0;
 
-    if (htva != null) {
-      this.editedVirement.amount_total = this.roundToTwo(htva + tva);
-    } else if (tvac != null) {
-      this.editedVirement.amount_htva = this.roundToTwo(tvac - tva);
+    this.editedVirement.amount_htva = htva;
+    this.editedVirement.amount_tva = tva;
+    this.editedVirement.amount_total = this.roundToTwo(htva + tva);
+  }
+
+  onTVACChange() {
+    if (!this.editedVirement) return;
+    let tvac = Math.max(0, this.editedVirement.amount_total ?? 0);
+    let htva = Math.max(0, this.editedVirement.amount_htva ?? 0);
+    let tva = Math.max(0, this.editedVirement.amount_tva ?? 0);
+
+    // Si HTVA > TVAC, on ajuste HTVA
+    if (htva > tvac) htva = tvac;
+    // Si TVA > TVAC, on ajuste TVA
+    if (tva > tvac) tva = tvac;
+
+    // Si HTVA a été modifié en dernier, on recalcule TVA
+    if (this.lastChanged === 'htva') {
+      tva = this.roundToTwo(tvac - htva);
+      if (tva < 0) tva = 0;
     }
+    // Si TVA a été modifié en dernier, on recalcule HTVA
+    else if (this.lastChanged === 'tva') {
+      htva = this.roundToTwo(tvac - tva);
+      if (htva < 0) htva = 0;
+    }
+    // Sinon, on répartit au mieux
+    else {
+      if (htva + tva !== tvac) {
+        tva = this.roundToTwo(tvac - htva);
+        if (tva < 0) tva = 0;
+      }
+    }
+
+    this.editedVirement.amount_htva = htva;
+    this.editedVirement.amount_tva = tva;
+    this.editedVirement.amount_total = tvac;
   }
 
   private roundToTwo(value: number): number {
-    return Math.round(value * 100) / 100;
+    return Math.round(Math.max(0, value) * 100) / 100;
   }
+
 
 
 }

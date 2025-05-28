@@ -345,9 +345,6 @@ export class AllInvoicesComponent implements OnInit {
                         invoice_id: invoice.id
 
                       };
-
-
-
                       this.transactionService
                         .createTransaction(transactionDtoCommission)
                         .pipe(take(1))

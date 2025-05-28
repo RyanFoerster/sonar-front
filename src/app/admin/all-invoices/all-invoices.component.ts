@@ -238,7 +238,6 @@ export class AllInvoicesComponent implements OnInit {
       .pipe(
         take(1),
         tap((invoices: InvoiceEntity[]) => {
-          console.log('invoices', invoices);
           this.allInvoices.set(invoices);
         })
       )
@@ -246,7 +245,6 @@ export class AllInvoicesComponent implements OnInit {
   }
 
   filterByStatus(status: FilterStatus) {
-    console.log(status);
     this.selectedStatus.set(status);
     this.currentPage.set(1);
   }

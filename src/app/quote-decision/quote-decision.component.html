@@ -124,11 +124,16 @@
         <p class="block" hlmLabel>
           <span class="text-sm font-medium text-gray-900">Numéro national</span>
           <input
+            type="text"
+            [value]="formatNationalNumber(clientInfoForm.get('national_number')?.value || '')"
+            (input)="onNationalNumberInput($event)"
+            maxlength="15"
+            placeholder="12.34.56-789.10"
             formControlName="national_number"
             hlmInput
-            placeholder="12345678910"
-            class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg"
+            class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg disabled:bg-gray-100 disabled:cursor-not-allowed"
           />
+
         </p>
         <div class="grid md:grid-cols-2 gap-4">
           <p class="block" hlmLabel>

@@ -162,6 +162,13 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'ponto',
+    loadComponent: () =>
+      import('./ponto-connect/ponto-connect.component').then((m) => m.PontoConnectComponent),
+    canActivate: [maintenanceGuard, authGuard, activatedUserGuard],
+
+  },
+  {
     path: '**',
     redirectTo: 'home',
     pathMatch: 'full',

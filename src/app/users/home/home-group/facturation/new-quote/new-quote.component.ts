@@ -1852,4 +1852,50 @@ export class NewQuoteComponent implements AfterViewInit {
     this.showMailPreview = false;
     this.createQuote(); // ou updateQuote() selon le contexte
   }
+
+  formatNationalNumber(value: string): string {
+    const digits = value.replace(/\D/g, '').slice(0, 11);
+    let formatted = '';
+    for (let i = 0; i < digits.length; i++) {
+      formatted += digits[i];
+      if (i === 1 || i === 3) formatted += '.';
+      if (i === 5) formatted += '-';
+      if (i === 8) formatted += '.';
+    }
+    return formatted;
+  }
+
+  onNationalNumberInput(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const rawValue = input.value;
+    const selectionStart = input.selectionStart || 0;
+
+    // Compte le nombre de chiffres avant le curseur
+    let digitCount = 0;
+    for (let i = 0; i < selectionStart; i++) {
+      if (/\d/.test(rawValue[i])) digitCount++;
+    }
+
+    // Récupère uniquement les chiffres
+    const digits = rawValue.replace(/\D/g, '').slice(0, 11);
+
+    // Formate la nouvelle valeur
+    const newFormatted = this.formatNationalNumber(digits);
+
+    // Calcule la nouvelle position du curseur après formatage
+    let newCursor = 0, count = 0;
+    for (let i = 0; i < newFormatted.length && count < digitCount; i++) {
+      if (/\d/.test(newFormatted[i])) count++;
+      newCursor = i + 1;
+    }
+
+    // Met à jour la valeur brute dans le formulaire
+    this.createClientForm.get('national_number')?.setValue(digits, { emitEvent: false });
+    input.value = newFormatted;
+
+    // Replace le curseur à la bonne position
+    setTimeout(() => {
+      input.setSelectionRange(newCursor, newCursor);
+    }, 0);
+  }
 }

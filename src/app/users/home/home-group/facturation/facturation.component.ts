@@ -1,16 +1,7 @@
-import { DatePipe, Location, NgClass } from '@angular/common';
-import {
-  Component,
-  computed,
-  inject,
-  input,
-  OnDestroy,
-  signal,
-  OnInit,
-  ChangeDetectionStrategy,
-} from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
-import { provideIcons } from '@ng-icons/core';
+import {DatePipe, Location} from '@angular/common';
+import {ChangeDetectionStrategy, Component, computed, inject, input, OnDestroy, OnInit, signal,} from '@angular/core';
+import {Router, RouterLink} from '@angular/router';
+import {provideIcons} from '@ng-icons/core';
 import {
   lucideArrowLeft,
   lucideCornerDownLeft,
@@ -18,34 +9,31 @@ import {
   lucideFileDown,
   lucideFilePlus,
   lucideFileText,
-  lucideSearch,
   lucideMessageCircle,
+  lucideSearch,
   lucideX,
 } from '@ng-icons/lucide';
 
-import { HlmButtonDirective } from '@spartan-ng/ui-button-helm';
-import { HlmIconComponent } from '@spartan-ng/ui-icon-helm';
-import { HlmTableImports } from '@spartan-ng/ui-table-helm';
-import { firstValueFrom } from 'rxjs';
-import { CompteGroupeEntity } from '../../../../shared/entities/compte-groupe.entity';
-import { InvoiceEntity } from '../../../../shared/entities/invoice.entity';
-import { PrincipalAccountEntity } from '../../../../shared/entities/principal-account.entity';
-import { QuoteEntity } from '../../../../shared/entities/quote.entity';
-import { UserEntity } from '../../../../shared/entities/user.entity';
-import { AuthService } from '../../../../shared/services/auth.service';
-import { ComptePrincipalService } from '../../../../shared/services/compte-principal.service';
-import { InvoiceService } from '../../../../shared/services/invoice.service';
-import { QuoteService } from '../../../../shared/services/quote.service';
-import { UsersService } from '../../../../shared/services/users.service';
-import { PdfGeneratorService } from '../../../../shared/services/pdf-generator.service';
-import { toast } from 'ngx-sonner';
-import { FormsModule } from '@angular/forms';
-import { CompteGroupeService } from '../../../../shared/services/compte-groupe.service';
-import { BrnSelectImports } from '@spartan-ng/ui-select-brain';
-import { HlmSelectImports } from '@spartan-ng/ui-select-helm';
+import {HlmButtonDirective} from '@spartan-ng/ui-button-helm';
+import {HlmIconComponent} from '@spartan-ng/ui-icon-helm';
+import {firstValueFrom} from 'rxjs';
+import {CompteGroupeEntity} from '../../../../shared/entities/compte-groupe.entity';
+import {InvoiceEntity} from '../../../../shared/entities/invoice.entity';
+import {PrincipalAccountEntity} from '../../../../shared/entities/principal-account.entity';
+import {QuoteEntity} from '../../../../shared/entities/quote.entity';
+import {UserEntity} from '../../../../shared/entities/user.entity';
+import {AuthService} from '../../../../shared/services/auth.service';
+import {ComptePrincipalService} from '../../../../shared/services/compte-principal.service';
+import {InvoiceService} from '../../../../shared/services/invoice.service';
+import {QuoteService} from '../../../../shared/services/quote.service';
+import {UsersService} from '../../../../shared/services/users.service';
+import {PdfGeneratorService} from '../../../../shared/services/pdf-generator.service';
+import {toast} from 'ngx-sonner';
+import {FormsModule} from '@angular/forms';
+import {CompteGroupeService} from '../../../../shared/services/compte-groupe.service';
 
-import { QuotesTableComponent } from './quotes-table/quotes-table.component';
-import { InvoicesTableComponent } from './invoices-table/invoices-table.component';
+import {QuotesTableComponent} from './quotes-table/quotes-table.component';
+import {InvoicesTableComponent} from './invoices-table/invoices-table.component';
 
 import {
   HlmTabsComponent,
@@ -536,10 +524,9 @@ export class FacturationComponent implements OnInit, OnDestroy {
       ctx.close();
 
       if (this.typeOfProjet() === 'PRINCIPAL' && this.accountPrincipal) {
-        const updatedAccount = await firstValueFrom(
+        this.accountPrincipal = await firstValueFrom(
           this.services.principal.getGroupByIdWithRelations(+this.id()!)
         );
-        this.accountPrincipal = updatedAccount;
       } else if (this.groupAccount()) {
         const updatedGroup = await firstValueFrom(
           this.services.group.getGroupById(+this.id()!)

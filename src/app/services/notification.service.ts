@@ -519,19 +519,9 @@ export class NotificationService {
         '/transactions',
         notification.data['transactionId'],
       ]);
-    } else if (
-      notification.type === 'event_invitation' &&
-      notification.data?.['eventId']
-    ) {
-      // Naviguer vers la page de profil avec l'onglet des invitations d'événement actif
-      this.router.navigate(['/profile'], {
-        queryParams: {
-          tab: 'event',
-          eventTab: 'pending',
-          highlight: notification.data['eventId'],
-        },
-      });
     }
+    // Note: La navigation pour les événements est maintenant gérée directement dans le composant notification-manager
+
     // Ajouter d'autres types de notification selon les besoins
   }
 }

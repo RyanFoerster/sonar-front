@@ -52,6 +52,7 @@
       (duplicateEvent)="openDuplicateModal(selectedEvent)"
       (editEvent)="openEditModal(selectedEvent)"
       (sendReminders)="sendReminders(selectedEvent.id)"
+      (sendMemo)="sendMemo(selectedEvent.id)"
       (deleteEvent)="deleteEvent()"
       (addToGoogleCalendar)="openAddToGoogleCalendarModal()"
       (cancelInvitation)="cancelInvitation($event)"
@@ -158,28 +159,26 @@
 
             <div class="form-group">
               <label for="endDateTime" class="text-sm font-medium mb-1 block"
-                >Date et heure de fin *</label
+                >Date et heure de fin</label
               >
               <input
                 type="datetime-local"
                 id="endDateTime"
                 formControlName="endDateTime"
                 class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
               />
             </div>
           </div>
 
           <div class="form-group">
             <label for="meetupDateTime" class="text-sm font-medium mb-1 block"
-              >Date et heure de rendez-vous *</label
+              >Date et heure de rendez-vous</label
             >
             <input
               type="datetime-local"
               id="meetupDateTime"
               formControlName="meetupDateTime"
               class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              required
             />
           </div>
 
@@ -214,26 +213,15 @@
                   *ngFor="let member of groupMembers"
                   class="p-3 mb-2 border border-gray-100 rounded-lg last:mb-0 flex items-center transition-colors"
                   [class.bg-blue-50]="isOrganizerSelected(member.id)"
-                  [class.bg-gray-100]="isAlreadyInvited(member.id)"
-                  [class.cursor-pointer]="!isAlreadyInvited(member.id)"
-                  [class.opacity-70]="isAlreadyInvited(member.id)"
-                  (click)="
-                    !isAlreadyInvited(member.id) &&
-                      toggleOrganizerSelection(member)
-                  "
-                  (keydown.enter)="
-                    !isAlreadyInvited(member.id) &&
-                      toggleOrganizerSelection(member)
-                  "
+                  [class.cursor-pointer]="true"
+                  (click)="toggleOrganizerSelection(member)"
+                  (keydown.enter)="toggleOrganizerSelection(member)"
                   (keydown.space)="
-                    !isAlreadyInvited(member.id) &&
-                      toggleOrganizerSelection(member);
-                    $event.preventDefault()
+                    toggleOrganizerSelection(member); $event.preventDefault()
                   "
                   tabindex="0"
                   role="checkbox"
                   [attr.aria-checked]="isOrganizerSelected(member.id)"
-                  [attr.aria-disabled]="isAlreadyInvited(member.id)"
                 >
                   <div
                     class="flex-shrink-0 w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-700 font-medium mr-3"
@@ -250,24 +238,6 @@
                   </div>
                   <div class="flex-shrink-0 ml-2">
                     <div
-                      *ngIf="isAlreadyInvited(member.id)"
-                      class="flex items-center text-xs text-green-600"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
-                        fill="currentColor"
-                        viewBox="0 0 16 16"
-                      >
-                        <path
-                          d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0zM4.5 7.5a.5.5 0 0 0 0 1h5.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H4.5z"
-                        />
-                      </svg>
-                      <span class="ml-1">Déjà invité</span>
-                    </div>
-                    <div
-                      *ngIf="!isAlreadyInvited(member.id)"
                       class="w-6 h-6 border rounded-md flex items-center justify-center"
                       [class.bg-blue-500]="isOrganizerSelected(member.id)"
                       [class.border-blue-500]="isOrganizerSelected(member.id)"
@@ -288,6 +258,255 @@
                           d="M4.5 12.75l6 6 9-13.5"
                         />
                       </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section des participants -->
+          <div class="form-group mt-6">
+            <label
+              for="participants-section"
+              class="text-sm font-medium mb-1 block"
+              >Participants à inviter</label
+            >
+            <div id="participants-section" class="space-y-4">
+              <!-- Section des membres du groupe -->
+              <div
+                class="border border-gray-200 rounded-lg overflow-hidden mt-2"
+              >
+                <div class="bg-gray-50 border-b border-gray-200 p-3">
+                  <h3 class="font-medium text-gray-900">Membres du groupe</h3>
+                </div>
+                <div class="p-4">
+                  <div
+                    *ngIf="loadingGroupMembers"
+                    class="flex justify-center items-center py-4"
+                  >
+                    <div
+                      class="w-6 h-6 border-2 border-t-blue-500 border-gray-200 rounded-full animate-spin mr-2"
+                    ></div>
+                    <p class="text-sm text-gray-600">
+                      Chargement des membres...
+                    </p>
+                  </div>
+                  <div
+                    *ngIf="!loadingGroupMembers && groupMembers.length === 0"
+                    class="py-4 text-center text-gray-500"
+                  >
+                    Aucun membre disponible
+                  </div>
+                  <div
+                    *ngIf="!loadingGroupMembers && groupMembers.length > 0"
+                    class="max-h-60 overflow-y-auto"
+                  >
+                    <div
+                      *ngFor="let member of groupMembers"
+                      class="p-3 mb-2 border border-gray-100 rounded-lg last:mb-0 flex items-center transition-colors cursor-pointer"
+                      [class.bg-blue-50]="isUserSelected(member.id)"
+                      [class.opacity-70]="isOrganizerSelected(member.id)"
+                      (click)="
+                        isOrganizerSelected(member.id)
+                          ? null
+                          : toggleMemberSelection(member)
+                      "
+                      (keydown.enter)="
+                        isOrganizerSelected(member.id)
+                          ? null
+                          : toggleMemberSelection(member)
+                      "
+                      (keydown.space)="
+                        isOrganizerSelected(member.id)
+                          ? null
+                          : toggleMemberSelection(member);
+                        $event.preventDefault()
+                      "
+                      tabindex="0"
+                      role="checkbox"
+                      [attr.aria-checked]="isUserSelected(member.id)"
+                      [attr.aria-disabled]="isOrganizerSelected(member.id)"
+                    >
+                      <div
+                        class="flex-shrink-0 w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-700 font-medium mr-3"
+                      >
+                        {{ getInitials(member) }}
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-gray-900 truncate">
+                          {{ member.firstName }} {{ member.name }}
+                        </p>
+                        <p class="text-xs text-gray-500 truncate">
+                          {{ member.email }}
+                        </p>
+                      </div>
+                      <div class="flex-shrink-0 ml-2">
+                        <div
+                          *ngIf="isOrganizerSelected(member.id)"
+                          class="flex items-center text-xs text-green-600"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="16"
+                            height="16"
+                            fill="currentColor"
+                            viewBox="0 0 16 16"
+                          >
+                            <path
+                              d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0zM4.5 7.5a.5.5 0 0 0 0 1h5.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H4.5z"
+                            />
+                          </svg>
+                          <span class="ml-1">Déjà organisateur</span>
+                        </div>
+                        <div
+                          *ngIf="!isOrganizerSelected(member.id)"
+                          class="w-6 h-6 border rounded-md flex items-center justify-center"
+                          [class.bg-blue-500]="isUserSelected(member.id)"
+                          [class.border-blue-500]="isUserSelected(member.id)"
+                          [class.border-gray-300]="!isUserSelected(member.id)"
+                        >
+                          <svg
+                            *ngIf="isUserSelected(member.id)"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke-width="3"
+                            stroke="white"
+                            class="w-4 h-4"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="M4.5 12.75l6 6 9-13.5"
+                            />
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Section des participants externes -->
+              <div
+                class="border border-gray-200 rounded-lg overflow-hidden mt-4"
+              >
+                <div class="bg-gray-50 border-b border-gray-200 p-3">
+                  <h3 class="font-medium text-gray-900">
+                    Participants externes
+                  </h3>
+                </div>
+                <div class="p-4">
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div class="md:col-span-1">
+                      <label
+                        for="external-email-create"
+                        class="text-sm font-medium mb-1 block"
+                        >Email *</label
+                      >
+                      <input
+                        type="email"
+                        id="external-email-create"
+                        [(ngModel)]="newExternalEmail"
+                        [ngModelOptions]="{ standalone: true }"
+                        class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        required
+                      />
+                    </div>
+                    <div class="md:col-span-1">
+                      <label
+                        for="external-name-create"
+                        class="text-sm font-medium mb-1 block"
+                        >Nom (optionnel)</label
+                      >
+                      <input
+                        type="text"
+                        id="external-name-create"
+                        [(ngModel)]="newExternalName"
+                        [ngModelOptions]="{ standalone: true }"
+                        class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div class="md:col-span-1 flex items-end">
+                      <button
+                        type="button"
+                        class="w-full px-4 py-2 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors flex items-center justify-center gap-2"
+                        (click)="addExternalParticipant()"
+                        [disabled]="!newExternalEmail"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke-width="2"
+                          stroke="currentColor"
+                          class="w-5 h-5"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M12 4.5v15m7.5-7.5h-15"
+                          />
+                        </svg>
+                        Ajouter
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Liste des participants externes ajoutés -->
+                  <div *ngIf="externalParticipants.length > 0" class="mt-4">
+                    <h4 class="text-sm font-medium text-gray-700 mb-2">
+                      Participants externes ajoutés
+                    </h4>
+                    <div class="space-y-2">
+                      <div
+                        *ngFor="
+                          let person of externalParticipants;
+                          let i = index
+                        "
+                        class="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                      >
+                        <div class="flex items-center">
+                          <div
+                            class="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-700 font-medium mr-3"
+                          >
+                            {{
+                              person.name
+                                ? getInitials({ name: person.name })
+                                : person.email.substring(0, 2).toUpperCase()
+                            }}
+                          </div>
+                          <div>
+                            <div class="text-sm font-medium">
+                              {{ person.name || "Sans nom" }}
+                            </div>
+                            <div class="text-xs text-gray-500">
+                              {{ person.email }}
+                            </div>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          class="p-1.5 rounded-full text-gray-500 hover:bg-gray-200 transition-colors"
+                          (click)="removeExternalParticipant(i)"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke-width="2"
+                            stroke="currentColor"
+                            class="w-5 h-5"
+                          >
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -400,14 +619,13 @@
               <label
                 for="edit-endDateTime"
                 class="text-sm font-medium mb-1 block"
-                >Date et heure de fin *</label
+                >Date et heure de fin</label
               >
               <input
                 type="datetime-local"
                 id="edit-endDateTime"
                 formControlName="endDateTime"
                 class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
               />
             </div>
           </div>
@@ -416,14 +634,13 @@
             <label
               for="edit-meetupDateTime"
               class="text-sm font-medium mb-1 block"
-              >Date et heure de rendez-vous *</label
+              >Date et heure de rendez-vous</label
             >
             <input
               type="datetime-local"
               id="edit-meetupDateTime"
               formControlName="meetupDateTime"
               class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              required
             />
           </div>
 
@@ -597,14 +814,13 @@
               <label
                 for="duplicate-endDateTime"
                 class="text-sm font-medium mb-1 block"
-                >Date et heure de fin *</label
+                >Date et heure de fin</label
               >
               <input
                 type="datetime-local"
                 id="duplicate-endDateTime"
                 formControlName="endDateTime"
                 class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
               />
             </div>
           </div>
@@ -613,14 +829,13 @@
             <label
               for="duplicate-meetupDateTime"
               class="text-sm font-medium mb-1 block"
-              >Date et heure de rendez-vous *</label
+              >Date et heure de rendez-vous</label
             >
             <input
               type="datetime-local"
               id="duplicate-meetupDateTime"
               formControlName="meetupDateTime"
               class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              required
             />
           </div>
 
@@ -1133,7 +1348,7 @@
         <p class="p-4 bg-blue-50 text-blue-700 rounded-lg text-sm">
           Envoyer des rappels pour l'événement
           <span class="font-medium">"{{ selectedEvent?.title }}"</span>
-          aux participants qui ont confirmé leur présence.
+          aux participants qui n'ont pas encore donné de réponse.
         </p>
 
         <!-- Options de programmation -->
@@ -1229,26 +1444,28 @@
           </div>
         </div>
 
-        <!-- Liste des participants confirmés -->
+        <!-- Liste des participants en attente -->
         <div class="border border-gray-200 rounded-lg overflow-hidden">
           <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
             <h3 class="font-medium text-gray-900">
-              Participants confirmés ({{ getConfirmedParticipants().length }})
+              Participants en attente de réponse ({{
+                getPendingParticipants().length
+              }})
             </h3>
           </div>
           <div class="max-h-48 overflow-y-auto">
             <div
-              *ngIf="getConfirmedParticipants().length === 0"
+              *ngIf="getPendingParticipants().length === 0"
               class="p-4 text-center text-gray-500 text-sm"
             >
-              Aucun participant n'a encore confirmé sa présence
+              Tous les participants ont déjà donné leur réponse
             </div>
             <div
-              *ngFor="let participant of getConfirmedParticipants()"
+              *ngFor="let participant of getPendingParticipants()"
               class="flex items-center px-4 py-3 border-b border-gray-200 last:border-b-0"
             >
               <div
-                class="flex items-center justify-center w-8 h-8 bg-green-100 rounded-full mr-3 text-sm text-green-700"
+                class="flex items-center justify-center w-8 h-8 bg-yellow-100 rounded-full mr-3 text-sm text-yellow-700"
               >
                 {{ getInitials(participant) }}
               </div>
@@ -1266,9 +1483,9 @@
                 </div>
               </div>
               <span
-                class="text-xs px-2 py-0.5 rounded-full bg-green-50 text-green-700"
+                class="text-xs px-2 py-0.5 rounded-full bg-yellow-50 text-yellow-700"
               >
-                Confirmé
+                En attente
               </span>
             </div>
           </div>
@@ -1288,7 +1505,7 @@
             class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors"
             (click)="submitSendReminders()"
             [disabled]="
-              getConfirmedParticipants().length === 0 ||
+              getPendingParticipants().length === 0 ||
               !reminderTiming ||
               (reminderTiming === 'custom' && !customReminderDate) ||
               loading
@@ -1306,6 +1523,206 @@
                 class="w-5 h-5 border-2 border-t-white border-white/30 rounded-full animate-spin mr-2"
               ></div>
               {{ reminderTiming === "now" ? "Envoi..." : "Programmation..." }}
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de programmation de mémos -->
+<div class="modal-overlay" *ngIf="showSendMemoModal">
+  <div class="modal-container">
+    <div class="modal-header">
+      <h2>Programmer des mémos</h2>
+      <button class="close-btn" (click)="closeSendMemoModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="space-y-6">
+        <p class="p-4 bg-blue-50 text-blue-700 rounded-lg text-sm">
+          Envoyer un mémo pour l'événement
+          <span class="font-medium">"{{ selectedEvent?.title }}"</span>
+          à tous les participants.
+        </p>
+
+        <!-- Options de programmation -->
+        <div class="space-y-4">
+          <fieldset>
+            <legend class="text-sm font-medium text-gray-700 mb-2 block">
+              Quand envoyer le mémo ?
+            </legend>
+            <div class="space-y-2">
+              <label for="memo-timing-now" class="flex items-center">
+                <input
+                  id="memo-timing-now"
+                  type="radio"
+                  name="memoTiming"
+                  value="now"
+                  [(ngModel)]="memoTiming"
+                  class="mr-2"
+                />
+                <span class="text-sm">Maintenant</span>
+              </label>
+              <label for="memo-timing-1hour" class="flex items-center">
+                <input
+                  id="memo-timing-1hour"
+                  type="radio"
+                  name="memoTiming"
+                  value="1hour"
+                  [(ngModel)]="memoTiming"
+                  class="mr-2"
+                />
+                <span class="text-sm">1 heure avant l'événement</span>
+              </label>
+              <label for="memo-timing-1day" class="flex items-center">
+                <input
+                  id="memo-timing-1day"
+                  type="radio"
+                  name="memoTiming"
+                  value="1day"
+                  [(ngModel)]="memoTiming"
+                  class="mr-2"
+                />
+                <span class="text-sm">1 jour avant l'événement</span>
+              </label>
+              <label for="memo-timing-custom" class="flex items-center">
+                <input
+                  id="memo-timing-custom"
+                  type="radio"
+                  name="memoTiming"
+                  value="custom"
+                  [(ngModel)]="memoTiming"
+                  class="mr-2"
+                />
+                <span class="text-sm">Date personnalisée</span>
+              </label>
+            </div>
+          </fieldset>
+
+          <!-- Date personnalisée -->
+          <div *ngIf="memoTiming === 'custom'" class="ml-6">
+            <label
+              for="customMemoDate"
+              class="text-sm font-medium text-gray-700 mb-1 block"
+            >
+              Date et heure d'envoi
+            </label>
+            <input
+              type="datetime-local"
+              id="customMemoDate"
+              [(ngModel)]="customMemoDate"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+
+          <!-- Message personnalisé -->
+          <div>
+            <label
+              for="memoMessage"
+              class="text-sm font-medium text-gray-700 mb-1 block"
+            >
+              Message du mémo *
+            </label>
+            <textarea
+              id="memoMessage"
+              [(ngModel)]="customMemoMessage"
+              rows="4"
+              placeholder="Écrivez votre message à envoyer aux participants..."
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              maxlength="1000"
+              required
+            ></textarea>
+            <div class="text-xs text-gray-500 mt-1">
+              {{ 1000 - (customMemoMessage.length || 0) }} caractères restants
+            </div>
+          </div>
+        </div>
+
+        <!-- Liste des participants confirmés -->
+        <div class="border border-gray-200 rounded-lg overflow-hidden">
+          <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
+            <h3 class="font-medium text-gray-900">
+              Participants confirmés ({{ getConfirmedParticipants().length }})
+            </h3>
+          </div>
+          <div class="max-h-48 overflow-y-auto">
+            <div
+              *ngIf="getConfirmedParticipants().length === 0"
+              class="p-4 text-center text-gray-500 text-sm"
+            >
+              Aucun participant confirmé pour cet événement
+            </div>
+            <div
+              *ngFor="let participant of getConfirmedParticipants()"
+              class="flex items-center px-4 py-3 border-b border-gray-200 last:border-b-0"
+            >
+              <div
+                class="flex items-center justify-center w-8 h-8 bg-blue-100 rounded-full mr-3 text-sm text-blue-700"
+              >
+                {{ getInitials(participant) }}
+              </div>
+              <div class="flex-1">
+                <div class="text-sm font-medium text-gray-900">
+                  {{
+                    participant.name ||
+                      (participant.isExternal
+                        ? participant.personId
+                        : "Participant")
+                  }}
+                </div>
+                <div *ngIf="participant.email" class="text-xs text-gray-500">
+                  {{ participant.email }}
+                </div>
+              </div>
+              <span
+                class="text-xs px-2 py-0.5 rounded-full"
+                [class.bg-green-50]="participant.status === 'ACCEPTED'"
+                [class.text-green-700]="participant.status === 'ACCEPTED'"
+                [class.bg-yellow-50]="participant.status === 'PENDING'"
+                [class.text-yellow-700]="participant.status === 'PENDING'"
+                [class.bg-red-50]="participant.status === 'DECLINED'"
+                [class.text-red-700]="participant.status === 'DECLINED'"
+              >
+                {{ getParticipantStatusLabel(participant.status) }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+          <button
+            type="button"
+            class="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-colors"
+            (click)="closeSendMemoModal()"
+          >
+            Annuler
+          </button>
+          <button
+            type="button"
+            class="px-4 py-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700 transition-colors"
+            (click)="submitSendMemo()"
+            [disabled]="
+              getConfirmedParticipants().length === 0 ||
+              !memoTiming ||
+              !customMemoMessage.trim() ||
+              (memoTiming === 'custom' && !customMemoDate) ||
+              loading
+            "
+          >
+            <span *ngIf="!loading">
+              {{
+                memoTiming === "now"
+                  ? "Envoyer maintenant"
+                  : "Programmer le mémo"
+              }}
+            </span>
+            <span *ngIf="loading" class="flex items-center justify-center">
+              <div
+                class="w-5 h-5 border-2 border-t-white border-white/30 rounded-full animate-spin mr-2"
+              ></div>
+              {{ memoTiming === "now" ? "Envoi..." : "Programmation..." }}
             </span>
           </button>
         </div>

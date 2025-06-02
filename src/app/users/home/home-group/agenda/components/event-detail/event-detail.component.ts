@@ -64,6 +64,7 @@ import {
         (duplicateEvent)="onDuplicateEvent()"
         (editEvent)="onEditEvent()"
         (sendReminders)="onSendReminders()"
+        (sendMemo)="onSendMemo()"
         (deleteEvent)="onDeleteEvent()"
         (addToGoogleCalendar)="onAddToGoogleCalendar()"
       ></app-event-actions>
@@ -400,6 +401,7 @@ export class EventDetailComponent {
   @Output() duplicateEvent = new EventEmitter<void>();
   @Output() editEvent = new EventEmitter<void>();
   @Output() sendReminders = new EventEmitter<void>();
+  @Output() sendMemo = new EventEmitter<void>();
   @Output() deleteEvent = new EventEmitter<void>();
   @Output() addToGoogleCalendar = new EventEmitter<void>();
   @Output() cancelInvitation = new EventEmitter<InvitedPerson>();
@@ -437,6 +439,10 @@ export class EventDetailComponent {
 
   onSendReminders(): void {
     this.sendReminders.emit();
+  }
+
+  onSendMemo(): void {
+    this.sendMemo.emit();
   }
 
   onDeleteEvent(): void {
@@ -495,7 +501,8 @@ export class EventDetailComponent {
     }
   }
 
-  formatDate(date: string | Date): string {
+  formatDate(date: string | Date | undefined): string {
+    if (!date) return '';
     return new Date(date).toLocaleDateString('fr-FR', {
       year: 'numeric',
       month: 'long',

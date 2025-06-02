@@ -152,6 +152,12 @@ export class AgendaComponent implements OnInit, OnDestroy {
   customReminderDate = '';
   customReminderMessage = '';
 
+  // Variables pour la programmation de mémos
+  showSendMemoModal = false;
+  memoTiming = 'now';
+  customMemoDate = '';
+  customMemoMessage = '';
+
   constructor(
     private eventService: EventService,
     private googleCalendarService: GoogleCalendarService,
@@ -168,8 +174,8 @@ export class AgendaComponent implements OnInit, OnDestroy {
       description: [''],
       location: [''],
       startDateTime: ['', Validators.required],
-      endDateTime: ['', Validators.required],
-      meetupDateTime: ['', Validators.required],
+      endDateTime: [''],
+      meetupDateTime: [''],
       status: [EventStatus.PENDING],
       organizers: [[], Validators.required],
     });
@@ -179,16 +185,16 @@ export class AgendaComponent implements OnInit, OnDestroy {
       description: [''],
       location: [''],
       startDateTime: ['', Validators.required],
-      endDateTime: ['', Validators.required],
-      meetupDateTime: ['', Validators.required],
+      endDateTime: [''],
+      meetupDateTime: [''],
       status: [EventStatus.PENDING],
       organizers: [[], Validators.required],
     });
 
     this.duplicateEventForm = this.fb.group({
       startDateTime: ['', Validators.required],
-      endDateTime: ['', Validators.required],
-      meetupDateTime: ['', Validators.required],
+      endDateTime: [''],
+      meetupDateTime: [''],
     });
 
     // Initialize new calendar form
@@ -475,8 +481,11 @@ export class AgendaComponent implements OnInit, OnDestroy {
     this.showCreateEventModal = true;
     this.resetForms();
     this.selectedOrganizers = [];
-    // Réinitialiser les participants pour ne pas interférer avec la création d'un nouvel événement
-    this.eventParticipants = [];
+    // Réinitialiser les participants et les participants externes
+    this.selectedGroupMembers = [];
+    this.externalParticipants = [];
+    this.newExternalEmail = '';
+    this.newExternalName = '';
   }
 
   openViewModal(event: Event) {
@@ -733,6 +742,9 @@ export class AgendaComponent implements OnInit, OnDestroy {
       case 'reminders':
         this.closeSendRemindersModal();
         break;
+      case 'memo':
+        this.closeSendMemoModal();
+        break;
     }
   }
 
@@ -785,7 +797,8 @@ export class AgendaComponent implements OnInit, OnDestroy {
 
   populateEditForm(event: Event) {
     // Formatter les dates pour l'input datetime-local
-    const formatDateForInput = (dateStr: string | Date) => {
+    const formatDateForInput = (dateStr: string | Date | undefined) => {
+      if (!dateStr) return '';
       const date = new Date(dateStr);
       return date.toISOString().slice(0, 16); // Format YYYY-MM-DDTHH:MM
     };
@@ -803,8 +816,9 @@ export class AgendaComponent implements OnInit, OnDestroy {
   }
 
   populateDuplicateForm(event: Event) {
-    // Suggérer des dates une semaine plus tard pour la duplication
-    const addWeek = (dateStr: string | Date) => {
+    // Ajouter une semaine aux dates
+    const addWeek = (dateStr: string | Date | undefined) => {
+      if (!dateStr) return '';
       const date = new Date(dateStr);
       date.setDate(date.getDate() + 7);
       return date.toISOString().slice(0, 16); // Format YYYY-MM-DDTHH:MM
@@ -1213,6 +1227,30 @@ export class AgendaComponent implements OnInit, OnDestroy {
 
       const newEvent: CreateEventRequest = formValue;
 
+      // Préparer les invitations pour les participants sélectionnés (membres du groupe)
+      const invitedPeople: InvitedPerson[] = [
+        // Membres du groupe sélectionnés
+        ...this.selectedGroupMembers.map((member) => ({
+          personId: member.id,
+          status: InvitationStatus.PENDING,
+          isExternal: false,
+          email: member.email,
+          name: `${member.firstName} ${member.name}`,
+        })),
+
+        // Participants externes
+        ...this.externalParticipants.map((person) => ({
+          personId: person.email,
+          status: InvitationStatus.PENDING,
+          isExternal: true,
+          email: person.email,
+          name: person.name,
+        })),
+      ];
+
+      // Ajouter les invitations à l'événement
+      newEvent.invitedPeople = invitedPeople;
+
       this.eventService.createEvent(this.groupId, newEvent).subscribe({
         next: (createdEvent) => {
           this.events = [...this.events, createdEvent];
@@ -1380,14 +1418,40 @@ export class AgendaComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Récupère la liste des participants qui n'ont pas encore répondu
+   */
+  getPendingParticipants(): InvitedPerson[] {
+    if (!this.eventParticipants || this.eventParticipants.length === 0) {
+      return [];
+    }
+
+    return this.eventParticipants.filter(
+      (participant) => participant.status === InvitationStatus.PENDING
+    );
+  }
+
+  /**
+   * Récupère tous les participants (peu importe leur statut)
+   */
+  getAllParticipants(): InvitedPerson[] {
+    if (!this.eventParticipants || this.eventParticipants.length === 0) {
+      return [];
+    }
+
+    return this.eventParticipants;
+  }
+
+  /**
    * Soumet la demande d'envoi de rappels
    */
   submitSendReminders(): void {
     if (!this.selectedEvent?.id) return;
 
-    const confirmedParticipants = this.getConfirmedParticipants();
-    if (confirmedParticipants.length === 0) {
-      this.showErrorMessage('Aucun participant confirmé pour cet événement');
+    const pendingParticipants = this.getPendingParticipants();
+    if (pendingParticipants.length === 0) {
+      this.showErrorMessage(
+        'Aucun participant en attente de réponse pour cet événement'
+      );
       return;
     }
 
@@ -1431,7 +1495,7 @@ export class AgendaComponent implements OnInit, OnDestroy {
 
     const reminderRequest = {
       eventId: this.selectedEvent.id,
-      recipientIds: confirmedParticipants.map((p) => p.personId),
+      recipientIds: pendingParticipants.map((p: InvitedPerson) => p.personId),
       scheduledDate: scheduledDate.toISOString(),
       customMessage: this.customReminderMessage || undefined,
       timing: this.reminderTiming,
@@ -1475,6 +1539,135 @@ export class AgendaComponent implements OnInit, OnDestroy {
         return "(1 jour avant l'événement)";
       case 'custom':
         return `(le ${this.formatDate(this.customReminderDate)})`;
+      default:
+        return '';
+    }
+  }
+
+  /**
+   * Méthodes pour la gestion des mémos
+   */
+  sendMemo(eventId: string | undefined): void {
+    if (!eventId) return;
+    this.openSendMemoModal();
+  }
+
+  /**
+   * Ouvre la modal de programmation des mémos
+   */
+  openSendMemoModal(): void {
+    this.showSendMemoModal = true;
+    this.memoTiming = 'now';
+    this.customMemoDate = '';
+    this.customMemoMessage = '';
+  }
+
+  /**
+   * Ferme la modal de programmation des mémos
+   */
+  closeSendMemoModal(): void {
+    this.showSendMemoModal = false;
+    this.memoTiming = 'now';
+    this.customMemoDate = '';
+    this.customMemoMessage = '';
+  }
+
+  /**
+   * Soumet la demande d'envoi de mémos
+   */
+  submitSendMemo(): void {
+    if (!this.selectedEvent?.id) return;
+
+    const confirmedParticipants = this.getConfirmedParticipants();
+    if (confirmedParticipants.length === 0) {
+      this.showErrorMessage('Aucun participant confirmé pour cet événement');
+      return;
+    }
+
+    // Calculer la date d'envoi selon le timing sélectionné
+    let scheduledDate: Date | null = null;
+    const eventStartDate = new Date(this.selectedEvent.startDateTime);
+
+    switch (this.memoTiming) {
+      case 'now':
+        scheduledDate = new Date();
+        break;
+      case '1hour':
+        scheduledDate = new Date(eventStartDate.getTime() - 60 * 60 * 1000);
+        break;
+      case '1day':
+        scheduledDate = new Date(
+          eventStartDate.getTime() - 24 * 60 * 60 * 1000
+        );
+        break;
+      case 'custom':
+        if (!this.customMemoDate) {
+          this.showErrorMessage('Veuillez sélectionner une date personnalisée');
+          return;
+        }
+        scheduledDate = new Date(this.customMemoDate);
+        break;
+    }
+
+    if (!scheduledDate) {
+      this.showErrorMessage('Erreur dans la configuration de la date');
+      return;
+    }
+
+    // Vérifier que la date programmée n'est pas dans le passé (sauf pour "maintenant")
+    if (this.memoTiming !== 'now' && scheduledDate < new Date()) {
+      this.showErrorMessage('La date de mémo ne peut pas être dans le passé');
+      return;
+    }
+
+    this.loading = true;
+
+    const memoRequest = {
+      eventId: this.selectedEvent.id,
+      recipientIds: confirmedParticipants.map((p: InvitedPerson) => p.personId),
+      scheduledDate: scheduledDate.toISOString(),
+      customMessage: this.customMemoMessage || undefined,
+      timing: this.memoTiming,
+    };
+
+    this.eventService
+      .sendMemo(this.groupId, this.selectedEvent.id, memoRequest)
+      .subscribe({
+        next: () => {
+          this.loading = false;
+          this.closeSendMemoModal();
+
+          const timingText = this.getMemoTimingText();
+          this.showSuccessMessage(
+            `Mémo ${
+              this.memoTiming === 'now' ? 'envoyé' : 'programmé'
+            } avec succès ${timingText}`
+          );
+        },
+        error: (error) => {
+          this.loading = false;
+          this.showErrorMessage(
+            `Erreur lors de ${
+              this.memoTiming === 'now' ? "l'envoi" : 'la programmation'
+            } du mémo: ${error.message || 'Veuillez réessayer plus tard'}`
+          );
+        },
+      });
+  }
+
+  /**
+   * Retourne le texte descriptif du timing sélectionné pour les mémos
+   */
+  private getMemoTimingText(): string {
+    switch (this.memoTiming) {
+      case 'now':
+        return '';
+      case '1hour':
+        return "(1 heure avant l'événement)";
+      case '1day':
+        return "(1 jour avant l'événement)";
+      case 'custom':
+        return `(le ${this.formatDate(this.customMemoDate)})`;
       default:
         return '';
     }
@@ -2091,24 +2284,40 @@ export class AgendaComponent implements OnInit, OnDestroy {
    * Formate un événement pour l'API Google Calendar
    */
   private formatEventForGoogleCalendar(event: Event): EventCreateData {
+    // Créer une description enrichie avec les détails supplémentaires
+    let description = event.description || '';
+    if (event.location) {
+      description += `\n\nLieu: ${event.location}`;
+    }
+
+    // Si meetupDateTime existe et est différente de startDateTime, l'ajouter à la description
+    if (event.meetupDateTime) {
+      const meetupDate = new Date(event.meetupDateTime);
+      description += `\n\nRendez-vous: ${this.formatDate(meetupDate)}`;
+    }
+
+    // Ajouter des informations sur les organisateurs et participants
+    description += '\n\nOrganisé par Sonar Artists';
+
     return {
       summary: event.title,
-      description: event.description || '',
+      description,
       start: {
         dateTime: new Date(event.startDateTime).toISOString(),
-        timeZone: 'Europe/Paris',
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       },
       end: {
-        dateTime: new Date(event.endDateTime).toISOString(),
-        timeZone: 'Europe/Paris',
+        dateTime: event.endDateTime
+          ? new Date(event.endDateTime).toISOString()
+          : new Date(
+              new Date(event.startDateTime).getTime() + 3 * 60 * 60 * 1000
+            ).toISOString(), // Par défaut 3h après le début
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       },
       location: event.location || '',
-      attendees: this.eventParticipants
-        .filter((p) => p.email !== undefined && p.email !== null)
-        .map((p) => ({
-          email: p.email as string,
-          displayName: p.name || '',
-        })),
+      reminders: {
+        useDefault: true,
+      },
     };
   }
 

@@ -24,8 +24,8 @@ export interface Event {
   description?: string;
   location?: string;
   startDateTime: string | Date;
-  endDateTime: string | Date;
-  meetupDateTime: string | Date;
+  endDateTime?: string | Date;
+  meetupDateTime?: string | Date;
   status: EventStatus;
   cancellationReason?: string;
   invitedPeople: InvitedPerson[];
@@ -41,8 +41,8 @@ export interface CreateEventRequest {
   description?: string;
   location?: string;
   startDateTime: string;
-  endDateTime: string;
-  meetupDateTime: string;
+  endDateTime?: string;
+  meetupDateTime?: string;
   status?: EventStatus;
   cancellationReason?: string;
   invitedPeople?: InvitedPerson[];

@@ -1,6 +1,7 @@
 import {
   Component,
-  ElementRef, HostListener,
+  ElementRef,
+  HostListener,
   OnDestroy,
   OnInit,
   ViewChild,
@@ -71,7 +72,6 @@ export class NotificationManagerComponent implements OnInit, OnDestroy {
   private scrollSubscription?: Subscription;
   private intersectionObserver?: IntersectionObserver;
 
-
   @ViewChild('loadMoreTrigger') loadMoreTrigger?: ElementRef;
 
   // Icônes
@@ -88,11 +88,10 @@ export class NotificationManagerComponent implements OnInit, OnDestroy {
     private notificationService: NotificationService,
     private router: Router,
     private authService: AuthService,
-    private eRef: ElementRef,
+    private eRef: ElementRef
   ) {}
 
   ngOnInit(): void {
-
     // S'abonner aux nouveaux événements de notification pour la mise à jour en temps réel
     this.notificationService.notifications$
       .pipe(takeUntil(this.destroy$))
@@ -251,12 +250,9 @@ export class NotificationManagerComponent implements OnInit, OnDestroy {
    * Ouvre ou ferme le panneau de notifications
    */
   toggleNotificationPanel(): void {
-
     this.isOpen = !this.isOpen;
 
-
     if (this.isOpen) {
-
       // Recharger les notifications à l'ouverture
       this.loadNotifications();
       this.setupIntersectionObserver();
@@ -288,10 +284,7 @@ export class NotificationManagerComponent implements OnInit, OnDestroy {
         },
       });
 
-
-
-
-  // Si c'est une notification de transaction, naviguer vers les détails de la transaction
+    // Si c'est une notification de transaction, naviguer vers les détails de la transaction
     // if (
     //   notification.type === 'transaction' &&
     //   notification.data &&
@@ -418,9 +411,43 @@ export class NotificationManagerComponent implements OnInit, OnDestroy {
       this.toggleReadStatus(notification, event);
     }
 
-    // Déléguer la navigation au service de notifications
-    this.notificationService.handleNotificationClick(notification);
+    // Fermer le panneau de notifications
+    this.isOpen = false;
 
+    // Délai pour permettre à l'animation de fermeture de se terminer
+    setTimeout(() => {
+      // Naviguer en fonction du type de notification
+      if (
+        notification.type === 'transaction' &&
+        notification.data &&
+        notification.data['transactionId']
+      ) {
+        // Naviguer vers les détails de la transaction
+        this.router.navigate([
+          '/transactions',
+          notification.data['transactionId'],
+        ]);
+      } else if (
+        notification.type === 'event_invitation' &&
+        notification.data &&
+        notification.data['eventId'] &&
+        notification.data['groupId']
+      ) {
+        // Naviguer vers l'événement dans l'agenda du groupe avec le format d'URL exact
+        this.router.navigate(
+          ['/home/home-group', notification.data['groupId'], 'agenda'],
+          {
+            queryParams: {
+              typeOfProjet: 'GROUP',
+              selectedEventId: notification.data['eventId'],
+            },
+          }
+        );
+      } else {
+        // Déléguer la navigation au service de notifications pour les autres types
+        this.notificationService.handleNotificationClick(notification);
+      }
+    }, 300);
   }
 
   /**
@@ -450,6 +477,4 @@ export class NotificationManagerComponent implements OnInit, OnDestroy {
       this.isOpen = false;
     }
   }
-
-
 }

@@ -949,7 +949,11 @@ export class ProfileComponent implements OnInit {
    */
   protected formatEventDuration(event: Event): string {
     const start = new Date(event.startDateTime);
-    const end = new Date(event.endDateTime);
+
+    // Vérifier si endDateTime existe, sinon utiliser startDateTime + 3h par défaut
+    const end = event.endDateTime
+      ? new Date(event.endDateTime)
+      : new Date(new Date(event.startDateTime).getTime() + 3 * 60 * 60 * 1000);
 
     // Si c'est le même jour
     if (start.toDateString() === end.toDateString()) {

@@ -188,6 +188,21 @@ import {
       >
         <div class="flex justify-between items-center mb-2">
           <h3 class="text-base font-semibold text-gray-900">
+            <span
+              [class.text-yellow-600]="event.status === EventStatus.PENDING"
+              [class.text-green-600]="event.status === EventStatus.CONFIRMED"
+              [class.text-red-600]="event.status === EventStatus.CANCELLED"
+            >
+              <span *ngIf="event.status === EventStatus.PENDING"
+                >EN ATTENTE -
+              </span>
+              <span *ngIf="event.status === EventStatus.CONFIRMED"
+                >CONFIRMÉ -
+              </span>
+              <span *ngIf="event.status === EventStatus.CANCELLED"
+                >ANNULÉ -
+              </span>
+            </span>
             {{ event.title }}
           </h3>
           <span

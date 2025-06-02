@@ -92,7 +92,7 @@ export class EventService {
   }
 
   /**
-   * Envoie des rappels aux invités sélectionnés
+   * Envoie des rappels aux invités sélectionnés qui n'ont pas encore répondu
    */
   sendReminders(
     groupId: number,
@@ -101,6 +101,20 @@ export class EventService {
   ): Observable<void> {
     return this.http.post<void>(
       `${this.apiUrl}/groups/${groupId}/events/${eventId}/reminders`,
+      recipients
+    );
+  }
+
+  /**
+   * Envoie des mémos à tous les participants sélectionnés
+   */
+  sendMemo(
+    groupId: number,
+    eventId: string,
+    recipients: SendReminderRequest
+  ): Observable<void> {
+    return this.http.post<void>(
+      `${this.apiUrl}/groups/${groupId}/events/${eventId}/memo`,
       recipients
     );
   }

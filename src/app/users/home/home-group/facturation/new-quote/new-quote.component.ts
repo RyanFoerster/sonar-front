@@ -291,6 +291,8 @@ export class NewQuoteComponent implements AfterViewInit {
       vat_included: [false],
       type_of_project: [''],
       comment: ['', [Validators.maxLength(2000)]],
+      custom_message: [''],
+      message: [''],
     });
 
     this.createClientForm = this.formBuilder.group({
@@ -431,6 +433,7 @@ export class NewQuoteComponent implements AfterViewInit {
             new Date(quote.validation_deadline)
           ),
           comment: quote.comment,
+          client_id: quote.client.id,
         });
 
         this.calculateTotals();
@@ -1208,6 +1211,7 @@ export class NewQuoteComponent implements AfterViewInit {
           tva6: this.tva6(),
           totalHtva: this.totalHtva(),
           attachment_keys: this.getAllAttachmentKeys(),
+          message : this.mailPreview.body,
         };
 
         // Ajouter l'ID du compte en fonction du type de projet
@@ -1840,10 +1844,14 @@ export class NewQuoteComponent implements AfterViewInit {
 
 // Génère le contenu du mail à partir du devis courant
   generateMailPreview() {
+    const customMessage = this.createQuoteForm.get('custom_message')?.value || '';
     return {
       to: this.client()?.email ?? '',
-      subject: `Votre devis n°${this.nextQuoteNumber ?? ''}`,
-      body: `Bonjour ${this.client()?.firstname || this.client()?.name},\n\nVeuillez trouver en pièce jointe votre devis.\n\nCordialement,\n${this.connectedUser()?.firstName || ''}`
+      subject: `Acceptation de devis`,
+      body:
+        `Bonjour ${this.client()?.firstname || this.client()?.name},\n\n` +
+        (customMessage ? customMessage + '\n\n' : '') +
+        `Veuillez trouver en pièce jointe votre devis.\n\nCordialement,\n${this.connectedUser()?.firstName || ''}`
     };
   }
 
@@ -1863,6 +1871,37 @@ export class NewQuoteComponent implements AfterViewInit {
       if (i === 8) formatted += '.';
     }
     return formatted;
+  }
+
+  generateQuote() {
+    if (!this.createQuoteForm.value.client_id) {
+      toast.error('Veuillez sélectionner un client avant de créer le devis.');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      this.createQuoteForm.markAllAsTouched();
+      this.isLoadingQuote.set(false);
+      return;
+    }
+    if (this.products().length === 0) {
+      toast.error('Veuillez ajouter au moins un service avant de créer le devis.');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      this.createQuoteForm.markAllAsTouched();
+      this.isLoadingQuote.set(false);
+      return;
+    }
+    if (!this.isAtLeastOneAttachmentSelected()) {
+      toast.error('Une pièce jointe est requise car le devis contient au moins un service avec TVA 0%.');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      this.createQuoteForm.markAllAsTouched();
+      this.isLoadingQuote.set(false);
+      return;
+    }
+    if (!this.createQuoteForm.valid) {
+      this.createQuoteForm.markAllAsTouched();
+      this.isLoadingQuote.set(false);
+      return;
+    }
+    // Logique de génération du devis ici
+    this.openMailPreview();
   }
 
   onNationalNumberInput(event: Event) {

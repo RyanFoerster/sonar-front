@@ -1138,8 +1138,8 @@
               class="bg-primary text-white font-medium text-sm rounded-lg px-4 py-2 md:px-6 md:py-2.5 flex items-center gap-2 hover:bg-primary/90 transition-all w-full md:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
               hlmBtn
               type="button"
-              (click)="openMailPreview()"
-              [disabled]="isLoadingQuote() && !isAtLeastOneAttachmentSelected()"
+              (click)="generateQuote()"
+              [disabled]="isLoadingQuote() || !isAtLeastOneAttachmentSelected()"
             >
               <hlm-icon size="sm" name="lucideFileDown" />
               {{ updatedQuoteId() ? "Modifier le devis" : "Générer le devis" }}
@@ -1517,11 +1517,20 @@
       <h2 class="text-lg font-semibold text-gray-900 mb-2">Aperçu du mail</h2>
       <p><strong>À :</strong> {{ mailPreview.to }}</p>
       <p><strong>Objet :</strong> {{ mailPreview.subject }}</p>
-      <p class="mb-2"><strong>Message :</strong></p>
-      <div class="border p-2 bg-gray-50 whitespace-pre-line text-sm">{{ mailPreview.body }}</div>
+      <div class="border p-2 bg-gray-50 whitespace-pre-line text-sm">
+      <textarea
+        [(ngModel)]="mailPreview.body"
+        rows="6"
+        class="w-full bg-gray-50 border-none resize-none focus:outline-none"
+        style="min-height: 100px;"
+        ></textarea>
+      </div>
+
       <div class="flex justify-end gap-2 mt-4">
         <button (click)="sendQuoteAndMail()" class="bg-primary text-white rounded-lg px-4 py-2" hlmBtn>Envoyer</button>
-        <button (click)="showMailPreview = false" class="bg-gray-100 text-gray-700 rounded-lg px-4 py-2 hover:bg-gray-200 transition-all" hlmBtn>Annuler</button>
+        <button (click)="showMailPreview = false"
+                class="bg-gray-100 text-gray-700 rounded-lg px-4 py-2 hover:bg-gray-200 transition-all" hlmBtn>Annuler
+        </button>
       </div>
     </div>
   </div>

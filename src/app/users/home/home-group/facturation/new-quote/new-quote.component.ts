@@ -800,6 +800,9 @@ export class NewQuoteComponent implements AfterViewInit {
       console.log('dataToSend', dataToSend);
     }
 
+    if (clientData.is_physical_person) {
+      clientData.name = `${clientData.firstname} ${clientData.lastname}`.trim();
+    }
     this.clientService
       .create(dataToSend as Partial<ClientEntity>)
       .pipe(take(1))
@@ -930,28 +933,27 @@ export class NewQuoteComponent implements AfterViewInit {
       this.client.set(null);
       this.selectedClient.set(null);
       this.createQuoteForm.patchValue({ client_id: '' });
+
       return;
     }
+
     this.clientService
       .getOneById(clientId)
       .pipe(
         tap((data) => {
           this.client.set(data);
           this.createQuoteForm.patchValue({ client_id: data.id });
-          this.products.set([]);
-          this.tva6.set(0);
-          this.tva21.set(0);
-          this.totalHtva.set(0);
-          this.total.set(0);
-          // Pré-remplir le délai de paiement du devis avec celui du client, sinon 10 jours
           const paymentDeadline = data.default_payment_deadline ?? 10;
           this.createQuoteForm.patchValue({
             payment_deadline: paymentDeadline,
           });
+
+          this.calculateTotals();
         })
       )
       .subscribe();
   }
+
 
   createProduct() {
     if (!this.createProductForm.valid || !this.client()) return;

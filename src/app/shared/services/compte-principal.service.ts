@@ -47,4 +47,14 @@ export class ComptePrincipalService {
     );
 
   }
+
+
+
+  updatePrincipalSolde(id: number, amount_htva: number) {
+    return this.httpClient.patch(
+      `${environment.API_URL}/compte-principal/${id}/solde`,
+      { amount_htva }
+    );
+
+  }
 }

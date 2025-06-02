@@ -10,7 +10,7 @@ import {
   HlmTdComponent, HlmThComponent,
   HlmTrowComponent,
 } from '@spartan-ng/ui-table-helm';
-import { take, tap } from 'rxjs';
+import {of, switchMap, take, tap, throwError} from 'rxjs';
 import { InvoiceEntity } from '../../shared/entities/invoice.entity';
 import { UserEntity } from '../../shared/entities/user.entity';
 import { EuroFormatPipe } from '../../shared/pipes/euro-format.pipe';
@@ -46,6 +46,8 @@ import {VirementSepaDto} from "../../shared/dtos/virement-sepa.dto";
 import {VirementSepaEntity} from "../../shared/entities/virement-sepa.entity";
 import {VirementSepaService} from "../../shared/services/virement-sepa.service";
 import {ComptePrincipalService} from "../../shared/services/compte-principal.service";
+import {CompteGroupeService} from "../../shared/services/compte-groupe.service";
+import {TransactionEntity} from "../../shared/entities/transaction.entity";
 
 type InvoiceStatus =
   | 'payment_pending'
@@ -118,6 +120,7 @@ export class AllInvoicesComponent implements OnInit {
   private readonly virementService= inject(VirementSepaService)
 
   private readonly principalAccountService = inject(ComptePrincipalService);
+  private readonly groupAccountService = inject(CompteGroupeService);
   private readonly usersService = inject(UsersService);
   private readonly pdfService = inject(PdfGeneratorService);
 
@@ -235,7 +238,6 @@ export class AllInvoicesComponent implements OnInit {
       .pipe(
         take(1),
         tap((invoices: InvoiceEntity[]) => {
-          console.log('invoices', invoices);
           this.allInvoices.set(invoices);
         })
       )
@@ -243,7 +245,6 @@ export class AllInvoicesComponent implements OnInit {
   }
 
   filterByStatus(status: FilterStatus) {
-    console.log(status);
     this.selectedStatus.set(status);
     this.currentPage.set(1);
   }
@@ -293,12 +294,13 @@ export class AllInvoicesComponent implements OnInit {
       amount_htva: montant,
       amount_tva: 0,
       amount_total: invoice.total,
-      communication: `Paiement facture ${invoice.invoice_number}`,
+      communication: `Paiement facture ` + this.formatInvoiceNumber(invoice),
       structured_communication: '',
       transaction_type: 'INCOMING',
-
-
+      invoice_id: invoice.id
     };
+
+
     //verifie si c'est un virement de groupe ou de principal
     let type : string = "";
     let idAccount : number = 0;
@@ -334,14 +336,13 @@ export class AllInvoicesComponent implements OnInit {
                     next: (idCommisionAccount: number) => {
                       const transactionDtoCommission: TransactionDto = {
                         amount: commission,
-                        communication: `Commission pour la facture ${invoice.invoice_number}`,
+                        communication: `Commission pour la facture ` + this.formatInvoiceNumber(invoice),
                         senderGroup: invoice.group_account?.id ?? null,
                         senderPrincipal: invoice.main_account?.id ?? null,
                         recipientPrincipal: [idCommisionAccount],
+                        invoice_id: invoice.id
+
                       };
-
-
-
                       this.transactionService
                         .createTransaction(transactionDtoCommission)
                         .pipe(take(1))
@@ -551,24 +552,65 @@ export class AllInvoicesComponent implements OnInit {
   }
 
   cancel(invoice: InvoiceEntity) {
-    //mettre à jour le statut de la facture
-    this.invoiceService
-      .update(invoice.id, { status: 'canceled' })
-      .pipe(take(1))
-      .subscribe({
-        next: () => {
-          this.allInvoices.update((invoices) =>
-            invoices.map((inv) =>
-              inv.id === invoice.id ? { ...inv, status: 'pending' } : inv
-            )
-          );
-          toast.success(`Facture ${invoice.id} annulée.`);
-        },
-        error: (err: unknown) => {
-          console.error('Erreur lors de la mise à jour du statut:', err);
-          toast.error('Erreur lors de la mise à jour du statut de la facture.');
-        },
-      });
+    let virementBackup: VirementSepaEntity | null = null;
+    let transactionBackup: TransactionEntity | null = null;
 
+    // On vérifie d'abord la présence du virement et de la transaction
+    this.virementService.getVirementSepaByInvoiceId(invoice.id).pipe(
+      take(1),
+      switchMap((virement: VirementSepaEntity | null) => {
+        if (!virement) return throwError(() => new Error('Aucun virement SEPA trouvé.'));
+        virementBackup = virement;
+        return this.transactionService.getTransactionByInvoiceId(invoice.id).pipe(
+          take(1),
+          switchMap((transaction: TransactionEntity | null) => {
+            if (!transaction) return throwError(() => new Error('Aucune transaction trouvée.'));
+            transactionBackup = transaction;
+
+            // Toutes les entités existent, on peut commencer les modifications
+            // 1. Reverse virement (décrémente le solde et supprime le virement)
+            let updateSolde$ = invoice.group_account
+              ? this.groupAccountService.updateGroupeSolde(invoice.group_account.id, -virement.amount_htva).pipe(take(1))
+              : this.principalAccountService.updatePrincipalSolde(invoice.main_account.id, -virement.amount_htva).pipe(take(1));
+            return updateSolde$.pipe(
+              switchMap(() => this.virementService.deleteVirementSepa(virement.id).pipe(take(1))),
+              // 2. Suppression de la transaction et update soldes
+              switchMap(() => this.transactionService.deleteTransaction(transaction.id).pipe(take(1))),
+              switchMap(() => {
+                let updateSolde2$ = invoice.group_account
+                  ? this.groupAccountService.updateGroupeSolde(invoice.group_account.id, transaction.amount).pipe(take(1))
+                  : this.principalAccountService.updatePrincipalSolde(invoice.main_account.id, transaction.amount).pipe(take(1));
+                const updateCommission$ = this.principalAccountService.getCommisionAccount().pipe(
+                  take(1),
+                  switchMap((idCommisionAccount: number) =>
+                    this.principalAccountService.updatePrincipalSolde(idCommisionAccount, -transaction.amount).pipe(take(1))
+                  )
+                );
+                return (updateSolde2$ ? updateSolde2$ : updateCommission$).pipe(
+                  switchMap(() => updateCommission$)
+                );
+              }),
+              // 3. Mise à jour du statut de la facture
+              switchMap(() => this.invoiceService.update(invoice.id, { status: 'payment_pending' }).pipe(take(1)))
+            );
+          })
+        );
+      })
+    ).subscribe({
+      next: () => {
+        this.allInvoices.update((invoices) =>
+          invoices.map((inv) =>
+            inv.id === invoice.id ? { ...inv, status: 'pending' } : inv
+          )
+        );
+        toast.success(`Facture ${invoice.id} annulée.`);
+      },
+      error: (err) => {
+        toast.error('Erreur lors de l\'annulation : ' + (err?.message || err));
+        console.error('Erreur lors de l\'annulation :', err);
+      }
+    });
   }
+
+
 }

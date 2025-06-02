@@ -4,6 +4,7 @@ import { TransactionEntity } from '../entities/transaction.entity';
 import { environment } from '../../../environments/environment';
 import { TransactionDto } from '../dtos/transaction.dto';
 import { PaginatedResponse } from '../interfaces/paginated-response.interface';
+import {VirementSepaEntity} from "../entities/virement-sepa.entity";
 
 @Injectable({
   providedIn: 'root',
@@ -78,5 +79,24 @@ export class TransactionService {
       `${environment.API_URL}/transaction/sender-group/${id}`,
       { params }
     );
+  }
+
+
+
+
+
+  deleteTransaction(id: number) {
+    return this.httpClient.delete(
+      `${environment.API_URL}/transaction/${id}`
+    );
+
+
+  }
+
+  getTransactionByInvoiceId(id: number) {
+    return this.httpClient.get<TransactionEntity>(
+      `${environment.API_URL}/transaction/invoice/${id}`
+    );
+
   }
 }

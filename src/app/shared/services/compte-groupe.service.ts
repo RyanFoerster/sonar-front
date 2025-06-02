@@ -134,4 +134,12 @@ export class CompteGroupeService {
     );
   }
 
+  updateGroupeSolde(id: number, amount_htva: number) {
+    return this.httpClient.patch<CompteGroupeEntity>(
+      `${environment.API_URL}/compte-groupe/${id}/solde`,
+      { amount_htva },
+      { headers: this.getHeaders() }
+    );
+
+  }
 }

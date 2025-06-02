@@ -10,4 +10,7 @@ export interface TransactionDto {
   recipientGroup?: number[] ;
 
   recipientPrincipal?: number[];
+
+  invoice_id?: number;
+
 }

@@ -91,7 +91,8 @@
 </div>
 } @else {
 <hlm-tabs
-  tab="devis"
+  [tab]="activeTab"
+
   class="flex flex-col gap-2 sm:gap-3 md:gap-4 mx-4 sm:mx-10"
 >
   <hlm-tabs-list
@@ -133,8 +134,8 @@
   <div hlmTabsContent="factures">
     <!-- Tableau des factures et notes de crédit -->
     <app-invoices-table
-      [allInvoicesAndCreditNotes]="allInvoicesAndCreditNotes()"
-      [paginatedInvoicesAndCreditNotes]="paginatedInvoicesAndCreditNotes()"
+      [allInvoicesAndCreditNotes]="getAllInvoicesEntities()"
+      [paginatedInvoicesAndCreditNotes]="getPaginatedInvoicesEntities()"
       [invoicesFilter]="invoicesFilter"
       [invoicesPagination]="invoicesPagination"
       [typeOfProjet]="typeOfProjet()!"

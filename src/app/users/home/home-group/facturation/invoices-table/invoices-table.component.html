@@ -94,10 +94,10 @@
         <tbody class="divide-y divide-gray-200">
           @if (hasAccessToBilling()) { @for (doc of
           paginatedInvoicesAndCreditNotes(); track doc.id + '-' +
-          doc.documentType) {
+          doc.type) {
 
           <!-- Ligne de facture -->
-          @if (doc.documentType === 'invoice') {
+          @if (doc.type === 'invoice') {
           <tr
             class="bg-white hover:bg-gray-50 transition-colors flex flex-col lg:table-row mb-3 lg:mb-0 rounded-lg lg:rounded-none shadow-sm lg:shadow-none border border-gray-100 lg:border-0"
           >
@@ -241,7 +241,7 @@
                 <!-- Affiche le niveau de rappel si non payé -->
               </span>
             </td>
-            <td
+            <div
               class="px-2 sm:px-3 md:px-4 lg:px-6 py-1.5 sm:py-2 md:py-3 lg:py-4"
             >
               <div
@@ -251,33 +251,224 @@
                   hlmBtn
                   variant="ghost"
                   size="sm"
-                  class="flex items-center justify-center gap-1 sm:gap-1.5 w-full lg:w-auto text-[10px] xs:text-xs whitespace-nowrap px-1.5 sm:px-2 py-1 sm:py-1.5 border border-gray-200 hover:bg-gray-100 hover:border-gray-300"
+                  title="Télécharger la facture"
+                  class="flex items-center justify-center gap-1.5 w-full lg:w-auto text-xs whitespace-nowrap px-2 py-1.5 border border-transparent hover:border-gray-200 hover:bg-gray-100 text-gray-600 hover:text-gray-800"
                   (click)="generateInvoicePDF(asInvoiceEntity(doc))"
                 >
                   <hlm-icon
                     size="sm"
                     name="lucideFileDown"
-                    class="h-3 w-3 sm:h-4 sm:w-4 text-green-600"
+                    class="h-3.5 w-3.5"
                   />
-                  <span>Télécharger facture</span>
+                  <span class="lg:hidden">Télécharger</span>
                 </button>
                 @if (connectedUser()?.role === 'ADMIN' && doc['status'] !==
                 'paid') {
-                <button
-                  hlmBtn
-                  variant="outline"
-                  size="sm"
-                  class="flex items-center justify-center gap-1 sm:gap-1.5 w-full lg:w-auto text-[10px] xs:text-xs whitespace-nowrap px-1.5 sm:px-2 py-1 sm:py-1.5 border border-blue-200 hover:bg-blue-50 text-blue-700"
-                  (click)="markAsPaid(doc.id)"
-                >
-                  <hlm-icon
+
+
+
+                <hlm-dialog *ngIf="doc['status']  !== 'paid'" (closed)="cancelEdit()">
+                  <!-- Bouton déclencheur du dialog -->
+                  <button
+                    hlmBtn
+                    variant="ghost"
                     size="sm"
-                    name="lucideCheckCircle"
-                    class="h-3 w-3 sm:h-4 sm:w-4 text-blue-600"
-                  />
-                  <span>Marquer comme payée</span>
-                </button>
+                    class="flex items-center justify-center gap-1.5 w-full lg:w-auto text-xs whitespace-nowrap px-2 py-1.5 border border-transparent hover:border-green-200 hover:bg-green-50 text-green-600 hover:text-green-700"
+                    brnDialogTrigger
+                    title="Récapitulatif de la facture"
+                  >
+                    <hlm-icon
+                      size="sm"
+                      name="lucideCheckCircle"
+                      class="h-3.5 w-3.5"
+                    />
+                    <span class="lg:hidden">Marquer Payée</span>
+                  </button>
+
+                  <!-- Contenu du dialog -->
+                  <hlm-dialog-content *brnDialogContent="let ctx" class="sm:max-w-md w-full mx-4 sm:mx-auto rounded-xl shadow-lg">
+                    <hlm-dialog-header>
+                      <h3 hlmDialogTitle class="text-lg font-semibold text-gray-800">
+                        Récapitulatif de la facture #{{ formatInvoiceNumber(doc) }}
+                      </h3>
+                      <p hlmDialogDescription class="text-sm text-gray-500">
+                        Voici les informations principales liées à cette facture.
+                      </p>
+                    </hlm-dialog-header>
+
+                    <div class="mt-4 space-y-3 text-sm text-gray-700">
+                      <div class="flex justify-between">
+                        <span class="font-medium">Nom du projet :</span>
+                        <span class="text-right text-gray-900">
+                           {{
+                            doc.main_account
+                              ? doc?.main_account?.username
+                              : doc.group_account
+                                ? doc.group_account.username
+                                : "N/A"
+                          }}
+                       </span>
+                      </div>
+                      <div class="flex justify-between">
+                        <span class="font-medium">Client :</span>
+                        <span class="text-right text-gray-900">{{ doc.client.name }}</span>
+                      </div>
+                      <div class="flex justify-between">
+                        <span class="font-medium">HTVA :</span>
+                        <span class="text-right text-gray-900">{{ doc['price_htva'] | euroFormat }}</span>
+                      </div>
+                      <div class="flex justify-between">
+                        <span class="font-medium">Total TVAC :</span>
+                        <span class="text-right text-gray-900">{{ doc.total | euroFormat }}</span>
+                      </div>
+
+
+
+                      <div class="flex flex-col gap-3 w-full max-w-md">
+                        <div>
+                          <div class="flex justify-between items-center">
+                            <span class="font-medium">Commission :</span>
+                            <div *ngIf="!isEditing" class="flex items-center gap-2">
+                              <button
+                                (click)="editCommission(doc)"
+                                class="text-blue-600 hover:text-blue-800 transition"
+                                title="Modifier"
+                              >
+                                ✏️
+                              </button>
+                              <span class="text-gray-900">
+                                {{
+                                  doc?.main_account?.commissionPourcentage ??
+                                  doc?.group_account?.commissionPourcentage ??
+                                  doc?.main_account?.commission ??
+                                  doc?.group_account?.commission ??
+                                  'N/A'
+                                }}
+                                <ng-container *ngIf="(doc?.main_account?.commissionPourcentage ?? doc?.group_account?.commissionPourcentage) != null">%</ng-container>
+
+                                <ng-container *ngIf="(doc?.main_account?.commission ?? doc?.group_account?.commission) != null">€</ng-container>
+                              </span>
+                            </div>
+                          </div>
+                          <div *ngIf="isEditing" class="mt-2 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                            <div class="flex gap-3">
+                              <label class="flex items-center gap-1 cursor-pointer text-sm">
+                                <input
+                                  type="radio"
+                                  name="commissionType"
+                                  [(ngModel)]="commissionType"
+                                  value="percent"
+                                  class="cursor-pointer"
+                                />
+                                %
+                              </label>
+                              <label class="flex items-center gap-1 cursor-pointer text-sm">
+                                <input
+                                  type="radio"
+                                  name="commissionType"
+                                  [(ngModel)]="commissionType"
+                                  value="fixed"
+                                  class="cursor-pointer"
+                                />
+                                Montant
+                              </label>
+                            </div>
+                            <div *ngIf="commissionType === 'percent'" class="flex items-center gap-1">
+                              <input
+                                type="number"
+                                [(ngModel)]="editedCommissionPercent"
+                                min="0"
+                                max="100"
+                                class="w-20 p-1 border rounded text-right"
+                                placeholder=""
+                              />
+                              <span>%</span>
+                            </div>
+                            <div *ngIf="commissionType === 'fixed'" class="flex items-center gap-1">
+                              <input
+                                type="number"
+                                [(ngModel)]="editedCommissionFixed"
+                                min="0"
+                                [max]="doc['price_htva']"
+                                class="w-24 p-1 border rounded text-right"
+                                placeholder="Montant"
+                              />
+                              <span>€</span>
+                            </div>
+                            <div class="flex gap-2 ml-auto">
+                              <button
+                                (click)="saveCommission(doc)"
+                                class="text-green-600 hover:text-green-800 font-bold"
+                                title="Enregistrer"
+                                [disabled]="commissionType === 'fixed' && editedCommissionFixed != null && editedCommissionFixed > doc['price_htva']"
+                              >
+                                ✅
+                              </button>
+                              <button
+                                (click)="cancelEdit()"
+                                class="text-red-500 hover:text-red-700 font-bold"
+                                title="Annuler"
+                              >
+                                ❌
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="flex justify-between">
+                          <span class="font-medium">Montant de la commission :</span>
+                          <span class="text-right text-gray-900">
+                            {{ calculateCommissionAmount(doc) | euroFormat }}
+                          </span>
+                        </div>
+                      </div>
+
+                      <!-- Ajoute d'autres champs si besoin -->
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row justify-end mt-6 gap-2">
+                      <button
+                        hlmBtn
+                        type="button"
+                        (click)="ctx.close()"
+                        class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition font-medium shadow-sm border border-gray-200"
+                      >
+                        Fermer
+                      </button>
+                      <button
+                        hlmBtn
+                        type="button"
+                        [disabled]="isEditing"
+                        (click)="markAsPaid(doc.id)"
+                        class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition font-semibold shadow-sm border border-green-700 disabled:bg-gray-200 disabled:text-gray-400"
+                      >
+                        Validé le payement
+                      </button>
+                    </div>
+                  </hlm-dialog-content>
+                </hlm-dialog>
                 }
+                <button
+                  *ngIf="doc.status === 'paid'"
+                  hlmBtn
+                  variant="ghost"
+                  size="sm"
+                  class="flex items-center justify-center gap-1.5 w-full lg:w-auto text-xs whitespace-nowrap px-2 py-1.5 border border-transparent hover:border-gray-200 hover:bg-gray-100 text-gray-600 hover:text-gray-800"
+                  (click)="cancel(doc)"
+                  title="Annuler la facture"
+                >
+                  ❌
+                  <span class="lg:hidden">Annuler</span>
+                </button>
+
+
+              </div>
+
+
+
+
+
+
+
                 <!-- @if (canEditBilling()) { @if (!doc['linkedInvoiceId']) {
                 <button
                   hlmBtn
@@ -316,12 +507,11 @@
                 </button>
                 }
               </div>
-            </td>
           </tr>
           }
 
           <!-- Ligne de note de crédit -->
-          @if (doc.documentType === 'credit_note') {
+          @if (doc.type === 'credit_note') {
           <tr
             class="bg-amber-50 hover:bg-amber-100 transition-colors flex flex-col lg:table-row mb-3 lg:mb-0 rounded-lg lg:rounded-none shadow-sm lg:shadow-none border border-amber-100 lg:border-0"
           >

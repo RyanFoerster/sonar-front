@@ -24,7 +24,6 @@ import {
 } from '@ng-icons/lucide';
 
 import { HlmButtonDirective } from '@spartan-ng/ui-button-helm';
-
 import { HlmIconComponent } from '@spartan-ng/ui-icon-helm';
 import { HlmTableImports } from '@spartan-ng/ui-table-helm';
 import { firstValueFrom } from 'rxjs';
@@ -55,7 +54,6 @@ import {
   HlmTabsTriggerDirective,
 } from '@spartan-ng/ui-tabs-helm';
 
-// Interface pour les documents
 interface Document {
   id: number;
   documentType: 'quote' | 'invoice' | 'credit_note' | string;
@@ -88,7 +86,6 @@ interface Document {
   linkedInvoiceId?: number;
 }
 
-/* Ajout d'une interface pour le contexte modal */
 interface ModalContext {
   close: () => void;
 }
@@ -139,11 +136,9 @@ export class FacturationComponent implements OnInit, OnDestroy {
     router: inject(Router),
   };
 
-  // Inputs
   id = input<number>();
   typeOfProjet = input<string>();
 
-  // State signals
   protected accountPrincipal: PrincipalAccountEntity | undefined;
   protected connectedUser = signal<UserEntity | null>(null);
   protected groupAccount = signal<CompteGroupeEntity | undefined>(undefined);
@@ -157,7 +152,6 @@ export class FacturationComponent implements OnInit, OnDestroy {
   protected searchNumber = signal<string>('');
   protected originalDocuments = signal<Document[]>([]);
 
-  // Computed values
   protected reportDateFormatted = computed(() =>
     this.formatDate(this.reportDate())
   );
@@ -165,18 +159,17 @@ export class FacturationComponent implements OnInit, OnDestroy {
     () => this.currentDate.toISOString().split('T')[0]
   );
 
-  // Pagination constants
   private readonly ITEMS_PER_PAGE = 10;
   private readonly INITIAL_PAGE = 1;
 
-  // Pagination state
+  activeTab: 'devis' | 'factures' = 'factures';
+
   protected pagination = {
     currentPage: signal(this.INITIAL_PAGE),
     totalPages: signal(0),
     totalItems: signal(0),
   };
 
-  // Nouveau système de pagination pour les factures/notes de crédit
   protected invoicesPagination = {
     currentPage: signal(this.INITIAL_PAGE),
     totalPages: signal(0),
@@ -185,13 +178,12 @@ export class FacturationComponent implements OnInit, OnDestroy {
 
   protected itemsPerPage = signal(this.ITEMS_PER_PAGE);
 
-  // Documents state
   currentFilter: 'all' | 'quotes' | 'invoiced_quotes' | 'credit-note' = 'all';
-  invoicesFilter: 'all' | 'invoices' | 'credit-notes' = 'all'; // Nouveau filtre pour les factures et notes de crédit
+  invoicesFilter: 'all' | 'invoices' | 'credit-notes' = 'all';
   invoices: InvoiceEntity[] = [];
   protected allDocuments = signal<Document[]>([]);
-  protected allQuotes = signal<Document[]>([]); // Uniquement les devis
-  protected allInvoicesAndCreditNotes = signal<Document[]>([]); // Uniquement les factures et notes de crédit
+  protected allQuotes = signal<Document[]>([]);
+  protected allInvoicesAndCreditNotes = signal<Document[]>([]);
 
   protected paginatedDocuments = computed(() => {
     const startIndex =
@@ -221,6 +213,7 @@ export class FacturationComponent implements OnInit, OnDestroy {
   }
 
   async ngOnInit(): Promise<void> {
+    this.activeTab = 'devis';
     this.isLoading.set(true);
     await this.getConnectedUser();
   }
@@ -246,7 +239,6 @@ export class FacturationComponent implements OnInit, OnDestroy {
       const data = await firstValueFrom(
         this.services.principal.getGroupByIdWithRelations(+this.id()!)
       );
-      console.log('data principal', data);
       this.accountPrincipal = data;
       this.loadInvoices();
       this.initializeCreditNotes(data.invoice || []);
@@ -300,22 +292,14 @@ export class FacturationComponent implements OnInit, OnDestroy {
   private updateDocuments(): void {
     let allDocs = [];
 
-    // Récupération des devis et formatage
     const formattedQuotes = this.getFormattedQuotes();
-
-    // Récupération des notes de crédit et formatage
     const formattedCreditNotes = this.getFormattedCreditNotes();
-
-    // Récupération des factures et formatage
     const formattedInvoices = this.getFormattedInvoices();
 
-    // Combinaison de tous les documents
     allDocs = [...formattedQuotes, ...formattedCreditNotes];
 
-    // Filtrage selon le filtre actuel
     const filteredDocs = this.filterDocuments(allDocs);
 
-    // Recherche par numéro
     let docsMatchingSearch = filteredDocs;
     if (this.searchNumber()) {
       const searchLower = this.searchNumber().toLowerCase();
@@ -329,18 +313,15 @@ export class FacturationComponent implements OnInit, OnDestroy {
       });
     }
 
-    // Tri par date décroissante
     const sortedDocs = docsMatchingSearch.sort(this.sortByDate);
     this.allDocuments.set(sortedDocs);
 
-    // Mise à jour des documents séparés
     this.updateSeparatedDocuments(
       formattedQuotes,
       formattedInvoices,
       formattedCreditNotes
     );
 
-    // Mise à jour de la pagination
     this.updatePagination(this.allQuotes());
     this.updateInvoicesPagination(this.allInvoicesAndCreditNotes());
   }
@@ -350,7 +331,6 @@ export class FacturationComponent implements OnInit, OnDestroy {
     invoices: Document[],
     creditNotes: Document[]
   ): void {
-    // Filtrage des devis
     let filteredQuotes = quotes;
 
     if (this.currentFilter === 'quotes') {
@@ -361,11 +341,9 @@ export class FacturationComponent implements OnInit, OnDestroy {
       filteredQuotes = [];
     }
 
-    // Recherche par numéro pour les devis
     if (this.searchNumber()) {
       const searchLower = this.searchNumber().toLowerCase();
       filteredQuotes = filteredQuotes.filter((quote) => {
-        // Nouveau format d-(année)/000(numéro)
         const currentYear = new Date().getFullYear();
         const paddedNumber =
           quote.quote_number?.toString().padStart(4, '0') || '';
@@ -375,7 +353,6 @@ export class FacturationComponent implements OnInit, OnDestroy {
       });
     }
 
-    // Tri des devis par numéro (ordre décroissant) au lieu de par date
     const sortedQuotes = filteredQuotes.sort((a: Document, b: Document) => {
       const aNumber = a.quote_number || 0;
       const bNumber = b.quote_number || 0;
@@ -384,22 +361,18 @@ export class FacturationComponent implements OnInit, OnDestroy {
 
     this.allQuotes.set(sortedQuotes);
 
-    // Filtrage des factures et notes de crédit
     let invoicesAndCreditNotes = [...invoices, ...creditNotes];
 
-    // Filtrage selon le filtre de factures
     if (this.invoicesFilter === 'invoices') {
       invoicesAndCreditNotes = invoices;
     } else if (this.invoicesFilter === 'credit-notes') {
       invoicesAndCreditNotes = creditNotes;
     }
 
-    // Recherche par numéro pour les factures et notes de crédit
     if (this.searchNumber()) {
       const searchLower = this.searchNumber().toLowerCase();
       invoicesAndCreditNotes = invoicesAndCreditNotes.filter((doc) => {
         if (doc.documentType === 'invoice') {
-          // Nouveau format f-(année)/000(numéro)
           const currentYear = new Date().getFullYear();
           const paddedNumber =
             doc.invoice_number?.toString().padStart(4, '0') || '';
@@ -407,7 +380,6 @@ export class FacturationComponent implements OnInit, OnDestroy {
             `f-${currentYear}/${paddedNumber}`.toLowerCase();
           return formattedNumber.includes(searchLower);
         } else if (doc.documentType === 'credit_note') {
-          // Nouveau format nc-(année)/000(numéro)
           const currentYear = new Date().getFullYear();
           const paddedNumber =
             doc.invoice_number?.toString().padStart(4, '0') || '';
@@ -419,7 +391,6 @@ export class FacturationComponent implements OnInit, OnDestroy {
       });
     }
 
-    // Tri des factures et notes de crédit par numéro (ordre décroissant)
     const sortedInvoicesAndCreditNotes = invoicesAndCreditNotes.sort(
       (a: Document, b: Document) => {
         const aNumber = a.invoice_number || 0;
@@ -434,15 +405,15 @@ export class FacturationComponent implements OnInit, OnDestroy {
   private getFormattedQuotes() {
     return this.typeOfProjet() === 'PRINCIPAL'
       ? this.accountPrincipal!.quote.map((quote) => ({
-          ...quote,
-          documentDate: quote.quote_date,
-          documentType: 'quote',
-        }))
+        ...quote,
+        documentDate: quote.quote_date,
+        documentType: 'quote',
+      }))
       : this.groupAccount()!.quote.map((quote) => ({
-          ...quote,
-          documentDate: quote.quote_date,
-          documentType: 'quote',
-        }));
+        ...quote,
+        documentDate: quote.quote_date,
+        documentType: 'quote',
+      }));
   }
 
   private getFormattedCreditNotes() {
@@ -455,21 +426,44 @@ export class FacturationComponent implements OnInit, OnDestroy {
       }));
   }
 
+  // Ajout du champ commissionPourcentage dans le mapping du groupe
   private getFormattedInvoices() {
-    const groupAccount = this.groupAccount();
-    return this.invoices
-      .filter((inv) => inv.type === 'invoice')
-      .map((invoice) => ({
-        ...invoice,
-        documentDate: invoice.invoice_date,
-        documentType: 'invoice',
-        group_account: groupAccount
-          ? { id: groupAccount.id, username: groupAccount.username }
-          : undefined,
-      }));
+    if (this.typeOfProjet() === 'PRINCIPAL') {
+      const principal = this.accountPrincipal;
+      return this.invoices
+        .filter((inv) => inv.type === 'invoice')
+        .map((invoice) => ({
+          ...invoice,
+          documentDate: invoice.invoice_date,
+          documentType: 'invoice',
+          main_account: principal
+            ? {
+              id: principal.id,
+              username: principal.username,
+              commissionPourcentage: principal.commissionPourcentage,
+              commission: principal.commission,
+            }
+            : undefined,
+        }));
+    } else {
+      const groupAccount = this.groupAccount();
+      return this.invoices
+        .filter((inv) => inv.type === 'invoice')
+        .map((invoice) => ({
+          ...invoice,
+          documentDate: invoice.invoice_date,
+          documentType: 'invoice',
+          group_account: groupAccount
+            ? {
+              id: groupAccount.id,
+              username: groupAccount.username,
+              commissionPourcentage: groupAccount.commissionPourcentage,
+            }
+            : undefined,
+        }));
+    }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private filterDocuments(docs: any[]) {
     switch (this.currentFilter) {
       case 'quotes':
@@ -493,7 +487,6 @@ export class FacturationComponent implements OnInit, OnDestroy {
     );
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private updatePagination(docs: any[]) {
     this.pagination.totalItems.set(docs.length);
     this.pagination.totalPages.set(
@@ -517,12 +510,11 @@ export class FacturationComponent implements OnInit, OnDestroy {
     this.services.pdf.generateQuotePDF(quote as unknown as QuoteEntity);
   }
 
-  generateInvoicePDF(invoice: Document): void {
-    console.log('invoice in generateInvoicePDF', invoice);
+  generateInvoicePDF(invoice: any): void {
     this.services.pdf.generateInvoicePDF(invoice as unknown as InvoiceEntity);
   }
 
-  generateCreditNotePdf(creditNote?: Document): void {
+  generateCreditNotePdf(creditNote?: InvoiceEntity): void {
     if (creditNote) {
       this.creditNote.set(creditNote as unknown as InvoiceEntity);
     }
@@ -543,7 +535,6 @@ export class FacturationComponent implements OnInit, OnDestroy {
       quote.invoice = data;
       ctx.close();
 
-      // Rafraîchir entièrement les données au lieu de simplement mettre à jour l'affichage
       if (this.typeOfProjet() === 'PRINCIPAL' && this.accountPrincipal) {
         const updatedAccount = await firstValueFrom(
           this.services.principal.getGroupByIdWithRelations(+this.id()!)
@@ -556,7 +547,6 @@ export class FacturationComponent implements OnInit, OnDestroy {
         this.groupAccount.set(updatedGroup);
       }
 
-      // Mettre à jour les factures et l'affichage
       this.loadInvoices();
       toast('Facture créée avec succès');
     } catch (error) {
@@ -577,7 +567,6 @@ export class FacturationComponent implements OnInit, OnDestroy {
       this.creditNoteList.update((prev) => [...prev, data]);
       this.isCreditNote.set(!!data);
     } catch (error) {
-      // Gérer les erreurs
       console.error(error);
     }
   }
@@ -588,9 +577,8 @@ export class FacturationComponent implements OnInit, OnDestroy {
         this.services.invoice.getCreditNoteByInvoiceId(creditNoteId)
       );
       this.creditNote.set(data);
-      this.generateCreditNotePdf(this.creditNote()! as unknown as Document);
+      this.generateCreditNotePdf(this.creditNote()! as unknown as InvoiceEntity);
     } catch (error) {
-      // Gérer les erreurs
       console.error(error);
     }
   }
@@ -772,44 +760,31 @@ export class FacturationComponent implements OnInit, OnDestroy {
     return this.getVisiblePagesGeneric(currentPage, totalPages);
   }
 
-  // Méthodes pour caster les types et éviter les erreurs
   protected asQuoteEntity(doc: Document): QuoteEntity {
-    // Conversion explicite pour le compilateur
     return doc as unknown as QuoteEntity;
   }
 
   protected asInvoiceEntity(doc: Document): InvoiceEntity {
-    // Conversion explicite pour le compilateur
     return doc as unknown as InvoiceEntity;
   }
 
-  /**
-   * Gère la mise à jour du statut d'une facture émise par le composant enfant.
-   * Recharge les données pour refléter le changement.
-   * @param updatedInvoiceId L'ID de la facture mise à jour.
-   */
   protected async handleInvoiceUpdate(): Promise<void> {
+    this.activeTab = 'factures';
     this.isLoading.set(true);
     try {
       if (this.typeOfProjet() === 'PRINCIPAL') {
         const data = await firstValueFrom(
           this.services.principal.getGroupByIdWithRelations(+this.id()!)
         );
-        console.log('data principal', data);
         this.accountPrincipal = data;
       } else if (this.typeOfProjet() === 'GROUP') {
         const data = await firstValueFrom(
           this.services.group.getGroupById(+this.id()!)
         );
-        console.log('data group', data);
         this.groupAccount.set(data);
       } else {
-        console.log('this.typeOfProjet()', this.typeOfProjet());
         await this.getConnectedUser();
       }
-
-      console.log('this.accountPrincipal', this.accountPrincipal);
-      console.log('this.groupAccount', this.groupAccount());
 
       this.loadInvoices();
       toast('Statut de la facture mis à jour.');
@@ -824,7 +799,6 @@ export class FacturationComponent implements OnInit, OnDestroy {
     }
   }
 
-  // Nouvelle méthode pour formater les numéros de facture
   protected formatInvoiceNumber(invoice: Document): string {
     if (!invoice.invoice_number) return '';
 
@@ -832,24 +806,26 @@ export class FacturationComponent implements OnInit, OnDestroy {
     const paddedNumber = invoice.invoice_number.toString().padStart(4, '0');
 
     if (invoice.documentType === 'invoice') {
-      // Format global: f-(année)/000(numéro)
       return `f-${currentYear}/${paddedNumber}`;
     } else if (invoice.documentType === 'credit_note') {
-      // Format note de crédit: nc-(année)/000(numéro)
       return `nc-${currentYear}/${paddedNumber}`;
     }
 
     return `${invoice.invoice_number}`;
   }
 
-  // Nouvelle méthode pour formater les numéros de devis
   protected formatQuoteNumber(quote: Document): string {
     if (!quote.quote_number) return '';
 
     const currentYear = new Date().getFullYear();
     const paddedNumber = quote.quote_number.toString().padStart(4, '0');
-
-    // Format: d-(année)/000(numéro)
     return `d-${currentYear}/${paddedNumber}`;
+  }
+
+  getAllInvoicesEntities(): InvoiceEntity[] {
+    return this.allInvoicesAndCreditNotes().map(doc => this.asInvoiceEntity(doc));
+  }
+  getPaginatedInvoicesEntities(): InvoiceEntity[] {
+    return this.paginatedInvoicesAndCreditNotes().map(doc => this.asInvoiceEntity(doc));
   }
 }

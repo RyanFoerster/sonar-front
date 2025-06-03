@@ -79,6 +79,7 @@ import { EuroFormatPipe } from '../../../../../shared/pipes/euro-format.pipe';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { QuoteDto } from '../../../../../shared/dtos/quote.dto';
 import { QuillModule } from 'ngx-quill';
+import { ClientFormComponent } from '../../../../../shared/components/client-form/client-form.component';
 
 @Component({
   selector: 'app-new-quote',
@@ -106,6 +107,7 @@ import { QuillModule } from 'ngx-quill';
     DatePipe,
     HlmToasterComponent,
     QuillModule,
+    ClientFormComponent,
   ],
   providers: [
     provideIcons({
@@ -152,7 +154,7 @@ export class NewQuoteComponent implements AfterViewInit {
   private authService: AuthService = inject(AuthService);
   private datePipe: DatePipe = inject(DatePipe);
   private userAttachmentService: ProjectAttachmentService = inject(
-    ProjectAttachmentService
+    ProjectAttachmentService,
   );
   private changeDetectorRef: ChangeDetectorRef = inject(ChangeDetectorRef);
 
@@ -175,11 +177,11 @@ export class NewQuoteComponent implements AfterViewInit {
   protected currentDate = new Date();
 
   protected notPastDate = computed(
-    () => this.currentDate.toISOString().split('T')[0]
+    () => this.currentDate.toISOString().split('T')[0],
   );
 
   protected startDate = computed(() =>
-    this.currentDate.toISOString().slice(0, 10)
+    this.currentDate.toISOString().slice(0, 10),
   );
 
   protected clients = signal<ClientEntity[]>([]);
@@ -282,7 +284,7 @@ export class NewQuoteComponent implements AfterViewInit {
       validation_deadline: [
         this.datePipe.transform(
           new Date(new Date().getTime() + 10 * 24 * 60 * 60 * 1000),
-          'yyyy-MM-dd'
+          'yyyy-MM-dd',
         ),
         Validators.required,
       ],
@@ -315,7 +317,7 @@ export class NewQuoteComponent implements AfterViewInit {
     });
     console.log(
       'Form after init, is_physical_person:',
-      this.createClientForm.get('is_physical_person')?.value
+      this.createClientForm.get('is_physical_person')?.value,
     );
 
     this.createClientForm
@@ -346,7 +348,7 @@ export class NewQuoteComponent implements AfterViewInit {
 
     // Adapter les validateurs pour le délai de paiement par défaut en fonction du rôle
     const deadlineControl = this.createClientForm.get(
-      'default_payment_deadline'
+      'default_payment_deadline',
     );
     if (deadlineControl) {
       if (this.connectedUser()?.role === 'ADMIN') {
@@ -396,7 +398,7 @@ export class NewQuoteComponent implements AfterViewInit {
           tap((data) => {
             this.clients.set(data);
             this.filteredClients.set(data);
-          })
+          }),
         )
         .subscribe();
     } else if (this.connectedUser()?.clients) {
@@ -407,7 +409,7 @@ export class NewQuoteComponent implements AfterViewInit {
       this.isLoadingQuote.set(true);
       try {
         const quote = (await firstValueFrom(
-          this.quoteService.getQuote(this.updatedQuoteId()!)
+          this.quoteService.getQuote(this.updatedQuoteId()!),
         )) as QuoteEntity;
         this.updatedQuote.set(quote);
 
@@ -430,7 +432,7 @@ export class NewQuoteComponent implements AfterViewInit {
           service_date: this.formatDate(new Date(quote.service_date)),
           payment_deadline: quote.payment_deadline,
           validation_deadline: this.formatDate(
-            new Date(quote.validation_deadline)
+            new Date(quote.validation_deadline),
           ),
           comment: quote.comment,
           client_id: quote.client.id,
@@ -571,11 +573,11 @@ export class NewQuoteComponent implements AfterViewInit {
     this.isToggleClientForm.set(!this.isToggleClientForm());
     console.log(
       'Form after toggleClientForm, is_physical_person:',
-      this.createClientForm.get('is_physical_person')?.value
+      this.createClientForm.get('is_physical_person')?.value,
     );
     console.log(
       'Form after toggleClientForm, is_info_pending:',
-      this.createClientForm.get('is_info_pending')?.value
+      this.createClientForm.get('is_info_pending')?.value,
     ); // Log pour is_info_pending
   }
 
@@ -592,7 +594,7 @@ export class NewQuoteComponent implements AfterViewInit {
     if (this.isTvaIncluded()) {
       this.isTvaIncluded.set(false);
       this.advertiseMessage.set(
-        'Pour des questions de simplicité, lors de la modification d\'un service, la case à cocher "Montant TVA comprise" est décochée. Pensez à la remettre à chaque modification de service.'
+        'Pour des questions de simplicité, lors de la modification d\'un service, la case à cocher "Montant TVA comprise" est décochée. Pensez à la remettre à chaque modification de service.',
       );
       this.setQuoteVatIncluded();
       this.checkTvaIncluded();
@@ -648,7 +650,7 @@ export class NewQuoteComponent implements AfterViewInit {
     this.createClientForm.get('company_vat_number')?.updateValueAndValidity();
     console.log(
       'Form after togglePhysicalPerson, is_physical_person:',
-      this.createClientForm.get('is_physical_person')?.value
+      this.createClientForm.get('is_physical_person')?.value,
     );
   }
 
@@ -717,7 +719,7 @@ export class NewQuoteComponent implements AfterViewInit {
     // Mettre à jour les produits modifiés
     for (const product of this.products()) {
       const existingIndex = this.modifiedProducts().findIndex(
-        (p) => p.id === product.id
+        (p) => p.id === product.id,
       );
       if (existingIndex !== -1) {
         this.modifiedProducts.update((products) => {
@@ -758,7 +760,7 @@ export class NewQuoteComponent implements AfterViewInit {
             postalCode,
             city,
           });
-        })
+        }),
       )
       .subscribe();
   }
@@ -811,57 +813,8 @@ export class NewQuoteComponent implements AfterViewInit {
       .pipe(take(1))
       .subscribe({
         next: (newClient: ClientEntity) => {
-          this.setClient(newClient.id);
-
-          // Mise à jour de la liste des clients
-          const clientList =
-            this.connectedUser()?.role === 'ADMIN'
-              ? this.clients()
-              : this.connectedUser()!.clients;
-          const existingIndex = clientList.findIndex(
-            (client) => client.id === newClient.id
-          );
-
-          if (existingIndex !== -1) {
-            clientList[existingIndex] = newClient;
-          } else {
-            clientList.push(newClient);
-          }
-          this.clients.set(clientList);
-
-          // Mise à jour du client actuel
-          this.currentClient.set(newClient);
-          this.client.set(newClient);
-
-          // Réinitialisation du formulaire et des états
-          console.log(
-            'Form BEFORE partial reset in createClient, is_physical_person:',
-            this.createClientForm.get('is_physical_person')?.value
-          );
-          this.createClientForm.reset({
-            country: 'Belgique',
-            default_payment_deadline: 10,
-            is_physical_person: false, // Assurer la réinitialisation explicite
-            is_info_pending: false, // Assurer la réinitialisation explicite
-          });
-          console.log(
-            'Form AFTER partial reset in createClient, is_physical_person:',
-            this.createClientForm.get('is_physical_person')?.value
-          );
-          console.log(
-            'Form AFTER partial reset in createClient, is_info_pending:',
-            this.createClientForm.get('is_info_pending')?.value
-          ); // Log pour is_info_pending
+          this.handleClientCreated(newClient);
           this.toggleClientForm(false);
-          console.log(
-            'Form AFTER toggleClientForm in createClient, is_physical_person:',
-            this.createClientForm.get('is_physical_person')?.value
-          );
-          this.isPhysicalPerson.set(false);
-
-          // Sauvegarde de l'utilisateur connecté
-          this.authService.setUser(this.connectedUser()!);
-          toast.success('Client créé avec succès');
         },
         error: (error: unknown) => {
           console.error('Erreur lors de la création du client:', error);
@@ -887,45 +840,8 @@ export class NewQuoteComponent implements AfterViewInit {
         .pipe(
           take(1),
           tap(() => {
-            // Mettre à jour le client dans la liste
-            const updatedClient = { ...this.client(), ...formData };
-            const clientList =
-              this.connectedUser()?.role === 'ADMIN'
-                ? this.clients()
-                : this.connectedUser()!.clients;
-            const existingIndex = clientList.findIndex(
-              (client) => client.id === updatedClient.id
-            );
-
-            if (existingIndex !== -1) {
-              clientList[existingIndex] = updatedClient;
-            }
-            this.clients.set(clientList);
-
-            // Mise à jour du client actuel
-            this.currentClient.set(updatedClient);
-            this.client.set(updatedClient);
-
-            // Mettre à jour aussi le délai de paiement du formulaire de devis
-            const paymentDeadline =
-              updatedClient.default_payment_deadline ?? 10;
-            this.createQuoteForm.patchValue({
-              payment_deadline: paymentDeadline,
-            });
-
-            // Réinitialisation du formulaire et des états
-            this.createClientForm.reset({
-              country: 'Belgique',
-              default_payment_deadline: 10,
-              is_physical_person: false, // Assurer la réinitialisation explicite
-              is_info_pending: false, // Assurer la réinitialisation explicite
-            });
-            this.toggleClientForm(false);
-            this.isPhysicalPerson.set(false);
-
-            // Notification de succès
-            toast.success('Client mis à jour avec succès');
-          })
+            this.handleClientUpdated(this.client()!);
+          }),
         )
         .subscribe();
     }
@@ -952,11 +868,10 @@ export class NewQuoteComponent implements AfterViewInit {
           });
 
           this.calculateTotals();
-        })
+        }),
       )
       .subscribe();
   }
-
 
   createProduct() {
     if (!this.createProductForm.valid || !this.client()) return;
@@ -1014,7 +929,7 @@ export class NewQuoteComponent implements AfterViewInit {
           this.toggleProductForm();
           this.isTva0.set(false);
           this.isArtisticPerformance.set(false);
-        })
+        }),
       )
       .subscribe();
   }
@@ -1076,14 +991,14 @@ export class NewQuoteComponent implements AfterViewInit {
         .update(
           this.idProductToEdit()?.toString() || '',
           updatedProduct,
-          this.isTvaIncluded()
+          this.isTvaIncluded(),
         )
         .pipe(take(1))
         .subscribe({
           next: (product) => {
             // Stocker le produit modifié dans notre liste temporaire
             const existingIndex = this.modifiedProducts().findIndex(
-              (p) => p.id === product.id
+              (p) => p.id === product.id,
             );
             if (existingIndex !== -1) {
               this.modifiedProducts.update((products) => {
@@ -1129,7 +1044,7 @@ export class NewQuoteComponent implements AfterViewInit {
       const updatedProducts = products.filter((product) => product.id !== id);
 
       this.totalHtva.set(
-        updatedProducts.reduce((a, b) => a + b.price_htva!, 0)
+        updatedProducts.reduce((a, b) => a + b.price_htva!, 0),
       );
 
       if (updatedProducts.length > 0) {
@@ -1188,14 +1103,14 @@ export class NewQuoteComponent implements AfterViewInit {
       this.isLoadingQuote.set(false);
     } else if (this.products().length == 0) {
       toast.error(
-        'Veuillez ajouter au moins un service avant de créer le devis.'
+        'Veuillez ajouter au moins un service avant de créer le devis.',
       );
       window.scrollTo({ top: 0, behavior: 'smooth' });
       this.createQuoteForm.markAllAsTouched();
       this.isLoadingQuote.set(false);
     } else if (!this.isAtLeastOneAttachmentSelected()) {
       toast.error(
-        'Une pièce jointe est requise car le devis contient au moins un service avec TVA 0%.'
+        'Une pièce jointe est requise car le devis contient au moins un service avec TVA 0%.',
       );
       window.scrollTo({ top: 0, behavior: 'smooth' });
       this.isLoadingQuote.set(false);
@@ -1211,7 +1126,7 @@ export class NewQuoteComponent implements AfterViewInit {
           tva6: this.tva6(),
           totalHtva: this.totalHtva(),
           attachment_keys: this.getAllAttachmentKeys(),
-          message : this.mailPreview.body,
+          message: this.mailPreview.body,
         };
 
         // Ajouter l'ID du compte en fonction du type de projet
@@ -1243,7 +1158,7 @@ export class NewQuoteComponent implements AfterViewInit {
 
         setTimeout(() => {
           const firstInvalid = this.formErrors.find((el) =>
-            el.nativeElement.querySelector('.ng-invalid')
+            el.nativeElement.querySelector('.ng-invalid'),
           );
           if (firstInvalid) {
             firstInvalid.nativeElement.scrollIntoView({
@@ -1314,7 +1229,7 @@ export class NewQuoteComponent implements AfterViewInit {
   private handleFile(file: File) {
     if (!this.isValidPdfFile(file)) {
       console.error(
-        'Format de fichier non valide. Seuls les fichiers PDF sont acceptés.'
+        'Format de fichier non valide. Seuls les fichiers PDF sont acceptés.',
       );
       return;
     }
@@ -1356,7 +1271,7 @@ export class NewQuoteComponent implements AfterViewInit {
       const control = this.createQuoteForm.get(key);
       console.log(
         `Contrôle ${key}: valeur = ${control?.value}, valide = ${control?.valid}, erreurs = `,
-        control?.errors
+        control?.errors,
       );
     });
 
@@ -1369,7 +1284,7 @@ export class NewQuoteComponent implements AfterViewInit {
       service_date: new Date(this.createQuoteForm.get('service_date')?.value),
       payment_deadline: this.createQuoteForm.get('payment_deadline')?.value,
       validation_deadline: new Date(
-        this.createQuoteForm.get('validation_deadline')?.value
+        this.createQuoteForm.get('validation_deadline')?.value,
       ),
       client_id: this.client()!.id,
       products_id: this.products().map((product) => product.id!),
@@ -1377,10 +1292,10 @@ export class NewQuoteComponent implements AfterViewInit {
       comment: this.createQuoteForm.get('comment')?.value || '',
       attachment_keys: [
         ...this.existingAttachments().map((attachment) =>
-          this.extractS3KeyFromUrl(attachment.url)
+          this.extractS3KeyFromUrl(attachment.url),
         ),
         ...this.selectedFiles.map(
-          (file) => `quote/${this.updatedQuoteId()}/${file.name}`
+          (file) => `quote/${this.updatedQuoteId()}/${file.name}`,
         ),
       ],
     };
@@ -1393,8 +1308,8 @@ export class NewQuoteComponent implements AfterViewInit {
           this.updatedQuoteId() || '',
           quoteDto,
           this.selectedFiles,
-          this.isDoubleValidation()
-        )
+          this.isDoubleValidation(),
+        ),
       );
       this.isLoadingQuote.set(false);
       this.goBack();
@@ -1443,7 +1358,7 @@ export class NewQuoteComponent implements AfterViewInit {
         client.name.toLowerCase().includes(searchValue) ||
         client.email.toLowerCase().includes(searchValue) ||
         (client.company_vat_number &&
-          client.company_vat_number.toLowerCase().includes(searchValue))
+          client.company_vat_number.toLowerCase().includes(searchValue)),
     );
 
     this.filteredClients.set(filtered);
@@ -1479,7 +1394,7 @@ export class NewQuoteComponent implements AfterViewInit {
           take(1),
           tap((attachments: ProjectAttachment[]) => {
             this.userAttachments.set(attachments);
-          })
+          }),
         )
         .subscribe();
     } else {
@@ -1489,7 +1404,7 @@ export class NewQuoteComponent implements AfterViewInit {
           take(1),
           tap((attachments: ProjectAttachment[]) => {
             this.userAttachments.set(attachments);
-          })
+          }),
         )
         .subscribe();
     }
@@ -1508,7 +1423,7 @@ export class NewQuoteComponent implements AfterViewInit {
     } else {
       // Retirer de la sélection
       this.selectedAttachments.update((attachments) =>
-        attachments.filter((a) => a.id !== attachment.id)
+        attachments.filter((a) => a.id !== attachment.id),
       );
     }
   }
@@ -1542,7 +1457,7 @@ export class NewQuoteComponent implements AfterViewInit {
             next: (blob) => {
               // Vérifier si le fichier existe déjà dans selectedFiles
               const fileExists = this.selectedFiles.some(
-                (file) => file.name === attachment.name
+                (file) => file.name === attachment.name,
               );
 
               if (!fileExists) {
@@ -1557,11 +1472,11 @@ export class NewQuoteComponent implements AfterViewInit {
             error: (error) => {
               console.error(
                 `Erreur lors du téléchargement de ${attachment.name}:`,
-                error
+                error,
               );
               hasError = true;
               toast.error(
-                `Impossible de récupérer le fichier ${attachment.name}`
+                `Impossible de récupérer le fichier ${attachment.name}`,
               );
               resolve(); // On résout quand même pour continuer avec les autres fichiers
             },
@@ -1582,7 +1497,7 @@ export class NewQuoteComponent implements AfterViewInit {
       .catch((error) => {
         console.error('Erreur lors du traitement des pièces jointes:', error);
         toast.error(
-          'Une erreur est survenue lors du traitement des pièces jointes'
+          'Une erreur est survenue lors du traitement des pièces jointes',
         );
       });
   }
@@ -1593,7 +1508,7 @@ export class NewQuoteComponent implements AfterViewInit {
 
     // Vérifier si un fichier avec le même nom existe déjà
     const existingAttachment = this.userAttachments().find(
-      (attachment) => attachment.name === fileToSave.name
+      (attachment) => attachment.name === fileToSave.name,
     );
 
     if (existingAttachment) {
@@ -1622,7 +1537,7 @@ export class NewQuoteComponent implements AfterViewInit {
             this.file.set([...this.selectedFiles]);
 
             toast.success('Pièce jointe sauvegardée avec succès');
-          })
+          }),
         )
         .subscribe({
           error: (error) => {
@@ -1637,7 +1552,7 @@ export class NewQuoteComponent implements AfterViewInit {
     return new Promise((resolve) => {
       const description = prompt(
         'Description de la pièce jointe (optionnel):',
-        ''
+        '',
       );
       resolve(description);
     });
@@ -1658,14 +1573,14 @@ export class NewQuoteComponent implements AfterViewInit {
           take(1),
           tap(() => {
             this.userAttachments.update((attachments) =>
-              attachments.filter((a) => a.id !== id)
+              attachments.filter((a) => a.id !== id),
             );
             if (this.selectedAttachment()?.id === id) {
               this.selectedAttachment.set(null);
               this.selectedFile = null;
               this.file.set([]);
             }
-          })
+          }),
         )
         .subscribe();
     }
@@ -1704,13 +1619,13 @@ export class NewQuoteComponent implements AfterViewInit {
 
   isFileAlreadySaved(fileName: string): boolean {
     return this.userAttachments().some(
-      (attachment) => attachment.name === fileName
+      (attachment) => attachment.name === fileName,
     );
   }
 
   removeExistingAttachment(attachment: { url: string; name: string }) {
     this.existingAttachments.update((attachments) =>
-      attachments.filter((a) => a.url !== attachment.url)
+      attachments.filter((a) => a.url !== attachment.url),
     );
   }
 
@@ -1719,7 +1634,7 @@ export class NewQuoteComponent implements AfterViewInit {
   isAtLeastOneAttachmentSelected(): boolean {
     // Vérifie s'il existe au moins un produit avec TVA 0% dans le signal products()
     const requiresAttachment = this.products().some(
-      (product) => product.vat === 0
+      (product) => product.vat === 0,
     );
 
     if (requiresAttachment) {
@@ -1794,7 +1709,7 @@ export class NewQuoteComponent implements AfterViewInit {
       emailControl?.enable(); // S'assurer qu'il est activé
 
       const deadlineControl = this.createClientForm.get(
-        'default_payment_deadline'
+        'default_payment_deadline',
       );
       const min = this.connectedUser()?.role === 'ADMIN' ? 1 : 10; // Correction: min 1 pour ADMIN
       const max = this.connectedUser()?.role === 'ADMIN' ? null : 30;
@@ -1831,31 +1746,31 @@ export class NewQuoteComponent implements AfterViewInit {
     this.showEditProductConfirmationModal.set(false); // Ferme la modale
   }
 
-
   // Ajoute ces propriétés dans la classe
   showMailPreview = false;
   mailPreview = { to: '', subject: '', body: '' };
 
-// Méthode pour ouvrir la modale d’aperçu
+  // Méthode pour ouvrir la modale d'aperçu
   openMailPreview() {
     this.mailPreview = this.generateMailPreview();
     this.showMailPreview = true;
   }
 
-// Génère le contenu du mail à partir du devis courant
+  // Génère le contenu du mail à partir du devis courant
   generateMailPreview() {
-    const customMessage = this.createQuoteForm.get('custom_message')?.value || '';
+    const customMessage =
+      this.createQuoteForm.get('custom_message')?.value || '';
     return {
       to: this.client()?.email ?? '',
       subject: `Acceptation de devis`,
       body:
         `Bonjour ${this.client()?.firstname || this.client()?.name},\n\n` +
         (customMessage ? customMessage + '\n\n' : '') +
-        `Veuillez trouver en pièce jointe votre devis.\n\nCordialement,\n${this.connectedUser()?.firstName || ''}`
+        `Veuillez trouver en pièce jointe votre devis.\n\nCordialement,\n${this.connectedUser()?.firstName || ''}`,
     };
   }
 
-// Envoie le devis et ferme la modale
+  // Envoie le devis et ferme la modale
   sendQuoteAndMail() {
     this.showMailPreview = false;
     this.createQuote(); // ou updateQuote() selon le contexte
@@ -1882,14 +1797,18 @@ export class NewQuoteComponent implements AfterViewInit {
       return;
     }
     if (this.products().length === 0) {
-      toast.error('Veuillez ajouter au moins un service avant de créer le devis.');
+      toast.error(
+        'Veuillez ajouter au moins un service avant de créer le devis.',
+      );
       window.scrollTo({ top: 0, behavior: 'smooth' });
       this.createQuoteForm.markAllAsTouched();
       this.isLoadingQuote.set(false);
       return;
     }
     if (!this.isAtLeastOneAttachmentSelected()) {
-      toast.error('Une pièce jointe est requise car le devis contient au moins un service avec TVA 0%.');
+      toast.error(
+        'Une pièce jointe est requise car le devis contient au moins un service avec TVA 0%.',
+      );
       window.scrollTo({ top: 0, behavior: 'smooth' });
       this.createQuoteForm.markAllAsTouched();
       this.isLoadingQuote.set(false);
@@ -1922,19 +1841,36 @@ export class NewQuoteComponent implements AfterViewInit {
     const newFormatted = this.formatNationalNumber(digits);
 
     // Calcule la nouvelle position du curseur après formatage
-    let newCursor = 0, count = 0;
+    let newCursor = 0,
+      count = 0;
     for (let i = 0; i < newFormatted.length && count < digitCount; i++) {
       if (/\d/.test(newFormatted[i])) count++;
       newCursor = i + 1;
     }
 
     // Met à jour la valeur brute dans le formulaire
-    this.createClientForm.get('national_number')?.setValue(digits, { emitEvent: false });
+    this.createClientForm
+      .get('national_number')
+      ?.setValue(digits, { emitEvent: false });
     input.value = newFormatted;
 
     // Replace le curseur à la bonne position
     setTimeout(() => {
       input.setSelectionRange(newCursor, newCursor);
     }, 0);
+  }
+
+  handleClientCreated(newClient: ClientEntity) {
+    this.setClient(newClient.id);
+    this.isToggleClientForm.set(false);
+  }
+
+  handleClientUpdated(updatedClient: ClientEntity) {
+    this.client.set(updatedClient);
+    this.isToggleClientForm.set(false);
+    const paymentDeadline = updatedClient.default_payment_deadline ?? 10;
+    this.createQuoteForm.patchValue({
+      payment_deadline: paymentDeadline,
+    });
   }
 }

@@ -1,0 +1,386 @@
+<!-- Client Form -->
+<form
+  [formGroup]="createClientForm"
+  class="bg-white rounded-xl p-8 space-y-6 max-w-2xl mx-auto"
+  (ngSubmit)="onSubmit()"
+>
+  <div class="flex justify-between items-center border-b border-gray-200 pb-6">
+    <h2 class="text-xl font-bold text-gray-900">
+      {{ client ? "Modifier le client" : "Nouveau client" }}
+    </h2>
+    <button
+      type="button"
+      (click)="closeForm.emit()"
+      class="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-all"
+    >
+      <hlm-icon size="sm" name="lucideXCircle" />
+    </button>
+  </div>
+
+  <div class="space-y-6">
+    <p class="block" hlmLabel>
+      <span class="text-sm font-medium text-gray-900">Pays</span>
+      <brn-select
+        formControlName="country"
+        class="mt-1.5"
+        placeholder="Belgique"
+      >
+        <hlm-select-trigger
+          class="w-full bg-white border-gray-200 text-sm rounded-lg"
+        >
+          <hlm-select-value />
+        </hlm-select-trigger>
+        <hlm-select-content class="w-full max-h-80">
+          @for (pays of paysEuropeens; track pays) {
+            <hlm-option [value]="pays" class="text-sm">{{ pays }}</hlm-option>
+          }
+        </hlm-select-content>
+      </brn-select>
+    </p>
+
+    <p class="flex items-center gap-2 cursor-pointer group">
+      <hlm-checkbox
+        (checkedChange)="togglePhysicalPerson()"
+        [checked]="isPhysicalPerson()"
+        class="rounded-md group-hover:border-primary transition-colors"
+      />
+      <span
+        class="text-sm text-gray-700 group-hover:text-gray-900 transition-colors"
+      >
+        Personne physique ou association de fait ?
+      </span>
+    </p>
+
+    @if (!isPhysicalPerson()) {
+      <div class="space-y-4">
+        <div class="block" hlmLabel>
+          <span class="text-sm font-medium text-gray-900"
+            >Numéro d'entreprise</span
+          >
+          <div class="flex flex-col sm:flex-row gap-2 mt-1.5">
+            <input
+              [ngClass]="{
+                'border-green-600 focus:ring-green-600': getIsValidBCENumber(),
+                'border-red-600 focus:ring-red-600':
+                  getIsValidBCENumber() === false,
+              }"
+              formControlName="company_number"
+              hlmInput
+              placeholder="987 XXX XXX"
+              class="flex-1 bg-white border-gray-200 text-sm rounded-lg disabled:bg-gray-100 disabled:cursor-not-allowed"
+            />
+            <button
+              (click)="checkBCE()"
+              type="button"
+              class="bg-primary text-white font-medium text-sm rounded-lg px-4 py-2 flex items-center justify-center gap-2 hover:bg-primary/90 transition-all"
+              hlmBtn
+            >
+              Vérifier
+              <hlm-icon size="sm" name="lucideCheck" />
+            </button>
+          </div>
+        </div>
+
+        <p class="block" hlmLabel>
+          <span class="text-sm font-medium text-gray-900"
+            >Numéro de TVA (sans le préfixe)</span
+          >
+          <input
+            formControlName="company_vat_number"
+            hlmInput
+            type="number"
+            placeholder="XXXXXXXXXX"
+            class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg disabled:bg-gray-100 disabled:cursor-not-allowed"
+          />
+        </p>
+
+        <div class="block" hlmLabel>
+          <span class="text-sm font-medium text-gray-900"
+            >Nom de l'entreprise*</span
+          >
+          <input
+            formControlName="name"
+            hlmInput
+            placeholder="Nom de l'entreprise"
+            class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg disabled:bg-gray-100 disabled:cursor-not-allowed"
+          />
+          @if (
+            createClientForm.get("name")?.invalid &&
+            createClientForm.get("name")?.touched
+          ) {
+            <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
+              <hlm-icon size="xs" name="lucideAlertCircle" />
+              Le nom de l'entreprise est requis
+            </span>
+          }
+        </div>
+      </div>
+    } @else {
+      <div class="space-y-4">
+        <p class="block" hlmLabel>
+          <span class="text-sm font-medium text-gray-900">Numéro national</span>
+          <input
+            type="text"
+            [value]="
+              formatNationalNumber(
+                createClientForm.get('national_number')?.value || ''
+              )
+            "
+            (input)="onNationalNumberInput($event)"
+            maxlength="15"
+            placeholder="12.34.56-789.10"
+            formControlName="national_number"
+            hlmInput
+            class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg disabled:bg-gray-100 disabled:cursor-not-allowed"
+          />
+        </p>
+
+        <div class="grid md:grid-cols-2 gap-4">
+          <p class="block" hlmLabel>
+            <span class="text-sm font-medium text-gray-900">Prénom*</span>
+            <input
+              formControlName="firstname"
+              hlmInput
+              placeholder="Prénom"
+              class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg disabled:bg-gray-100 disabled:cursor-not-allowed"
+            />
+            @if (
+              createClientForm.get("firstname")?.invalid &&
+              createClientForm.get("firstname")?.touched
+            ) {
+              <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
+                <hlm-icon size="xs" name="lucideAlertCircle" />
+                Le prénom est requis
+              </span>
+            }
+          </p>
+
+          <p class="block" hlmLabel>
+            <span class="text-sm font-medium text-gray-900">Nom*</span>
+            <input
+              formControlName="lastname"
+              hlmInput
+              placeholder="Nom"
+              class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg disabled:bg-gray-100 disabled:cursor-not-allowed"
+            />
+            @if (
+              createClientForm.get("lastname")?.invalid &&
+              createClientForm.get("lastname")?.touched
+            ) {
+              <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
+                <hlm-icon size="xs" name="lucideAlertCircle" />
+                Le nom est requis
+              </span>
+            }
+          </p>
+        </div>
+      </div>
+    }
+
+    <div class="grid md:grid-cols-2 gap-4">
+      <p class="block" hlmLabel>
+        <span class="text-sm font-medium text-gray-900">Email*</span>
+        <input
+          class="w-full"
+          formControlName="email"
+          type="email"
+          hlmInput
+          placeholder="adresse@email.com"
+        />
+        @if (
+          createClientForm.get("email")?.invalid &&
+          createClientForm.get("email")?.touched
+        ) {
+          <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
+            <hlm-icon size="xs" name="lucideAlertCircle" />
+            @if (createClientForm.get("email")?.errors?.["required"]) {
+              L'email est requis
+            } @else if (createClientForm.get("email")?.errors?.["email"]) {
+              L'email n'est pas valide
+            }
+          </span>
+        }
+      </p>
+
+      <p class="block" hlmLabel>
+        <span class="text-sm font-medium text-gray-900">Téléphone*</span>
+        <input
+          class="w-full"
+          formControlName="phone"
+          type="tel"
+          hlmInput
+          placeholder="+32 XXX XX XX XX"
+        />
+        @if (
+          createClientForm.get("phone")?.invalid &&
+          createClientForm.get("phone")?.touched
+        ) {
+          <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
+            <hlm-icon size="xs" name="lucideAlertCircle" />
+            Le numéro de téléphone est requis
+          </span>
+        }
+      </p>
+    </div>
+
+    <div class="space-y-4">
+      <div class="grid md:grid-cols-2 gap-4">
+        <p class="block" hlmLabel>
+          <span class="text-sm font-medium text-gray-900">Rue*</span>
+          <input
+            formControlName="street"
+            hlmInput
+            placeholder="Rue"
+            class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg disabled:bg-gray-100 disabled:cursor-not-allowed"
+          />
+          @if (
+            createClientForm.get("street")?.invalid &&
+            createClientForm.get("street")?.touched
+          ) {
+            <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
+              <hlm-icon size="xs" name="lucideAlertCircle" />
+              La rue est requise
+            </span>
+          }
+        </p>
+
+        <p class="block" hlmLabel>
+          <span class="text-sm font-medium text-gray-900">Numéro*</span>
+          <input
+            formControlName="number"
+            hlmInput
+            placeholder="Numéro"
+            class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg disabled:bg-gray-100 disabled:cursor-not-allowed"
+          />
+          @if (
+            createClientForm.get("number")?.invalid &&
+            createClientForm.get("number")?.touched
+          ) {
+            <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
+              <hlm-icon size="xs" name="lucideAlertCircle" />
+              Le numéro est requis
+            </span>
+          }
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-4">
+        <p class="block" hlmLabel>
+          <span class="text-sm font-medium text-gray-900">Code postal*</span>
+          <input
+            formControlName="postalCode"
+            hlmInput
+            placeholder="Code postal"
+            class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg disabled:bg-gray-100 disabled:cursor-not-allowed"
+          />
+          @if (
+            createClientForm.get("postalCode")?.invalid &&
+            createClientForm.get("postalCode")?.touched
+          ) {
+            <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
+              <hlm-icon size="xs" name="lucideAlertCircle" />
+              Le code postal est requis
+            </span>
+          }
+        </p>
+
+        <p class="block md:col-span-2" hlmLabel>
+          <span class="text-sm font-medium text-gray-900">Ville*</span>
+          <input
+            formControlName="city"
+            hlmInput
+            placeholder="Ville"
+            class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg disabled:bg-gray-100 disabled:cursor-not-allowed"
+          />
+          @if (
+            createClientForm.get("city")?.invalid &&
+            createClientForm.get("city")?.touched
+          ) {
+            <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
+              <hlm-icon size="xs" name="lucideAlertCircle" />
+              La ville est requise
+            </span>
+          }
+        </p>
+      </div>
+    </div>
+
+    <div class="space-y-4">
+      <p class="block" hlmLabel>
+        <span class="text-sm font-medium text-gray-900"
+          >Délai de paiement par défaut (jours)*</span
+        >
+        <input
+          formControlName="default_payment_deadline"
+          type="number"
+          hlmInput
+          [min]="connectedUser()?.role === 'ADMIN' ? null : 10"
+          [max]="connectedUser()?.role === 'ADMIN' ? null : 30"
+          placeholder="Min: 10, Max: 30"
+          class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg disabled:bg-gray-100 disabled:cursor-not-allowed"
+        />
+        @if (
+          createClientForm.get("default_payment_deadline")?.invalid &&
+          createClientForm.get("default_payment_deadline")?.touched
+        ) {
+          <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
+            <hlm-icon size="xs" name="lucideAlertCircle" />
+            @if (
+              createClientForm.get("default_payment_deadline")?.errors?.[
+                "required"
+              ]
+            ) {
+              Le délai est requis
+            } @else if (
+              createClientForm.get("default_payment_deadline")?.errors?.["min"]
+            ) {
+              @if (connectedUser()?.role === "ADMIN") {
+                Min. 1 jour
+              } @else {
+                Min. 10 jours
+              }
+            } @else if (
+              createClientForm.get("default_payment_deadline")?.errors?.["max"]
+            ) {
+              @if (connectedUser()?.role !== "ADMIN") {
+                Max. 30 jours
+              }
+            }
+          </span>
+        }
+      </p>
+    </div>
+
+    <p class="flex items-center gap-2 cursor-pointer group">
+      <hlm-checkbox
+        formControlName="is_info_pending"
+        class="rounded-md group-hover:border-primary transition-colors"
+      />
+      <span
+        class="text-sm text-gray-700 group-hover:text-gray-900 transition-colors"
+      >
+        Laisser le client compléter ses informations (email requis seulement)
+      </span>
+    </p>
+  </div>
+
+  <div class="flex justify-end gap-3 pt-6 border-t border-gray-200">
+    <button
+      type="button"
+      (click)="closeForm.emit()"
+      class="bg-gray-100 text-gray-700 font-medium text-sm rounded-lg px-4 py-2 hover:bg-gray-200 transition-all"
+      hlmBtn
+    >
+      Annuler
+    </button>
+    <button
+      class="bg-primary text-white font-medium text-sm rounded-lg px-4 py-2 flex items-center gap-2 hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+      hlmBtn
+      type="submit"
+      [disabled]="!createClientForm.valid"
+    >
+      <hlm-icon size="sm" name="lucideCheck" />
+      {{ client ? "Mettre à jour le client" : "Créer le client" }}
+    </button>
+  </div>
+</form>

@@ -373,7 +373,7 @@
       Gérer les membres
       <hlm-icon class="w-3 sm:w-4" name="lucideChevronRight" />
     </a>
-    } @if (typeOfProjet() === "GROUP") {
+    } @if (typeOfProjet() === "GROUP" && connectedUser()?.role === 'ADMIN') {
     <a
       routerLink="agenda"
       [queryParams]="{ typeOfProjet: typeOfProjet() }"

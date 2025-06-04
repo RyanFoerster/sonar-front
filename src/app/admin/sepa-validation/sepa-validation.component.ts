@@ -314,7 +314,14 @@ export class SepaValidationComponent implements AfterViewInit {
               });
             } else if (virement.status === 'ACCEPTED') {
               this.virementsSepaAccepted.update((virements) => {
-                return [...virements, virement];
+                // Ajouter le virement et trier par date de création (plus récent en premier)
+                const updatedVirements = [...virements, virement];
+                updatedVirements.sort(
+                  (a, b) =>
+                    new Date(b.created_at).getTime() -
+                    new Date(a.created_at).getTime(),
+                );
+                return updatedVirements;
               });
             }
           });
@@ -354,7 +361,21 @@ export class SepaValidationComponent implements AfterViewInit {
           return virements.filter((virement) => virement.id !== id);
         });
         this.virementsSepaAccepted.update((virements) => {
-          return [...virements, { ...acceptedVirement, status: 'ACCEPTED' }];
+          // Ajouter le virement accepté en tête de liste et trier par date de création (plus récent en premier)
+          const updatedVirement = {
+            ...acceptedVirement,
+            status: 'ACCEPTED' as const,
+          };
+          const updatedVirements = [updatedVirement, ...virements];
+
+          // Trier par date de création (plus récent en premier)
+          updatedVirements.sort(
+            (a, b) =>
+              new Date(b.created_at).getTime() -
+              new Date(a.created_at).getTime(),
+          );
+
+          return updatedVirements;
         });
         // Recalculer la page actuelle si la page devient vide
         if (

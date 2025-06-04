@@ -8,596 +8,669 @@
     >
       <button
         hlmBtn
-        [variant]="currentFilter === 'all' ? 'default' : 'ghost'"
-        (click)="filterList('all')"
-        class="rounded-md text-xs sm:text-sm py-1.5 px-3 transition-colors"
-      >
-        Tous
-      </button>
-      <button
-        hlmBtn
-        [variant]="currentFilter === 'quotes' ? 'default' : 'ghost'"
-        (click)="filterList('quotes')"
+        [variant]="currentFilter === 'pending' ? 'default' : 'ghost'"
+        (click)="filterList('pending')"
         class="rounded-md text-xs sm:text-sm py-1.5 px-3 transition-colors"
       >
         En attente
       </button>
       <button
         hlmBtn
-        [variant]="currentFilter === 'invoiced_quotes' ? 'default' : 'ghost'"
-        (click)="filterList('invoiced_quotes')"
+        [variant]="currentFilter === 'invoiced' ? 'default' : 'ghost'"
+        (click)="filterList('invoiced')"
         class="rounded-md text-xs sm:text-sm py-1.5 px-3 transition-colors"
       >
         Facturés
+      </button>
+      <button
+        hlmBtn
+        [variant]="currentFilter === 'rejected' ? 'default' : 'ghost'"
+        (click)="filterList('rejected')"
+        class="rounded-md text-xs sm:text-sm py-1.5 px-3 transition-colors"
+      >
+        Dépassés/Refusés
+      </button>
+      <button
+        hlmBtn
+        [variant]="currentFilter === 'all' ? 'default' : 'ghost'"
+        (click)="filterList('all')"
+        class="rounded-md text-xs sm:text-sm py-1.5 px-3 transition-colors"
+      >
+        Tous
       </button>
     </div>
   </div>
 
   @if (allQuotes().length > 0) {
-  <div
-    class="relative overflow-x-auto rounded-xl border border-gray-200 bg-white p-2 sm:p-3 md:p-4"
-  >
-    <div class="overflow-x-auto">
-      <table class="w-full text-xs sm:text-sm text-left">
-        <caption
-          class="p-2 sm:p-3 md:p-4 text-sm sm:text-base md:text-lg font-semibold text-left text-gray-900 bg-white border-b border-gray-200"
-        >
-          Liste des devis
-        </caption>
-        <thead class="hidden lg:table-header-group">
-          <tr
-            class="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-200"
+    <div
+      class="relative overflow-x-auto rounded-xl border border-gray-200 bg-white p-2 sm:p-3 md:p-4"
+    >
+      <div class="overflow-x-auto">
+        <table class="w-full text-xs sm:text-sm text-left">
+          <caption
+            class="p-2 sm:p-3 md:p-4 text-sm sm:text-base md:text-lg font-semibold text-left text-gray-900 bg-white border-b border-gray-200"
           >
-            <th
-              scope="col"
-              class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4 font-medium whitespace-nowrap w-24"
+            Liste des devis
+          </caption>
+          <thead class="hidden lg:table-header-group">
+            <tr
+              class="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-200"
             >
-              N°
-            </th>
-            <th
-              scope="col"
-              class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4 font-medium whitespace-nowrap w-32"
-            >
-              Date
-            </th>
-            <th
-              scope="col"
-              class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4 font-medium"
-            >
-              Client
-            </th>
-            <th
-              scope="col"
-              class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4 font-medium whitespace-nowrap w-32"
-            >
-              Type
-            </th>
-            <th
-              scope="col"
-              class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4 font-medium whitespace-nowrap w-28"
-            >
-              Total
-            </th>
-            <th
-              scope="col"
-              class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4 font-medium whitespace-nowrap w-60"
-            >
-              Acceptation
-            </th>
-            <th
-              scope="col"
-              class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4 font-medium text-right"
-            >
-
-            </th>
-            <th
-              scope="col"
-              class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4 font-medium text-right"
-            >
-              Actions
-            </th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-200">
-          @if (hasAccessToBilling()) { @for (doc of paginatedDocuments(); track
-          doc.id + '-' + doc.documentType) {
-          <tr
-            class="bg-white hover:bg-gray-50 transition-colors flex flex-col lg:table-row mb-3 lg:mb-0 rounded-lg lg:rounded-none shadow-sm lg:shadow-none border border-gray-100 lg:border-0"
-          >
-            <td
-              class="px-2 sm:px-3 md:px-4 lg:px-6 py-1.5 sm:py-2 md:py-3 lg:py-4 flex lg:table-cell items-center justify-between lg:justify-start"
-            >
-              <span class="font-medium lg:font-normal lg:hidden text-xs"
-                >N° :</span
+              <th
+                scope="col"
+                class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4 font-medium whitespace-nowrap w-24"
               >
-              <span class="whitespace-nowrap">{{
-                formatQuoteNumber(doc)
-              }}</span>
-            </td>
-            <td
-              class="px-2 sm:px-3 md:px-4 lg:px-6 py-1.5 sm:py-2 md:py-3 lg:py-4 flex lg:table-cell items-center justify-between lg:justify-start"
-            >
-              <span class="font-medium lg:font-normal lg:hidden text-xs"
-                >Date :</span
+                N°
+              </th>
+              <th
+                scope="col"
+                class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4 font-medium whitespace-nowrap w-32"
               >
-              <span class="whitespace-nowrap">{{
-                doc["quote_date"] | date : "dd/MM/yyyy"
-              }}</span>
-            </td>
-            <td
-              class="px-2 sm:px-3 md:px-4 lg:px-6 py-1.5 sm:py-2 md:py-3 lg:py-4"
-            >
-              <div class="flex items-center gap-1.5 sm:gap-2 md:gap-3">
-                <div
-                  class="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 flex-shrink-0 text-xs sm:text-sm"
+                Date
+              </th>
+              <th
+                scope="col"
+                class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4 font-medium"
+              >
+                Client
+              </th>
+              <th
+                scope="col"
+                class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4 font-medium whitespace-nowrap w-32"
+              >
+                Type
+              </th>
+              <th
+                scope="col"
+                class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4 font-medium whitespace-nowrap w-28"
+              >
+                Total
+              </th>
+              <th
+                scope="col"
+                class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4 font-medium whitespace-nowrap w-60"
+              >
+                Acceptation
+              </th>
+              <th
+                scope="col"
+                class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4 font-medium text-right"
+              ></th>
+              <th
+                scope="col"
+                class="px-2 sm:px-3 md:px-4 lg:px-6 py-2 sm:py-3 md:py-4 font-medium text-right"
+              >
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200">
+            @if (hasAccessToBilling()) {
+              @for (
+                doc of paginatedDocuments();
+                track doc.id + "-" + doc.documentType
+              ) {
+                <tr
+                  class="bg-white hover:bg-gray-50 transition-colors flex flex-col lg:table-row mb-3 lg:mb-0 rounded-lg lg:rounded-none shadow-sm lg:shadow-none border border-gray-100 lg:border-0"
                 >
-                  {{
-                    doc.client.name && doc.client.name.length > 0
-                      ? doc.client.name.charAt(0).toUpperCase()
-                      : (doc.client.email && doc.client.email.length > 0
-                        ? doc.client.email.charAt(0).toUpperCase()
-                        : 'A')
-                  }}
-
-
-
-                </div>
-                <div class="min-w-0">
-                  <div
-                    class="font-medium text-gray-900 truncate text-xs sm:text-sm"
+                  <td
+                    class="px-2 sm:px-3 md:px-4 lg:px-6 py-1.5 sm:py-2 md:py-3 lg:py-4 flex lg:table-cell items-center justify-between lg:justify-start"
                   >
-                    {{ doc.client.name }}
-                  </div>
-                  <div class="text-xs text-gray-500 truncate">
-                    {{ doc.client.email }}
-                  </div>
-                  @if (doc.comment) {
-                  <div class="flex items-center mt-1">
-                    <button
-                      type="button"
-                      (click)="openCommentModal(doc.comment)"
-                      class="relative cursor-pointer"
-                      title="Voir le commentaire"
+                    <span class="font-medium lg:font-normal lg:hidden text-xs"
+                      >N° :</span
                     >
-                      <span
-                        class="inline-flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2 py-0.5 sm:py-1 bg-primary/10 text-primary rounded-full text-[10px] xs:text-xs font-medium hover:bg-primary/20 transition-colors"
-                      >
-                        <hlm-icon
-                          size="sm"
-                          name="lucideMessageCircle"
-                          class="text-primary h-3 w-3 sm:h-4 sm:w-4"
-                        />
-                        <span class="hidden sm:inline">Commentaire ajouté</span>
-                      </span>
-                    </button>
-                  </div>
-                  }
-                </div>
-              </div>
-            </td>
-            <td
-              class="px-2 sm:px-3 md:px-4 lg:px-6 py-1.5 sm:py-2 md:py-3 lg:py-4 flex lg:table-cell items-center justify-between lg:justify-start"
-            >
-              <span class="font-medium lg:font-normal lg:hidden text-xs"
-                >Type :</span
-              >
-              <span
-                class="inline-flex items-center justify-center rounded-full px-2 sm:px-3 py-0.5 sm:py-1 text-[10px] xs:text-xs font-medium min-w-[120px] sm:min-w-[140px] lg:min-w-[120px] text-center"
-                [ngClass]="{
-                  'bg-green-50 text-green-700': doc['status']! === 'invoiced',
-                  'bg-blue-50 text-blue-700': doc['status']! !== 'invoiced'
-                }"
-              >
-                {{
-                  doc["status"] === "invoiced"
-                    ? "Devis facturé"
-                    : "Devis en attente"
-                }}
-              </span>
-            </td>
-            <td
-              class="px-2 sm:px-3 md:px-4 lg:px-6 py-1.5 sm:py-2 md:py-3 lg:py-4 flex lg:table-cell items-center justify-between lg:justify-start"
-            >
-              <span class="font-medium lg:font-normal lg:hidden text-xs"
-                >Total :</span
-              >
-              <span class="font-medium text-xs sm:text-sm whitespace-nowrap">{{
-                doc.total | euroFormat
-              }}</span>
-            </td>
-
-            <td
-              class="px-2 sm:px-3 md:px-4 lg:px-6 py-1.5 sm:py-2 md:py-3 lg:py-4 flex lg:table-cell items-center justify-between lg:justify-start"
-            >
-              <span class="font-medium lg:font-normal lg:hidden text-xs"
-                >Acceptation :</span
-              >
-              <div class="flex flex-col gap-1">
-                <div class="flex items-center gap-1 sm:gap-2">
-                  <span class="text-[10px] xs:text-xs text-gray-500"
-                    >Groupe:</span
+                    <span class="whitespace-nowrap">{{
+                      formatQuoteNumber(doc)
+                    }}</span>
+                  </td>
+                  <td
+                    class="px-2 sm:px-3 md:px-4 lg:px-6 py-1.5 sm:py-2 md:py-3 lg:py-4 flex lg:table-cell items-center justify-between lg:justify-start"
                   >
-                  <span
-                    class="inline-flex items-center rounded-full px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] xs:text-xs font-medium whitespace-nowrap"
-                    [ngClass]="{
-                      'bg-green-50 text-green-700':
-                        doc.group_acceptance === 'accepted',
-                      'bg-red-50 text-red-700':
-                        doc.group_acceptance === 'refused',
-                      'bg-yellow-50 text-yellow-700':
-                        doc.group_acceptance === 'pending'
-                    }"
-                  >
-                    {{
-                      doc.group_acceptance === "accepted"
-                        ? "Accepté"
-                        : doc.group_acceptance === "refused"
-                        ? "Refusé"
-                        : "En attente"
-                    }}
-                  </span>
-
-
-                </div>
-                <div class="flex items-center gap-1 sm:gap-2">
-                  <span class="text-[10px] text-gray-500"
-                    >Donneur d'ordre:</span
-                  >
-                  <span
-                    class="inline-flex items-center rounded-full px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] xs:text-xs font-medium whitespace-nowrap"
-                    [ngClass]="{
-                      'bg-green-50 text-green-700':
-                        doc.order_giver_acceptance === 'accepted',
-                      'bg-red-50 text-red-700':
-                        doc.order_giver_acceptance === 'refused',
-                      'bg-yellow-50 text-yellow-700':
-                        doc.order_giver_acceptance === 'pending'
-                    }"
-                  >
-                    {{
-                      doc.order_giver_acceptance === "accepted"
-                        ? "Accepté"
-                        : doc.order_giver_acceptance === "refused"
-                        ? "Refusé"
-                        : "En attente"
-                    }}
-                  </span>
-                </div>
-              </div>
-
-            </td>
-
-            <td>  @if (doc.group_acceptance === 'pending' && canEditBilling()
-             ) {
-              <button
-                hlmBtn
-                variant="default"
-                size="sm"
-                class="flex items-center justify-center gap-1 sm:gap-1.5 w-full lg:w-auto text-[10px] xs:text-xs whitespace-nowrap px-1 sm:px-1.5 py-1 sm:py-1.5 bg-green-600 hover:bg-green-700 text-white"
-                (click)="acceptQuoteGroupe(doc.id)"
-                [disabled]="loadingAccept() === doc.id"
-              >
-              <span *ngIf="loadingAccept() === doc.id" class="flex items-center h-full">
-              <svg class="animate-spin h-4 w-4 mr-1" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/></svg>
-              Chargement...
-              </span>
-                <span *ngIf="loadingAccept() !== doc.id" class="leading-none flex items-center h-full">
-                  Accepter le devis
-                </span>
-              </button>
-
-            }</td>
-
-            <td
-              class="px-2 sm:px-3 md:px-4 lg:px-6 py-1.5 sm:py-2 md:py-3 lg:py-4"
-            >
-              <div
-                class="flex flex-col lg:flex-row items-stretch lg:items-center justify-end gap-1 sm:gap-2 lg:gap-1.5"
-              >
-                <button
-                  hlmBtn
-                  variant="ghost"
-                  size="sm"
-                  class="flex items-center justify-center gap-1 sm:gap-1.5 w-full lg:w-auto text-[10px] xs:text-xs whitespace-nowrap px-1 sm:px-1.5 py-1 sm:py-1.5 border border-gray-200 hover:bg-gray-100 hover:border-gray-300"
-                  [ngClass]="{ 'opacity-50 cursor-not-allowed': doc.invoice }"
-                  (click)="generateQuotePDF(doc)"
-                  [disabled]="doc.invoice"
-                >
-                  <hlm-icon
-                    size="sm"
-                    name="lucideFileDown"
-                    class="h-3 w-3 sm:h-4 sm:w-4 text-blue-600"
-                  />
-                  <span>Télécharger devis</span>
-                </button>
-                @if (doc.invoice) {
-                <button
-                  hlmBtn
-                  variant="ghost"
-                  size="sm"
-                  class="flex items-center justify-center gap-1 sm:gap-1.5 w-full lg:w-auto text-[10px] xs:text-xs whitespace-nowrap px-1 sm:px-1.5 py-1 sm:py-1.5 border border-gray-200 hover:bg-gray-100 hover:border-gray-300"
-                  (click)="generateInvoicePDF(doc.invoice)"
-                >
-                  <hlm-icon
-                    size="sm"
-                    name="lucideFileDown"
-                    class="h-3 w-3 sm:h-4 sm:w-4 text-green-600"
-                  />
-                  <span>Télécharger facture</span>
-                </button>
-                @if (canEditBilling()) { @if (!doc['linkedInvoiceId']) {
-                <button
-                  hlmBtn
-                  variant="ghost"
-                  size="sm"
-                  class="flex items-center justify-center gap-1 sm:gap-1.5 w-full lg:w-auto text-[10px] xs:text-xs whitespace-nowrap px-1 sm:px-1.5 py-1 sm:py-1.5 border border-gray-200 hover:bg-gray-100 hover:border-gray-300"
-                  routerLink="new-credit-note"
-                  [queryParams]="{
-                    typeOfProjet: typeOfProjet(),
-                    invoiceId: doc.id
-                  }"
-                >
-                  <hlm-icon
-                    size="sm"
-                    name="lucideFileText"
-                    class="h-3 w-3 sm:h-4 sm:w-4 text-red-600"
-                  />
-                  <span>Créer note de crédit</span>
-                </button>
-                } } @if (doc['linkedInvoiceId']) {
-                <button
-                  hlmBtn
-                  variant="ghost"
-                  size="sm"
-                  class="flex items-center justify-center gap-1 sm:gap-1.5 w-full lg:w-auto text-[10px] xs:text-xs whitespace-nowrap px-1 sm:px-1.5 py-1 sm:py-1.5 border border-gray-200 hover:bg-gray-100 hover:border-gray-300"
-                  (click)="loadCreditNote(doc['linkedInvoiceId'])"
-                >
-                  <hlm-icon
-                    size="sm"
-                    name="lucideFileDown"
-                    class="h-3 w-3 sm:h-4 sm:w-4 text-red-600"
-                  />
-                  <span>Télécharger note de crédit liée</span>
-                </button>
-                } } @if (!doc.invoice && canEditBilling()) {
-                <button
-                  hlmBtn
-                  variant="ghost"
-                  size="sm"
-                  class="flex items-center justify-center gap-1 sm:gap-1.5 w-full lg:w-auto text-[10px] xs:text-xs whitespace-nowrap px-1 sm:px-1.5 py-1 sm:py-1.5 border border-gray-200 hover:bg-gray-100 hover:border-gray-300"
-                  routerLink="new-quote"
-                  [queryParams]="{
-                    typeOfProjet: typeOfProjet(),
-                    updatedQuoteId: doc.id
-                  }"
-                >
-                  <hlm-icon
-                    size="sm"
-                    name="lucideEdit"
-                    class="h-3 w-3 sm:h-4 sm:w-4 text-amber-600"
-                  />
-                  <span>Modifier</span>
-                </button>
-                @if(connectedUser()?.role === 'ADMIN' ||
-                doc.order_giver_acceptance === 'accepted' &&
-                doc.group_acceptance === 'accepted' && doc['status'] !==
-                'invoiced') {
-                <hlm-alert-dialog>
-                  <button
-                    hlmBtn
-                    variant="default"
-                    size="sm"
-                    class="flex items-center justify-center gap-1 sm:gap-1.5 w-full lg:w-auto text-[10px] xs:text-xs whitespace-nowrap px-1 sm:px-1.5 py-1 sm:py-1.5 bg-green-600 hover:bg-green-700 text-white"
-                    brnAlertDialogTrigger
-                  >
-                    <hlm-icon
-                      size="sm"
-                      name="lucideFileText"
-                      class="h-3 w-3 sm:h-4 sm:w-4"
-                    />
-                    <span>Générer la facture</span>
-                  </button>
-                  <hlm-alert-dialog-content
-                    *brnAlertDialogContent="let ctx"
-                    class="w-[95%] sm:w-auto max-w-md mx-auto"
-                  >
-                    <hlm-alert-dialog-header>
-                      <h3 hlmAlertDialogTitle class="text-base sm:text-lg">
-                        Créer la facture
-                      </h3>
-                      <p hlmAlertDialogDescription class="text-xs sm:text-sm">
-                        Cette action est irréversible.
-                      </p>
-                    </hlm-alert-dialog-header>
-                    <hlm-alert-dialog-footer
-                      class="flex flex-col xs:flex-row gap-2 xs:gap-0 justify-end"
+                    <span class="font-medium lg:font-normal lg:hidden text-xs"
+                      >Date :</span
                     >
-                      <button
-                        hlmBtn
-                        variant="outline"
-                        (click)="ctx.close()"
-                        class="text-xs sm:text-sm w-full xs:w-auto"
+                    <span class="whitespace-nowrap">{{
+                      doc["quote_date"] | date: "dd/MM/yyyy"
+                    }}</span>
+                  </td>
+                  <td
+                    class="px-2 sm:px-3 md:px-4 lg:px-6 py-1.5 sm:py-2 md:py-3 lg:py-4"
+                  >
+                    <div class="flex items-center gap-1.5 sm:gap-2 md:gap-3">
+                      <div
+                        class="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 flex-shrink-0 text-xs sm:text-sm"
                       >
-                        Annuler
-                      </button>
+                        {{
+                          doc.client.name && doc.client.name.length > 0
+                            ? doc.client.name.charAt(0).toUpperCase()
+                            : doc.client.email && doc.client.email.length > 0
+                              ? doc.client.email.charAt(0).toUpperCase()
+                              : "A"
+                        }}
+                      </div>
+                      <div class="min-w-0">
+                        <div
+                          class="font-medium text-gray-900 truncate text-xs sm:text-sm"
+                        >
+                          {{ doc.client.name }}
+                        </div>
+                        <div class="text-xs text-gray-500 truncate">
+                          {{ doc.client.email }}
+                        </div>
+                        @if (doc.comment) {
+                          <div class="flex items-center mt-1">
+                            <button
+                              type="button"
+                              (click)="openCommentModal(doc.comment)"
+                              class="relative cursor-pointer"
+                              title="Voir le commentaire"
+                            >
+                              <span
+                                class="inline-flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2 py-0.5 sm:py-1 bg-primary/10 text-primary rounded-full text-[10px] xs:text-xs font-medium hover:bg-primary/20 transition-colors"
+                              >
+                                <hlm-icon
+                                  size="sm"
+                                  name="lucideMessageCircle"
+                                  class="text-primary h-3 w-3 sm:h-4 sm:w-4"
+                                />
+                                <span class="hidden sm:inline"
+                                  >Commentaire ajouté</span
+                                >
+                              </span>
+                            </button>
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  </td>
+                  <td
+                    class="px-2 sm:px-3 md:px-4 lg:px-6 py-1.5 sm:py-2 md:py-3 lg:py-4 flex lg:table-cell items-center justify-between lg:justify-start"
+                  >
+                    <span class="font-medium lg:font-normal lg:hidden text-xs"
+                      >Type :</span
+                    >
+                    <span
+                      class="inline-flex items-center justify-center rounded-full px-2 sm:px-3 py-0.5 sm:py-1 text-[10px] xs:text-xs font-medium min-w-[120px] sm:min-w-[140px] lg:min-w-[120px] text-center"
+                      [ngClass]="{
+                        'bg-green-50 text-green-700':
+                          doc['status'] === 'invoiced',
+                        'bg-red-50 text-red-700':
+                          doc['status'] === 'expired' ||
+                          doc['status'] === 'refused',
+                        'bg-blue-50 text-blue-700': doc['status'] === 'pending',
+                      }"
+                    >
+                      {{
+                        doc["status"] === "invoiced"
+                          ? "Devis facturé"
+                          : doc["status"] === "expired"
+                            ? "Devis expiré"
+                            : doc["status"] === "refused"
+                              ? "Devis refusé"
+                              : "Devis en attente"
+                      }}
+                    </span>
+                  </td>
+                  <td
+                    class="px-2 sm:px-3 md:px-4 lg:px-6 py-1.5 sm:py-2 md:py-3 lg:py-4 flex lg:table-cell items-center justify-between lg:justify-start"
+                  >
+                    <span class="font-medium lg:font-normal lg:hidden text-xs"
+                      >Total :</span
+                    >
+                    <span
+                      class="font-medium text-xs sm:text-sm whitespace-nowrap"
+                      >{{ doc.total | euroFormat }}</span
+                    >
+                  </td>
+
+                  <td
+                    class="px-2 sm:px-3 md:px-4 lg:px-6 py-1.5 sm:py-2 md:py-3 lg:py-4 flex lg:table-cell items-center justify-between lg:justify-start"
+                  >
+                    <span class="font-medium lg:font-normal lg:hidden text-xs"
+                      >Acceptation :</span
+                    >
+                    <div class="flex flex-col gap-1">
+                      <div class="flex items-center gap-1 sm:gap-2">
+                        <span class="text-[10px] xs:text-xs text-gray-500"
+                          >Groupe:</span
+                        >
+                        <span
+                          class="inline-flex items-center rounded-full px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] xs:text-xs font-medium whitespace-nowrap"
+                          [ngClass]="{
+                            'bg-green-50 text-green-700':
+                              doc.group_acceptance === 'accepted',
+                            'bg-red-50 text-red-700':
+                              doc.group_acceptance === 'refused',
+                            'bg-yellow-50 text-yellow-700':
+                              doc.group_acceptance === 'pending',
+                          }"
+                        >
+                          {{
+                            doc.group_acceptance === "accepted"
+                              ? "Accepté"
+                              : doc.group_acceptance === "refused"
+                                ? "Refusé"
+                                : "En attente"
+                          }}
+                        </span>
+                      </div>
+                      <div class="flex items-center gap-1 sm:gap-2">
+                        <span class="text-[10px] text-gray-500"
+                          >Donneur d'ordre:</span
+                        >
+                        <span
+                          class="inline-flex items-center rounded-full px-1.5 sm:px-2 py-0.5 sm:py-1 text-[10px] xs:text-xs font-medium whitespace-nowrap"
+                          [ngClass]="{
+                            'bg-green-50 text-green-700':
+                              doc.order_giver_acceptance === 'accepted',
+                            'bg-red-50 text-red-700':
+                              doc.order_giver_acceptance === 'refused',
+                            'bg-yellow-50 text-yellow-700':
+                              doc.order_giver_acceptance === 'pending',
+                          }"
+                        >
+                          {{
+                            doc.order_giver_acceptance === "accepted"
+                              ? "Accepté"
+                              : doc.order_giver_acceptance === "refused"
+                                ? "Refusé"
+                                : "En attente"
+                          }}
+                        </span>
+                      </div>
+                    </div>
+                  </td>
+
+                  <td>
+                    @if (
+                      doc.group_acceptance === "pending" && canEditBilling()
+                    ) {
                       <button
                         hlmBtn
                         variant="default"
-                        (click)="createInvoice(asQuoteEntity(doc), ctx)"
-                        class="text-xs sm:text-sm w-full xs:w-auto"
+                        size="sm"
+                        class="flex items-center justify-center gap-1 sm:gap-1.5 w-full lg:w-auto text-[10px] xs:text-xs whitespace-nowrap px-1 sm:px-1.5 py-1 sm:py-1.5 bg-green-600 hover:bg-green-700 text-white"
+                        (click)="acceptQuoteGroupe(doc.id)"
+                        [disabled]="loadingAccept() === doc.id"
                       >
-                        Créer
+                        <span
+                          *ngIf="loadingAccept() === doc.id"
+                          class="flex items-center h-full"
+                        >
+                          <svg
+                            class="animate-spin h-4 w-4 mr-1"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              class="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              stroke-width="4"
+                              fill="none"
+                            />
+                            <path
+                              class="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                            />
+                          </svg>
+                          Chargement...
+                        </span>
+                        <span
+                          *ngIf="loadingAccept() !== doc.id"
+                          class="leading-none flex items-center h-full"
+                        >
+                          Accepter le devis
+                        </span>
                       </button>
-                    </hlm-alert-dialog-footer>
-                  </hlm-alert-dialog-content>
-                </hlm-alert-dialog>
-                } }
-              </div>
-            </td>
-          </tr>
-          <hlm-toaster />
-          } } @else {
-          <tr class="bg-white">
-            <td
-              [attr.colspan]="7"
-              class="px-6 py-4 text-center text-gray-500 italic"
+                    }
+                  </td>
+
+                  <td
+                    class="px-2 sm:px-3 md:px-4 lg:px-6 py-1.5 sm:py-2 md:py-3 lg:py-4"
+                  >
+                    <div
+                      class="flex flex-col lg:flex-row items-stretch lg:items-center justify-end gap-1 sm:gap-2 lg:gap-1.5"
+                    >
+                      <button
+                        hlmBtn
+                        variant="ghost"
+                        size="sm"
+                        class="flex items-center justify-center gap-1 sm:gap-1.5 w-full lg:w-auto text-[10px] xs:text-xs whitespace-nowrap px-1 sm:px-1.5 py-1 sm:py-1.5 border border-gray-200 hover:bg-gray-100 hover:border-gray-300"
+                        [ngClass]="{
+                          'opacity-50 cursor-not-allowed': doc.invoice,
+                        }"
+                        (click)="generateQuotePDF(doc)"
+                        [disabled]="doc.invoice"
+                      >
+                        <hlm-icon
+                          size="sm"
+                          name="lucideFileDown"
+                          class="h-3 w-3 sm:h-4 sm:w-4 text-blue-600"
+                        />
+                        <span>Télécharger devis</span>
+                      </button>
+                      @if (doc.invoice) {
+                        <button
+                          hlmBtn
+                          variant="ghost"
+                          size="sm"
+                          class="flex items-center justify-center gap-1 sm:gap-1.5 w-full lg:w-auto text-[10px] xs:text-xs whitespace-nowrap px-1 sm:px-1.5 py-1 sm:py-1.5 border border-gray-200 hover:bg-gray-100 hover:border-gray-300"
+                          (click)="generateInvoicePDF(doc.invoice)"
+                        >
+                          <hlm-icon
+                            size="sm"
+                            name="lucideFileDown"
+                            class="h-3 w-3 sm:h-4 sm:w-4 text-green-600"
+                          />
+                          <span>Télécharger facture</span>
+                        </button>
+                        @if (canEditBilling()) {
+                          @if (!doc["linkedInvoiceId"]) {
+                            <button
+                              hlmBtn
+                              variant="ghost"
+                              size="sm"
+                              class="flex items-center justify-center gap-1 sm:gap-1.5 w-full lg:w-auto text-[10px] xs:text-xs whitespace-nowrap px-1 sm:px-1.5 py-1 sm:py-1.5 border border-gray-200 hover:bg-gray-100 hover:border-gray-300"
+                              routerLink="new-credit-note"
+                              [queryParams]="{
+                                typeOfProjet: typeOfProjet(),
+                                invoiceId: doc.id,
+                              }"
+                            >
+                              <hlm-icon
+                                size="sm"
+                                name="lucideFileText"
+                                class="h-3 w-3 sm:h-4 sm:w-4 text-red-600"
+                              />
+                              <span>Créer note de crédit</span>
+                            </button>
+                          }
+                        }
+                        @if (doc["linkedInvoiceId"]) {
+                          <button
+                            hlmBtn
+                            variant="ghost"
+                            size="sm"
+                            class="flex items-center justify-center gap-1 sm:gap-1.5 w-full lg:w-auto text-[10px] xs:text-xs whitespace-nowrap px-1 sm:px-1.5 py-1 sm:py-1.5 border border-gray-200 hover:bg-gray-100 hover:border-gray-300"
+                            (click)="loadCreditNote(doc['linkedInvoiceId'])"
+                          >
+                            <hlm-icon
+                              size="sm"
+                              name="lucideFileDown"
+                              class="h-3 w-3 sm:h-4 sm:w-4 text-red-600"
+                            />
+                            <span>Télécharger note de crédit liée</span>
+                          </button>
+                        }
+                      }
+                      @if (!doc.invoice && canEditBilling()) {
+                        <button
+                          hlmBtn
+                          variant="ghost"
+                          size="sm"
+                          class="flex items-center justify-center gap-1 sm:gap-1.5 w-full lg:w-auto text-[10px] xs:text-xs whitespace-nowrap px-1 sm:px-1.5 py-1 sm:py-1.5 border border-gray-200 hover:bg-gray-100 hover:border-gray-300"
+                          routerLink="new-quote"
+                          [queryParams]="{
+                            typeOfProjet: typeOfProjet(),
+                            updatedQuoteId: doc.id,
+                          }"
+                        >
+                          <hlm-icon
+                            size="sm"
+                            name="lucideEdit"
+                            class="h-3 w-3 sm:h-4 sm:w-4 text-amber-600"
+                          />
+                          <span>Modifier</span>
+                        </button>
+                        @if (
+                          connectedUser()?.role === "ADMIN" ||
+                          (doc.order_giver_acceptance === "accepted" &&
+                            doc.group_acceptance === "accepted" &&
+                            doc["status"] !== "invoiced")
+                        ) {
+                          <hlm-alert-dialog>
+                            <button
+                              hlmBtn
+                              variant="default"
+                              size="sm"
+                              class="flex items-center justify-center gap-1 sm:gap-1.5 w-full lg:w-auto text-[10px] xs:text-xs whitespace-nowrap px-1 sm:px-1.5 py-1 sm:py-1.5 bg-green-600 hover:bg-green-700 text-white"
+                              brnAlertDialogTrigger
+                            >
+                              <hlm-icon
+                                size="sm"
+                                name="lucideFileText"
+                                class="h-3 w-3 sm:h-4 sm:w-4"
+                              />
+                              <span>Générer la facture</span>
+                            </button>
+                            <hlm-alert-dialog-content
+                              *brnAlertDialogContent="let ctx"
+                              class="w-[95%] sm:w-auto max-w-md mx-auto"
+                            >
+                              <hlm-alert-dialog-header>
+                                <h3
+                                  hlmAlertDialogTitle
+                                  class="text-base sm:text-lg"
+                                >
+                                  Créer la facture
+                                </h3>
+                                <p
+                                  hlmAlertDialogDescription
+                                  class="text-xs sm:text-sm"
+                                >
+                                  Cette action est irréversible.
+                                </p>
+                              </hlm-alert-dialog-header>
+                              <hlm-alert-dialog-footer
+                                class="flex flex-col xs:flex-row gap-2 xs:gap-0 justify-end"
+                              >
+                                <button
+                                  hlmBtn
+                                  variant="outline"
+                                  (click)="ctx.close()"
+                                  class="text-xs sm:text-sm w-full xs:w-auto"
+                                >
+                                  Annuler
+                                </button>
+                                <button
+                                  hlmBtn
+                                  variant="default"
+                                  (click)="
+                                    createInvoice(asQuoteEntity(doc), ctx)
+                                  "
+                                  class="text-xs sm:text-sm w-full xs:w-auto"
+                                >
+                                  Créer
+                                </button>
+                              </hlm-alert-dialog-footer>
+                            </hlm-alert-dialog-content>
+                          </hlm-alert-dialog>
+                        }
+                      }
+                    </div>
+                  </td>
+                </tr>
+                <hlm-toaster />
+              }
+            } @else {
+              <tr class="bg-white">
+                <td
+                  [attr.colspan]="7"
+                  class="px-6 py-4 text-center text-gray-500 italic"
+                >
+                  Vous n'avez pas accès à la facturation pour ce projet.
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    @if (allQuotes().length) {
+      <nav hlmPagination class="mt-3 sm:mt-4 flex justify-center">
+        <ul
+          hlmPaginationContent
+          class="flex flex-wrap gap-1 justify-center items-center"
+        >
+          <li hlmPaginationItem class="mx-0.5 sm:mx-1">
+            <button
+              class="px-1.5 sm:px-2 md:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium transition-colors hover:bg-gray-100 rounded-md border border-gray-200"
+              [class.opacity-50]="pagination.currentPage() === 1"
+              [disabled]="pagination.currentPage() === 1"
+              (click)="
+                pagination.currentPage() > 1 &&
+                  onPageChange(pagination.currentPage() - 1)
+              "
             >
-              Vous n'avez pas accès à la facturation pour ce projet.
-            </td>
-          </tr>
+              Précédent
+            </button>
+          </li>
+
+          @for (
+            page of getVisiblePages(
+              pagination.currentPage(),
+              pagination.totalPages()
+            );
+            track $index
+          ) {
+            @if (page === "ellipsis") {
+              <li hlmPaginationItem class="mx-0.5 sm:mx-1">
+                <span
+                  class="px-1.5 sm:px-2 md:px-3 py-1 sm:py-1.5 text-xs sm:text-sm"
+                  >...</span
+                >
+              </li>
+            } @else {
+              <li hlmPaginationItem class="mx-0.5 sm:mx-1">
+                <button
+                  class="min-w-[24px] sm:min-w-[32px] md:min-w-[40px] h-6 sm:h-8 md:h-9 px-1.5 sm:px-2 md:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium transition-colors rounded-md border"
+                  [class.bg-zinc-800]="pagination.currentPage() === page"
+                  [class.text-white]="pagination.currentPage() === page"
+                  [class.border-zinc-800]="pagination.currentPage() === page"
+                  [class.border-gray-200]="pagination.currentPage() !== page"
+                  [class.hover:bg-gray-100]="pagination.currentPage() !== page"
+                  (click)="onPageChange(page)"
+                >
+                  {{ page }}
+                </button>
+              </li>
+            }
           }
-        </tbody>
-      </table>
-    </div>
-  </div>
 
-  @if (allQuotes().length) {
-  <nav hlmPagination class="mt-3 sm:mt-4 flex justify-center">
-    <ul
-      hlmPaginationContent
-      class="flex flex-wrap gap-1 justify-center items-center"
-    >
-      <li hlmPaginationItem class="mx-0.5 sm:mx-1">
-        <button
-          class="px-1.5 sm:px-2 md:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium transition-colors hover:bg-gray-100 rounded-md border border-gray-200"
-          [class.opacity-50]="pagination.currentPage() === 1"
-          [disabled]="pagination.currentPage() === 1"
-          (click)="
-            pagination.currentPage() > 1 &&
-              onPageChange(pagination.currentPage() - 1)
-          "
+          <li hlmPaginationItem class="mx-0.5 sm:mx-1">
+            <button
+              class="px-1.5 sm:px-2 md:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium transition-colors hover:bg-gray-100 rounded-md border border-gray-200"
+              [class.opacity-50]="
+                pagination.currentPage() === pagination.totalPages()
+              "
+              [disabled]="pagination.currentPage() === pagination.totalPages()"
+              (click)="
+                pagination.currentPage() < pagination.totalPages() &&
+                  onPageChange(pagination.currentPage() + 1)
+              "
+            >
+              Suivant
+            </button>
+          </li>
+        </ul>
+      </nav>
+    }
+  } @else {
+    <div class="py-8 text-center rounded-xl border border-gray-200 bg-white">
+      <div class="flex flex-col items-center gap-3 sm:gap-4">
+        <div
+          class="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-gray-100 flex items-center justify-center"
         >
-          Précédent
-        </button>
-      </li>
-
-      @for (page of getVisiblePages(pagination.currentPage(),
-      pagination.totalPages()); track $index) { @if (page === 'ellipsis') {
-      <li hlmPaginationItem class="mx-0.5 sm:mx-1">
-        <span class="px-1.5 sm:px-2 md:px-3 py-1 sm:py-1.5 text-xs sm:text-sm"
-          >...</span
-        >
-      </li>
-      } @else {
-      <li hlmPaginationItem class="mx-0.5 sm:mx-1">
-        <button
-          class="min-w-[24px] sm:min-w-[32px] md:min-w-[40px] h-6 sm:h-8 md:h-9 px-1.5 sm:px-2 md:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium transition-colors rounded-md border"
-          [class.bg-zinc-800]="pagination.currentPage() === page"
-          [class.text-white]="pagination.currentPage() === page"
-          [class.border-zinc-800]="pagination.currentPage() === page"
-          [class.border-gray-200]="pagination.currentPage() !== page"
-          [class.hover:bg-gray-100]="pagination.currentPage() !== page"
-          (click)="onPageChange(page)"
-        >
-          {{ page }}
-        </button>
-      </li>
-      } }
-
-      <li hlmPaginationItem class="mx-0.5 sm:mx-1">
-        <button
-          class="px-1.5 sm:px-2 md:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium transition-colors hover:bg-gray-100 rounded-md border border-gray-200"
-          [class.opacity-50]="
-            pagination.currentPage() === pagination.totalPages()
-          "
-          [disabled]="pagination.currentPage() === pagination.totalPages()"
-          (click)="
-            pagination.currentPage() < pagination.totalPages() &&
-              onPageChange(pagination.currentPage() + 1)
-          "
-        >
-          Suivant
-        </button>
-      </li>
-    </ul>
-  </nav>
-  } } @else {
-  <div class="py-8 text-center rounded-xl border border-gray-200 bg-white">
-    <div class="flex flex-col items-center gap-3 sm:gap-4">
-      <div
-        class="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-gray-100 flex items-center justify-center"
-      >
-        <hlm-icon name="lucideFileText" size="lg" class="text-gray-400" />
-      </div>
-      <div class="space-y-1 sm:space-y-2">
-        <h3 class="text-base sm:text-lg font-medium text-gray-900">
-          Aucun devis trouvé
-        </h3>
-        <p class="text-xs sm:text-sm text-gray-500 max-w-md mx-auto">
-          @if (currentFilter === 'all') { Il n'y a actuellement aucun devis. }
-          @else if (currentFilter === 'quotes') { Il n'y a actuellement aucun
-          devis en attente. } @else if (currentFilter === 'invoiced_quotes') {
-          Il n'y a actuellement aucun devis facturé. }
-        </p>
-        @if (canEditBilling()) {
-        <div class="mt-3 sm:mt-4">
-          <a
-            routerLink="new-quote"
-            [queryParams]="{ typeOfProjet: typeOfProjet() }"
-            class="inline-flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm bg-gray-sonar text-black hover:bg-gray-sonar/80 transition-colors"
-          >
-            <hlm-icon size="sm" name="lucideFilePlus" />
-            Créer un nouveau devis
-          </a>
+          <hlm-icon name="lucideFileText" size="lg" class="text-gray-400" />
         </div>
-        }
+        <div class="space-y-1 sm:space-y-2">
+          <h3 class="text-base sm:text-lg font-medium text-gray-900">
+            Aucun devis trouvé
+          </h3>
+          <p class="text-xs sm:text-sm text-gray-500 max-w-md mx-auto">
+            @if (currentFilter === "all") {
+              Il n'y a actuellement aucun devis.
+            } @else if (currentFilter === "pending") {
+              Il n'y a actuellement aucun devis en attente.
+            } @else if (currentFilter === "invoiced") {
+              Il n'y a actuellement aucun devis facturé.
+            } @else if (currentFilter === "rejected") {
+              Il n'y a actuellement aucun devis dépassé ou refusé.
+            }
+          </p>
+          @if (canEditBilling()) {
+            <div class="mt-3 sm:mt-4">
+              <a
+                routerLink="new-quote"
+                [queryParams]="{ typeOfProjet: typeOfProjet() }"
+                class="inline-flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm bg-gray-sonar text-black hover:bg-gray-sonar/80 transition-colors"
+              >
+                <hlm-icon size="sm" name="lucideFilePlus" />
+                Créer un nouveau devis
+              </a>
+            </div>
+          }
+        </div>
       </div>
     </div>
-  </div>
   }
 </div>
 
 <!-- Modal pour afficher le commentaire -->
 @if (isCommentModalOpen()) {
-<div
-  class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
-  tabindex="0"
-  (click)="isCommentModalOpen.set(false)"
-  (keydown.enter)="isCommentModalOpen.set(false)"
-  (keydown.space)="isCommentModalOpen.set(false)"
-  role="button"
-  aria-label="Fermer la modale"
->
   <div
-    class="bg-white rounded-xl p-4 sm:p-6 max-w-lg w-full mx-auto shadow-xl space-y-3 sm:space-y-4"
-    (click)="$event.stopPropagation()"
+    class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
     tabindex="0"
+    (click)="isCommentModalOpen.set(false)"
     (keydown.enter)="isCommentModalOpen.set(false)"
     (keydown.space)="isCommentModalOpen.set(false)"
+    role="button"
+    aria-label="Fermer la modale"
   >
     <div
-      class="flex justify-between items-center border-b border-gray-200 pb-3 sm:pb-4"
+      class="bg-white rounded-xl p-4 sm:p-6 max-w-lg w-full mx-auto shadow-xl space-y-3 sm:space-y-4"
+      (click)="$event.stopPropagation()"
+      tabindex="0"
+      (keydown.enter)="isCommentModalOpen.set(false)"
+      (keydown.space)="isCommentModalOpen.set(false)"
     >
-      <h3 class="text-base sm:text-lg font-semibold text-gray-900">
-        Commentaire
-      </h3>
-      <button
-        type="button"
-        tabindex="0"
-        (click)="isCommentModalOpen.set(false)"
-        (keydown.enter)="isCommentModalOpen.set(false)"
-        (keydown.space)="isCommentModalOpen.set(false)"
-        class="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-all"
-        aria-label="Fermer"
+      <div
+        class="flex justify-between items-center border-b border-gray-200 pb-3 sm:pb-4"
       >
-        <hlm-icon size="sm" name="lucideX" />
-      </button>
-    </div>
-    <div
-      #commentContent
-      class="comment-modal-content prose prose-sm sm:prose-base max-w-none text-gray-700 max-h-[60vh] overflow-y-auto prose-a:text-blue-600 prose-a:underline hover:prose-a:text-blue-800"
-      [innerHTML]="currentCommentHtml()"
-    ></div>
-    <div class="flex justify-end pt-3 sm:pt-4 border-t border-gray-200">
-      <button
-        hlmBtn
-        variant="outline"
-        (click)="isCommentModalOpen.set(false)"
-        class="text-xs sm:text-sm"
-      >
-        Fermer
-      </button>
+        <h3 class="text-base sm:text-lg font-semibold text-gray-900">
+          Commentaire
+        </h3>
+        <button
+          type="button"
+          tabindex="0"
+          (click)="isCommentModalOpen.set(false)"
+          (keydown.enter)="isCommentModalOpen.set(false)"
+          (keydown.space)="isCommentModalOpen.set(false)"
+          class="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-all"
+          aria-label="Fermer"
+        >
+          <hlm-icon size="sm" name="lucideX" />
+        </button>
+      </div>
+      <div
+        #commentContent
+        class="comment-modal-content prose prose-sm sm:prose-base max-w-none text-gray-700 max-h-[60vh] overflow-y-auto prose-a:text-blue-600 prose-a:underline hover:prose-a:text-blue-800"
+        [innerHTML]="currentCommentHtml()"
+      ></div>
+      <div class="flex justify-end pt-3 sm:pt-4 border-t border-gray-200">
+        <button
+          hlmBtn
+          variant="outline"
+          (click)="isCommentModalOpen.set(false)"
+          class="text-xs sm:text-sm"
+        >
+          Fermer
+        </button>
+      </div>
     </div>
   </div>
-</div>
 }

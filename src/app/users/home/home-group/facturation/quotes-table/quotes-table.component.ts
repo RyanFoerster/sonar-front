@@ -5,9 +5,10 @@ import {
   EventEmitter,
   computed,
   signal,
-  input, inject,
+  input,
+  inject,
 } from '@angular/core';
-import {DatePipe, JsonPipe, NgClass, NgIf} from '@angular/common';
+import { DatePipe, JsonPipe, NgClass, NgIf } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 
@@ -44,10 +45,10 @@ import {
 import { EuroFormatPipe } from '../../../../../shared/pipes/euro-format.pipe';
 import { QuoteEntity } from '../../../../../shared/entities/quote.entity';
 import { UserEntity } from '../../../../../shared/entities/user.entity';
-import {quotes} from "html2canvas/dist/types/css/property-descriptors/quotes";
-import {QuoteService} from "../../../../../shared/services/quote.service";
-import {firstValueFrom} from "rxjs";
-import {toast} from "ngx-sonner";
+import { quotes } from 'html2canvas/dist/types/css/property-descriptors/quotes';
+import { QuoteService } from '../../../../../shared/services/quote.service';
+import { firstValueFrom } from 'rxjs';
+import { toast } from 'ngx-sonner';
 
 // Importing the Document interface from parent component
 interface Document {
@@ -112,7 +113,6 @@ export interface ModalContext {
     HlmPaginationItemDirective,
     HlmToasterComponent,
     NgIf,
-
   ],
   providers: [
     provideIcons({
@@ -128,8 +128,7 @@ export interface ModalContext {
   styleUrl: './quotes-table.component.css',
 })
 export class QuotesTableComponent {
-  private readonly services = {quote: inject(QuoteService),}
-
+  private readonly services = { quote: inject(QuoteService) };
 
   @Input() allQuotes = signal<Document[]>([]);
   @Input() pagination: {
@@ -142,8 +141,8 @@ export class QuotesTableComponent {
     totalItems: () => 0,
   };
   @Input() itemsPerPage = signal(10);
-  @Input() currentFilter: 'all' | 'quotes' | 'invoiced_quotes' | 'credit-note' =
-    'all';
+  @Input() currentFilter: 'pending' | 'invoiced' | 'rejected' | 'all' =
+    'pending';
   typeOfProjet = input<string>();
   canEditBilling = input<boolean>(false);
   hasAccessToBilling = input<boolean>(true);
@@ -151,7 +150,7 @@ export class QuotesTableComponent {
 
   @Output() pageChange = new EventEmitter<number>();
   @Output() filterChange = new EventEmitter<
-    'all' | 'quotes' | 'invoiced_quotes' | 'credit-note'
+    'pending' | 'invoiced' | 'rejected' | 'all'
   >();
   @Output() downloadQuote = new EventEmitter<Document>();
   @Output() downloadInvoice = new EventEmitter<Document>();
@@ -200,11 +199,17 @@ export class QuotesTableComponent {
   async acceptQuoteGroupe(id: number) {
     this.loadingAccept.set(id);
     try {
-      const updatedQuote = await firstValueFrom(this.services.quote.acceptQuoteGroupe(id));
-      this.allQuotes.update((quotes) =>
-        quotes.map((q) => q.id === id ? { ...q, group_acceptance: updatedQuote.group_acceptance } : q)
+      const updatedQuote = await firstValueFrom(
+        this.services.quote.acceptQuoteGroupe(id),
       );
-      toast.success("Devis accepté avec succès.");
+      this.allQuotes.update((quotes) =>
+        quotes.map((q) =>
+          q.id === id
+            ? { ...q, group_acceptance: updatedQuote.group_acceptance }
+            : q,
+        ),
+      );
+      toast.success('Devis accepté avec succès.');
     } catch (error) {
       toast.error("Erreur lors de l'acceptation du devis.");
     } finally {
@@ -212,15 +217,13 @@ export class QuotesTableComponent {
     }
   }
 
-  filterList(
-    filter: 'all' | 'quotes' | 'invoiced_quotes' | 'credit-note'
-  ): void {
+  filterList(filter: 'pending' | 'invoiced' | 'rejected' | 'all'): void {
     this.filterChange.emit(filter);
   }
 
   getVisiblePages(
     currentPage: number,
-    totalPages: number
+    totalPages: number,
   ): (number | 'ellipsis')[] {
     const visibleCount = 5;
     const pages: (number | 'ellipsis')[] = [];

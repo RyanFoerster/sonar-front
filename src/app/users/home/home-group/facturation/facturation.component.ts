@@ -1,7 +1,16 @@
-import {DatePipe, Location} from '@angular/common';
-import {ChangeDetectionStrategy, Component, computed, inject, input, OnDestroy, OnInit, signal,} from '@angular/core';
-import {Router, RouterLink} from '@angular/router';
-import {provideIcons} from '@ng-icons/core';
+import { DatePipe, Location } from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  input,
+  OnDestroy,
+  OnInit,
+  signal,
+} from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
+import { provideIcons } from '@ng-icons/core';
 import {
   lucideArrowLeft,
   lucideCornerDownLeft,
@@ -14,26 +23,26 @@ import {
   lucideX,
 } from '@ng-icons/lucide';
 
-import {HlmButtonDirective} from '@spartan-ng/ui-button-helm';
-import {HlmIconComponent} from '@spartan-ng/ui-icon-helm';
-import {firstValueFrom} from 'rxjs';
-import {CompteGroupeEntity} from '../../../../shared/entities/compte-groupe.entity';
-import {InvoiceEntity} from '../../../../shared/entities/invoice.entity';
-import {PrincipalAccountEntity} from '../../../../shared/entities/principal-account.entity';
-import {QuoteEntity} from '../../../../shared/entities/quote.entity';
-import {UserEntity} from '../../../../shared/entities/user.entity';
-import {AuthService} from '../../../../shared/services/auth.service';
-import {ComptePrincipalService} from '../../../../shared/services/compte-principal.service';
-import {InvoiceService} from '../../../../shared/services/invoice.service';
-import {QuoteService} from '../../../../shared/services/quote.service';
-import {UsersService} from '../../../../shared/services/users.service';
-import {PdfGeneratorService} from '../../../../shared/services/pdf-generator.service';
-import {toast} from 'ngx-sonner';
-import {FormsModule} from '@angular/forms';
-import {CompteGroupeService} from '../../../../shared/services/compte-groupe.service';
+import { HlmButtonDirective } from '@spartan-ng/ui-button-helm';
+import { HlmIconComponent } from '@spartan-ng/ui-icon-helm';
+import { firstValueFrom } from 'rxjs';
+import { CompteGroupeEntity } from '../../../../shared/entities/compte-groupe.entity';
+import { InvoiceEntity } from '../../../../shared/entities/invoice.entity';
+import { PrincipalAccountEntity } from '../../../../shared/entities/principal-account.entity';
+import { QuoteEntity } from '../../../../shared/entities/quote.entity';
+import { UserEntity } from '../../../../shared/entities/user.entity';
+import { AuthService } from '../../../../shared/services/auth.service';
+import { ComptePrincipalService } from '../../../../shared/services/compte-principal.service';
+import { InvoiceService } from '../../../../shared/services/invoice.service';
+import { QuoteService } from '../../../../shared/services/quote.service';
+import { UsersService } from '../../../../shared/services/users.service';
+import { PdfGeneratorService } from '../../../../shared/services/pdf-generator.service';
+import { toast } from 'ngx-sonner';
+import { FormsModule } from '@angular/forms';
+import { CompteGroupeService } from '../../../../shared/services/compte-groupe.service';
 
-import {QuotesTableComponent} from './quotes-table/quotes-table.component';
-import {InvoicesTableComponent} from './invoices-table/invoices-table.component';
+import { QuotesTableComponent } from './quotes-table/quotes-table.component';
+import { InvoicesTableComponent } from './invoices-table/invoices-table.component';
 
 import {
   HlmTabsComponent,
@@ -141,10 +150,10 @@ export class FacturationComponent implements OnInit, OnDestroy {
   protected originalDocuments = signal<Document[]>([]);
 
   protected reportDateFormatted = computed(() =>
-    this.formatDate(this.reportDate())
+    this.formatDate(this.reportDate()),
   );
   protected notPastDate = computed(
-    () => this.currentDate.toISOString().split('T')[0]
+    () => this.currentDate.toISOString().split('T')[0],
   );
 
   private readonly ITEMS_PER_PAGE = 10;
@@ -166,7 +175,7 @@ export class FacturationComponent implements OnInit, OnDestroy {
 
   protected itemsPerPage = signal(this.ITEMS_PER_PAGE);
 
-  currentFilter: 'all' | 'quotes' | 'invoiced_quotes' | 'credit-note' = 'all';
+  currentFilter: 'pending' | 'invoiced' | 'rejected' | 'all' = 'pending';
   invoicesFilter: 'all' | 'invoices' | 'credit-notes' = 'all';
   invoices: InvoiceEntity[] = [];
   protected allDocuments = signal<Document[]>([]);
@@ -184,7 +193,7 @@ export class FacturationComponent implements OnInit, OnDestroy {
       (this.invoicesPagination.currentPage() - 1) * this.itemsPerPage();
     return this.allInvoicesAndCreditNotes().slice(
       startIndex,
-      startIndex + this.itemsPerPage()
+      startIndex + this.itemsPerPage(),
     );
   });
 
@@ -225,14 +234,14 @@ export class FacturationComponent implements OnInit, OnDestroy {
     this.isLoading.set(true);
     if (this.typeOfProjet() === 'PRINCIPAL') {
       const data = await firstValueFrom(
-        this.services.principal.getGroupByIdWithRelations(+this.id()!)
+        this.services.principal.getGroupByIdWithRelations(+this.id()!),
       );
       this.accountPrincipal = data;
       this.loadInvoices();
       this.initializeCreditNotes(data.invoice || []);
     } else {
       const data = await firstValueFrom(
-        this.services.group.getGroupById(+this.id()!)
+        this.services.group.getGroupById(+this.id()!),
       );
       this.groupAccount.set(data);
       this.loadInvoices();
@@ -244,7 +253,7 @@ export class FacturationComponent implements OnInit, OnDestroy {
 
     if (this.typeOfProjet() === 'PRINCIPAL') {
       const data = await firstValueFrom(
-        this.services.principal.getGroupByIdWithRelations(+this.id()!)
+        this.services.principal.getGroupByIdWithRelations(+this.id()!),
       );
       this.accountPrincipal = data;
       this.loadInvoices();
@@ -252,11 +261,11 @@ export class FacturationComponent implements OnInit, OnDestroy {
     } else {
       if (
         user.userSecondaryAccounts.find(
-          (account) => account.secondary_account_id === +this.id()!
+          (account) => account.secondary_account_id === +this.id()!,
         )
       ) {
         const data = await firstValueFrom(
-          this.services.group.getGroupById(+this.id()!)
+          this.services.group.getGroupById(+this.id()!),
         );
         this.groupAccount.set(data);
         this.loadInvoices();
@@ -271,137 +280,99 @@ export class FacturationComponent implements OnInit, OnDestroy {
     this.creditNoteList.set(creditNotes);
   }
 
-  filterList(type: 'all' | 'quotes' | 'invoiced_quotes' | 'credit-note'): void {
+  filterList(type: 'all' | 'pending' | 'invoiced' | 'rejected'): void {
     this.currentFilter = type;
-    this.pagination.currentPage.set(1);
     this.updateDocuments();
   }
 
   private updateDocuments(): void {
-    let allDocs = [];
+    const quotes = this.getFormattedQuotes();
+    const invoices = this.getFormattedInvoices();
+    const creditNotes = this.getFormattedCreditNotes();
 
-    const formattedQuotes = this.getFormattedQuotes();
-    const formattedCreditNotes = this.getFormattedCreditNotes();
-    const formattedInvoices = this.getFormattedInvoices();
+    this.updateSeparatedDocuments(quotes, invoices, creditNotes);
 
-    allDocs = [...formattedQuotes, ...formattedCreditNotes];
-
-    const filteredDocs = this.filterDocuments(allDocs);
-
-    let docsMatchingSearch = filteredDocs;
-    if (this.searchNumber()) {
-      const searchLower = this.searchNumber().toLowerCase();
-      docsMatchingSearch = filteredDocs.filter((doc) => {
-        if (doc.documentType === 'quote') {
-          return `d-${doc.quote_number}`.toLowerCase().includes(searchLower);
-        } else if (doc.documentType === 'credit_note') {
-          return `nc-${doc.invoice_number}`.toLowerCase().includes(searchLower);
-        }
-        return false;
-      });
+    let filteredDocs: Document[] = [];
+    switch (this.currentFilter) {
+      case 'pending':
+        filteredDocs = quotes.filter(
+          (doc) =>
+            doc.status !== 'expired' &&
+            doc.status !== 'refused' &&
+            doc.status !== 'invoiced' &&
+            !doc.invoice,
+        );
+        break;
+      case 'invoiced':
+        filteredDocs = quotes.filter(
+          (doc) => doc.status === 'invoiced' || !!doc.invoice,
+        );
+        break;
+      case 'rejected':
+        filteredDocs = quotes.filter(
+          (doc) => doc.status === 'expired' || doc.status === 'refused',
+        );
+        break;
+      case 'all':
+      default:
+        filteredDocs = quotes;
+        break;
     }
 
-    const sortedDocs = docsMatchingSearch.sort(this.sortByDate);
-    this.allDocuments.set(sortedDocs);
-
-    this.updateSeparatedDocuments(
-      formattedQuotes,
-      formattedInvoices,
-      formattedCreditNotes
-    );
-
+    this.allQuotes.set(this.filterDocuments(filteredDocs));
     this.updatePagination(this.allQuotes());
-    this.updateInvoicesPagination(this.allInvoicesAndCreditNotes());
   }
 
   private updateSeparatedDocuments(
     quotes: Document[],
     invoices: Document[],
-    creditNotes: Document[]
+    creditNotes: Document[],
   ): void {
     let filteredQuotes = quotes;
-
-    if (this.currentFilter === 'quotes') {
-      filteredQuotes = quotes.filter((quote) => quote.status !== 'invoiced');
-    } else if (this.currentFilter === 'invoiced_quotes') {
-      filteredQuotes = quotes.filter((quote) => quote.status === 'invoiced');
-    } else if (this.currentFilter === 'credit-note') {
-      filteredQuotes = [];
-    }
-
     if (this.searchNumber()) {
       const searchLower = this.searchNumber().toLowerCase();
-      filteredQuotes = filteredQuotes.filter((quote) => {
-        const currentYear = new Date().getFullYear();
-        const paddedNumber =
-          quote.quote_number?.toString().padStart(4, '0') || '';
-        const formattedNumber =
-          `d-${currentYear}/${paddedNumber}`.toLowerCase();
-        return formattedNumber.includes(searchLower);
-      });
+      filteredQuotes = quotes.filter((doc) =>
+        `d-${doc.quote_number}`.toLowerCase().includes(searchLower),
+      );
     }
 
-    const sortedQuotes = filteredQuotes.sort((a: Document, b: Document) => {
-      const aNumber = a.quote_number || 0;
-      const bNumber = b.quote_number || 0;
-      return bNumber - aNumber;
-    });
-
-    this.allQuotes.set(sortedQuotes);
-
-    let invoicesAndCreditNotes = [...invoices, ...creditNotes];
-
-    if (this.invoicesFilter === 'invoices') {
-      invoicesAndCreditNotes = invoices;
-    } else if (this.invoicesFilter === 'credit-notes') {
-      invoicesAndCreditNotes = creditNotes;
-    }
-
+    let filteredInvoicesAndCreditNotes = [...invoices, ...creditNotes];
     if (this.searchNumber()) {
       const searchLower = this.searchNumber().toLowerCase();
-      invoicesAndCreditNotes = invoicesAndCreditNotes.filter((doc) => {
-        if (doc.documentType === 'invoice') {
-          const currentYear = new Date().getFullYear();
-          const paddedNumber =
-            doc.invoice_number?.toString().padStart(4, '0') || '';
-          const formattedNumber =
-            `f-${currentYear}/${paddedNumber}`.toLowerCase();
-          return formattedNumber.includes(searchLower);
-        } else if (doc.documentType === 'credit_note') {
-          const currentYear = new Date().getFullYear();
-          const paddedNumber =
-            doc.invoice_number?.toString().padStart(4, '0') || '';
-          const formattedNumber =
-            `nc-${currentYear}/${paddedNumber}`.toLowerCase();
-          return formattedNumber.includes(searchLower);
-        }
-        return false;
-      });
+      filteredInvoicesAndCreditNotes = filteredInvoicesAndCreditNotes.filter(
+        (doc) => {
+          if (doc.documentType === 'invoice') {
+            return `f-${doc.invoice_number}`
+              .toLowerCase()
+              .includes(searchLower);
+          } else if (doc.documentType === 'credit_note') {
+            return `nc-${doc.invoice_number}`
+              .toLowerCase()
+              .includes(searchLower);
+          }
+          return false;
+        },
+      );
     }
 
-    const sortedInvoicesAndCreditNotes = invoicesAndCreditNotes.sort(
-      (a: Document, b: Document) => {
-        const aNumber = a.invoice_number || 0;
-        const bNumber = b.invoice_number || 0;
-        return bNumber - aNumber;
-      }
+    this.allQuotes.set(filteredQuotes.sort(this.sortByDate));
+    this.allInvoicesAndCreditNotes.set(
+      filteredInvoicesAndCreditNotes.sort(this.sortByDate),
     );
-
-    this.allInvoicesAndCreditNotes.set(sortedInvoicesAndCreditNotes);
   }
 
   private getFormattedQuotes() {
     return this.typeOfProjet() === 'PRINCIPAL'
       ? this.accountPrincipal!.quote.map((quote) => ({
-        ...quote,
-        documentDate: quote.quote_date,
-        documentType: 'quote',
-      }))
+          ...quote,
+          documentDate: quote.quote_date,
+          documentType: 'quote',
+        }))
       : this.groupAccount()!.quote.map((quote) => ({
-        ...quote,
-        documentDate: quote.quote_date,
-        documentType: 'quote',
-      }));
+          ...quote,
+          documentDate: quote.quote_date,
+          documentType: 'quote',
+        }));
   }
 
   private getFormattedCreditNotes() {
@@ -426,11 +397,11 @@ export class FacturationComponent implements OnInit, OnDestroy {
           documentType: 'invoice',
           main_account: principal
             ? {
-              id: principal.id,
-              username: principal.username,
-              commissionPourcentage: principal.commissionPourcentage,
-              commission: principal.commission,
-            }
+                id: principal.id,
+                username: principal.username,
+                commissionPourcentage: principal.commissionPourcentage,
+                commission: principal.commission,
+              }
             : undefined,
         }));
     } else {
@@ -443,30 +414,37 @@ export class FacturationComponent implements OnInit, OnDestroy {
           documentType: 'invoice',
           group_account: groupAccount
             ? {
-              id: groupAccount.id,
-              username: groupAccount.username,
-              commissionPourcentage: groupAccount.commissionPourcentage,
-            }
+                id: groupAccount.id,
+                username: groupAccount.username,
+                commissionPourcentage: groupAccount.commissionPourcentage,
+              }
             : undefined,
         }));
     }
   }
 
-  private filterDocuments(docs: any[]) {
-    switch (this.currentFilter) {
-      case 'quotes':
-        return docs.filter(
-          (doc) => doc.documentType === 'quote' && !doc.invoice
-        );
-      case 'invoiced_quotes':
-        return docs.filter(
-          (doc) => doc.documentType === 'quote' && doc.invoice
-        );
-      case 'credit-note':
-        return docs.filter((doc) => doc.documentType === 'credit_note');
-      default:
-        return docs;
+  private filterDocuments(docs: Document[]): Document[] {
+    if (this.currentFilter === 'all') {
+      return docs;
     }
+
+    return docs.filter((doc) => {
+      switch (this.currentFilter) {
+        case 'pending':
+          return (
+            doc.status !== 'expired' &&
+            doc.status !== 'refused' &&
+            doc.status !== 'invoiced' &&
+            !doc.invoice
+          );
+        case 'invoiced':
+          return doc.status === 'invoiced' || !!doc.invoice;
+        case 'rejected':
+          return doc.status === 'expired' || doc.status === 'refused';
+        default:
+          return true;
+      }
+    });
   }
 
   private sortByDate(a: Document, b: Document) {
@@ -478,7 +456,7 @@ export class FacturationComponent implements OnInit, OnDestroy {
   private updatePagination(docs: any[]) {
     this.pagination.totalItems.set(docs.length);
     this.pagination.totalPages.set(
-      Math.ceil(docs.length / this.itemsPerPage())
+      Math.ceil(docs.length / this.itemsPerPage()),
     );
   }
 
@@ -518,18 +496,18 @@ export class FacturationComponent implements OnInit, OnDestroy {
         this.services.invoice.createInvoice(quote, {
           account_id: +this.id()!,
           type: this.typeOfProjet() as 'PRINCIPAL' | 'GROUP',
-        })
+        }),
       );
       quote.invoice = data;
       ctx.close();
 
       if (this.typeOfProjet() === 'PRINCIPAL' && this.accountPrincipal) {
         this.accountPrincipal = await firstValueFrom(
-          this.services.principal.getGroupByIdWithRelations(+this.id()!)
+          this.services.principal.getGroupByIdWithRelations(+this.id()!),
         );
       } else if (this.groupAccount()) {
         const updatedGroup = await firstValueFrom(
-          this.services.group.getGroupById(+this.id()!)
+          this.services.group.getGroupById(+this.id()!),
         );
         this.groupAccount.set(updatedGroup);
       }
@@ -548,7 +526,7 @@ export class FacturationComponent implements OnInit, OnDestroy {
   async checkCreditNote(invoice_id: number): Promise<void> {
     try {
       const data: InvoiceEntity = await firstValueFrom(
-        this.services.invoice.getCreditNoteByInvoiceId(invoice_id)
+        this.services.invoice.getCreditNoteByInvoiceId(invoice_id),
       );
       this.creditNote.set(data);
       this.creditNoteList.update((prev) => [...prev, data]);
@@ -561,10 +539,12 @@ export class FacturationComponent implements OnInit, OnDestroy {
   async loadCreditNote(creditNoteId: number): Promise<void> {
     try {
       const data = await firstValueFrom(
-        this.services.invoice.getCreditNoteByInvoiceId(creditNoteId)
+        this.services.invoice.getCreditNoteByInvoiceId(creditNoteId),
       );
       this.creditNote.set(data);
-      this.generateCreditNotePdf(this.creditNote()! as unknown as InvoiceEntity);
+      this.generateCreditNotePdf(
+        this.creditNote()! as unknown as InvoiceEntity,
+      );
     } catch (error) {
       console.error(error);
     }
@@ -580,8 +560,8 @@ export class FacturationComponent implements OnInit, OnDestroy {
       const success = await firstValueFrom(
         this.services.quote.reportQuoteDate(
           quote_id,
-          new Date(this.reportDate())
-        )
+          new Date(this.reportDate()),
+        ),
       );
       if (success) {
         this.updateQuoteDate(quote_id);
@@ -599,13 +579,13 @@ export class FacturationComponent implements OnInit, OnDestroy {
       this.accountPrincipal.quote = this.accountPrincipal.quote.map((quote) =>
         quote.id === quote_id
           ? { ...quote, quote_date: new Date(this.reportDate()!) }
-          : quote
+          : quote,
       );
     } else if (this.groupAccount()) {
       const updatedQuotes = this.groupAccount()!.quote.map((quote) =>
         quote.id === quote_id
           ? { ...quote, quote_date: new Date(this.reportDate()!) }
-          : quote
+          : quote,
       );
       this.groupAccount.update((account) => ({
         ...account!,
@@ -625,7 +605,7 @@ export class FacturationComponent implements OnInit, OnDestroy {
 
   protected getVisiblePages(
     currentPage: number,
-    totalPages: number
+    totalPages: number,
   ): (number | 'ellipsis')[] {
     if (totalPages <= 5) {
       return Array.from({ length: totalPages }, (_, i) => i + 1);
@@ -665,7 +645,7 @@ export class FacturationComponent implements OnInit, OnDestroy {
 
     if (this.typeOfProjet() === 'GROUP') {
       const userAccount = this.connectedUser()?.userSecondaryAccounts.find(
-        (account) => account.id === +this.id()!
+        (account) => account.id === +this.id()!,
       );
       return userAccount?.role_billing !== 'NONE';
     }
@@ -684,7 +664,7 @@ export class FacturationComponent implements OnInit, OnDestroy {
 
     if (this.typeOfProjet() === 'GROUP') {
       const userAccount = this.connectedUser()?.userSecondaryAccounts.find(
-        (account) => account.secondary_account_id === +this.id()!
+        (account) => account.secondary_account_id === +this.id()!,
       );
       return userAccount?.role_billing === 'ADMIN';
     }
@@ -715,7 +695,7 @@ export class FacturationComponent implements OnInit, OnDestroy {
 
   private getVisiblePagesGeneric(
     currentPage: number,
-    totalPages: number
+    totalPages: number,
   ): (number | 'ellipsis')[] {
     if (totalPages <= 5) {
       return Array.from({ length: totalPages }, (_, i) => i + 1);
@@ -742,7 +722,7 @@ export class FacturationComponent implements OnInit, OnDestroy {
 
   protected getVisibleInvoicesPages(
     currentPage: number,
-    totalPages: number
+    totalPages: number,
   ): (number | 'ellipsis')[] {
     return this.getVisiblePagesGeneric(currentPage, totalPages);
   }
@@ -761,12 +741,12 @@ export class FacturationComponent implements OnInit, OnDestroy {
     try {
       if (this.typeOfProjet() === 'PRINCIPAL') {
         const data = await firstValueFrom(
-          this.services.principal.getGroupByIdWithRelations(+this.id()!)
+          this.services.principal.getGroupByIdWithRelations(+this.id()!),
         );
         this.accountPrincipal = data;
       } else if (this.typeOfProjet() === 'GROUP') {
         const data = await firstValueFrom(
-          this.services.group.getGroupById(+this.id()!)
+          this.services.group.getGroupById(+this.id()!),
         );
         this.groupAccount.set(data);
       } else {
@@ -778,7 +758,7 @@ export class FacturationComponent implements OnInit, OnDestroy {
     } catch (error) {
       console.error(
         'Erreur lors du rechargement des données après mise à jour:',
-        error
+        error,
       );
       toast.error('Erreur lors du rechargement des données.');
     } finally {
@@ -810,9 +790,13 @@ export class FacturationComponent implements OnInit, OnDestroy {
   }
 
   getAllInvoicesEntities(): InvoiceEntity[] {
-    return this.allInvoicesAndCreditNotes().map(doc => this.asInvoiceEntity(doc));
+    return this.allInvoicesAndCreditNotes().map((doc) =>
+      this.asInvoiceEntity(doc),
+    );
   }
   getPaginatedInvoicesEntities(): InvoiceEntity[] {
-    return this.paginatedInvoicesAndCreditNotes().map(doc => this.asInvoiceEntity(doc));
+    return this.paginatedInvoicesAndCreditNotes().map((doc) =>
+      this.asInvoiceEntity(doc),
+    );
   }
 }

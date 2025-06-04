@@ -40,6 +40,7 @@ import {
   lucideFileText,
   lucideFilePlus,
   lucideMessageCircle,
+  lucideRefreshCw,
 } from '@ng-icons/lucide';
 
 import { EuroFormatPipe } from '../../../../../shared/pipes/euro-format.pipe';
@@ -121,6 +122,7 @@ export interface ModalContext {
       lucideFileText,
       lucideFilePlus,
       lucideMessageCircle,
+      lucideRefreshCw,
     }),
     DatePipe,
   ],
@@ -164,6 +166,7 @@ export class QuotesTableComponent {
   // Ajout des signaux pour la modal de commentaire
   protected isCommentModalOpen = signal(false);
   protected currentCommentHtml = signal<string | null>(null);
+  protected isCheckingExpired = signal(false);
 
   protected paginatedDocuments = computed(() => {
     const startIndex =
@@ -308,5 +311,33 @@ export class QuotesTableComponent {
     // Utilise DOMParser pour analyser et extraire le texte
     const doc = new DOMParser().parseFromString(html, 'text/html');
     return doc.body.textContent || '';
+  }
+
+  /**
+   * Vérifie les devis expirés via l'API
+   */
+  async checkExpiredQuotes(): Promise<void> {
+    if (this.isCheckingExpired() || this.connectedUser()?.role !== 'ADMIN')
+      return;
+
+    this.isCheckingExpired.set(true);
+    try {
+      const result = await firstValueFrom(
+        this.services.quote.checkExpiredQuotes(),
+      );
+
+      // Afficher le message de succès
+      toast.success(result.message);
+
+      // Si des devis ont été modifiés, on rafraîchit la liste
+      if (result.quotes.length > 0) {
+        // Émettre un événement pour rafraîchir la liste des devis
+        this.filterChange.emit(this.currentFilter);
+      }
+    } catch (error) {
+      toast.error('Erreur lors de la vérification des devis expirés');
+    } finally {
+      this.isCheckingExpired.set(false);
+    }
   }
 }

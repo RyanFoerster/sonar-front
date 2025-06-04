@@ -56,7 +56,7 @@ export class QuoteService {
     quoteId: string | null,
     quoteDto: QuoteDto,
     files: File[],
-    isDoubleValidation: boolean
+    isDoubleValidation: boolean,
   ) {
     const form = new FormData();
 
@@ -89,7 +89,7 @@ export class QuoteService {
         params: {
           isDoubleValidation,
         },
-      }
+      },
     );
   }
 
@@ -106,42 +106,42 @@ export class QuoteService {
   acceptQuoteFromGroup(quoteId: string | null) {
     return this.http.patch<QuoteEntity>(
       `${this.apiUrl}/${quoteId}/group_acceptance`,
-      {}
+      {},
     );
   }
 
   acceptQuoteFromClient(quoteId: string | null) {
     return this.http.patch<QuoteEntity>(
       `${this.apiUrl}/${quoteId}/order_giver_acceptance`,
-      {}
+      {},
     );
   }
 
   rejectQuoteFromGroup(quoteId: string | null) {
     return this.http.patch<QuoteEntity>(
       `${this.apiUrl}/${quoteId}/group_rejection`,
-      {}
+      {},
     );
   }
 
   rejectQuoteFromClient(quoteId: string | null) {
     return this.http.patch<QuoteEntity>(
       `${this.apiUrl}/${quoteId}/order_giver_rejection`,
-      {}
+      {},
     );
   }
 
   cancelRejectionFromGroup(quoteId: string | null) {
     return this.http.patch<QuoteEntity>(
       `${this.apiUrl}/${quoteId}/group_rejection_cancel`,
-      {}
+      {},
     );
   }
 
   cancelRejectionFromClient(quoteId: string | null) {
     return this.http.patch<QuoteEntity>(
       `${this.apiUrl}/${quoteId}/order_giver_rejection_cancel`,
-      {}
+      {},
     );
   }
 
@@ -153,7 +153,7 @@ export class QuoteService {
     // *** AJUSTER LE PATH DE L'API ICI ***
     return this.http.patch<QuoteEntity>(
       `${this.apiUrl}/mark-info-provided/${quoteId}`, // !! Endpoint hypothétique !!
-      {}
+      {},
     );
   }
 
@@ -181,8 +181,18 @@ export class QuoteService {
     return this.http.patch<QuoteEntity>(
       `${this.apiUrl}/${$id}/group_acceptance`,
 
-      {}
+      {},
     );
+  }
 
+  /**
+   * Vérifie et met à jour les devis expirés
+   * @returns Observable avec le résultat de la vérification
+   */
+  checkExpiredQuotes(): Observable<{ message: string; quotes: QuoteEntity[] }> {
+    return this.http.post<{ message: string; quotes: QuoteEntity[] }>(
+      `${this.apiUrl}/admin/check-expired`,
+      {},
+    );
   }
 }

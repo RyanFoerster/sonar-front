@@ -30,21 +30,21 @@ export class ClientService {
   create(client: Partial<ClientEntity>) {
     return this.httpClient.post<ClientEntity>(
       `${this.API_URL}/clients`,
-      client
+      client,
     );
   }
 
   update(id: number, client: Partial<ClientEntity>) {
     return this.httpClient.patch<ClientEntity>(
       `${this.API_URL}/clients/${id}`,
-      client
+      client,
     );
   }
 
   updateDetails(id: number, clientData: Partial<ClientEntity>) {
     return this.httpClient.patch<ClientEntity>(
       `${this.API_URL}/clients/update-details/${id}`,
-      clientData
+      clientData,
     );
   }
 
@@ -56,7 +56,7 @@ export class ClientService {
   checkBce(companyNumber: string): Observable<any> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return this.httpClient.get<any>(
-      `${this.API_URL}/clients/bce/${companyNumber}`
+      `${this.API_URL}/clients/bce/${companyNumber}`,
     );
   }
 }

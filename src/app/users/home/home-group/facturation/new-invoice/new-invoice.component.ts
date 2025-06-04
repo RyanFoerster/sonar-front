@@ -8,7 +8,8 @@ import {
   computed,
   input,
   ChangeDetectorRef,
-  ChangeDetectionStrategy, OnInit,
+  ChangeDetectionStrategy,
+  OnInit,
 } from '@angular/core';
 import {
   FormBuilder,
@@ -78,7 +79,8 @@ import { EuroFormatPipe } from '../../../../../shared/pipes/euro-format.pipe';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { QuoteDto } from '../../../../../shared/dtos/quote.dto';
 import { QuillModule } from 'ngx-quill';
-import {InvoiceService} from "../../../../../shared/services/invoice.service";
+import { InvoiceService } from '../../../../../shared/services/invoice.service';
+import { ClientFormComponent } from '../../../../../shared/components/client-form/client-form.component';
 
 @Component({
   selector: 'app-new-invoice',
@@ -91,7 +93,6 @@ import {InvoiceService} from "../../../../../shared/services/invoice.service";
     HlmButtonDirective,
     HlmIconComponent,
     EuroFormatPipe,
-
     HlmLabelDirective,
     HlmInputDirective,
     HlmButtonDirective,
@@ -102,10 +103,10 @@ import {InvoiceService} from "../../../../../shared/services/invoice.service";
     HlmCheckboxComponent,
     HlmIconComponent,
     HlmIconComponent,
-    HlmIconComponent,
     DatePipe,
     HlmToasterComponent,
     QuillModule,
+    ClientFormComponent,
   ],
   providers: [
     provideIcons({
@@ -151,7 +152,7 @@ export class NewInvoiceComponent implements AfterViewInit, OnInit {
   private authService: AuthService = inject(AuthService);
   private datePipe: DatePipe = inject(DatePipe);
   private userAttachmentService: ProjectAttachmentService = inject(
-    ProjectAttachmentService
+    ProjectAttachmentService,
   );
   private changeDetectorRef: ChangeDetectorRef = inject(ChangeDetectorRef);
 
@@ -174,46 +175,15 @@ export class NewInvoiceComponent implements AfterViewInit, OnInit {
   protected currentDate = new Date();
 
   protected notPastDate = computed(
-    () => this.currentDate.toISOString().split('T')[0]
+    () => this.currentDate.toISOString().split('T')[0],
   );
 
   protected startDate = computed(() =>
-    this.currentDate.toISOString().slice(0, 10)
+    this.currentDate.toISOString().slice(0, 10),
   );
 
   protected clients = signal<ClientEntity[]>([]);
   protected updatedQuote = signal<QuoteEntity | null>(null);
-
-  protected paysEuropeens: string[] = [
-    'Allemagne',
-    'Autriche',
-    'Belgique',
-    'Bulgarie',
-    'Chypre',
-    'Croatie',
-    'Danemark',
-    'Espagne',
-    'Estonie',
-    'Finlande',
-    'Grèce',
-    'Hongrie',
-    'Irlande',
-    'Italie',
-    'Lettonie',
-    'Lituanie',
-    'Luxembourg',
-    'Malte',
-    'Pays-Bas',
-    'Pologne',
-    'Portugal',
-    'République tchèque',
-    'Roumanie',
-    'Slovénie',
-    'Slovaquie',
-    'Suède',
-    'Suisse',
-    'Royaume-Uni',
-  ];
 
   protected isToggleClientForm = signal(false);
   protected isToggleProductForm = signal(false);
@@ -276,12 +246,11 @@ export class NewInvoiceComponent implements AfterViewInit, OnInit {
         Validators.required,
       ],
       service_date: [this.formatDate(new Date())],
-
       payment_deadline: [10, [Validators.required]],
       validation_deadline: [
         this.datePipe.transform(
           new Date(new Date().getTime() + 10 * 24 * 60 * 60 * 1000),
-          'yyyy-MM-dd'
+          'yyyy-MM-dd',
         ),
         Validators.required,
       ],
@@ -307,19 +276,30 @@ export class NewInvoiceComponent implements AfterViewInit, OnInit {
       company_vat_number: [null],
       national_number: [null],
       is_physical_person: [false],
-      default_payment_deadline: [10, [Validators.min(10), Validators.max(30)]],
+      default_payment_deadline: [10],
       is_info_pending: [false],
     });
-    console.log(
-      'Form after init, is_physical_person:',
-      this.createClientForm.get('is_physical_person')?.value
-    );
+
+    // Écouter les changements sur default_payment_deadline
+    this.createClientForm
+      .get('default_payment_deadline')
+      ?.valueChanges.subscribe((value) => {
+        if (value) {
+          const numericValue = parseInt(value, 10);
+          if (!isNaN(numericValue)) {
+            this.createClientForm.patchValue(
+              { default_payment_deadline: numericValue },
+              { emitEvent: false },
+            );
+          }
+        }
+      });
 
     this.createClientForm
       .get('is_info_pending')
       ?.valueChanges.subscribe((isPending) => {
-      this.toggleClientFieldsValidation(isPending);
-    });
+        this.toggleClientFieldsValidation(isPending);
+      });
 
     this.createProductForm = this.formBuilder.group({
       description: ['', [Validators.required]],
@@ -339,14 +319,15 @@ export class NewInvoiceComponent implements AfterViewInit, OnInit {
   }
 
   ngOnInit() {
-
     // Initialiser validation_deadline avec la date d'aujourd'hui + délai
     this.updateValidationDeadline();
 
     // Écouter les changements sur payment_deadline
-    this.createInvoiceForm.get('payment_deadline')?.valueChanges.subscribe(() => {
-      this.updateValidationDeadline();
-    });
+    this.createInvoiceForm
+      .get('payment_deadline')
+      ?.valueChanges.subscribe(() => {
+        this.updateValidationDeadline();
+      });
   }
 
   async ngAfterViewInit() {
@@ -354,7 +335,7 @@ export class NewInvoiceComponent implements AfterViewInit, OnInit {
 
     // Adapter les validateurs pour le délai de paiement par défaut en fonction du rôle
     const deadlineControl = this.createClientForm.get(
-      'default_payment_deadline'
+      'default_payment_deadline',
     );
     if (deadlineControl) {
       if (this.connectedUser()?.role === 'ADMIN') {
@@ -404,7 +385,7 @@ export class NewInvoiceComponent implements AfterViewInit, OnInit {
           tap((data) => {
             this.clients.set(data);
             this.filteredClients.set(data);
-          })
+          }),
         )
         .subscribe();
     } else if (this.connectedUser()?.clients) {
@@ -415,7 +396,7 @@ export class NewInvoiceComponent implements AfterViewInit, OnInit {
       this.isLoadingInvoice.set(true);
       try {
         const quote = (await firstValueFrom(
-          this.quoteService.getQuote(this.updatedQuoteId()!)
+          this.quoteService.getQuote(this.updatedQuoteId()!),
         )) as QuoteEntity;
         this.updatedQuote.set(quote);
 
@@ -438,7 +419,7 @@ export class NewInvoiceComponent implements AfterViewInit, OnInit {
           service_date: this.formatDate(new Date(quote.service_date)),
           payment_deadline: quote.payment_deadline,
           validation_deadline: this.formatDate(
-            new Date(quote.validation_deadline)
+            new Date(quote.validation_deadline),
           ),
           comment: quote.comment,
         });
@@ -503,87 +484,18 @@ export class NewInvoiceComponent implements AfterViewInit, OnInit {
     // car le décochage initial a été empêché par preventDefault.
   }
 
-  toggleClientForm(isNewClient: boolean) {
+  toggleClientForm(isNewClient = false) {
     if (isNewClient) {
       this.createClientForm.reset();
       this.createClientForm.patchValue({
+        country: 'Belgique',
+        default_payment_deadline: 10,
         is_physical_person: false,
-        is_info_pending: false, // Explicite après reset
+        is_info_pending: false,
       });
       this.isPhysicalPerson.set(false);
-      this.createClientForm.patchValue({
-        country: 'Belgique',
-        is_physical_person: false,
-        is_info_pending: false, // Redondant mais sûr
-      });
-    } else {
-      if (this.client()) {
-        const currentClient = this.client()!;
-        const isPhysical = currentClient.is_physical_person || false;
-        const isInfoPending = currentClient.is_info_pending || false;
-        this.isPhysicalPerson.set(isPhysical);
-        // Note: Il n'y a pas de signal dédié pour isInfoPending dans le code actuel pour le .set()
-
-        const defaultDeadline = currentClient.default_payment_deadline ?? 10;
-
-        if (isPhysical) {
-          this.createClientForm.patchValue({
-            firstname: currentClient.firstname,
-            lastname: currentClient.lastname,
-            name: `${currentClient.firstname} ${currentClient.lastname}`.trim(),
-            email: currentClient.email,
-            phone: currentClient.phone,
-            street: currentClient.street,
-            number: currentClient.number,
-            city: currentClient.city,
-            country: currentClient.country,
-            postalCode: currentClient.postalCode,
-            national_number: currentClient.national_number,
-            is_physical_person: true,
-            is_info_pending: isInfoPending, // Ajouté
-            default_payment_deadline: defaultDeadline,
-          });
-        } else {
-          this.createClientForm.patchValue({
-            name: currentClient.name,
-            email: currentClient.email,
-            phone: currentClient.phone,
-            street: currentClient.street,
-            number: currentClient.number,
-            city: currentClient.city,
-            country: currentClient.country,
-            postalCode: currentClient.postalCode,
-            company_number: currentClient.company_number,
-            company_vat_number: currentClient.company_vat_number,
-            is_physical_person: false,
-            is_info_pending: isInfoPending, // Ajouté
-            default_payment_deadline: defaultDeadline,
-          });
-        }
-      } else {
-        this.createClientForm.reset();
-        this.createClientForm.patchValue({
-          is_physical_person: false,
-          is_info_pending: false, // Explicite après reset
-        });
-        this.isPhysicalPerson.set(false);
-        this.createClientForm.patchValue({
-          country: 'Belgique',
-          default_payment_deadline: 10,
-          is_physical_person: false,
-          is_info_pending: false, // Ajouté
-        });
-      }
     }
     this.isToggleClientForm.set(!this.isToggleClientForm());
-    console.log(
-      'Form after toggleClientForm, is_physical_person:',
-      this.createClientForm.get('is_physical_person')?.value
-    );
-    console.log(
-      'Form after toggleClientForm, is_info_pending:',
-      this.createClientForm.get('is_info_pending')?.value
-    ); // Log pour is_info_pending
   }
 
   toggleProductForm() {
@@ -594,7 +506,7 @@ export class NewInvoiceComponent implements AfterViewInit, OnInit {
     if (this.isTvaIncluded()) {
       this.isTvaIncluded.set(false);
       this.advertiseMessage.set(
-        'Pour des questions de simplicité, lors de la modification d\'un service, la case à cocher "Montant TVA comprise" est décochée. Pensez à la remettre à chaque modification de service.'
+        'Pour des questions de simplicité, lors de la modification d\'un service, la case à cocher "Montant TVA comprise" est décochée. Pensez à la remettre à chaque modification de service.',
       );
       this.setQuoteVatIncluded();
       this.checkTvaIncluded();
@@ -645,7 +557,7 @@ export class NewInvoiceComponent implements AfterViewInit, OnInit {
     this.createClientForm.get('company_vat_number')?.updateValueAndValidity();
     console.log(
       'Form after togglePhysicalPerson, is_physical_person:',
-      this.createClientForm.get('is_physical_person')?.value
+      this.createClientForm.get('is_physical_person')?.value,
     );
   }
 
@@ -710,7 +622,7 @@ export class NewInvoiceComponent implements AfterViewInit, OnInit {
     // Mettre à jour les produits modifiés
     for (const product of this.products()) {
       const existingIndex = this.modifiedProducts().findIndex(
-        (p) => p.id === product.id
+        (p) => p.id === product.id,
       );
       if (existingIndex !== -1) {
         this.modifiedProducts.update((products) => {
@@ -751,7 +663,7 @@ export class NewInvoiceComponent implements AfterViewInit, OnInit {
             postalCode,
             city,
           });
-        })
+        }),
       )
       .subscribe();
   }
@@ -805,56 +717,7 @@ export class NewInvoiceComponent implements AfterViewInit, OnInit {
       .pipe(take(1))
       .subscribe({
         next: (newClient: ClientEntity) => {
-          this.setClient(newClient.id);
-
-          // Mise à jour de la liste des clients
-          const clientList =
-            this.connectedUser()?.role === 'ADMIN'
-              ? this.clients()
-              : this.connectedUser()!.clients;
-          const existingIndex = clientList.findIndex(
-            (client) => client.id === newClient.id
-          );
-
-          if (existingIndex !== -1) {
-            clientList[existingIndex] = newClient;
-          } else {
-            clientList.push(newClient);
-          }
-          this.clients.set(clientList);
-
-          // Mise à jour du client actuel
-          this.currentClient.set(newClient);
-          this.client.set(newClient);
-
-          // Réinitialisation du formulaire et des états
-          console.log(
-            'Form BEFORE partial reset in createClient, is_physical_person:',
-            this.createClientForm.get('is_physical_person')?.value
-          );
-          this.createClientForm.reset({
-            country: 'Belgique',
-            default_payment_deadline: 10,
-            is_physical_person: false, // Assurer la réinitialisation explicite
-            is_info_pending: false, // Assurer la réinitialisation explicite
-          });
-          console.log(
-            'Form AFTER partial reset in createClient, is_physical_person:',
-            this.createClientForm.get('is_physical_person')?.value
-          );
-          console.log(
-            'Form AFTER partial reset in createClient, is_info_pending:',
-            this.createClientForm.get('is_info_pending')?.value
-          ); // Log pour is_info_pending
-          this.toggleClientForm(false);
-          console.log(
-            'Form AFTER toggleClientForm in createClient, is_physical_person:',
-            this.createClientForm.get('is_physical_person')?.value
-          );
-          this.isPhysicalPerson.set(false);
-
-          // Sauvegarde de l'utilisateur connecté
-          this.authService.setUser(this.connectedUser()!);
+          this.onClientCreated(newClient);
           toast.success('Client créé avec succès');
         },
         error: (error: unknown) => {
@@ -863,68 +726,6 @@ export class NewInvoiceComponent implements AfterViewInit, OnInit {
         },
       });
   }
-
-  updateClient() {
-    if (this.createClientForm.valid && this.client()) {
-      const formData = { ...this.createClientForm.value };
-
-      // Si c'est une personne physique, on combine firstname et lastname pour le name
-      if (this.isPhysicalPerson()) {
-        formData.name = `${formData.firstname} ${formData.lastname}`.trim();
-        formData.is_physical_person = true;
-      } else {
-        formData.is_physical_person = false;
-      }
-
-      this.clientService
-        .update(this.client()!.id, formData)
-        .pipe(
-          take(1),
-          tap(() => {
-            // Mettre à jour le client dans la liste
-            const updatedClient = { ...this.client(), ...formData };
-            const clientList =
-              this.connectedUser()?.role === 'ADMIN'
-                ? this.clients()
-                : this.connectedUser()!.clients;
-            const existingIndex = clientList.findIndex(
-              (client) => client.id === updatedClient.id
-            );
-
-            if (existingIndex !== -1) {
-              clientList[existingIndex] = updatedClient;
-            }
-            this.clients.set(clientList);
-
-            // Mise à jour du client actuel
-            this.currentClient.set(updatedClient);
-            this.client.set(updatedClient);
-
-            // Mettre à jour aussi le délai de paiement du formulaire de devis
-            const paymentDeadline =
-              updatedClient.default_payment_deadline ?? 10;
-            this.createInvoiceForm.patchValue({
-              payment_deadline: paymentDeadline,
-            });
-
-            // Réinitialisation du formulaire et des états
-            this.createClientForm.reset({
-              country: 'Belgique',
-              default_payment_deadline: 10,
-              is_physical_person: false, // Assurer la réinitialisation explicite
-              is_info_pending: false, // Assurer la réinitialisation explicite
-            });
-            this.toggleClientForm(false);
-            this.isPhysicalPerson.set(false);
-
-            // Notification de succès
-            toast.success('Client mis à jour avec succès');
-          })
-        )
-        .subscribe();
-    }
-  }
-
 
   setClient(clientId: number | null) {
     if (clientId === null) {
@@ -947,7 +748,7 @@ export class NewInvoiceComponent implements AfterViewInit, OnInit {
           });
 
           this.calculateTotals();
-        })
+        }),
       )
       .subscribe();
   }
@@ -1007,7 +808,7 @@ export class NewInvoiceComponent implements AfterViewInit, OnInit {
           this.createProductForm.patchValue({ quantity: 1, vat: false });
           this.toggleProductForm();
           this.isTva0.set(false);
-        })
+        }),
       )
       .subscribe();
   }
@@ -1069,14 +870,14 @@ export class NewInvoiceComponent implements AfterViewInit, OnInit {
         .update(
           this.idProductToEdit()?.toString() || '',
           updatedProduct,
-          this.isTvaIncluded()
+          this.isTvaIncluded(),
         )
         .pipe(take(1))
         .subscribe({
           next: (product) => {
             // Stocker le produit modifié dans notre liste temporaire
             const existingIndex = this.modifiedProducts().findIndex(
-              (p) => p.id === product.id
+              (p) => p.id === product.id,
             );
             if (existingIndex !== -1) {
               this.modifiedProducts.update((products) => {
@@ -1122,7 +923,7 @@ export class NewInvoiceComponent implements AfterViewInit, OnInit {
       const updatedProducts = products.filter((product) => product.id !== id);
 
       this.totalHtva.set(
-        updatedProducts.reduce((a, b) => a + b.price_htva!, 0)
+        updatedProducts.reduce((a, b) => a + b.price_htva!, 0),
       );
 
       if (updatedProducts.length > 0) {
@@ -1174,19 +975,20 @@ export class NewInvoiceComponent implements AfterViewInit, OnInit {
   }
   createInvoice() {
     if (!this.createInvoiceForm.value.client_id) {
-      toast.error('Veuillez sélectionner un client avant de créer une facture.');
+      toast.error(
+        'Veuillez sélectionner un client avant de créer une facture.',
+      );
       window.scrollTo({ top: 0, behavior: 'smooth' });
       this.createInvoiceForm.markAllAsTouched();
       this.isLoadingInvoice.set(false);
-    }
-    else if(this.products().length==0) {
-      toast.error('Veuillez ajouter au moins un service avant de créer une facture.');
+    } else if (this.products().length == 0) {
+      toast.error(
+        'Veuillez ajouter au moins un service avant de créer une facture.',
+      );
       window.scrollTo({ top: 0, behavior: 'smooth' });
       this.createInvoiceForm.markAllAsTouched();
       this.isLoadingInvoice.set(false);
-    }else {
-
-
+    } else {
       if (this.createInvoiceForm.valid) {
         const invoice = {
           ...this.createInvoiceForm.value,
@@ -1200,8 +1002,6 @@ export class NewInvoiceComponent implements AfterViewInit, OnInit {
           attachment_keys: this.getAllAttachmentKeys(),
           comment: this.createInvoiceForm.get('comment')?.value || '',
           quote_date: new Date(this.createInvoiceForm.get('quote_date')?.value),
-
-
         };
         // Ajouter l'ID du compte en fonction du type de projet
         if (this.typeOfProjet() === 'PRINCIPAL') {
@@ -1227,18 +1027,13 @@ export class NewInvoiceComponent implements AfterViewInit, OnInit {
               toast.error('Erreur lors de la création de la facture');
             },
           });
-
       } else {
         this.isLoadingInvoice.set(false);
         this.createInvoiceForm.markAllAsTouched();
-        window.scrollTo({top: 0, behavior: 'smooth'});
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     }
   }
-
-
-
-
 
   onDragOver(event: DragEvent) {
     event.preventDefault();
@@ -1298,7 +1093,7 @@ export class NewInvoiceComponent implements AfterViewInit, OnInit {
   private handleFile(file: File) {
     if (!this.isValidPdfFile(file)) {
       console.error(
-        'Format de fichier non valide. Seuls les fichiers PDF sont acceptés.'
+        'Format de fichier non valide. Seuls les fichiers PDF sont acceptés.',
       );
       return;
     }
@@ -1325,8 +1120,6 @@ export class NewInvoiceComponent implements AfterViewInit, OnInit {
       this.fileInput.nativeElement.value = '';
     }
   }
-
-
 
   toggleClientSelect() {
     this.isClientSelectOpen.set(!this.isClientSelectOpen());
@@ -1366,7 +1159,7 @@ export class NewInvoiceComponent implements AfterViewInit, OnInit {
         client.name.toLowerCase().includes(searchValue) ||
         client.email.toLowerCase().includes(searchValue) ||
         (client.company_vat_number &&
-          client.company_vat_number.toLowerCase().includes(searchValue))
+          client.company_vat_number.toLowerCase().includes(searchValue)),
     );
 
     this.filteredClients.set(filtered);
@@ -1402,7 +1195,7 @@ export class NewInvoiceComponent implements AfterViewInit, OnInit {
           take(1),
           tap((attachments: ProjectAttachment[]) => {
             this.userAttachments.set(attachments);
-          })
+          }),
         )
         .subscribe();
     } else {
@@ -1412,7 +1205,7 @@ export class NewInvoiceComponent implements AfterViewInit, OnInit {
           take(1),
           tap((attachments: ProjectAttachment[]) => {
             this.userAttachments.set(attachments);
-          })
+          }),
         )
         .subscribe();
     }
@@ -1431,7 +1224,7 @@ export class NewInvoiceComponent implements AfterViewInit, OnInit {
     } else {
       // Retirer de la sélection
       this.selectedAttachments.update((attachments) =>
-        attachments.filter((a) => a.id !== attachment.id)
+        attachments.filter((a) => a.id !== attachment.id),
       );
     }
   }
@@ -1465,7 +1258,7 @@ export class NewInvoiceComponent implements AfterViewInit, OnInit {
             next: (blob) => {
               // Vérifier si le fichier existe déjà dans selectedFiles
               const fileExists = this.selectedFiles.some(
-                (file) => file.name === attachment.name
+                (file) => file.name === attachment.name,
               );
 
               if (!fileExists) {
@@ -1480,11 +1273,11 @@ export class NewInvoiceComponent implements AfterViewInit, OnInit {
             error: (error) => {
               console.error(
                 `Erreur lors du téléchargement de ${attachment.name}:`,
-                error
+                error,
               );
               hasError = true;
               toast.error(
-                `Impossible de récupérer le fichier ${attachment.name}`
+                `Impossible de récupérer le fichier ${attachment.name}`,
               );
               resolve(); // On résout quand même pour continuer avec les autres fichiers
             },
@@ -1505,7 +1298,7 @@ export class NewInvoiceComponent implements AfterViewInit, OnInit {
       .catch((error) => {
         console.error('Erreur lors du traitement des pièces jointes:', error);
         toast.error(
-          'Une erreur est survenue lors du traitement des pièces jointes'
+          'Une erreur est survenue lors du traitement des pièces jointes',
         );
       });
   }
@@ -1516,7 +1309,7 @@ export class NewInvoiceComponent implements AfterViewInit, OnInit {
 
     // Vérifier si un fichier avec le même nom existe déjà
     const existingAttachment = this.userAttachments().find(
-      (attachment) => attachment.name === fileToSave.name
+      (attachment) => attachment.name === fileToSave.name,
     );
 
     if (existingAttachment) {
@@ -1545,7 +1338,7 @@ export class NewInvoiceComponent implements AfterViewInit, OnInit {
             this.file.set([...this.selectedFiles]);
 
             toast.success('Pièce jointe sauvegardée avec succès');
-          })
+          }),
         )
         .subscribe({
           error: (error) => {
@@ -1560,7 +1353,7 @@ export class NewInvoiceComponent implements AfterViewInit, OnInit {
     return new Promise((resolve) => {
       const description = prompt(
         'Description de la pièce jointe (optionnel):',
-        ''
+        '',
       );
       resolve(description);
     });
@@ -1581,14 +1374,14 @@ export class NewInvoiceComponent implements AfterViewInit, OnInit {
           take(1),
           tap(() => {
             this.userAttachments.update((attachments) =>
-              attachments.filter((a) => a.id !== id)
+              attachments.filter((a) => a.id !== id),
             );
             if (this.selectedAttachment()?.id === id) {
               this.selectedAttachment.set(null);
               this.selectedFile = null;
               this.file.set([]);
             }
-          })
+          }),
         )
         .subscribe();
     }
@@ -1627,13 +1420,13 @@ export class NewInvoiceComponent implements AfterViewInit, OnInit {
 
   isFileAlreadySaved(fileName: string): boolean {
     return this.userAttachments().some(
-      (attachment) => attachment.name === fileName
+      (attachment) => attachment.name === fileName,
     );
   }
 
   removeExistingAttachment(attachment: { url: string; name: string }) {
     this.existingAttachments.update((attachments) =>
-      attachments.filter((a) => a.url !== attachment.url)
+      attachments.filter((a) => a.url !== attachment.url),
     );
   }
 
@@ -1642,7 +1435,7 @@ export class NewInvoiceComponent implements AfterViewInit, OnInit {
   isAtLeastOneAttachmentSelected(): boolean {
     // Vérifie s'il existe au moins un produit avec TVA 0% dans le signal products()
     const requiresAttachment = this.products().some(
-      (product) => product.vat === 0
+      (product) => product.vat === 0,
     );
 
     if (requiresAttachment) {
@@ -1712,7 +1505,7 @@ export class NewInvoiceComponent implements AfterViewInit, OnInit {
       emailControl?.enable(); // S'assurer qu'il est activé
 
       const deadlineControl = this.createClientForm.get(
-        'default_payment_deadline'
+        'default_payment_deadline',
       );
       const min = this.connectedUser()?.role === 'ADMIN' ? 1 : 10; // Correction: min 1 pour ADMIN
       const max = this.connectedUser()?.role === 'ADMIN' ? null : 30;
@@ -1756,7 +1549,9 @@ export class NewInvoiceComponent implements AfterViewInit, OnInit {
 
       // Format date en yyyy-MM-dd pour input[type=date]
       const formattedDate = today.toISOString().split('T')[0];
-      this.createInvoiceForm.get('validation_deadline')?.setValue(formattedDate);
+      this.createInvoiceForm
+        .get('validation_deadline')
+        ?.setValue(formattedDate);
     }
   }
   formatNationalNumber(value: string): string {
@@ -1771,38 +1566,42 @@ export class NewInvoiceComponent implements AfterViewInit, OnInit {
     return formatted;
   }
 
-  onNationalNumberInput(event: Event) {
-    const input = event.target as HTMLInputElement;
-    const rawValue = input.value;
-    const selectionStart = input.selectionStart || 0;
 
-    // Compte le nombre de chiffres avant le curseur
-    let digitCount = 0;
-    for (let i = 0; i < selectionStart; i++) {
-      if (/\d/.test(rawValue[i])) digitCount++;
-    }
 
-    // Récupère uniquement les chiffres
-    const digits = rawValue.replace(/\D/g, '').slice(0, 11);
-
-    // Formate la nouvelle valeur
-    const newFormatted = this.formatNationalNumber(digits);
-
-    // Calcule la nouvelle position du curseur après formatage
-    let newCursor = 0, count = 0;
-    for (let i = 0; i < newFormatted.length && count < digitCount; i++) {
-      if (/\d/.test(newFormatted[i])) count++;
-      newCursor = i + 1;
-    }
-
-    // Met à jour la valeur brute dans le formulaire
-    this.createClientForm.get('national_number')?.setValue(digits, { emitEvent: false });
-    input.value = newFormatted;
-
-    // Replace le curseur à la bonne position
-    setTimeout(() => {
-      input.setSelectionRange(newCursor, newCursor);
-    }, 0);
+  removeClient() {
+    this.client.set(null);
+    this.selectedClient.set(null);
   }
 
+  onClientUpdated(client: ClientEntity) {
+    this.selectedClient.set(client);
+    this.client.set(client);
+    this.createClientForm.patchValue({
+      client_id: client.id,
+      client_name: client.firstname + " " + client.lastname,
+      client_firstname: client.firstname,
+      client_lastname: client.lastname,
+      client_email: client.email,
+      payment_deadline: client.default_payment_deadline || 10,
+    });
+    this.ngAfterViewInit();
+
+  }
+  onClientCreated(client: ClientEntity) {
+    this.clients.update((clients) => [...clients, client]);
+    this.filteredClients.update((clients) => [...clients, client]);
+
+  }
+
+  closeClientForm() {
+    this.isToggleClientForm.set(false);
+    this.createClientForm.reset();
+    this.createClientForm.patchValue({
+      is_info_pending: false,
+      country: 'Belgique',
+      default_payment_deadline: 10,
+    });
+    this.toggleClientFieldsValidation(false); // Réinitialiser la validation des champs
+
+  }
 }

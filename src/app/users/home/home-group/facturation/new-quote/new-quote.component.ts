@@ -87,8 +87,7 @@ import { ClientFormComponent } from '../../../../../shared/components/client-for
   imports: [
     HlmInputDirective,
     HlmLabelDirective,
-    BrnSelectImports,
-    HlmSelectImports,
+
     HlmButtonDirective,
     HlmIconComponent,
     EuroFormatPipe,
@@ -186,37 +185,6 @@ export class NewQuoteComponent implements AfterViewInit {
 
   protected clients = signal<ClientEntity[]>([]);
   protected updatedQuote = signal<QuoteEntity | null>(null);
-
-  protected paysEuropeens: string[] = [
-    'Allemagne',
-    'Autriche',
-    'Belgique',
-    'Bulgarie',
-    'Chypre',
-    'Croatie',
-    'Danemark',
-    'Espagne',
-    'Estonie',
-    'Finlande',
-    'Grèce',
-    'Hongrie',
-    'Irlande',
-    'Italie',
-    'Lettonie',
-    'Lituanie',
-    'Luxembourg',
-    'Malte',
-    'Pays-Bas',
-    'Pologne',
-    'Portugal',
-    'République tchèque',
-    'Roumanie',
-    'Slovénie',
-    'Slovaquie',
-    'Suède',
-    'Suisse',
-    'Royaume-Uni',
-  ];
 
   protected isToggleClientForm = signal(false);
   protected isToggleProductForm = signal(false);
@@ -772,79 +740,6 @@ export class NewQuoteComponent implements AfterViewInit {
 
   getIsValidBCENumber() {
     return this.isValidBCENumber();
-  }
-
-  createClient() {
-    if (this.createClientForm.invalid) {
-      this.createClientForm.markAllAsTouched();
-      toast.error('Veuillez corriger les erreurs dans le formulaire client.');
-      return;
-    }
-
-    console.log('createClient', this.createClientForm.value);
-
-    const clientData = this.createClientForm.value;
-    const userId = this.connectedUser()?.id;
-
-    if (!userId) {
-      toast.error('Erreur: Utilisateur non connecté.');
-      return;
-    }
-
-    // Si is_info_pending, ne garder que l'email et le flag
-    let dataToSend: Partial<ClientEntity> = {};
-    if (clientData.is_info_pending) {
-      dataToSend = {
-        email: clientData.email,
-        is_info_pending: true,
-        country: clientData.country, // Garder le pays sélectionné
-        is_physical_person: clientData.is_physical_person, // Garder le type
-      };
-    } else {
-      dataToSend = clientData;
-      console.log('dataToSend', dataToSend);
-    }
-
-    if (clientData.is_physical_person) {
-      clientData.name = `${clientData.firstname} ${clientData.lastname}`.trim();
-    }
-    this.clientService
-      .create(dataToSend as Partial<ClientEntity>)
-      .pipe(take(1))
-      .subscribe({
-        next: (newClient: ClientEntity) => {
-          this.handleClientCreated(newClient);
-          this.toggleClientForm(false);
-        },
-        error: (error: unknown) => {
-          console.error('Erreur lors de la création du client:', error);
-          toast.error('Erreur lors de la création du client');
-        },
-      });
-  }
-
-  updateClient() {
-    if (this.createClientForm.valid && this.client()) {
-      const formData = { ...this.createClientForm.value };
-
-      // Si c'est une personne physique, on combine firstname et lastname pour le name
-      if (this.isPhysicalPerson()) {
-        formData.name = `${formData.firstname} ${formData.lastname}`.trim();
-        formData.is_physical_person = true;
-      } else {
-        formData.is_physical_person = false;
-      }
-
-      this.clientService
-        .update(this.client()!.id, formData)
-        .pipe(
-          take(1),
-          tap(() => {
-            this.handleClientUpdated(this.client()!);
-          }),
-        )
-        .subscribe();
-    }
   }
 
   setClient(clientId: number | null) {
@@ -1823,54 +1718,39 @@ export class NewQuoteComponent implements AfterViewInit {
     this.openMailPreview();
   }
 
-  onNationalNumberInput(event: Event) {
-    const input = event.target as HTMLInputElement;
-    const rawValue = input.value;
-    const selectionStart = input.selectionStart || 0;
-
-    // Compte le nombre de chiffres avant le curseur
-    let digitCount = 0;
-    for (let i = 0; i < selectionStart; i++) {
-      if (/\d/.test(rawValue[i])) digitCount++;
-    }
-
-    // Récupère uniquement les chiffres
-    const digits = rawValue.replace(/\D/g, '').slice(0, 11);
-
-    // Formate la nouvelle valeur
-    const newFormatted = this.formatNationalNumber(digits);
-
-    // Calcule la nouvelle position du curseur après formatage
-    let newCursor = 0,
-      count = 0;
-    for (let i = 0; i < newFormatted.length && count < digitCount; i++) {
-      if (/\d/.test(newFormatted[i])) count++;
-      newCursor = i + 1;
-    }
-
-    // Met à jour la valeur brute dans le formulaire
-    this.createClientForm
-      .get('national_number')
-      ?.setValue(digits, { emitEvent: false });
-    input.value = newFormatted;
-
-    // Replace le curseur à la bonne position
-    setTimeout(() => {
-      input.setSelectionRange(newCursor, newCursor);
-    }, 0);
-  }
-
-  handleClientCreated(newClient: ClientEntity) {
-    this.setClient(newClient.id);
-    this.isToggleClientForm.set(false);
-  }
-
-  handleClientUpdated(updatedClient: ClientEntity) {
-    this.client.set(updatedClient);
-    this.isToggleClientForm.set(false);
-    const paymentDeadline = updatedClient.default_payment_deadline ?? 10;
-    this.createQuoteForm.patchValue({
-      payment_deadline: paymentDeadline,
+  onClientUpdated(client: ClientEntity) {
+    this.selectedClient.set(client);
+    this.client.set(client);
+    this.createClientForm.patchValue({
+      client_id: client.id,
+      client_name: client.firstname + ' ' + client.lastname,
+      client_firstname: client.firstname,
+      client_lastname: client.lastname,
+      client_email: client.email,
+      payment_deadline: client.default_payment_deadline || 10,
     });
+    this.ngAfterViewInit();
+  }
+
+  onClientCreated(client: ClientEntity) {
+    console.log('=== DEBUG onClientCreated ===');
+    console.log('Client créé reçu:', client);
+    console.log('Client ID:', client?.id);
+    console.log("Type de l'ID:", typeof client?.id);
+    console.log('========================');
+
+    this.clients.update((clients) => [...clients, client]);
+    this.filteredClients.update((clients) => [...clients, client]);
+  }
+
+  closeClientForm() {
+    this.isToggleClientForm.set(false);
+    this.createClientForm.reset();
+    this.createClientForm.patchValue({
+      is_info_pending: false,
+      country: 'Belgique',
+      default_payment_deadline: 10,
+    });
+    this.toggleClientFieldsValidation(false); // Réinitialiser la validation des champs
   }
 }

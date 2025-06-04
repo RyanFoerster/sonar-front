@@ -1229,11 +1229,11 @@
       <hlm-toaster />
     } @else {
       <app-client-form
-        [client]="client()"
-        (closeForm)="toggleClientForm(false)"
-        (clientCreated)="handleClientCreated($event)"
-        (clientUpdated)="handleClientUpdated($event)"
-      />
+        (clientCreated)="onClientCreated($event)"
+        (clientUpdated)="onClientUpdated($event)"
+        (closeForm)="closeClientForm()"
+        [client]="selectedClient()"
+        ></app-client-form>
     }
   </div>
 </div>

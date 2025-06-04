@@ -66,7 +66,7 @@
               }"
               formControlName="company_number"
               hlmInput
-              placeholder="987 XXX XXX"
+              [placeholder]="getPlaceholder('company')"
               class="flex-1 bg-white border-gray-200 text-sm rounded-lg disabled:bg-gray-100 disabled:cursor-not-allowed"
             />
             <button
@@ -81,18 +81,34 @@
           </div>
         </div>
 
-        <p class="block" hlmLabel>
-          <span class="text-sm font-medium text-gray-900"
-            >Numéro de TVA (sans le préfixe)</span
-          >
-          <input
-            formControlName="company_vat_number"
-            hlmInput
-            type="number"
-            placeholder="XXXXXXXXXX"
-            class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg disabled:bg-gray-100 disabled:cursor-not-allowed"
-          />
-        </p>
+        <div class="block" hlmLabel>
+          <span class="text-sm font-medium text-gray-900">Numéro de TVA</span>
+          <div class="relative">
+            @if (getPrefix("vat")) {
+              <span
+                class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
+              >
+                {{ getPrefix("vat") }}
+              </span>
+            }
+            <input
+              formControlName="company_vat_number"
+              hlmInput
+              [placeholder]="getPlaceholder('vat')"
+              [class]="getPrefix('vat') ? 'pl-12' : ''"
+              class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg disabled:bg-gray-100 disabled:cursor-not-allowed"
+            />
+          </div>
+          @if (
+            createClientForm.get("company_vat_number")?.invalid &&
+            createClientForm.get("company_vat_number")?.touched
+          ) {
+            <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
+              <hlm-icon size="xs" name="lucideAlertCircle" />
+              {{ getErrorMessage("company_vat_number") }}
+            </span>
+          }
+        </div>
 
         <div class="block" hlmLabel>
           <span class="text-sm font-medium text-gray-900"
@@ -127,12 +143,20 @@
               )
             "
             (input)="onNationalNumberInput($event)"
-            maxlength="15"
-            placeholder="12.34.56-789.10"
+            [placeholder]="getNationalNumberPlaceholder()"
             formControlName="national_number"
             hlmInput
             class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg disabled:bg-gray-100 disabled:cursor-not-allowed"
           />
+          @if (
+            createClientForm.get("national_number")?.invalid &&
+            createClientForm.get("national_number")?.touched
+          ) {
+            <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
+              <hlm-icon size="xs" name="lucideAlertCircle" />
+              {{ getErrorMessage("national_number") }}
+            </span>
+          }
         </p>
 
         <div class="grid md:grid-cols-2 gap-4">
@@ -209,7 +233,8 @@
           formControlName="phone"
           type="tel"
           hlmInput
-          placeholder="+32 XXX XX XX XX"
+          [placeholder]="getPlaceholder('phone')"
+          class="w-full"
         />
         @if (
           createClientForm.get("phone")?.invalid &&
@@ -217,7 +242,7 @@
         ) {
           <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
             <hlm-icon size="xs" name="lucideAlertCircle" />
-            Le numéro de téléphone est requis
+            {{ getErrorMessage("phone") }}
           </span>
         }
       </p>
@@ -270,7 +295,7 @@
           <input
             formControlName="postalCode"
             hlmInput
-            placeholder="Code postal"
+            [placeholder]="getPlaceholder('postalCode')"
             class="mt-1.5 w-full bg-white border-gray-200 text-sm rounded-lg disabled:bg-gray-100 disabled:cursor-not-allowed"
           />
           @if (
@@ -279,7 +304,7 @@
           ) {
             <span class="text-red-500 text-xs mt-1 flex items-center gap-1">
               <hlm-icon size="xs" name="lucideAlertCircle" />
-              Le code postal est requis
+              {{ getErrorMessage("postalCode") }}
             </span>
           }
         </p>
@@ -373,14 +398,24 @@
     >
       Annuler
     </button>
-    <button
-      class="bg-primary text-white font-medium text-sm rounded-lg px-4 py-2 flex items-center gap-2 hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-      hlmBtn
-      type="submit"
-      [disabled]="!createClientForm.valid"
-    >
-      <hlm-icon size="sm" name="lucideCheck" />
-      {{ client ? "Mettre à jour le client" : "Créer le client" }}
-    </button>
+    <div class="flex flex-col items-end">
+      <button
+        class="bg-primary text-white font-medium text-sm rounded-lg px-4 py-2 flex items-center gap-2 hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        hlmBtn
+        type="submit"
+        [disabled]="!createClientForm.valid"
+      >
+        <hlm-icon size="sm" name="lucideCheck" />
+        {{ client ? "Mettre à jour le client" : "Créer le client" }}
+      </button>
+      @if (!createClientForm.valid && getInvalidFieldsMessage()) {
+        <span
+          class="text-red-500 text-xs mt-2 flex items-center gap-1 max-w-xs text-right"
+        >
+          <hlm-icon size="xs" name="lucideAlertCircle" />
+          {{ getInvalidFieldsMessage() }}
+        </span>
+      }
+    </div>
   </div>
 </form>

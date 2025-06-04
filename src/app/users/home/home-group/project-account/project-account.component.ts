@@ -92,6 +92,9 @@ import { VirementSepaDto } from '../../../../shared/dtos/virement-sepa.dto';
 import { VirementSepaService } from '../../../../shared/services/virement-sepa.service';
 import { atLeastOneRequired } from '../../../../shared/validators/at-least-one-required.validator';
 import { HostListener } from '@angular/core';
+import { ibanValidator } from '../../../../shared/validators/iban.validator';
+import { belgianStructuredCommunicationValidator } from '../../../../shared/validators/belgian-structured-communication.validator';
+import { onIbanInput } from '../../../../shared/utils/iban-formatter';
 
 // Constantes
 const ITEMS_PER_PAGE = 10;
@@ -264,7 +267,7 @@ export class ProjectAccountComponent implements AfterViewInit {
 
   // Computed values
   protected readonly amount_debited = computed(
-    () => +this.state.amountHtva() - +this.state.amountTva()
+    () => +this.state.amountHtva() - +this.state.amountTva(),
   );
 
   // Computed values pour les comptes triés
@@ -273,8 +276,8 @@ export class ProjectAccountComponent implements AfterViewInit {
       .filteredPrincipalAccounts()
       ?.slice()
       .sort((a: PrincipalAccountEntity, b: PrincipalAccountEntity) =>
-        (a.username ?? '').localeCompare(b.username ?? '')
-      )
+        (a.username ?? '').localeCompare(b.username ?? ''),
+      ),
   );
 
   protected readonly sortedGroupAccounts = computed(() =>
@@ -282,8 +285,8 @@ export class ProjectAccountComponent implements AfterViewInit {
       .filteredGroupAccounts()
       ?.slice()
       .sort((a: CompteGroupeEntity, b: CompteGroupeEntity) =>
-        (a.username ?? '').localeCompare(b.username ?? '')
-      )
+        (a.username ?? '').localeCompare(b.username ?? ''),
+      ),
   );
 
   // Pagination states
@@ -331,7 +334,7 @@ export class ProjectAccountComponent implements AfterViewInit {
         let filename = 'facture.pdf';
         if (contentDisposition) {
           const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(
-            contentDisposition
+            contentDisposition,
           );
           if (matches != null && matches[1]) {
             filename = matches[1].replace(/['"]/g, '');
@@ -369,7 +372,7 @@ export class ProjectAccountComponent implements AfterViewInit {
         }),
         iban: new FormControl('', {
           nonNullable: true,
-          validators: [Validators.required],
+          validators: [Validators.required, ibanValidator()],
         }),
         amount_htva: new FormControl(null, {
           nonNullable: true,
@@ -380,11 +383,14 @@ export class ProjectAccountComponent implements AfterViewInit {
           nonNullable: true,
           validators: [Validators.required],
         }),
-        structured_communication: new FormControl('', { nonNullable: true }),
+        structured_communication: new FormControl('', {
+          nonNullable: true,
+          validators: [belgianStructuredCommunicationValidator()],
+        }),
       },
       {
         validators: [atLeastOneRequired()],
-      }
+      },
     );
   }
 
@@ -411,7 +417,7 @@ export class ProjectAccountComponent implements AfterViewInit {
         ...this.virementSepaForm.value,
         amount_total: this.virementSepaForm.value.amount_htva,
         amount_htva: this.amount_debited(),
-        transaction_type : "OUTGOING" // Type de transaction par défaut
+        transaction_type: 'OUTGOING', // Type de transaction par défaut
       };
 
       // Créer ou mettre à jour le bénéficiaire si les champs sont remplis
@@ -428,8 +434,8 @@ export class ProjectAccountComponent implements AfterViewInit {
               virementSepa,
               +this.id()!,
               this.typeOfProjet()!,
-              this.selectedFile!
-            )
+              this.selectedFile!,
+            ),
           ),
           tap(() => {
             ctx.close();
@@ -454,7 +460,7 @@ export class ProjectAccountComponent implements AfterViewInit {
             this.state.isSpinner.set(false);
             this.state.errorMessage.set(err.error.message);
             return of(null);
-          })
+          }),
         )
         .subscribe();
     }
@@ -506,7 +512,7 @@ export class ProjectAccountComponent implements AfterViewInit {
 
   protected getVisiblePages(
     currentPage: number,
-    totalPages: number
+    totalPages: number,
   ): (number | 'ellipsis')[] {
     const result: (number | 'ellipsis')[] = [];
 
@@ -582,7 +588,7 @@ export class ProjectAccountComponent implements AfterViewInit {
       error: (error) => {
         console.error(
           'Erreur lors du chargement des comptes principaux:',
-          error
+          error,
         );
       },
     });
@@ -602,7 +608,7 @@ export class ProjectAccountComponent implements AfterViewInit {
     const filteredAccounts = this.state
       .groupAccounts()
       ?.filter((account) =>
-        account.username?.toLowerCase().includes(searchValue)
+        account.username?.toLowerCase().includes(searchValue),
       );
 
     this.state.filteredGroupAccounts.set(filteredAccounts);
@@ -625,7 +631,7 @@ export class ProjectAccountComponent implements AfterViewInit {
       .filter((account) => {
         const isSelected = currentSelections.some(
           (selection: Recipient) =>
-            selection.id === account.id && selection.type === 'PRINCIPAL'
+            selection.id === account.id && selection.type === 'PRINCIPAL',
         );
         return (
           !isSelected &&
@@ -643,7 +649,7 @@ export class ProjectAccountComponent implements AfterViewInit {
       this.state.groupAccounts()?.filter((account) => {
         const isSelected = currentSelections.some(
           (selection: Recipient) =>
-            selection.id === account.id && selection.type === 'GROUP'
+            selection.id === account.id && selection.type === 'GROUP',
         );
         return (
           !isSelected &&
@@ -747,7 +753,7 @@ export class ProjectAccountComponent implements AfterViewInit {
             this.state.isSpinner.set(false);
             this.state.errorMessage.set(err.error.message);
             return of(null);
-          })
+          }),
         )
         .subscribe();
     }
@@ -784,7 +790,7 @@ export class ProjectAccountComponent implements AfterViewInit {
         ](
           accountId,
           this.pagination.recipient.currentPage(),
-          this.itemsPerPage()
+          this.itemsPerPage(),
         ),
         senderTransactions: this.services.transaction[
           isPrincipal
@@ -801,10 +807,10 @@ export class ProjectAccountComponent implements AfterViewInit {
       this.state.transactionSender.set(senderTransactions.data);
 
       this.pagination.recipient.totalItems.set(
-        recipientTransactions.meta.total
+        recipientTransactions.meta.total,
       );
       this.pagination.recipient.totalPages.set(
-        recipientTransactions.meta.totalPages
+        recipientTransactions.meta.totalPages,
       );
 
       this.pagination.sender.totalItems.set(senderTransactions.meta.total);
@@ -847,7 +853,7 @@ export class ProjectAccountComponent implements AfterViewInit {
       // Calculer le nombre total de pages
       this.pagination.virement.totalItems.set(virements.length);
       this.pagination.virement.totalPages.set(
-        Math.ceil(virements.length / this.itemsPerPage())
+        Math.ceil(virements.length / this.itemsPerPage()),
       );
 
       // Mettre à jour les virements pour la page actuelle
@@ -949,7 +955,7 @@ export class ProjectAccountComponent implements AfterViewInit {
       error: (error) => {
         console.error('Erreur lors de la conversion en PDF:', error);
         this.state.errorMessage.set(
-          'Erreur lors de la conversion en PDF. Veuillez réessayer.'
+          'Erreur lors de la conversion en PDF. Veuillez réessayer.',
         );
         this.state.isLoadingVirement.set(false);
       },
@@ -960,7 +966,7 @@ export class ProjectAccountComponent implements AfterViewInit {
     try {
       // Charge uniquement la première page des bénéficiaires au chargement initial
       const data = await lastValueFrom(
-        this.services.beneficiary.getBeneficiariesPage(1).pipe(take(1))
+        this.services.beneficiary.getBeneficiariesPage(1).pipe(take(1)),
       );
 
       if (data && data.items && data.items.length > 0) {
@@ -1029,7 +1035,7 @@ export class ProjectAccountComponent implements AfterViewInit {
           tap((results) => {
             console.log(
               `Résultats de recherche pour "${value}":`,
-              results.length
+              results.length,
             );
 
             // Assurer qu'il n'y a pas de doublons dans les résultats de recherche
@@ -1052,10 +1058,10 @@ export class ProjectAccountComponent implements AfterViewInit {
           catchError((error) => {
             console.error(
               'Erreur lors de la recherche des bénéficiaires:',
-              error
+              error,
             );
             return of([]);
-          })
+          }),
         )
         .subscribe();
     } else {
@@ -1071,11 +1077,11 @@ export class ProjectAccountComponent implements AfterViewInit {
       const filtered = currentBeneficiaries.filter(
         (beneficiary) =>
           beneficiary?.account_owner?.toLowerCase().includes(value) ||
-          beneficiary?.iban?.toLowerCase().includes(value)
+          beneficiary?.iban?.toLowerCase().includes(value),
       );
 
       console.log(
-        `Filtrage local: ${filtered.length} résultats sur ${currentBeneficiaries.length}`
+        `Filtrage local: ${filtered.length} résultats sur ${currentBeneficiaries.length}`,
       );
 
       this.state.filteredBeneficiaries.set(filtered);
@@ -1091,7 +1097,7 @@ export class ProjectAccountComponent implements AfterViewInit {
     event.preventDefault();
     event.stopPropagation();
     this.state.showBeneficiariesDropdown.set(
-      !this.state.showBeneficiariesDropdown()
+      !this.state.showBeneficiariesDropdown(),
     );
     if (this.state.showBeneficiariesDropdown()) {
       // S'assurer que la liste des bénéficiaires n'a pas de doublons avant de l'afficher
@@ -1118,7 +1124,7 @@ export class ProjectAccountComponent implements AfterViewInit {
 
       // Vérifier si une recherche est en cours
       const searchInput = document.querySelector(
-        'input[placeholder="Rechercher un bénéficiaire"]'
+        'input[placeholder="Rechercher un bénéficiaire"]',
       ) as HTMLInputElement;
       const searchValue = searchInput?.value?.trim().toLowerCase() || '';
 
@@ -1126,7 +1132,7 @@ export class ProjectAccountComponent implements AfterViewInit {
         'Chargement de la page',
         nextPage,
         'recherche:',
-        searchValue ? 'oui' : 'non'
+        searchValue ? 'oui' : 'non',
       );
 
       // Si une recherche est active avec 3 caractères ou plus, utiliser l'API de recherche
@@ -1155,10 +1161,10 @@ export class ProjectAccountComponent implements AfterViewInit {
             catchError((error) => {
               console.error(
                 'Erreur lors de la recherche des bénéficiaires:',
-                error
+                error,
               );
               return of([]);
-            })
+            }),
           )
           .subscribe();
         return;
@@ -1187,7 +1193,7 @@ export class ProjectAccountComponent implements AfterViewInit {
             } else {
               console.warn(
                 'Réponse API invalide ou totalPages manquant pour la page',
-                nextPage
+                nextPage,
               );
               return;
             }
@@ -1197,17 +1203,17 @@ export class ProjectAccountComponent implements AfterViewInit {
 
               if (data.items.length > 0) {
                 const currentIds = new Set(
-                  this.state.beneficiaries().map((b) => b.id)
+                  this.state.beneficiaries().map((b) => b.id),
                 );
                 const newBeneficiaries = data.items.filter(
-                  (b) => b && b.id && !currentIds.has(b.id)
+                  (b) => b && b.id && !currentIds.has(b.id),
                 );
 
                 console.log(
                   'Nouveaux bénéficiaires uniques après filtrage:',
                   newBeneficiaries.length,
                   'IDs:',
-                  newBeneficiaries.map((b) => b.id)
+                  newBeneficiaries.map((b) => b.id),
                 );
 
                 if (newBeneficiaries.length > 0) {
@@ -1230,7 +1236,7 @@ export class ProjectAccountComponent implements AfterViewInit {
                         beneficiary?.account_owner
                           ?.toLowerCase()
                           .includes(searchValue) ||
-                        beneficiary?.iban?.toLowerCase().includes(searchValue)
+                        beneficiary?.iban?.toLowerCase().includes(searchValue),
                     );
                     this.state.visibleBeneficiaries.set([
                       ...this.state.visibleBeneficiaries(),
@@ -1240,7 +1246,7 @@ export class ProjectAccountComponent implements AfterViewInit {
                 } else {
                   console.warn(
                     'Aucun nouveau bénéficiaire unique trouvé pour la page',
-                    nextPage
+                    nextPage,
                   );
                 }
               } else {
@@ -1249,17 +1255,17 @@ export class ProjectAccountComponent implements AfterViewInit {
             } else {
               console.warn(
                 'Réponse API invalide (items manquants) pour la page',
-                nextPage
+                nextPage,
               );
             }
           }),
           catchError((error) => {
             console.error(
               'Erreur lors du chargement des bénéficiaires supplémentaires:',
-              error
+              error,
             );
             return of(null);
-          })
+          }),
         )
         .subscribe();
     }
@@ -1290,7 +1296,7 @@ export class ProjectAccountComponent implements AfterViewInit {
         }
       });
       this.state.filteredBeneficiaries.set(
-        Array.from(uniqueBeneficiaries.values())
+        Array.from(uniqueBeneficiaries.values()),
       );
     }
   }
@@ -1307,7 +1313,7 @@ export class ProjectAccountComponent implements AfterViewInit {
       }
     });
     this.state.filteredBeneficiaries.set(
-      Array.from(uniqueBeneficiaries.values())
+      Array.from(uniqueBeneficiaries.values()),
     );
   }
 
@@ -1321,7 +1327,7 @@ export class ProjectAccountComponent implements AfterViewInit {
     if (
       !currentSelections.some(
         (selection: Recipient) =>
-          selection.id === account.id && selection.type === account.type
+          selection.id === account.id && selection.type === account.type,
       )
     ) {
       this.transactionForm.patchValue({
@@ -1352,7 +1358,7 @@ export class ProjectAccountComponent implements AfterViewInit {
       this.transactionForm.get('recipients')?.value || [];
     const updatedSelections = currentSelections.filter(
       (selection: Recipient) =>
-        !(selection.id === account.id && selection.type === account.type)
+        !(selection.id === account.id && selection.type === account.type),
     );
     this.transactionForm.patchValue({ recipients: updatedSelections });
     const mockEvent = new InputEvent('input', {
@@ -1365,5 +1371,12 @@ export class ProjectAccountComponent implements AfterViewInit {
       writable: false,
     });
     this.filterAllAccounts(mockEvent);
+  }
+
+  /**
+   * Formate l'IBAN pendant la saisie
+   */
+  onIbanInput(event: Event): void {
+    onIbanInput(event);
   }
 }

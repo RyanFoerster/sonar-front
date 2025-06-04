@@ -9,28 +9,28 @@
     <div class="flex flex-wrap gap-2 w-full sm:w-auto">
       <hlm-dialog class="w-full sm:w-auto">
         @if (virementsSepaInPending().length > 0) {
-        <button
-          class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-          hlmBtn
-          brnDialogTrigger
-          (click)="currentVirementsIndex.set(0)"
-        >
-          <hlm-icon name="lucideInbox" class="w-4 h-4 mr-2" />
-          {{ virementsSepaInPending().length }} virement{{
-            virementsSepaInPending().length > 1 ? "s" : ""
-          }}
-          en attente
-        </button>
+          <button
+            class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            hlmBtn
+            brnDialogTrigger
+            (click)="currentVirementsIndex.set(0)"
+          >
+            <hlm-icon name="lucideInbox" class="w-4 h-4 mr-2" />
+            {{ virementsSepaInPending().length }} virement{{
+              virementsSepaInPending().length > 1 ? "s" : ""
+            }}
+            en attente
+          </button>
         } @else {
-        <div
-          class="w-full sm:w-auto text-sm text-gray-600 flex items-center justify-center sm:justify-start p-2 bg-gray-50 rounded-lg"
-        >
-          <hlm-icon
-            name="lucideCheckCircle2"
-            class="w-4 h-4 mr-2 text-green-500"
-          />
-          Aucun virement en attente
-        </div>
+          <div
+            class="w-full sm:w-auto text-sm text-gray-600 flex items-center justify-center sm:justify-start p-2 bg-gray-50 rounded-lg"
+          >
+            <hlm-icon
+              name="lucideCheckCircle2"
+              class="w-4 h-4 mr-2 text-green-500"
+            />
+            Aucun virement en attente
+          </div>
         }
 
         <hlm-dialog-content
@@ -93,201 +93,262 @@
                 class="bg-white rounded-xl shadow-lg overflow-hidden order-2 lg:order-1"
               >
                 @if (currentVirement()) {
-                <!-- En-tête de la carte -->
-                <div class="p-4 bg-gray-50 border-b border-gray-100">
-                  <div
-                    class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2"
-                  >
-                    <div>
-                      <p class="text-sm text-gray-600">
-                        {{ currentVirement()?.created_at | date : "dd/MM/yy" }}
-                      </p>
-                      <p class="font-medium text-gray-900">
-                        {{ currentVirement()?.account_owner }}
-                      </p>
-                    </div>
-                    <div class="flex gap-2">
-                      <a
-                        (click)="downloadInvoice(currentVirement()!)"
-                        (keydown.enter)="downloadInvoice(currentVirement()!)"
-                        tabindex="0"
-                        role="button"
-                        target="_blank"
-                        download
-                        class="relative h-8 w-8 flex items-center justify-center text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                        hlmBtn
-                        [title]="'Télécharger la facture'"
-                      >
-                        <hlm-icon
-                          name="lucideDownload"
-                          class="h-4 w-4 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
-                        />
-                      </a>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Corps de la carte -->
-                <div class="p-4 space-y-4">
-
-                  <!-- Informations bancaires -->
-                  <div class="bg-gray-50 p-3 rounded-lg">
-                    <p class="text-sm font-medium text-gray-500">IBAN</p>
-                    <ng-container *ngIf="isEditing && editedVirement; else ibanView">
-                      <input
-                        [(ngModel)]="editedVirement.iban"
-                        name="iban"
-                        required
-                        class="w-full text-sm text-gray-900 border border-gray-300 rounded px-2 py-1"
-                        [ngClass]="{
-                       'border-red-500': editedVirement.iban === '',
-                       'border-gray-300': editedVirement.iban !== ''
-                      }"
-                      />
-                      <div *ngIf="editedVirement.iban === ''" class="text-red-500 text-xs mt-1">
-                        L'IBAN est requis.
+                  <!-- En-tête de la carte -->
+                  <div class="p-4 bg-gray-50 border-b border-gray-100">
+                    <div
+                      class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2"
+                    >
+                      <div>
+                        <p class="text-sm text-gray-600">
+                          {{ currentVirement()?.created_at | date: "dd/MM/yy" }}
+                        </p>
+                        <p class="font-medium text-gray-900">
+                          {{ currentVirement()?.account_owner }}
+                        </p>
                       </div>
-                    </ng-container>
-                    <ng-template #ibanView>
-                      <p class="text-sm text-gray-900 break-all">
-                        {{ currentVirement()?.iban }}
-                      </p>
-                    </ng-template>
+                      <div class="flex gap-2">
+                        <a
+                          (click)="downloadInvoice(currentVirement()!)"
+                          (keydown.enter)="downloadInvoice(currentVirement()!)"
+                          tabindex="0"
+                          role="button"
+                          target="_blank"
+                          download
+                          class="relative h-8 w-8 flex items-center justify-center text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                          hlmBtn
+                          [title]="'Télécharger la facture'"
+                        >
+                          <hlm-icon
+                            name="lucideDownload"
+                            class="h-4 w-4 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+                          />
+                        </a>
+                      </div>
+                    </div>
                   </div>
 
-
-                  <!-- Montants -->
-                  <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
-
-                    <!-- TVAC -->
+                  <!-- Corps de la carte -->
+                  <div class="p-4 space-y-4">
+                    <!-- Informations bancaires -->
                     <div class="bg-gray-50 p-3 rounded-lg">
-                      <p class="text-sm font-medium text-gray-500">TVAC</p>
-                      <ng-container *ngIf="isEditing && editedVirement; else tvacView">
+                      <p class="text-sm font-medium text-gray-500">IBAN</p>
+                      <ng-container
+                        *ngIf="isEditing && editedVirement; else ibanView"
+                      >
                         <input
-                          type="number" step="0.01" min="0"
-                          [(ngModel)]="editedVirement.amount_total"
-                          (ngModelChange)="onTVACChange()"
-                          name="amount_total"
-                          class="w-full text-sm text-gray-900 border rounded px-2 py-1"
-                          [ngClass]="{
-                              'border-red-500': editedVirement.amount_total === null || editedVirement.amount_total === undefined,
-                              'border-gray-300': editedVirement.amount_total !== null && editedVirement.amount_total !== undefined
-                          }"
-                        />
-                        <div *ngIf="editedVirement.amount_total === null || editedVirement.amount_total === undefined" class="text-red-500 text-xs mt-1">
-                          Le montant TVAC est requis.
-                        </div>
-                      </ng-container>
-                      <ng-template #tvacView>
-                        <p class="text-sm text-gray-900">
-                          {{ currentVirement()?.amount_total! | euroFormat }}
-                        </p>
-                      </ng-template>
-                    </div>
-
-                    <!-- HTVA -->
-                    <div class="bg-gray-50 p-3 rounded-lg">
-                      <p class="text-sm font-medium text-gray-500">HTVA</p>
-                      <ng-container *ngIf="isEditing && editedVirement; else htvaView">
-                        <input
-                          type="number" step="0.01" min="0"
-                          [(ngModel)]="editedVirement.amount_htva"
-                          (ngModelChange)="onHTVAChange()"
-                          name="amount_htva"
-                          class="w-full text-sm text-gray-900 border rounded px-2 py-1"
-                          [ngClass]="{
-                               'border-red-500': editedVirement.amount_htva === null || editedVirement.amount_htva === undefined,
-                               'border-gray-300': editedVirement.amount_htva !== null && editedVirement.amount_htva !== undefined
-                           }"
-                        />
-                        <div *ngIf="editedVirement.amount_htva === null || editedVirement.amount_htva === undefined" class="text-red-500 text-xs mt-1">
-                          Le montant HTVA est requis.
-                        </div>
-                      </ng-container>
-                      <ng-template #htvaView>
-                        <p class="text-sm text-gray-900">
-                          {{ currentVirement()?.amount_htva! | euroFormat }}
-                        </p>
-                      </ng-template>
-                    </div>
-
-                    <!-- TVA -->
-                    <div class="bg-gray-50 p-3 rounded-lg col-span-2 sm:col-span-1">
-                      <p class="text-sm font-medium text-gray-500">TVA</p>
-                      <ng-container *ngIf="isEditing && editedVirement; else tvaView">
-                        <input
-                          type="number" step="0.01" min="0"
-                          [(ngModel)]="editedVirement.amount_tva"
-                          (ngModelChange)="onTVAChange()"
-                          name="amount_tva"
-                          class="w-full text-sm text-gray-900 border rounded px-2 py-1"
-
-                        />
-
-                      </ng-container>
-                      <ng-template #tvaView>
-                        <p class="text-sm text-gray-900">
-                          {{ currentVirement()?.amount_tva! | euroFormat }}
-                        </p>
-                      </ng-template>
-                    </div>
-
-                  </div>
-
-
-
-
-                  <!-- Communications et Projet -->
-                  <div class="grid grid-cols-2 gap-4">
-                    <!-- Communication -->
-                    <div class="bg-gray-50 p-3 rounded-lg">
-                      <p class="text-sm font-medium text-gray-500">Communication</p>
-                      <ng-container *ngIf="isEditing && editedVirement; else commView">
-                        <input
-                          type="text"
-                          [(ngModel)]="editedVirement.communication"
-                          name="communication"
+                          [(ngModel)]="editedVirement.iban"
+                          name="iban"
                           required
-                          class="w-full text-sm text-gray-900 border rounded px-2 py-1 break-all"
+                          class="w-full text-sm text-gray-900 border border-gray-300 rounded px-2 py-1"
                           [ngClass]="{
-                             'border-red-500': editedVirement.communication?.trim() === '',
-                             'border-gray-300': editedVirement.communication?.trim() !== ''
-                         }"
+                            'border-red-500':
+                              editedVirement.iban === '' ||
+                              !isValidIban(editedVirement.iban || ''),
+                            'border-gray-300':
+                              editedVirement.iban !== '' &&
+                              isValidIban(editedVirement.iban || ''),
+                          }"
+                          placeholder="IBAN (ex: BE68 5390 0754 7034)"
                         />
-                        <div *ngIf="editedVirement.communication?.trim() === ''" class="text-red-500 text-xs mt-1">
-                          La communication est requise.
+                        <div
+                          *ngIf="editedVirement.iban === ''"
+                          class="text-red-500 text-xs mt-1"
+                        >
+                          L'IBAN est requis.
+                        </div>
+                        <div
+                          *ngIf="
+                            editedVirement.iban !== '' &&
+                            !isValidIban(editedVirement.iban || '')
+                          "
+                          class="text-red-500 text-xs mt-1"
+                        >
+                          L'IBAN n'est pas valide.
                         </div>
                       </ng-container>
-                      <ng-template #commView>
+                      <ng-template #ibanView>
                         <p class="text-sm text-gray-900 break-all">
-                          {{ currentVirement()?.communication || '-' }}
+                          {{ currentVirement()?.iban }}
                         </p>
                       </ng-template>
                     </div>
 
-                    <!-- Communication structurée -->
-                    <div class="bg-gray-50 p-3 rounded-lg">
-                      <p class="text-sm font-medium text-gray-500">Communication structurée</p>
-                      <ng-container *ngIf="isEditing && editedVirement; else structuredCommView">
-                        <input
-                          type="text"
-                          [(ngModel)]="editedVirement.structured_communication"
-                          name="structured_communication"
+                    <!-- Montants -->
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                      <!-- TVAC -->
+                      <div class="bg-gray-50 p-3 rounded-lg">
+                        <p class="text-sm font-medium text-gray-500">TVAC</p>
+                        <ng-container
+                          *ngIf="isEditing && editedVirement; else tvacView"
+                        >
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            [(ngModel)]="editedVirement.amount_total"
+                            (ngModelChange)="onTVACChange()"
+                            name="amount_total"
+                            class="w-full text-sm text-gray-900 border rounded px-2 py-1"
+                            [ngClass]="{
+                              'border-red-500':
+                                editedVirement.amount_total === null ||
+                                editedVirement.amount_total === undefined,
+                              'border-gray-300':
+                                editedVirement.amount_total !== null &&
+                                editedVirement.amount_total !== undefined,
+                            }"
+                          />
+                          <div
+                            *ngIf="
+                              editedVirement.amount_total === null ||
+                              editedVirement.amount_total === undefined
+                            "
+                            class="text-red-500 text-xs mt-1"
+                          >
+                            Le montant TVAC est requis.
+                          </div>
+                        </ng-container>
+                        <ng-template #tvacView>
+                          <p class="text-sm text-gray-900">
+                            {{ currentVirement()?.amount_total! | euroFormat }}
+                          </p>
+                        </ng-template>
+                      </div>
 
-                          class="w-full text-sm text-gray-900 border rounded px-2 py-1"
+                      <!-- HTVA -->
+                      <div class="bg-gray-50 p-3 rounded-lg">
+                        <p class="text-sm font-medium text-gray-500">HTVA</p>
+                        <ng-container
+                          *ngIf="isEditing && editedVirement; else htvaView"
+                        >
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            [(ngModel)]="editedVirement.amount_htva"
+                            (ngModelChange)="onHTVAChange()"
+                            name="amount_htva"
+                            class="w-full text-sm text-gray-900 border rounded px-2 py-1"
+                            [ngClass]="{
+                              'border-red-500':
+                                editedVirement.amount_htva === null ||
+                                editedVirement.amount_htva === undefined,
+                              'border-gray-300':
+                                editedVirement.amount_htva !== null &&
+                                editedVirement.amount_htva !== undefined,
+                            }"
+                          />
+                          <div
+                            *ngIf="
+                              editedVirement.amount_htva === null ||
+                              editedVirement.amount_htva === undefined
+                            "
+                            class="text-red-500 text-xs mt-1"
+                          >
+                            Le montant HTVA est requis.
+                          </div>
+                        </ng-container>
+                        <ng-template #htvaView>
+                          <p class="text-sm text-gray-900">
+                            {{ currentVirement()?.amount_htva! | euroFormat }}
+                          </p>
+                        </ng-template>
+                      </div>
 
-                        />
-
-                      </ng-container>
-                      <ng-template #structuredCommView>
-                        <p class="text-sm text-gray-900">
-                          {{ currentVirement()?.structured_communication || '-' }}
-                        </p>
-                      </ng-template>
+                      <!-- TVA -->
+                      <div
+                        class="bg-gray-50 p-3 rounded-lg col-span-2 sm:col-span-1"
+                      >
+                        <p class="text-sm font-medium text-gray-500">TVA</p>
+                        <ng-container
+                          *ngIf="isEditing && editedVirement; else tvaView"
+                        >
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            [(ngModel)]="editedVirement.amount_tva"
+                            (ngModelChange)="onTVAChange()"
+                            name="amount_tva"
+                            class="w-full text-sm text-gray-900 border rounded px-2 py-1"
+                          />
+                        </ng-container>
+                        <ng-template #tvaView>
+                          <p class="text-sm text-gray-900">
+                            {{ currentVirement()?.amount_tva! | euroFormat }}
+                          </p>
+                        </ng-template>
+                      </div>
                     </div>
-                  </div>
 
-                  <div class="bg-gray-50 p-3 rounded-lg col-span-2">
+                    <!-- Communications et Projet -->
+                    <div class="grid grid-cols-2 gap-4">
+                      <!-- Communication -->
+                      <div class="bg-gray-50 p-3 rounded-lg">
+                        <p class="text-sm font-medium text-gray-500">
+                          Communication
+                        </p>
+                        <ng-container
+                          *ngIf="isEditing && editedVirement; else commView"
+                        >
+                          <input
+                            type="text"
+                            [(ngModel)]="editedVirement.communication"
+                            name="communication"
+                            required
+                            class="w-full text-sm text-gray-900 border rounded px-2 py-1 break-all"
+                            [ngClass]="{
+                              'border-red-500':
+                                editedVirement.communication?.trim() === '',
+                              'border-gray-300':
+                                editedVirement.communication?.trim() !== '',
+                            }"
+                          />
+                          <div
+                            *ngIf="editedVirement.communication?.trim() === ''"
+                            class="text-red-500 text-xs mt-1"
+                          >
+                            La communication est requise.
+                          </div>
+                        </ng-container>
+                        <ng-template #commView>
+                          <p class="text-sm text-gray-900 break-all">
+                            {{ currentVirement()?.communication || "-" }}
+                          </p>
+                        </ng-template>
+                      </div>
+
+                      <!-- Communication structurée -->
+                      <div class="bg-gray-50 p-3 rounded-lg">
+                        <p class="text-sm font-medium text-gray-500">
+                          Communication structurée
+                        </p>
+                        <ng-container
+                          *ngIf="
+                            isEditing && editedVirement;
+                            else structuredCommView
+                          "
+                        >
+                          <input
+                            type="text"
+                            [(ngModel)]="
+                              editedVirement.structured_communication
+                            "
+                            name="structured_communication"
+                            class="w-full text-sm text-gray-900 border rounded px-2 py-1"
+                          />
+                        </ng-container>
+                        <ng-template #structuredCommView>
+                          <p class="text-sm text-gray-900">
+                            {{
+                              currentVirement()?.structured_communication || "-"
+                            }}
+                          </p>
+                        </ng-template>
+                      </div>
+                    </div>
+
+                    <div class="bg-gray-50 p-3 rounded-lg col-span-2">
                       <p class="text-sm font-medium text-gray-500">Projet</p>
                       <p class="text-sm text-gray-900">
                         {{ currentVirement()?.projet_username }}
@@ -295,143 +356,144 @@
                     </div>
                   </div>
 
-
-
-
-
-
-                <!-- Actions -->
-                <div class="p-4 bg-gray-50 border-t border-gray-100">
-                  <div class="flex flex-col sm:flex-row justify-end gap-2">
-
-                    <!-- Si en mode édition : boutons Annuler + Valider -->
-                    <ng-container *ngIf="isEditing; else defaultActions">
-                      <button
-                        (click)="cancelEdit()"
-                        class="w-full sm:w-auto inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                        hlmBtn
-                      >
-                        <hlm-icon name="lucideX" class="w-4 h-4 mr-1" size="sm" />
-                        Annuler
-                      </button>
-
-                      <button
-                        (click)="validateEdit()"
-                        [disabled]="!isFormValid()"
-                        class="w-full sm:w-auto inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-lg
-         hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
-         disabled:opacity-50 disabled:cursor-not-allowed"
-                        hlmBtn
-                      >
-                        <hlm-icon name="lucideCheck" class="w-4 h-4 mr-1" size="sm" />
-                        Valider les modifications
-                      </button>
-
-                    </ng-container>
-
-                    <!-- Sinon : boutons classiques -->
-                    <ng-template #defaultActions>
-                    <hlm-dialog class="w-full sm:w-auto">
-                      <button
-                        class="w-full sm:w-auto inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                        hlmBtn
-                        brnDialogTrigger
-                      >
-                        <hlm-icon
-                          name="lucideXCircle"
-                          class="w-4 h-4 mr-1"
-                          size="sm"
-                        />
-                        Refuser
-                      </button>
-
-                      <hlm-dialog-content *brnDialogContent="let rejectCtx">
-                        <hlm-dialog-header>
-                          <h3
-                            hlmDialogTitle
-                            class="text-lg font-semibold text-gray-900"
-                          >
-                            Motif du refus
-                          </h3>
-                          <p
-                            hlmDialogDescription
-                            class="text-sm text-gray-500 mt-2"
-                          >
-                            Veuillez indiquer la raison du refus de ce virement.
-                          </p>
-                        </hlm-dialog-header>
-
-                        <div class="mt-4">
-                          <textarea
-                            [ngModel]="rejectedReason()"
-                            (ngModelChange)="rejectedReason.set($event)"
-                            class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            rows="4"
-                            placeholder="Saisissez le motif du refus..."
-                          ></textarea>
-                        </div>
-
-                        <hlm-dialog-footer
-                          class="mt-6 flex flex-col sm:flex-row justify-end gap-3"
+                  <!-- Actions -->
+                  <div class="p-4 bg-gray-50 border-t border-gray-100">
+                    <div class="flex flex-col sm:flex-row justify-end gap-2">
+                      <!-- Si en mode édition : boutons Annuler + Valider -->
+                      <ng-container *ngIf="isEditing; else defaultActions">
+                        <button
+                          (click)="cancelEdit()"
+                          class="w-full sm:w-auto inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                          hlmBtn
                         >
+                          <hlm-icon
+                            name="lucideX"
+                            class="w-4 h-4 mr-1"
+                            size="sm"
+                          />
+                          Annuler
+                        </button>
+
+                        <button
+                          (click)="validateEdit()"
+                          [disabled]="!isFormValid()"
+                          class="w-full sm:w-auto inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                          hlmBtn
+                        >
+                          <hlm-icon
+                            name="lucideCheck"
+                            class="w-4 h-4 mr-1"
+                            size="sm"
+                          />
+                          Valider les modifications
+                        </button>
+                      </ng-container>
+
+                      <!-- Sinon : boutons classiques -->
+                      <ng-template #defaultActions>
+                        <hlm-dialog class="w-full sm:w-auto">
                           <button
-                            type="button"
                             class="w-full sm:w-auto inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                             hlmBtn
-                            (click)="rejectedReason.set(''); rejectCtx.close()"
+                            brnDialogTrigger
                           >
-                            Annuler
+                            <hlm-icon
+                              name="lucideXCircle"
+                              class="w-4 h-4 mr-1"
+                              size="sm"
+                            />
+                            Refuser
                           </button>
-                          <button
-                            type="button"
-                            class="w-full sm:w-auto inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                            hlmBtn
-                            (click)="
-                              handleRejectVirement(
-                                currentVirement()!.id,
-                                rejectCtx,
-                                ctx
-                              )
-                            "
-                            [disabled]="!rejectedReason()"
-                          >
-                            Confirmer le refus
-                          </button>
-                        </hlm-dialog-footer>
-                      </hlm-dialog-content>
-                    </hlm-dialog>
 
+                          <hlm-dialog-content *brnDialogContent="let rejectCtx">
+                            <hlm-dialog-header>
+                              <h3
+                                hlmDialogTitle
+                                class="text-lg font-semibold text-gray-900"
+                              >
+                                Motif du refus
+                              </h3>
+                              <p
+                                hlmDialogDescription
+                                class="text-sm text-gray-500 mt-2"
+                              >
+                                Veuillez indiquer la raison du refus de ce
+                                virement.
+                              </p>
+                            </hlm-dialog-header>
 
-                      <button
-                        (click)="handleModifieVirement(currentVirement()!.id)"
-                        class="w-full sm:w-auto inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-white bg-yellow-600 rounded-lg hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
-                        hlmBtn
-                      >
-                        <hlm-icon
-                          name="lucidePencil"
-                          class="w-4 h-4 mr-1"
-                          size="sm"
-                        />
-                        Modifier
-                      </button>
+                            <div class="mt-4">
+                              <textarea
+                                [ngModel]="rejectedReason()"
+                                (ngModelChange)="rejectedReason.set($event)"
+                                class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                rows="4"
+                                placeholder="Saisissez le motif du refus..."
+                              ></textarea>
+                            </div>
 
+                            <hlm-dialog-footer
+                              class="mt-6 flex flex-col sm:flex-row justify-end gap-3"
+                            >
+                              <button
+                                type="button"
+                                class="w-full sm:w-auto inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                hlmBtn
+                                (click)="
+                                  rejectedReason.set(''); rejectCtx.close()
+                                "
+                              >
+                                Annuler
+                              </button>
+                              <button
+                                type="button"
+                                class="w-full sm:w-auto inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                                hlmBtn
+                                (click)="
+                                  handleRejectVirement(
+                                    currentVirement()!.id,
+                                    rejectCtx,
+                                    ctx
+                                  )
+                                "
+                                [disabled]="!rejectedReason()"
+                              >
+                                Confirmer le refus
+                              </button>
+                            </hlm-dialog-footer>
+                          </hlm-dialog-content>
+                        </hlm-dialog>
 
-                      <button
-                      (click)="handleAcceptVirement(currentVirement()!.id, ctx)"
-                      class="w-full sm:w-auto inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                      hlmBtn
-                    >
-                      <hlm-icon
-                        name="lucideCheckCircle2"
-                        class="w-4 h-4 mr-1"
-                        size="sm"
-                      />
-                      Accepter
-                    </button>
-                    </ng-template>
+                        <button
+                          (click)="handleModifieVirement(currentVirement()!.id)"
+                          class="w-full sm:w-auto inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-white bg-yellow-600 rounded-lg hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
+                          hlmBtn
+                        >
+                          <hlm-icon
+                            name="lucidePencil"
+                            class="w-4 h-4 mr-1"
+                            size="sm"
+                          />
+                          Modifier
+                        </button>
+
+                        <button
+                          (click)="
+                            handleAcceptVirement(currentVirement()!.id, ctx)
+                          "
+                          class="w-full sm:w-auto inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                          hlmBtn
+                        >
+                          <hlm-icon
+                            name="lucideCheckCircle2"
+                            class="w-4 h-4 mr-1"
+                            size="sm"
+                          />
+                          Accepter
+                        </button>
+                      </ng-template>
+                    </div>
                   </div>
-
-                </div>
                 }
               </div>
 
@@ -440,10 +502,10 @@
                 class="bg-white rounded-xl shadow-lg overflow-hidden h-[500px] lg:h-auto order-1 lg:order-2"
               >
                 @if (currentVirement()) {
-                <app-pdf-viewer
-                  [pdfUrl]="currentVirement()!.invoice_url!"
-                  [pdfBlob]="currentInvoiceBlob() || undefined"
-                ></app-pdf-viewer>
+                  <app-pdf-viewer
+                    [pdfUrl]="currentVirement()!.invoice_url!"
+                    [pdfBlob]="currentInvoiceBlob() || undefined"
+                  ></app-pdf-viewer>
                 }
               </div>
             </div>
@@ -459,89 +521,48 @@
         "
       >
         @if (isInitiatingTransfers()) {
-        <svg
-          class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-        >
-          <circle
-            class="opacity-25"
-            cx="12"
-            cy="12"
-            r="10"
-            stroke="currentColor"
-            stroke-width="4"
-          ></circle>
-          <path
-            class="opacity-75"
-            fill="currentColor"
-            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-          ></path>
-        </svg>
-        Initiation en cours... } @else { Initier le virement SEPA }
+          <svg
+            class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              class="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+            ></circle>
+            <path
+              class="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
+          </svg>
+          Initiation en cours...
+        } @else {
+          Initier le virement SEPA
+        }
       </button>
     </div>
   </div>
 
   <!-- Message de statut -->
   @if (transferStatus()) {
-  <div
-    class="mt-4 p-4 rounded-lg border {{
-      transferStatus()?.success
-        ? 'bg-green-50 border-green-200 text-green-800'
-        : 'bg-red-50 border-red-200 text-red-800'
-    }}"
-  >
-    <div class="flex">
-      <div class="flex-shrink-0">
-        @if (transferStatus()?.success) {
-        <svg
-          class="h-5 w-5 text-green-400"
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 20 20"
-          fill="currentColor"
-          aria-hidden="true"
-        >
-          <path
-            fill-rule="evenodd"
-            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-            clip-rule="evenodd"
-          />
-        </svg>
-        } @else {
-        <svg
-          class="h-5 w-5 text-red-400"
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 20 20"
-          fill="currentColor"
-          aria-hidden="true"
-        >
-          <path
-            fill-rule="evenodd"
-            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-            clip-rule="evenodd"
-          />
-        </svg>
-        }
-      </div>
-      <div class="ml-3">
-        <p class="text-sm font-medium">{{ transferStatus()?.message }}</p>
-      </div>
-      <div class="ml-auto pl-3">
-        <div class="-mx-1.5 -my-1.5">
-          <button
-            type="button"
-            (click)="transferStatus.set(null)"
-            class="inline-flex rounded-md p-1.5 {{
-              transferStatus()?.success
-                ? 'text-green-500 hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500'
-                : 'text-red-500 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500'
-            }}"
-          >
-            <span class="sr-only">Fermer</span>
+    <div
+      class="mt-4 p-4 rounded-lg border {{
+        transferStatus()?.success
+          ? 'bg-green-50 border-green-200 text-green-800'
+          : 'bg-red-50 border-red-200 text-red-800'
+      }}"
+    >
+      <div class="flex">
+        <div class="flex-shrink-0">
+          @if (transferStatus()?.success) {
             <svg
-              class="h-5 w-5"
+              class="h-5 w-5 text-green-400"
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 20 20"
               fill="currentColor"
@@ -549,15 +570,59 @@
             >
               <path
                 fill-rule="evenodd"
-                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
                 clip-rule="evenodd"
               />
             </svg>
-          </button>
+          } @else {
+            <svg
+              class="h-5 w-5 text-red-400"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                clip-rule="evenodd"
+              />
+            </svg>
+          }
+        </div>
+        <div class="ml-3">
+          <p class="text-sm font-medium">{{ transferStatus()?.message }}</p>
+        </div>
+        <div class="ml-auto pl-3">
+          <div class="-mx-1.5 -my-1.5">
+            <button
+              type="button"
+              (click)="transferStatus.set(null)"
+              class="inline-flex rounded-md p-1.5 {{
+                transferStatus()?.success
+                  ? 'text-green-500 hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500'
+                  : 'text-red-500 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500'
+              }}"
+            >
+              <span class="sr-only">Fermer</span>
+              <svg
+                class="h-5 w-5"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
     </div>
-  </div>
   }
 
   <!-- Section virements validés -->
@@ -565,145 +630,147 @@
     <h2 class="text-xl font-semibold text-gray-700">Virements validés</h2>
 
     @if (virementsSepaAccepted().length === 0) {
-    <div class="bg-gray-50 rounded-xl p-8 text-center">
-      <hlm-icon
-        name="lucideInbox"
-        class="w-12 h-12 mx-auto text-gray-400 mb-3"
-      />
-      <p class="text-gray-600">Aucun virement validé pour le moment</p>
-    </div>
-    } @else {
-    <div class="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
-      @for (virement of virementsSepaAccepted(); track virement.id) {
-      <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-        <!-- En-tête de la carte -->
-        <div class="p-4 bg-gray-50 border-b border-gray-100">
-          <div
-            class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2"
-          >
-            <div>
-              <p class="text-sm text-gray-600">
-                {{ virement.created_at | date : "dd/MM/yy" }}
-              </p>
-              <p class="font-medium text-gray-900">
-                {{ virement.account_owner }}
-              </p>
-            </div>
-            <div class="flex gap-2">
-              <button
-                (click)="paidVirement(virement.id)"
-                class="relative h-8 w-8 flex items-center justify-center text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                hlmBtn
-                [title]="'Marquer comme payé'"
-              >
-                <hlm-icon
-                  name="lucideCheckCircle2"
-                  class="h-4 w-4 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
-                />
-              </button>
-              <a
-                (click)="downloadInvoice(virement)"
-                (keydown.enter)="downloadInvoice(virement)"
-                tabindex="0"
-                role="button"
-                target="_blank"
-                download
-                class="relative h-8 w-8 flex items-center justify-center text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                hlmBtn
-                [title]="'Télécharger la facture'"
-              >
-                <hlm-icon
-                  name="lucideDownload"
-                  class="h-4 w-4 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
-                />
-              </a>
-            </div>
-          </div>
-        </div>
-
-        <!-- Corps de la carte des virements validés -->
-        <div class="p-4 space-y-4">
-          <!-- Informations bancaires -->
-          <div class="bg-gray-50 p-3 rounded-lg">
-            <dt
-              class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1"
-            >
-              IBAN
-            </dt>
-            <dd class="text-sm text-gray-900 break-all">{{ virement.iban }}</dd>
-          </div>
-
-          <!-- Montants -->
-          <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            <div class="bg-gray-50 p-3 rounded-lg">
-              <dt
-                class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1"
-              >
-                TVAC
-              </dt>
-              <dd class="text-sm font-medium text-gray-900">
-                {{ virement.amount_total | euroFormat }}
-              </dd>
-            </div>
-            <div class="bg-gray-50 p-3 rounded-lg">
-              <dt
-                class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1"
-              >
-                HTVA
-              </dt>
-              <dd class="text-sm font-medium text-gray-900">
-                {{ virement.amount_htva | euroFormat }}
-              </dd>
-            </div>
-            <div class="bg-gray-50 p-3 rounded-lg col-span-2 sm:col-span-1">
-              <dt
-                class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1"
-              >
-                TVA
-              </dt>
-              <dd class="text-sm font-medium text-gray-900">
-                {{ virement.amount_tva | euroFormat }}
-              </dd>
-            </div>
-          </div>
-
-          <!-- Communications et Projet -->
-          <div class="grid grid-cols-2 gap-4">
-            <div class="bg-gray-50 p-3 rounded-lg">
-              <dt
-                class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1"
-              >
-                Communication
-              </dt>
-              <dd class="text-sm text-gray-900 break-all">
-                {{ virement.communication || "-" }}
-              </dd>
-            </div>
-            <div class="bg-gray-50 p-3 rounded-lg">
-              <dt
-                class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1"
-              >
-                Communication structurée
-              </dt>
-              <dd class="text-sm text-gray-900">
-                {{ virement.structured_communication || "-" }}
-              </dd>
-            </div>
-            <div class="bg-gray-50 p-3 rounded-lg col-span-2">
-              <dt
-                class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1"
-              >
-                Projet
-              </dt>
-              <dd class="text-sm text-gray-900">
-                {{ virement.projet_username }}
-              </dd>
-            </div>
-          </div>
-        </div>
+      <div class="bg-gray-50 rounded-xl p-8 text-center">
+        <hlm-icon
+          name="lucideInbox"
+          class="w-12 h-12 mx-auto text-gray-400 mb-3"
+        />
+        <p class="text-gray-600">Aucun virement validé pour le moment</p>
       </div>
-      }
-    </div>
+    } @else {
+      <div class="grid gap-4 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+        @for (virement of virementsSepaAccepted(); track virement.id) {
+          <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+            <!-- En-tête de la carte -->
+            <div class="p-4 bg-gray-50 border-b border-gray-100">
+              <div
+                class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2"
+              >
+                <div>
+                  <p class="text-sm text-gray-600">
+                    {{ virement.created_at | date: "dd/MM/yy" }}
+                  </p>
+                  <p class="font-medium text-gray-900">
+                    {{ virement.account_owner }}
+                  </p>
+                </div>
+                <div class="flex gap-2">
+                  <button
+                    (click)="paidVirement(virement.id)"
+                    class="relative h-8 w-8 flex items-center justify-center text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                    hlmBtn
+                    [title]="'Marquer comme payé'"
+                  >
+                    <hlm-icon
+                      name="lucideCheckCircle2"
+                      class="h-4 w-4 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+                    />
+                  </button>
+                  <a
+                    (click)="downloadInvoice(virement)"
+                    (keydown.enter)="downloadInvoice(virement)"
+                    tabindex="0"
+                    role="button"
+                    target="_blank"
+                    download
+                    class="relative h-8 w-8 flex items-center justify-center text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    hlmBtn
+                    [title]="'Télécharger la facture'"
+                  >
+                    <hlm-icon
+                      name="lucideDownload"
+                      class="h-4 w-4 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+                    />
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <!-- Corps de la carte des virements validés -->
+            <div class="p-4 space-y-4">
+              <!-- Informations bancaires -->
+              <div class="bg-gray-50 p-3 rounded-lg">
+                <dt
+                  class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1"
+                >
+                  IBAN
+                </dt>
+                <dd class="text-sm text-gray-900 break-all">
+                  {{ virement.iban }}
+                </dd>
+              </div>
+
+              <!-- Montants -->
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                <div class="bg-gray-50 p-3 rounded-lg">
+                  <dt
+                    class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1"
+                  >
+                    TVAC
+                  </dt>
+                  <dd class="text-sm font-medium text-gray-900">
+                    {{ virement.amount_total | euroFormat }}
+                  </dd>
+                </div>
+                <div class="bg-gray-50 p-3 rounded-lg">
+                  <dt
+                    class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1"
+                  >
+                    HTVA
+                  </dt>
+                  <dd class="text-sm font-medium text-gray-900">
+                    {{ virement.amount_htva | euroFormat }}
+                  </dd>
+                </div>
+                <div class="bg-gray-50 p-3 rounded-lg col-span-2 sm:col-span-1">
+                  <dt
+                    class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1"
+                  >
+                    TVA
+                  </dt>
+                  <dd class="text-sm font-medium text-gray-900">
+                    {{ virement.amount_tva | euroFormat }}
+                  </dd>
+                </div>
+              </div>
+
+              <!-- Communications et Projet -->
+              <div class="grid grid-cols-2 gap-4">
+                <div class="bg-gray-50 p-3 rounded-lg">
+                  <dt
+                    class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1"
+                  >
+                    Communication
+                  </dt>
+                  <dd class="text-sm text-gray-900 break-all">
+                    {{ virement.communication || "-" }}
+                  </dd>
+                </div>
+                <div class="bg-gray-50 p-3 rounded-lg">
+                  <dt
+                    class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1"
+                  >
+                    Communication structurée
+                  </dt>
+                  <dd class="text-sm text-gray-900">
+                    {{ virement.structured_communication || "-" }}
+                  </dd>
+                </div>
+                <div class="bg-gray-50 p-3 rounded-lg col-span-2">
+                  <dt
+                    class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1"
+                  >
+                    Projet
+                  </dt>
+                  <dd class="text-sm text-gray-900">
+                    {{ virement.projet_username }}
+                  </dd>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
     }
   </div>
 
@@ -736,332 +803,339 @@
     </div>
 
     @if (paginatedAllVirements().length > 0) {
-    <!-- Tableau de Tous les Virements -->
-    <div
-      class="relative overflow-x-auto rounded-xl border border-gray-200 bg-white mb-6"
-    >
-      <div class="min-w-full overflow-x-auto">
-        <table hlmTable class="w-full text-sm text-left">
-          <thead class="hidden lg:table-header-group">
-            <tr
-              class="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-200"
-            >
-              <!-- Date de création -->
-              <th hlmTh class="w-40 px-3 py-3 sm:px-4">
-                <button
-                  class="flex items-center gap-1 hover:text-gray-700 transition-colors focus:outline-none"
-                  (click)="sortByAll('created_at')"
-                >
-                  <span>Date</span>
-                  @if (sortFieldAll() === 'created_at') {
-                  <span class="text-primary">{{
-                    sortOrderAll() === "asc" ? "↑" : "↓"
-                  }}</span>
-                  } @else {
-                  <hlm-icon
-                    name="lucideArrowUpDown"
-                    size="xs"
-                    class="text-gray-400 h-3 w-3"
-                  />
-                  }
-                </button>
-              </th>
-              <!-- Projet -->
-              <th hlmTh class="px-3 py-3 sm:px-4">
-                <button
-                  class="flex items-center gap-1 hover:text-gray-700 transition-colors focus:outline-none"
-                  (click)="sortByAll('projet_username')"
-                >
-                  <span>Projet</span>
-                  @if (sortFieldAll() === 'projet_username') {
-                  <span class="text-primary">{{
-                    sortOrderAll() === "asc" ? "↑" : "↓"
-                  }}</span>
-                  } @else {
-                  <hlm-icon
-                    name="lucideArrowUpDown"
-                    size="xs"
-                    class="text-gray-400 h-3 w-3"
-                  />
-                  }
-                </button>
-              </th>
-              <!-- Titulaire -->
-              <th hlmTh class="px-3 py-3 sm:px-4">
-                <button
-                  class="flex items-center gap-1 hover:text-gray-700 transition-colors focus:outline-none"
-                  (click)="sortByAll('account_owner')"
-                >
-                  <span>Titulaire</span>
-                  @if (sortFieldAll() === 'account_owner') {
-                  <span class="text-primary">{{
-                    sortOrderAll() === "asc" ? "↑" : "↓"
-                  }}</span>
-                  } @else {
-                  <hlm-icon
-                    name="lucideArrowUpDown"
-                    size="xs"
-                    class="text-gray-400 h-3 w-3"
-                  />
-                  }
-                </button>
-              </th>
-              <!-- IBAN -->
-              <th hlmTh class="px-3 py-3 sm:px-4">IBAN</th>
-              <!-- Montant Total -->
-              <th hlmTh class="w-32 px-3 py-3 sm:px-4 text-right">
-                <button
-                  class="flex items-center justify-end gap-1 w-full hover:text-gray-700 transition-colors focus:outline-none"
-                  (click)="sortByAll('amount_total')"
-                >
-                  <span>Montant Total</span>
-                  @if (sortFieldAll() === 'amount_total') {
-                  <span class="text-primary">{{
-                    sortOrderAll() === "asc" ? "↑" : "↓"
-                  }}</span>
-                  } @else {
-                  <hlm-icon
-                    name="lucideArrowUpDown"
-                    size="xs"
-                    class="text-gray-400 h-3 w-3"
-                  />
-                  }
-                </button>
-              </th>
-              <!-- Statut -->
-              <th hlmTh class="w-36 px-3 py-3 sm:px-4 text-center">
-                <button
-                  class="flex items-center justify-center gap-1 w-full hover:text-gray-700 transition-colors focus:outline-none"
-                  (click)="sortByAll('status')"
-                >
-                  <span>Statut</span>
-                  @if (sortFieldAll() === 'status') {
-                  <span class="text-primary">{{
-                    sortOrderAll() === "asc" ? "↑" : "↓"
-                  }}</span>
-                  } @else {
-                  <hlm-icon
-                    name="lucideArrowUpDown"
-                    size="xs"
-                    class="text-gray-400 h-3 w-3"
-                  />
-                  }
-                </button>
-              </th>
-              <!-- Actions -->
-              <th hlmTh class="w-40 px-3 py-3 sm:px-4 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-gray-100">
-            @for (virement of paginatedAllVirements(); track virement.id) {
-            <tr
-              hlmTrow
-              class="bg-white hover:bg-gray-50 transition-colors flex flex-col lg:table-row mb-3 lg:mb-0 rounded-lg lg:rounded-none shadow-sm lg:shadow-none border border-gray-100 lg:border-0"
-            >
-              <!-- Date -->
-              <td
-                hlmTd
-                class="px-3 py-2 sm:px-4 lg:py-3 flex lg:table-cell items-center justify-between lg:justify-start border-b lg:border-none border-gray-100"
-              >
-                <span
-                  class="font-medium lg:hidden text-xs text-gray-500 uppercase mr-2"
-                  >Date :</span
-                >
-                <span class="whitespace-nowrap text-gray-600 text-xs">{{
-                  virement.created_at | date : "dd/MM/yyyy HH:mm"
-                }}</span>
-              </td>
-              <!-- Projet -->
-              <td
-                hlmTd
-                class="px-3 py-2 sm:px-4 lg:py-3 flex lg:table-cell items-center justify-between lg:justify-start border-b lg:border-none border-gray-100"
-              >
-                <span
-                  class="font-medium lg:hidden text-xs text-gray-500 uppercase mr-2"
-                  >Projet :</span
-                >
-                <span
-                  class="text-gray-800 text-xs truncate"
-                  [title]="virement.projet_username"
-                  >{{ virement.projet_username }}</span
-                >
-              </td>
-              <!-- Titulaire -->
-              <td
-                hlmTd
-                class="px-3 py-2 sm:px-4 lg:py-3 flex lg:table-cell items-center justify-between lg:justify-start border-b lg:border-none border-gray-100"
-              >
-                <span
-                  class="font-medium lg:hidden text-xs text-gray-500 uppercase mr-2"
-                  >Titulaire :</span
-                >
-                <span
-                  class="text-gray-800 text-xs truncate"
-                  [title]="virement.account_owner"
-                  >{{ virement.account_owner }}</span
-                >
-              </td>
-              <!-- IBAN -->
-              <td
-                hlmTd
-                class="px-3 py-2 sm:px-4 lg:py-3 flex lg:table-cell items-center justify-between lg:justify-start border-b lg:border-none border-gray-100"
-              >
-                <span
-                  class="font-medium lg:hidden text-xs text-gray-500 uppercase mr-2"
-                  >IBAN :</span
-                >
-                <span class="text-gray-600 text-xs">{{ virement.iban }}</span>
-              </td>
-              <!-- Montant -->
-              <td
-                hlmTd
-                class="px-3 py-2 sm:px-4 lg:py-3 flex lg:table-cell items-center justify-between lg:justify-end lg:text-right border-b lg:border-none border-gray-100"
-              >
-                <span
-                  class="font-medium lg:hidden text-xs text-gray-500 uppercase mr-2"
-                  >Montant :</span
-                >
-                <span
-                  class="font-semibold text-xs whitespace-nowrap text-gray-800"
-                  >{{ virement.amount_total | euroFormat }}</span
-                >
-              </td>
-              <!-- Statut -->
-              <td
-                hlmTd
-                class="px-3 py-2 sm:px-4 lg:py-3 flex lg:table-cell items-center justify-between lg:justify-center border-b lg:border-none border-gray-100"
-              >
-                <span
-                  class="font-medium lg:hidden text-xs text-gray-500 uppercase mr-2"
-                  >Statut :</span
-                >
-                <span
-                  class="inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-semibold leading-none min-w-[80px] text-center border"
-                  [ngClass]="getStatusClasses(virement.status)"
-                >
-                  {{ getStatusLabel(virement.status) }}
-                </span>
-              </td>
-              <!-- Actions -->
-              <td hlmTd class="px-3 py-2 sm:px-4 lg:py-3">
-                <div
-                  class="flex flex-col lg:flex-row items-stretch lg:items-center justify-end gap-1.5 sm:gap-2"
-                >
-                  @if (virement.invoice_url) {
-                  <button
-                    hlmBtn
-                    variant="outline"
-                    size="sm"
-                    class="flex items-center justify-center gap-1.5 w-full lg:w-auto text-xs px-2 py-1.5"
-                    (click)="downloadInvoice(virement)"
-                    title="Voir la facture"
-                  >
-                    <hlm-icon
-                      size="sm"
-                      name="lucideFileText"
-                      class="h-3.5 w-3.5"
-                    />
-                    <span class="hidden sm:inline">Voir facture</span>
-                  </button>
-                  } @else {
-                  <button
-                    hlmBtn
-                    variant="outline"
-                    size="sm"
-                    class="flex items-center justify-center gap-1.5 w-full lg:w-auto text-xs px-2 py-1.5 text-gray-400 cursor-not-allowed"
-                    disabled
-                    title="Aucune facture disponible"
-                  >
-                    <hlm-icon
-                      size="sm"
-                      name="lucideFileWarning"
-                      class="h-3.5 w-3.5"
-                    />
-                    <span class="hidden sm:inline">Pas de facture</span>
-                  </button>
-                  }
-                </div>
-              </td>
-            </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Pagination for All Virements -->
-    <nav hlmPagination class="mb-8 flex justify-center">
-      <ul
-        hlmPaginationContent
-        class="flex flex-wrap gap-1 justify-center items-center"
+      <!-- Tableau de Tous les Virements -->
+      <div
+        class="relative overflow-x-auto rounded-xl border border-gray-200 bg-white mb-6"
       >
-        <li hlmPaginationItem class="mx-0.5 sm:mx-1">
-          <button
-            hlmBtn
-            variant="ghost"
-            class="px-2 md:px-3 py-1.5 text-xs sm:text-sm font-medium"
-            [disabled]="currentPageAll() === 1"
-            (click)="onPageChangeAll(currentPageAll() - 1)"
-          >
-            Précédent
-          </button>
-        </li>
-        @for (page of getVisiblePagesAll(); track $index) { @if (page ===
-        'ellipsis') {
-        <li hlmPaginationItem class="mx-0.5 sm:mx-1">
-          <span class="px-2 md:px-3 py-1.5 text-xs sm:text-sm">...</span>
-        </li>
-        } @else {
-        <li hlmPaginationItem class="mx-0.5 sm:mx-1">
-          <button
-            hlmBtn
-            [variant]="currentPageAll() === page ? 'default' : 'outline'"
-            class="min-w-[32px] sm:min-w-[36px] h-8 sm:h-9 px-2 md:px-3 py-1.5 text-xs sm:text-sm font-medium"
-            (click)="onPageChangeAll(page)"
-          >
-            {{ page }}
-          </button>
-        </li>
-        } }
-        <li hlmPaginationItem class="mx-0.5 sm:mx-1">
-          <button
-            hlmBtn
-            variant="ghost"
-            class="px-2 md:px-3 py-1.5 text-xs sm:text-sm font-medium"
-            [disabled]="currentPageAll() === totalPagesAll()"
-            (click)="onPageChangeAll(currentPageAll() + 1)"
-          >
-            Suivant
-          </button>
-        </li>
-      </ul>
-    </nav>
-
-    } @else {
-    <!-- Message if no virements found at all -->
-    <div
-      class="py-12 text-center rounded-xl border border-dashed border-gray-300 bg-white mb-8"
-    >
-      <div class="flex flex-col items-center gap-3 sm:gap-4">
-        <div
-          class="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-gray-100 flex items-center justify-center"
-        >
-          <hlm-icon name="lucideSearch" size="lg" class="text-gray-400" />
-          <!-- Icône de recherche pour "aucun résultat" -->
-        </div>
-        <div class="space-y-1 sm:space-y-2">
-          <h3 class="text-base sm:text-lg font-semibold text-gray-900">
-            @if (searchTermAll()) { Aucun virement ne correspond à votre
-            recherche } @else { Aucun virement SEPA enregistré }
-          </h3>
-          <p class="text-sm text-gray-500 max-w-md mx-auto">
-            @if (searchTermAll()) { Veuillez essayer avec d'autres mots-clés. }
-            @else { Il n'y a actuellement aucun virement SEPA dans l'historique.
-            }
-          </p>
+        <div class="min-w-full overflow-x-auto">
+          <table hlmTable class="w-full text-sm text-left">
+            <thead class="hidden lg:table-header-group">
+              <tr
+                class="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-200"
+              >
+                <!-- Date de création -->
+                <th hlmTh class="w-40 px-3 py-3 sm:px-4">
+                  <button
+                    class="flex items-center gap-1 hover:text-gray-700 transition-colors focus:outline-none"
+                    (click)="sortByAll('created_at')"
+                  >
+                    <span>Date</span>
+                    @if (sortFieldAll() === "created_at") {
+                      <span class="text-primary">{{
+                        sortOrderAll() === "asc" ? "↑" : "↓"
+                      }}</span>
+                    } @else {
+                      <hlm-icon
+                        name="lucideArrowUpDown"
+                        size="xs"
+                        class="text-gray-400 h-3 w-3"
+                      />
+                    }
+                  </button>
+                </th>
+                <!-- Projet -->
+                <th hlmTh class="px-3 py-3 sm:px-4">
+                  <button
+                    class="flex items-center gap-1 hover:text-gray-700 transition-colors focus:outline-none"
+                    (click)="sortByAll('projet_username')"
+                  >
+                    <span>Projet</span>
+                    @if (sortFieldAll() === "projet_username") {
+                      <span class="text-primary">{{
+                        sortOrderAll() === "asc" ? "↑" : "↓"
+                      }}</span>
+                    } @else {
+                      <hlm-icon
+                        name="lucideArrowUpDown"
+                        size="xs"
+                        class="text-gray-400 h-3 w-3"
+                      />
+                    }
+                  </button>
+                </th>
+                <!-- Titulaire -->
+                <th hlmTh class="px-3 py-3 sm:px-4">
+                  <button
+                    class="flex items-center gap-1 hover:text-gray-700 transition-colors focus:outline-none"
+                    (click)="sortByAll('account_owner')"
+                  >
+                    <span>Titulaire</span>
+                    @if (sortFieldAll() === "account_owner") {
+                      <span class="text-primary">{{
+                        sortOrderAll() === "asc" ? "↑" : "↓"
+                      }}</span>
+                    } @else {
+                      <hlm-icon
+                        name="lucideArrowUpDown"
+                        size="xs"
+                        class="text-gray-400 h-3 w-3"
+                      />
+                    }
+                  </button>
+                </th>
+                <!-- IBAN -->
+                <th hlmTh class="px-3 py-3 sm:px-4">IBAN</th>
+                <!-- Montant Total -->
+                <th hlmTh class="w-32 px-3 py-3 sm:px-4 text-right">
+                  <button
+                    class="flex items-center justify-end gap-1 w-full hover:text-gray-700 transition-colors focus:outline-none"
+                    (click)="sortByAll('amount_total')"
+                  >
+                    <span>Montant Total</span>
+                    @if (sortFieldAll() === "amount_total") {
+                      <span class="text-primary">{{
+                        sortOrderAll() === "asc" ? "↑" : "↓"
+                      }}</span>
+                    } @else {
+                      <hlm-icon
+                        name="lucideArrowUpDown"
+                        size="xs"
+                        class="text-gray-400 h-3 w-3"
+                      />
+                    }
+                  </button>
+                </th>
+                <!-- Statut -->
+                <th hlmTh class="w-36 px-3 py-3 sm:px-4 text-center">
+                  <button
+                    class="flex items-center justify-center gap-1 w-full hover:text-gray-700 transition-colors focus:outline-none"
+                    (click)="sortByAll('status')"
+                  >
+                    <span>Statut</span>
+                    @if (sortFieldAll() === "status") {
+                      <span class="text-primary">{{
+                        sortOrderAll() === "asc" ? "↑" : "↓"
+                      }}</span>
+                    } @else {
+                      <hlm-icon
+                        name="lucideArrowUpDown"
+                        size="xs"
+                        class="text-gray-400 h-3 w-3"
+                      />
+                    }
+                  </button>
+                </th>
+                <!-- Actions -->
+                <th hlmTh class="w-40 px-3 py-3 sm:px-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+              @for (virement of paginatedAllVirements(); track virement.id) {
+                <tr
+                  hlmTrow
+                  class="bg-white hover:bg-gray-50 transition-colors flex flex-col lg:table-row mb-3 lg:mb-0 rounded-lg lg:rounded-none shadow-sm lg:shadow-none border border-gray-100 lg:border-0"
+                >
+                  <!-- Date -->
+                  <td
+                    hlmTd
+                    class="px-3 py-2 sm:px-4 lg:py-3 flex lg:table-cell items-center justify-between lg:justify-start border-b lg:border-none border-gray-100"
+                  >
+                    <span
+                      class="font-medium lg:hidden text-xs text-gray-500 uppercase mr-2"
+                      >Date :</span
+                    >
+                    <span class="whitespace-nowrap text-gray-600 text-xs">{{
+                      virement.created_at | date: "dd/MM/yyyy HH:mm"
+                    }}</span>
+                  </td>
+                  <!-- Projet -->
+                  <td
+                    hlmTd
+                    class="px-3 py-2 sm:px-4 lg:py-3 flex lg:table-cell items-center justify-between lg:justify-start border-b lg:border-none border-gray-100"
+                  >
+                    <span
+                      class="font-medium lg:hidden text-xs text-gray-500 uppercase mr-2"
+                      >Projet :</span
+                    >
+                    <span
+                      class="text-gray-800 text-xs truncate"
+                      [title]="virement.projet_username"
+                      >{{ virement.projet_username }}</span
+                    >
+                  </td>
+                  <!-- Titulaire -->
+                  <td
+                    hlmTd
+                    class="px-3 py-2 sm:px-4 lg:py-3 flex lg:table-cell items-center justify-between lg:justify-start border-b lg:border-none border-gray-100"
+                  >
+                    <span
+                      class="font-medium lg:hidden text-xs text-gray-500 uppercase mr-2"
+                      >Titulaire :</span
+                    >
+                    <span
+                      class="text-gray-800 text-xs truncate"
+                      [title]="virement.account_owner"
+                      >{{ virement.account_owner }}</span
+                    >
+                  </td>
+                  <!-- IBAN -->
+                  <td
+                    hlmTd
+                    class="px-3 py-2 sm:px-4 lg:py-3 flex lg:table-cell items-center justify-between lg:justify-start border-b lg:border-none border-gray-100"
+                  >
+                    <span
+                      class="font-medium lg:hidden text-xs text-gray-500 uppercase mr-2"
+                      >IBAN :</span
+                    >
+                    <span class="text-gray-600 text-xs">{{
+                      virement.iban
+                    }}</span>
+                  </td>
+                  <!-- Montant -->
+                  <td
+                    hlmTd
+                    class="px-3 py-2 sm:px-4 lg:py-3 flex lg:table-cell items-center justify-between lg:justify-end lg:text-right border-b lg:border-none border-gray-100"
+                  >
+                    <span
+                      class="font-medium lg:hidden text-xs text-gray-500 uppercase mr-2"
+                      >Montant :</span
+                    >
+                    <span
+                      class="font-semibold text-xs whitespace-nowrap text-gray-800"
+                      >{{ virement.amount_total | euroFormat }}</span
+                    >
+                  </td>
+                  <!-- Statut -->
+                  <td
+                    hlmTd
+                    class="px-3 py-2 sm:px-4 lg:py-3 flex lg:table-cell items-center justify-between lg:justify-center border-b lg:border-none border-gray-100"
+                  >
+                    <span
+                      class="font-medium lg:hidden text-xs text-gray-500 uppercase mr-2"
+                      >Statut :</span
+                    >
+                    <span
+                      class="inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-semibold leading-none min-w-[80px] text-center border"
+                      [ngClass]="getStatusClasses(virement.status)"
+                    >
+                      {{ getStatusLabel(virement.status) }}
+                    </span>
+                  </td>
+                  <!-- Actions -->
+                  <td hlmTd class="px-3 py-2 sm:px-4 lg:py-3">
+                    <div
+                      class="flex flex-col lg:flex-row items-stretch lg:items-center justify-end gap-1.5 sm:gap-2"
+                    >
+                      @if (virement.invoice_url) {
+                        <button
+                          hlmBtn
+                          variant="outline"
+                          size="sm"
+                          class="flex items-center justify-center gap-1.5 w-full lg:w-auto text-xs px-2 py-1.5"
+                          (click)="downloadInvoice(virement)"
+                          title="Voir la facture"
+                        >
+                          <hlm-icon
+                            size="sm"
+                            name="lucideFileText"
+                            class="h-3.5 w-3.5"
+                          />
+                          <span class="hidden sm:inline">Voir facture</span>
+                        </button>
+                      } @else {
+                        <button
+                          hlmBtn
+                          variant="outline"
+                          size="sm"
+                          class="flex items-center justify-center gap-1.5 w-full lg:w-auto text-xs px-2 py-1.5 text-gray-400 cursor-not-allowed"
+                          disabled
+                          title="Aucune facture disponible"
+                        >
+                          <hlm-icon
+                            size="sm"
+                            name="lucideFileWarning"
+                            class="h-3.5 w-3.5"
+                          />
+                          <span class="hidden sm:inline">Pas de facture</span>
+                        </button>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
         </div>
       </div>
-    </div>
+
+      <!-- Pagination for All Virements -->
+      <nav hlmPagination class="mb-8 flex justify-center">
+        <ul
+          hlmPaginationContent
+          class="flex flex-wrap gap-1 justify-center items-center"
+        >
+          <li hlmPaginationItem class="mx-0.5 sm:mx-1">
+            <button
+              hlmBtn
+              variant="ghost"
+              class="px-2 md:px-3 py-1.5 text-xs sm:text-sm font-medium"
+              [disabled]="currentPageAll() === 1"
+              (click)="onPageChangeAll(currentPageAll() - 1)"
+            >
+              Précédent
+            </button>
+          </li>
+          @for (page of getVisiblePagesAll(); track $index) {
+            @if (page === "ellipsis") {
+              <li hlmPaginationItem class="mx-0.5 sm:mx-1">
+                <span class="px-2 md:px-3 py-1.5 text-xs sm:text-sm">...</span>
+              </li>
+            } @else {
+              <li hlmPaginationItem class="mx-0.5 sm:mx-1">
+                <button
+                  hlmBtn
+                  [variant]="currentPageAll() === page ? 'default' : 'outline'"
+                  class="min-w-[32px] sm:min-w-[36px] h-8 sm:h-9 px-2 md:px-3 py-1.5 text-xs sm:text-sm font-medium"
+                  (click)="onPageChangeAll(page)"
+                >
+                  {{ page }}
+                </button>
+              </li>
+            }
+          }
+          <li hlmPaginationItem class="mx-0.5 sm:mx-1">
+            <button
+              hlmBtn
+              variant="ghost"
+              class="px-2 md:px-3 py-1.5 text-xs sm:text-sm font-medium"
+              [disabled]="currentPageAll() === totalPagesAll()"
+              (click)="onPageChangeAll(currentPageAll() + 1)"
+            >
+              Suivant
+            </button>
+          </li>
+        </ul>
+      </nav>
+    } @else {
+      <!-- Message if no virements found at all -->
+      <div
+        class="py-12 text-center rounded-xl border border-dashed border-gray-300 bg-white mb-8"
+      >
+        <div class="flex flex-col items-center gap-3 sm:gap-4">
+          <div
+            class="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-gray-100 flex items-center justify-center"
+          >
+            <hlm-icon name="lucideSearch" size="lg" class="text-gray-400" />
+            <!-- Icône de recherche pour "aucun résultat" -->
+          </div>
+          <div class="space-y-1 sm:space-y-2">
+            <h3 class="text-base sm:text-lg font-semibold text-gray-900">
+              @if (searchTermAll()) {
+                Aucun virement ne correspond à votre recherche
+              } @else {
+                Aucun virement SEPA enregistré
+              }
+            </h3>
+            <p class="text-sm text-gray-500 max-w-md mx-auto">
+              @if (searchTermAll()) {
+                Veuillez essayer avec d'autres mots-clés.
+              } @else {
+                Il n'y a actuellement aucun virement SEPA dans l'historique.
+              }
+            </p>
+          </div>
+        </div>
+      </div>
     }
   </div>
   <!-- FIN NOUVELLE SECTION -->

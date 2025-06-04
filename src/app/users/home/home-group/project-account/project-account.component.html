@@ -1,408 +1,425 @@
-@defer () { @if (!state.isSpinner()) {
-<button
-  (click)="goBack()"
-  class="w-fit mx-4 sm:mx-10 mb-5 rounded-full flex items-center gap-3"
-  hlmBtn
->
-  <hlm-icon size="sm" name="lucideCornerDownLeft" />
-  Retour
-</button>
-<div class="bg-gray-sonar p-5 mx-4 sm:mx-10 rounded-xl flex flex-col gap-5">
-  <div class="md:flex md:justify-between">
-    <div class="flex justify-start w-full md:w-1/3">
-      @if (state.accountPrincipal()) {
-      <button
-        class="bg-white flex flex-col justify-center items-center w-full rounded-2xl h-32 gap-2 shadow-lg"
-      >
-        <div>
-          <p class="text-lg font-semibold">
-            {{ state.accountPrincipal()?.username }}
-          </p>
-          <p class="text-xs font-medium">{{ state.accountPrincipal()?.id }}</p>
-        </div>
-        <p
-          class="text-xl font-bold"
-          [ngClass]="{
-            'text-red-400': state.accountPrincipal()?.solde! < 0,
-            'text-green-400': state.accountPrincipal()?.solde! > 0
-          }"
-        >
-          {{ state.accountPrincipal()?.solde! | euroFormat }}
-        </p>
-      </button>
-      } @else {
-      <button
-        class="bg-white flex flex-col justify-center items-center w-full rounded-2xl h-32 gap-2 shadow-lg"
-      >
-        <div>
-          <p class="text-lg font-semibold">
-            {{ state.accountGroup()?.username }}
-          </p>
-          <p class="text-xs font-medium">{{ state.accountGroup()?.id }}</p>
-        </div>
-        <p
-          class="text-xl font-bold"
-          [ngClass]="{
-            'text-red-400': state.accountGroup()?.solde! < 0,
-            'text-green-400': state.accountGroup()?.solde! > 0
-          }"
-        >
-          {{ state.accountGroup()?.solde! | euroFormat }}
-        </p>
-      </button>
-      }
-    </div>
-
-    <div class="md:flex md:flex-col mt-5 md:justify-end">
-      <hlm-dialog>
-        <button
-          (click)="fetchAllAccount()"
-          id="transfer"
-          brnDialogTrigger
-          class="rounded-full w-full px-10 flex items-center justify-center gap-2"
-          hlmBtn
-        >
-          <hlm-icon name="lucideArrowLeftRight" size="sm" />
-          Transfert d'argent
-        </button>
-        <hlm-dialog-content
-          class="sm:max-w-[425px] rounded-xl m-2 max-h-[90vh] flex flex-col overflow-hidden"
-          *brnDialogContent="let ctx"
-        >
-          <hlm-dialog-header class="flex-none">
-            <h3 hlmDialogTitle class="text-lg font-semibold">
-              Transfert d'argent
-            </h3>
-            <p hlmDialogDescription class="text-sm text-gray-500">
-              Choisissez un projet, ajoutez le montant et une communication.
-              Cliquez sur envoyer lorsque vous avez terminé.
-            </p>
-          </hlm-dialog-header>
-
-          <form
-            [formGroup]="transactionForm"
-            class="flex flex-col gap-4 mt-4 flex-1 overflow-y-auto px-1"
-            (ngSubmit)="sendTransaction(ctx)"
-          >
-            <div class="space-y-4">
-              <div class="w-full">
-                <p class="text-sm font-medium mb-1 block">
-                  Sélection des projets
+@defer {
+  @if (!state.isSpinner()) {
+    <button
+      (click)="goBack()"
+      class="w-fit mx-4 sm:mx-10 mb-5 rounded-full flex items-center gap-3"
+      hlmBtn
+    >
+      <hlm-icon size="sm" name="lucideCornerDownLeft" />
+      Retour
+    </button>
+    <div class="bg-gray-sonar p-5 mx-4 sm:mx-10 rounded-xl flex flex-col gap-5">
+      <div class="md:flex md:justify-between">
+        <div class="flex justify-start w-full md:w-1/3">
+          @if (state.accountPrincipal()) {
+            <button
+              class="bg-white flex flex-col justify-center items-center w-full rounded-2xl h-32 gap-2 shadow-lg"
+            >
+              <div>
+                <p class="text-lg font-semibold">
+                  {{ state.accountPrincipal()?.username }}
                 </p>
-                <div class="relative">
-                  <!-- Barre de recherche -->
-                  <div class="relative mb-4">
-                    <input
-                      type="text"
-                      (input)="filterAllAccounts($event)"
-                      placeholder="Rechercher un projet..."
-                      class="w-full px-4 py-2 rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                    <span
-                      class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400"
-                    >
-                      <hlm-icon name="lucideSearch" size="sm" />
-                    </span>
-                  </div>
-
-                  <!-- Conteneur des projets -->
-                  <div
-                    class="bg-white rounded-xl border border-gray-200 overflow-hidden"
-                  >
-                    <!-- Projets sélectionnés -->
-                    @if (getSelectedAccounts().length > 0) {
-                    <div class="p-3 bg-gray-50 border-b border-gray-200">
-                      <h3 class="text-sm font-semibold text-gray-700 mb-2">
-                        Projets sélectionnés
-                      </h3>
-                      <div class="flex flex-wrap gap-2">
-                        @for (account of getSelectedAccounts(); track
-                        account.id) {
-                        <div
-                          class="group flex items-center gap-2 px-3 py-1.5 rounded-full text-sm"
-                          [class.bg-blue-100]="account.type === 'PRINCIPAL'"
-                          [class.bg-green-100]="account.type === 'GROUP'"
-                        >
-                          <div class="flex flex-col">
-                            @if (account.type === 'PRINCIPAL') {
-                            <div class="flex items-center gap-1">
-                              <span class="font-medium">
-                                {{ account.firstName }} {{ account.name }}
-                              </span>
-                              <span class="text-xs text-gray-500">
-                                ({{ account.username }})
-                              </span>
-                            </div>
-                            } @else {
-                            <span class="font-medium">
-                              {{ account.username }}
-                            </span>
-                            }
-                            <span class="text-xs text-gray-500">
-                              N° {{ account.id }}
-                            </span>
-                          </div>
-                          <button
-                            type="button"
-                            (click)="removeAccount(account)"
-                            class="opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <hlm-icon
-                              name="lucideX"
-                              size="sm"
-                              [class.text-blue-700]="
-                                account.type === 'PRINCIPAL'
-                              "
-                              [class.text-green-700]="account.type === 'GROUP'"
-                            />
-                          </button>
-                        </div>
-                        }
-                      </div>
-                    </div>
-                    }
-
-                    <!-- Liste des projets disponibles -->
-                    <div class="max-h-[300px] overflow-y-auto p-2">
-                      @if (sortedPrincipalAccounts().length > 0) {
-                      <div class="mb-4">
-                        <h3
-                          class="text-sm font-semibold text-blue-700 px-2 mb-2"
-                        >
-                          Projets individuels
-                        </h3>
-                        <div class="space-y-1">
-                          @for (account of sortedPrincipalAccounts(); track
-                          account.id) {
-                          <button
-                            type="button"
-                            (click)="
-                              addAccount({
-                                id: account.id,
-                                type: 'PRINCIPAL',
-                                username: account.username
-                              })
-                            "
-                            class="w-full px-3 py-2 rounded-lg text-left hover:bg-gray-50 transition-colors flex items-center justify-between group"
-                          >
-                            <div class="flex flex-col">
-                              <div class="flex items-center gap-2">
-                                <span class="text-sm font-medium text-gray-900">
-                                  {{ account.user?.firstName }}
-                                  {{ account.user?.name }}
-                                </span>
-                              </div>
-                              <div class="flex flex-col text-xs text-gray-500">
-                                <span>{{ account.username }}</span>
-                                <span>N° PI-{{ account.id }}</span>
-                              </div>
-                            </div>
-                            <span
-                              class="text-xs text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                              Ajouter
-                            </span>
-                          </button>
-                          }
-                        </div>
-                      </div>
-                      } @if (sortedGroupAccounts()?.length) {
-                      <div>
-                        <h3
-                          class="text-sm font-semibold text-green-700 px-2 mb-2"
-                        >
-                          Projets de groupe
-                        </h3>
-                        <div class="space-y-1">
-                          @for (account of sortedGroupAccounts(); track
-                          account.id) {
-                          <button
-                            type="button"
-                            (click)="
-                              addAccount({
-                                id: account.id,
-                                type: 'GROUP',
-                                username: account.username
-                              })
-                            "
-                            class="w-full px-3 py-2 rounded-lg text-left hover:bg-gray-50 transition-colors flex items-center justify-between group"
-                          >
-                            <div class="flex flex-col">
-                              <span class="text-sm font-medium text-gray-900">
-                                {{ account.username }}
-                              </span>
-                              <span class="text-xs text-gray-500">
-                                N° PG-{{ account.id }}
-                              </span>
-                            </div>
-                            <span
-                              class="text-xs text-green-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                              Ajouter
-                            </span>
-                          </button>
-                          }
-                        </div>
-                      </div>
-                      } @if (!sortedPrincipalAccounts().length &&
-                      !sortedGroupAccounts()?.length) {
-                      <div class="text-center py-8 text-gray-500">
-                        Aucun projet trouvé
-                      </div>
-                      }
-                    </div>
-                  </div>
-                </div>
+                <p class="text-xs font-medium">
+                  {{ state.accountPrincipal()?.id }}
+                </p>
               </div>
-
-              <div class="w-full">
-                <p class="text-sm font-medium mb-1 block">Montant</p>
-                <input
-                  formControlName="amount"
-                  hlmInput
-                  placeholder="Montant"
-                  type="number"
-                  class="rounded-full w-full"
-                />
-              </div>
-
-              <div class="w-full">
-                <p class="text-sm font-medium mb-1 block">Communication</p>
-                <input
-                  formControlName="communication"
-                  hlmInput
-                  placeholder="Communication"
-                  type="text"
-                  class="rounded-full w-full"
-                />
-              </div>
-            </div>
-
-            <div class="flex justify-end gap-3 mt-4">
-              <button
-                type="button"
-                class="rounded-full px-4"
-                hlmBtn
-                variant="outline"
-                (click)="ctx.close(); state.resetForm(transactionForm)"
-                [disabled]="state.isLoadingTransfer()"
+              <p
+                class="text-xl font-bold"
+                [ngClass]="{
+                  'text-red-400': state.accountPrincipal()?.solde! < 0,
+                  'text-green-400': state.accountPrincipal()?.solde! > 0,
+                }"
               >
-                Annuler
-              </button>
-              <button
-                class="rounded-full px-4 min-w-[100px] relative"
-                hlmBtn
-                type="submit"
-                [disabled]="state.isLoadingTransfer()"
-              >
-                <span [class.opacity-0]="state.isLoadingTransfer()"
-                  >Envoyer</span
-                >
-                @if(state.isLoadingTransfer()) {
-                <div
-                  class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
-                >
-                  <hlm-spinner class="h-4 w-4" />
-                </div>
-                }
-              </button>
-            </div>
-          </form>
-        </hlm-dialog-content>
-      </hlm-dialog>
-
-      <hlm-dialog>
-        <button
-          id="paie"
-          brnDialogTrigger
-          class="rounded-full w-full mt-5 px-10 flex items-center justify-center gap-2"
-          hlmBtn
-        >
-          <hlm-icon name="lucideBanknote" size="sm" />
-          Paiement
-        </button>
-        <hlm-dialog-content
-          class="sm:max-w-[525px] rounded-xl m-2 max-h-[90vh] flex flex-col overflow-hidden"
-          *brnDialogContent="let ctx"
-        >
-          <hlm-dialog-header class="flex-none">
-            <h3 hlmDialogTitle class="text-xl font-semibold text-red-600 mb-4">
-              Paiement
-            </h3>
-            <div
-              class="text-sm space-y-2 text-gray-600 bg-gray-50 p-4 rounded-lg"
-            >
-              <p class="font-medium mb-2">
-                Si le virement effectué concerne une facture adressée à Sonar
-                Artists ASBL :
+                {{ state.accountPrincipal()?.solde! | euroFormat }}
               </p>
-              <div class="space-y-1 pl-2">
-                <p>6 rue Francisco Ferrer, 4460 Grâce-Hollogne</p>
-                <p>N° entreprise : 0700.273.583</p>
-                <p>N° TVA : BE0700.273.583</p>
+            </button>
+          } @else {
+            <button
+              class="bg-white flex flex-col justify-center items-center w-full rounded-2xl h-32 gap-2 shadow-lg"
+            >
+              <div>
+                <p class="text-lg font-semibold">
+                  {{ state.accountGroup()?.username }}
+                </p>
+                <p class="text-xs font-medium">
+                  {{ state.accountGroup()?.id }}
+                </p>
               </div>
-              <p class="text-red-500 font-medium mt-4">
-                Dans ce cas, vous pouvez indiquer le montant de la TVA. Celui-ci
-                ne sera pas débité de votre compte de projet.
+              <p
+                class="text-xl font-bold"
+                [ngClass]="{
+                  'text-red-400': state.accountGroup()?.solde! < 0,
+                  'text-green-400': state.accountGroup()?.solde! > 0,
+                }"
+              >
+                {{ state.accountGroup()?.solde! | euroFormat }}
               </p>
-            </div>
-          </hlm-dialog-header>
+            </button>
+          }
+        </div>
 
-          <div class="flex-1 overflow-y-auto px-1">
-            <form
-              [formGroup]="virementSepaForm"
-              class="flex flex-col gap-6 py-8"
-              (ngSubmit)="createVirement(ctx)"
+        <div class="md:flex md:flex-col mt-5 md:justify-end">
+          <hlm-dialog>
+            <button
+              (click)="fetchAllAccount()"
+              id="transfer"
+              brnDialogTrigger
+              class="rounded-full w-full px-10 flex items-center justify-center gap-2"
+              hlmBtn
             >
-              <div class="space-y-6">
-                <div class="grid grid-cols-1 gap-6">
+              <hlm-icon name="lucideArrowLeftRight" size="sm" />
+              Transfert d'argent
+            </button>
+            <hlm-dialog-content
+              class="sm:max-w-[425px] rounded-xl m-2 max-h-[90vh] flex flex-col overflow-hidden"
+              *brnDialogContent="let ctx"
+            >
+              <hlm-dialog-header class="flex-none">
+                <h3 hlmDialogTitle class="text-lg font-semibold">
+                  Transfert d'argent
+                </h3>
+                <p hlmDialogDescription class="text-sm text-gray-500">
+                  Choisissez un projet, ajoutez le montant et une communication.
+                  Cliquez sur envoyer lorsque vous avez terminé.
+                </p>
+              </hlm-dialog-header>
+
+              <form
+                [formGroup]="transactionForm"
+                class="flex flex-col gap-4 mt-4 flex-1 overflow-y-auto px-1"
+                (ngSubmit)="sendTransaction(ctx)"
+              >
+                <div class="space-y-4">
                   <div class="w-full">
-                    <p class="text-sm font-medium mb-2 block">
-                      Bénéficiaires enregistrés
+                    <p class="text-sm font-medium mb-1 block">
+                      Sélection des projets
                     </p>
-                    <div class="relative beneficiary-dropdown">
-                      <div
-                        class="w-full p-3 rounded-full border border-gray-200 cursor-pointer flex items-center justify-between bg-white"
-                        (click)="toggleBeneficiariesDropdown($event)"
-                        (keydown.enter)="toggleBeneficiariesDropdown($event)"
-                        tabindex="0"
-                        role="button"
-                        aria-haspopup="listbox"
-                        [attr.aria-expanded]="state.showBeneficiariesDropdown()"
-                      >
-                        <span class="text-sm text-gray-600">
-                          @if (state.selectedBeneficiary()) {
-                          {{ state.selectedBeneficiary()?.account_owner }}
-                          } @else { Sélectionner un bénéficiaire enregistré }
-                        </span>
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          class="h-4 w-4 text-gray-400 transition-transform duration-200"
-                          [class.rotate-180]="state.showBeneficiariesDropdown()"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          aria-hidden="true"
+                    <div class="relative">
+                      <!-- Barre de recherche -->
+                      <div class="relative mb-4">
+                        <input
+                          type="text"
+                          (input)="filterAllAccounts($event)"
+                          placeholder="Rechercher un projet..."
+                          class="w-full px-4 py-2 rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                        <span
+                          class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400"
                         >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M19 9l-7 7-7-7"
-                          />
-                        </svg>
+                          <hlm-icon name="lucideSearch" size="sm" />
+                        </span>
                       </div>
 
-                      @if (state.showBeneficiariesDropdown()) {
+                      <!-- Conteneur des projets -->
                       <div
-                        class="absolute z-50 w-full mt-2 bg-white rounded-lg shadow-lg border border-gray-100"
-                        role="listbox"
+                        class="bg-white rounded-xl border border-gray-200 overflow-hidden"
                       >
-                        <div class="p-2 border-b border-gray-100">
-                          <div class="relative">
+                        <!-- Projets sélectionnés -->
+                        @if (getSelectedAccounts().length > 0) {
+                          <div class="p-3 bg-gray-50 border-b border-gray-200">
+                            <h3
+                              class="text-sm font-semibold text-gray-700 mb-2"
+                            >
+                              Projets sélectionnés
+                            </h3>
+                            <div class="flex flex-wrap gap-2">
+                              @for (
+                                account of getSelectedAccounts();
+                                track account.id
+                              ) {
+                                <div
+                                  class="group flex items-center gap-2 px-3 py-1.5 rounded-full text-sm"
+                                  [class.bg-blue-100]="
+                                    account.type === 'PRINCIPAL'
+                                  "
+                                  [class.bg-green-100]="
+                                    account.type === 'GROUP'
+                                  "
+                                >
+                                  <div class="flex flex-col">
+                                    @if (account.type === "PRINCIPAL") {
+                                      <div class="flex items-center gap-1">
+                                        <span class="font-medium">
+                                          {{ account.firstName }}
+                                          {{ account.name }}
+                                        </span>
+                                        <span class="text-xs text-gray-500">
+                                          ({{ account.username }})
+                                        </span>
+                                      </div>
+                                    } @else {
+                                      <span class="font-medium">
+                                        {{ account.username }}
+                                      </span>
+                                    }
+                                    <span class="text-xs text-gray-500">
+                                      N° {{ account.id }}
+                                    </span>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    (click)="removeAccount(account)"
+                                    class="opacity-0 group-hover:opacity-100 transition-opacity"
+                                  >
+                                    <hlm-icon
+                                      name="lucideX"
+                                      size="sm"
+                                      [class.text-blue-700]="
+                                        account.type === 'PRINCIPAL'
+                                      "
+                                      [class.text-green-700]="
+                                        account.type === 'GROUP'
+                                      "
+                                    />
+                                  </button>
+                                </div>
+                              }
+                            </div>
+                          </div>
+                        }
+
+                        <!-- Liste des projets disponibles -->
+                        <div class="max-h-[300px] overflow-y-auto p-2">
+                          @if (sortedPrincipalAccounts().length > 0) {
+                            <div class="mb-4">
+                              <h3
+                                class="text-sm font-semibold text-blue-700 px-2 mb-2"
+                              >
+                                Projets individuels
+                              </h3>
+                              <div class="space-y-1">
+                                @for (
+                                  account of sortedPrincipalAccounts();
+                                  track account.id
+                                ) {
+                                  <button
+                                    type="button"
+                                    (click)="
+                                      addAccount({
+                                        id: account.id,
+                                        type: 'PRINCIPAL',
+                                        username: account.username,
+                                      })
+                                    "
+                                    class="w-full px-3 py-2 rounded-lg text-left hover:bg-gray-50 transition-colors flex items-center justify-between group"
+                                  >
+                                    <div class="flex flex-col">
+                                      <div class="flex items-center gap-2">
+                                        <span
+                                          class="text-sm font-medium text-gray-900"
+                                        >
+                                          {{ account.user?.firstName }}
+                                          {{ account.user?.name }}
+                                        </span>
+                                      </div>
+                                      <div
+                                        class="flex flex-col text-xs text-gray-500"
+                                      >
+                                        <span>{{ account.username }}</span>
+                                        <span>N° PI-{{ account.id }}</span>
+                                      </div>
+                                    </div>
+                                    <span
+                                      class="text-xs text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    >
+                                      Ajouter
+                                    </span>
+                                  </button>
+                                }
+                              </div>
+                            </div>
+                          }
+                          @if (sortedGroupAccounts()?.length) {
+                            <div>
+                              <h3
+                                class="text-sm font-semibold text-green-700 px-2 mb-2"
+                              >
+                                Projets de groupe
+                              </h3>
+                              <div class="space-y-1">
+                                @for (
+                                  account of sortedGroupAccounts();
+                                  track account.id
+                                ) {
+                                  <button
+                                    type="button"
+                                    (click)="
+                                      addAccount({
+                                        id: account.id,
+                                        type: 'GROUP',
+                                        username: account.username,
+                                      })
+                                    "
+                                    class="w-full px-3 py-2 rounded-lg text-left hover:bg-gray-50 transition-colors flex items-center justify-between group"
+                                  >
+                                    <div class="flex flex-col">
+                                      <span
+                                        class="text-sm font-medium text-gray-900"
+                                      >
+                                        {{ account.username }}
+                                      </span>
+                                      <span class="text-xs text-gray-500">
+                                        N° PG-{{ account.id }}
+                                      </span>
+                                    </div>
+                                    <span
+                                      class="text-xs text-green-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    >
+                                      Ajouter
+                                    </span>
+                                  </button>
+                                }
+                              </div>
+                            </div>
+                          }
+                          @if (
+                            !sortedPrincipalAccounts().length &&
+                            !sortedGroupAccounts()?.length
+                          ) {
+                            <div class="text-center py-8 text-gray-500">
+                              Aucun projet trouvé
+                            </div>
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="w-full">
+                    <p class="text-sm font-medium mb-1 block">Montant</p>
+                    <input
+                      formControlName="amount"
+                      hlmInput
+                      placeholder="Montant"
+                      type="number"
+                      class="rounded-full w-full"
+                    />
+                  </div>
+
+                  <div class="w-full">
+                    <p class="text-sm font-medium mb-1 block">Communication</p>
+                    <input
+                      formControlName="communication"
+                      hlmInput
+                      placeholder="Communication"
+                      type="text"
+                      class="rounded-full w-full"
+                    />
+                  </div>
+                </div>
+
+                <div class="flex justify-end gap-3 mt-4">
+                  <button
+                    type="button"
+                    class="rounded-full px-4"
+                    hlmBtn
+                    variant="outline"
+                    (click)="ctx.close(); state.resetForm(transactionForm)"
+                    [disabled]="state.isLoadingTransfer()"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    class="rounded-full px-4 min-w-[100px] relative"
+                    hlmBtn
+                    type="submit"
+                    [disabled]="state.isLoadingTransfer()"
+                  >
+                    <span [class.opacity-0]="state.isLoadingTransfer()"
+                      >Envoyer</span
+                    >
+                    @if (state.isLoadingTransfer()) {
+                      <div
+                        class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+                      >
+                        <hlm-spinner class="h-4 w-4" />
+                      </div>
+                    }
+                  </button>
+                </div>
+              </form>
+            </hlm-dialog-content>
+          </hlm-dialog>
+
+          <hlm-dialog>
+            <button
+              id="paie"
+              brnDialogTrigger
+              class="rounded-full w-full mt-5 px-10 flex items-center justify-center gap-2"
+              hlmBtn
+            >
+              <hlm-icon name="lucideBanknote" size="sm" />
+              Paiement
+            </button>
+            <hlm-dialog-content
+              class="sm:max-w-[525px] rounded-xl m-2 max-h-[90vh] flex flex-col overflow-hidden"
+              *brnDialogContent="let ctx"
+            >
+              <hlm-dialog-header class="flex-none">
+                <h3
+                  hlmDialogTitle
+                  class="text-xl font-semibold text-red-600 mb-4"
+                >
+                  Paiement
+                </h3>
+                <div
+                  class="text-sm space-y-2 text-gray-600 bg-gray-50 p-4 rounded-lg"
+                >
+                  <p class="font-medium mb-2">
+                    Si le virement effectué concerne une facture adressée à
+                    Sonar Artists ASBL :
+                  </p>
+                  <div class="space-y-1 pl-2">
+                    <p>6 rue Francisco Ferrer, 4460 Grâce-Hollogne</p>
+                    <p>N° entreprise : 0700.273.583</p>
+                    <p>N° TVA : BE0700.273.583</p>
+                  </div>
+                  <p class="text-red-500 font-medium mt-4">
+                    Dans ce cas, vous pouvez indiquer le montant de la TVA.
+                    Celui-ci ne sera pas débité de votre compte de projet.
+                  </p>
+                </div>
+              </hlm-dialog-header>
+
+              <div class="flex-1 overflow-y-auto px-1">
+                <form
+                  [formGroup]="virementSepaForm"
+                  class="flex flex-col gap-6 py-8"
+                  (ngSubmit)="createVirement(ctx)"
+                >
+                  <div class="space-y-6">
+                    <div class="grid grid-cols-1 gap-6">
+                      <div class="w-full">
+                        <p class="text-sm font-medium mb-2 block">
+                          Bénéficiaires enregistrés
+                        </p>
+                        <div class="relative beneficiary-dropdown">
+                          <div
+                            class="w-full p-3 rounded-full border border-gray-200 cursor-pointer flex items-center justify-between bg-white"
+                            (click)="toggleBeneficiariesDropdown($event)"
+                            (keydown.enter)="
+                              toggleBeneficiariesDropdown($event)
+                            "
+                            tabindex="0"
+                            role="button"
+                            aria-haspopup="listbox"
+                            [attr.aria-expanded]="
+                              state.showBeneficiariesDropdown()
+                            "
+                          >
+                            <span class="text-sm text-gray-600">
+                              @if (state.selectedBeneficiary()) {
+                                {{ state.selectedBeneficiary()?.account_owner }}
+                              } @else {
+                                Sélectionner un bénéficiaire enregistré
+                              }
+                            </span>
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
-                              class="h-4 w-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2"
+                              class="h-4 w-4 text-gray-400 transition-transform duration-200"
+                              [class.rotate-180]="
+                                state.showBeneficiariesDropdown()
+                              "
                               fill="none"
                               viewBox="0 0 24 24"
                               stroke="currentColor"
@@ -412,1578 +429,1878 @@
                                 stroke-linecap="round"
                                 stroke-linejoin="round"
                                 stroke-width="2"
-                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                                d="M19 9l-7 7-7-7"
                               />
                             </svg>
-                            <input
-                              type="text"
-                              placeholder="Rechercher un bénéficiaire"
-                              (input)="filterBeneficiaries($event)"
-                              class="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                              aria-label="Rechercher un bénéficiaire"
-                              (click)="$event.stopPropagation()"
-                            />
                           </div>
-                        </div>
 
-                        <div class="max-h-[200px] overflow-y-auto p-1">
-                          @if (state.visibleBeneficiaries().length > 0) { @for
-                          (beneficiary of state.visibleBeneficiaries(); track
-                          beneficiary.id) {
-                          <div
-                            class="p-2 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors"
-                            (click)="selectBeneficiary(beneficiary)"
-                            (keydown.enter)="selectBeneficiary(beneficiary)"
-                            tabindex="0"
-                            role="option"
-                            [attr.aria-selected]="
-                              state.selectedBeneficiary()?.id === beneficiary.id
-                            "
-                          >
-                            <div class="flex flex-col">
-                              <span class="font-medium text-gray-900">{{
-                                beneficiary.account_owner
-                              }}</span>
-                              <span class="text-sm text-gray-500">{{
-                                beneficiary.iban
-                              }}</span>
-                            </div>
-                          </div>
-                          }
-
-                          <!-- Afficher le bouton seulement s'il reste des pages à charger et qu'il n'y a pas de recherche active -->
-                          @if (state.beneficiaries().length !==
-                          state.beneficiariesTotalItems() &&
-                          !state.isSearchActive()) {
-                          <div class="px-2 py-1 mt-1">
-                            <button
-                              type="button"
-                              (click)="
-                                loadMoreBeneficiaries(true);
-                                $event.stopPropagation()
-                              "
-                              class="w-full py-2 px-3 text-sm text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors flex items-center justify-center"
+                          @if (state.showBeneficiariesDropdown()) {
+                            <div
+                              class="absolute z-50 w-full mt-2 bg-white rounded-lg shadow-lg border border-gray-100"
+                              role="listbox"
                             >
-                              Charger plus de résultats ({{
-                                state.beneficiaries().length
-                              }}/{{ state.beneficiariesTotalItems() }})
-                            </button>
-                          </div>
-                          } } @else {
-                          <div class="p-4 text-sm text-gray-500 text-center">
-                            Aucun bénéficiaire trouvé
-                          </div>
+                              <div class="p-2 border-b border-gray-100">
+                                <div class="relative">
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    class="h-4 w-4 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                    aria-hidden="true"
+                                  >
+                                    <path
+                                      stroke-linecap="round"
+                                      stroke-linejoin="round"
+                                      stroke-width="2"
+                                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                                    />
+                                  </svg>
+                                  <input
+                                    type="text"
+                                    placeholder="Rechercher un bénéficiaire"
+                                    (input)="filterBeneficiaries($event)"
+                                    class="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    aria-label="Rechercher un bénéficiaire"
+                                    (click)="$event.stopPropagation()"
+                                  />
+                                </div>
+                              </div>
+
+                              <div class="max-h-[200px] overflow-y-auto p-1">
+                                @if (state.visibleBeneficiaries().length > 0) {
+                                  @for (
+                                    beneficiary of state.visibleBeneficiaries();
+                                    track beneficiary.id
+                                  ) {
+                                    <div
+                                      class="p-2 hover:bg-gray-50 rounded-lg cursor-pointer transition-colors"
+                                      (click)="selectBeneficiary(beneficiary)"
+                                      (keydown.enter)="
+                                        selectBeneficiary(beneficiary)
+                                      "
+                                      tabindex="0"
+                                      role="option"
+                                      [attr.aria-selected]="
+                                        state.selectedBeneficiary()?.id ===
+                                        beneficiary.id
+                                      "
+                                    >
+                                      <div class="flex flex-col">
+                                        <span
+                                          class="font-medium text-gray-900"
+                                          >{{ beneficiary.account_owner }}</span
+                                        >
+                                        <span class="text-sm text-gray-500">{{
+                                          beneficiary.iban
+                                        }}</span>
+                                      </div>
+                                    </div>
+                                  }
+
+                                  <!-- Afficher le bouton seulement s'il reste des pages à charger et qu'il n'y a pas de recherche active -->
+                                  @if (
+                                    state.beneficiaries().length !==
+                                      state.beneficiariesTotalItems() &&
+                                    !state.isSearchActive()
+                                  ) {
+                                    <div class="px-2 py-1 mt-1">
+                                      <button
+                                        type="button"
+                                        (click)="
+                                          loadMoreBeneficiaries(true);
+                                          $event.stopPropagation()
+                                        "
+                                        class="w-full py-2 px-3 text-sm text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors flex items-center justify-center"
+                                      >
+                                        Charger plus de résultats ({{
+                                          state.beneficiaries().length
+                                        }}/{{
+                                          state.beneficiariesTotalItems()
+                                        }})
+                                      </button>
+                                    </div>
+                                  }
+                                } @else {
+                                  <div
+                                    class="p-4 text-sm text-gray-500 text-center"
+                                  >
+                                    Aucun bénéficiaire trouvé
+                                  </div>
+                                }
+                              </div>
+                            </div>
                           }
                         </div>
                       </div>
-                      }
                     </div>
-                  </div>
-                </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div class="w-full">
-                    <p class="text-sm font-medium mb-2 block">
-                      Titulaire du compte
-                    </p>
-                    <input
-                      formControlName="account_owner"
-                      class="w-full px-4 py-2 text-sm border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Titulaire du compte"
-                      type="text"
-                    />
-                  </div>
-
-                  <div class="w-full">
-                    <p class="text-sm font-medium mb-2 block">IBAN</p>
-                    <input
-                      formControlName="iban"
-                      class="w-full px-4 py-2 text-sm border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="IBAN"
-                      type="text"
-                    />
-                  </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div class="w-full">
-                    <p class="text-sm font-medium mb-2 block">Montant Total</p>
-                    <input
-                      formControlName="amount_htva"
-                      class="rounded-full w-full focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
-                      (input)="setAmountHtva($event)"
-                      hlmInput
-                      placeholder="Montant total"
-                      type="number"
-                    />
-                  </div>
-
-                  <div class="w-full">
-                    <p class="text-sm font-medium mb-2 block">Montant TVA</p>
-                    <input
-                      formControlName="amount_tva"
-                      class="rounded-full w-full focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
-                      (input)="setAmountTva($event)"
-                      hlmInput
-                      placeholder="Montant TVA"
-                      type="number"
-                    />
-                  </div>
-                </div>
-
-                <div class="w-full">
-                  <p class="text-sm font-medium mb-2 block">
-                    Montant débité du projet
-                  </p>
-                  <input
-                    class="rounded-full w-full font-bold focus:outline-none bg-gray-50 focus-visible:ring-0 focus-visible:ring-offset-0"
-                    [value]="amount_debited().toFixed(2)"
-                    hlmInput
-                    disabled
-                    placeholder="0€"
-                    type="number"
-                  />
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div class="w-full">
-                    <p class="text-sm font-medium mb-2 block">Communication</p>
-                    <input
-                      formControlName="communication"
-                      class="rounded-full w-full focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
-                      hlmInput
-                      placeholder="Communication"
-                      type="text"
-                    />
-                  </div>
-
-                  <div class="w-full">
-                    <p class="text-sm font-medium mb-2 block">
-                      Communication structurée
-                    </p>
-                    <input
-                      formControlName="structured_communication"
-                      class="rounded-full w-full focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
-                      hlmInput
-                      placeholder="Communication structurée"
-                      type="text"
-                    />
-                  </div>
-                </div>
-
-                <div class="w-full">
-                  <p class="text-sm font-medium mb-2 block">Facture</p>
-                  <div class="flex flex-col gap-2">
-                    <div
-                      class="relative"
-                      (dragover)="$event.preventDefault()"
-                      (dragleave)="$event.preventDefault()"
-                      (drop)="onFileDrop($event)"
-                    >
-                      <input
-                        #fileInput
-                        hlmInput
-                        type="file"
-                        (change)="onFileSelected($event)"
-                        accept=".pdf"
-                        class="opacity-0 absolute inset-0 w-full h-full cursor-pointer z-10"
-                      />
-                      <div
-                        class="border-2 border-dashed border-gray-300 hover:border-gray-400 rounded-full p-4 text-center"
-                        [class.border-red-500]="!selectedFile"
-                      >
-                        @if(selectedFile) {
-                        <p class="text-sm text-gray-700">
-                          {{ selectedFile.name }}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div class="w-full">
+                        <p class="text-sm font-medium mb-2 block">
+                          Titulaire du compte
                         </p>
-                        } @else {
-                        <p class="text-sm text-gray-500">
-                          Glissez-déposez un fichier PDF ou cliquez pour
-                          sélectionner
-                        </p>
+                        <input
+                          formControlName="account_owner"
+                          class="w-full px-4 py-2 text-sm border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="Titulaire du compte"
+                          type="text"
+                        />
+                      </div>
+
+                      <div class="w-full">
+                        <p class="text-sm font-medium mb-2 block">IBAN</p>
+                        <input
+                          formControlName="iban"
+                          class="w-full px-4 py-2 text-sm border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          [class.border-red-500]="
+                            virementSepaForm.get('iban')?.invalid &&
+                            virementSepaForm.get('iban')?.touched
+                          "
+                          [class.border-gray-200]="
+                            !virementSepaForm.get('iban')?.invalid ||
+                            !virementSepaForm.get('iban')?.touched
+                          "
+                          placeholder="IBAN (ex: BE68 5390 0754 7034)"
+                          type="text"
+                          (input)="onIbanInput($event)"
+                          maxlength="34"
+                        />
+                        @if (
+                          virementSepaForm.get("iban")?.invalid &&
+                          virementSepaForm.get("iban")?.touched
+                        ) {
+                          <div class="mt-1 text-xs text-red-600">
+                            @if (
+                              virementSepaForm.get("iban")?.errors?.["required"]
+                            ) {
+                              L'IBAN est requis
+                            }
+                            @if (
+                              virementSepaForm.get("iban")?.errors?.["iban"]
+                            ) {
+                              {{
+                                virementSepaForm.get("iban")?.errors?.["iban"]
+                                  ?.message
+                              }}
+                            }
+                          </div>
                         }
                       </div>
                     </div>
 
-                    <div class="flex items-center gap-2">
-                      <button
-                        type="button"
-                        class="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
-                        (click)="openConvertToPdfDialog()"
-                      >
-                        <hlm-icon name="lucideFileUp" size="sm" />
-                        Convertir un fichier en PDF
-                      </button>
-                      <p class="text-xs text-gray-500">
-                        (Word, Excel, Images...)
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div class="w-full">
+                        <p class="text-sm font-medium mb-2 block">
+                          Montant Total
+                        </p>
+                        <input
+                          formControlName="amount_htva"
+                          class="rounded-full w-full focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                          (input)="setAmountHtva($event)"
+                          hlmInput
+                          placeholder="Montant total"
+                          type="number"
+                        />
+                      </div>
+
+                      <div class="w-full">
+                        <p class="text-sm font-medium mb-2 block">
+                          Montant TVA
+                        </p>
+                        <input
+                          formControlName="amount_tva"
+                          class="rounded-full w-full focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                          (input)="setAmountTva($event)"
+                          hlmInput
+                          placeholder="Montant TVA"
+                          type="number"
+                        />
+                      </div>
+                    </div>
+
+                    <div class="w-full">
+                      <p class="text-sm font-medium mb-2 block">
+                        Montant débité du projet
                       </p>
+                      <input
+                        class="rounded-full w-full font-bold focus:outline-none bg-gray-50 focus-visible:ring-0 focus-visible:ring-offset-0"
+                        [value]="amount_debited().toFixed(2)"
+                        hlmInput
+                        disabled
+                        placeholder="0€"
+                        type="number"
+                      />
                     </div>
 
-                    <p class="text-sm text-red-500">
-                      Uniquement les fichiers PDF sont acceptés.
-                    </p>
-                  </div>
-                </div>
-              </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div class="w-full">
+                        <p class="text-sm font-medium mb-2 block">
+                          Communication
+                        </p>
+                        <input
+                          formControlName="communication"
+                          class="rounded-full w-full focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                          hlmInput
+                          placeholder="Communication"
+                          type="text"
+                        />
+                      </div>
 
-              <div
-                class="flex justify-end gap-3 mt-6 sticky bottom-0 bg-white py-4"
-              >
-                @if(state.errorMessage() !== '') {
-                <p class="mt-4 text-sm text-red-600 text-center">
-                  {{ state.errorMessage() }}
-                </p>
-                }
-                <button
-                  type="button"
-                  class="rounded-full px-6 self-center"
-                  hlmBtn
-                  variant="outline"
-                  (click)="ctx.close(); state.resetForm(virementSepaForm)"
-                  [disabled]="state.isLoadingVirement()"
-                >
-                  Annuler
-                </button>
-                <button
-                  class="rounded-full px-6 min-w-[120px] relative"
-                  hlmBtn
-                  type="submit"
-                  [disabled]="state.isLoadingVirement() || !selectedFile"
-                >
-                  <span [class.opacity-0]="state.isLoadingVirement()"
-                    >Envoyer</span
-                  >
-                  @if(state.isLoadingVirement()) {
+                      <div class="w-full">
+                        <p class="text-sm font-medium mb-2 block">
+                          Communication structurée
+                        </p>
+                        <input
+                          formControlName="structured_communication"
+                          class="rounded-full w-full focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                          [class.border-red-500]="
+                            virementSepaForm.get('structured_communication')
+                              ?.invalid &&
+                            virementSepaForm.get('structured_communication')
+                              ?.touched
+                          "
+                          hlmInput
+                          placeholder="+++123/4567/89012+++ ou 123/4567/89012"
+                          type="text"
+                        />
+                        @if (
+                          virementSepaForm.get("structured_communication")
+                            ?.invalid &&
+                          virementSepaForm.get("structured_communication")
+                            ?.touched
+                        ) {
+                          <div class="mt-1 text-xs text-red-600">
+                            @if (
+                              virementSepaForm.get("structured_communication")
+                                ?.errors?.["belgianStructuredCommunication"]
+                            ) {
+                              {{
+                                virementSepaForm.get("structured_communication")
+                                  ?.errors?.["belgianStructuredCommunication"]
+                                  ?.message
+                              }}
+                            }
+                          </div>
+                        }
+                      </div>
+                    </div>
+
+                    <div class="w-full">
+                      <p class="text-sm font-medium mb-2 block">Facture</p>
+                      <div class="flex flex-col gap-2">
+                        <div
+                          class="relative"
+                          (dragover)="$event.preventDefault()"
+                          (dragleave)="$event.preventDefault()"
+                          (drop)="onFileDrop($event)"
+                        >
+                          <input
+                            #fileInput
+                            hlmInput
+                            type="file"
+                            (change)="onFileSelected($event)"
+                            accept=".pdf"
+                            class="opacity-0 absolute inset-0 w-full h-full cursor-pointer z-10"
+                          />
+                          <div
+                            class="border-2 border-dashed border-gray-300 hover:border-gray-400 rounded-full p-4 text-center"
+                            [class.border-red-500]="!selectedFile"
+                          >
+                            @if (selectedFile) {
+                              <p class="text-sm text-gray-700">
+                                {{ selectedFile.name }}
+                              </p>
+                            } @else {
+                              <p class="text-sm text-gray-500">
+                                Glissez-déposez un fichier PDF ou cliquez pour
+                                sélectionner
+                              </p>
+                            }
+                          </div>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                          <button
+                            type="button"
+                            class="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                            (click)="openConvertToPdfDialog()"
+                          >
+                            <hlm-icon name="lucideFileUp" size="sm" />
+                            Convertir un fichier en PDF
+                          </button>
+                          <p class="text-xs text-gray-500">
+                            (Word, Excel, Images...)
+                          </p>
+                        </div>
+
+                        <p class="text-sm text-red-500">
+                          Uniquement les fichiers PDF sont acceptés.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
                   <div
-                    class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+                    class="flex justify-end gap-3 mt-6 sticky bottom-0 bg-white py-4"
                   >
-                    <hlm-spinner class="h-4 w-4" />
-                  </div>
-                  }
-                </button>
-              </div>
-            </form>
-          </div>
-        </hlm-dialog-content>
-      </hlm-dialog>
-    </div>
-  </div>
-
-
-
-  <div class="flex flex-col gap-5">
-    <hlm-table class="overflow-x-auto p-4 bg-white rounded-xl shadow-lg">
-      <p class="text-lg font-semibold px-4 mb-2">Virement entrant </p>
-      <div class="overflow-auto touch-none w-full">
-        <hlm-trow class="hidden lg:flex lg:justify-between">
-          <hlm-th class="lg:w-[11%] text-sm font-semibold">Date</hlm-th>
-          <hlm-th class="lg:w-[11%] text-sm font-semibold">Titulaire</hlm-th>
-          <hlm-th class="lg:w-[13%] text-sm font-semibold">IBAN</hlm-th>
-          <hlm-th class="lg:w-[13%] text-sm font-semibold"
-          >Communication</hlm-th
-          >
-          <hlm-th class="lg:w-[13%] text-sm font-semibold"
-          >Comm. structurée</hlm-th
-          >
-          <hlm-th class="lg:w-[11%] text-sm font-semibold"
-          >Montant ajouté</hlm-th
-          >
-
-          <hlm-th class="lg:w-[9%] text-sm font-semibold">Statut</hlm-th>
-        </hlm-trow>
-
-        @if(state.accountPrincipal()) { @for(virement of
-          state.accountPrincipal()?.virementSepa; track virement.id) {
-          @if (virement.transaction_type == "INCOMING") {
-            <hlm-trow
-              class="flex flex-col lg:flex-row lg:justify-between border-b lg:border-none p-2 lg:p-0"
-            >
-              <div class="flex flex-col gap-2 lg:hidden">
-                <div class="flex justify-between items-center">
-                  <span class="text-sm font-semibold">Date:</span>
-                  <span class="text-sm">{{
-                      virement.created_at | date : "dd/MM/yyyy"
-                    }}</span>
-                </div>
-                <div class="flex justify-between items-center">
-                  <span class="text-sm font-semibold">Titulaire:</span>
-                  <span class="text-sm">{{ virement.account_owner }}</span>
-                </div>
-                <div class="flex justify-between items-center">
-                  <span class="text-sm font-semibold">IBAN:</span>
-                  <span class="text-sm">{{ virement.iban }}</span>
-                </div>
-                <div class="flex justify-between items-center">
-                  <span class="text-sm font-semibold">Communication:</span>
-                  <brn-popover>
+                    @if (state.errorMessage() !== "") {
+                      <p class="mt-4 text-sm text-red-600 text-center">
+                        {{ state.errorMessage() }}
+                      </p>
+                    }
                     <button
-                      brnPopoverTrigger
-                      class="text-sm truncate max-w-[150px] cursor-pointer hover:text-gray-600 text-left"
+                      type="button"
+                      class="rounded-full px-6 self-center"
+                      hlmBtn
+                      variant="outline"
+                      (click)="ctx.close(); state.resetForm(virementSepaForm)"
+                      [disabled]="state.isLoadingVirement()"
                     >
-                      {{ virement.communication }}
+                      Annuler
                     </button>
-                    <div
-                      class="p-2 text-sm max-w-[200px] bg-white rounded shadow-lg"
-                      hlmPopoverContent
-                      *brnPopoverContent="let ctx"
-                    >
-                      {{ virement.communication }}
-                    </div>
-                  </brn-popover>
-                </div>
-                <div class="flex justify-between items-center">
-                  <span class="text-sm font-semibold">Comm. structurée:</span>
-                  <span class="text-sm">{{
-                      virement.structured_communication
-                    }}</span>
-                </div>
-                <div class="flex justify-between items-center">
-                  <span class="text-sm font-semibold">Montant ajouté:</span>
-                  <span class="text-sm">{{
-                      virement.amount_htva | euroFormat
-                    }}</span>
-                </div>
-                <div class="flex justify-between items-center">
-                  <span class="text-sm font-semibold">Statut:</span>
-                  <span
-                    class="text-sm px-2 py-1 rounded-full cursor-pointer"
-                    [ngClass]="{
-                  'bg-green-100 text-green-800':
-                    virement.status === 'ACCEPTED' ||
-                    virement.status === 'PAID',
-                  'bg-yellow-100 text-yellow-800':
-                    virement.status === 'PENDING',
-                  'bg-red-100 text-red-800': virement.status === 'REJECTED'
-                }"
-                  >
-                @if (virement.status === 'REJECTED') {
-                  <brn-popover>
-                  <button brnPopoverTrigger class="flex items-center gap-1">
-                    Rejeté
-                    <hlm-icon name="lucideBell" size="sm" />
-                  </button>
-                  <div
-                    hlmPopoverContent
-                    class="p-2 text-sm bg-white rounded shadow-lg"
-                    *brnPopoverContent="let ctx"
-                  >
-                    {{
-                      virement.rejected_reason === null
-                        ? "Aucun motif de rejet"
-                        : virement.rejected_reason
-                    }}
-                  </div>
-                </brn-popover>
-                } @else {
-                  {{
-                    virement.status === "ACCEPTED"
-                      ? "Accepté"
-                      : virement.status === "PAID"
-                        ? "Payé"
-                        : "En attente"
-                  }}
-                }
-              </span>
-                </div>
-              </div>
-
-              <div class="hidden lg:flex lg:justify-between w-full">
-                <hlm-td class="lg:w-[11%] text-sm">{{
-                    virement.created_at | date : "dd/MM/yyyy"
-                  }}</hlm-td>
-                <hlm-td class="lg:w-[11%] text-sm">{{
-                    virement.account_owner
-                  }}</hlm-td>
-                <hlm-td class="lg:w-[13%] text-sm">{{ virement.iban }}</hlm-td>
-                <hlm-td class="lg:w-[13%] text-sm">
-                  <brn-popover>
                     <button
-                      brnPopoverTrigger
-                      class="truncate block max-w-[150px] cursor-pointer hover:text-gray-600 text-left"
+                      class="rounded-full px-6 min-w-[120px] relative"
+                      hlmBtn
+                      type="submit"
+                      [disabled]="state.isLoadingVirement() || !selectedFile"
                     >
-                      {{ virement.communication }}
+                      <span [class.opacity-0]="state.isLoadingVirement()"
+                        >Envoyer</span
+                      >
+                      @if (state.isLoadingVirement()) {
+                        <div
+                          class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+                        >
+                          <hlm-spinner class="h-4 w-4" />
+                        </div>
+                      }
                     </button>
-                    <div
-                      class="p-2 text-[10px] max-w-[200px] bg-white rounded shadow-lg"
-                      hlmPopoverContent
-                      *brnPopoverContent="let ctx"
-                    >
-                      {{ virement.communication }}
-                    </div>
-                  </brn-popover>
-                </hlm-td>
-                <hlm-td class="lg:w-[13%] text-sm">{{
-                    virement.structured_communication
-                  }}</hlm-td>
-                <hlm-td class="lg:w-[11%] text-sm">{{
-                    virement.amount_htva | euroFormat
-                  }}</hlm-td>
-
-                <hlm-td class="lg:w-[9%] text-sm">
-              <span
-                class="px-2 py-1 rounded-full cursor-pointer"
-                [ngClass]="{
-                  'bg-green-100 text-green-800':
-                    virement.status === 'ACCEPTED' ||
-                    virement.status === 'PAID',
-                  'bg-yellow-100 text-yellow-800':
-                    virement.status === 'PENDING',
-                  'bg-red-100 text-red-800': virement.status === 'REJECTED'
-                }"
-              >
-                @if (virement.status === 'REJECTED') {
-                  <brn-popover>
-                  <button brnPopoverTrigger class="flex items-center gap-1">
-                    Rejeté
-                    <hlm-icon name="lucideBell" size="sm" />
-                  </button>
-                  <div
-                    hlmPopoverContent
-                    class="p-2 text-sm bg-white rounded shadow-lg"
-                    *brnPopoverContent="let ctx"
-                  >
-                    {{ virement.rejected_reason }}
                   </div>
-                </brn-popover>
-                } @else {
-                  {{
-                    virement.status === "ACCEPTED"
-                      ? "Accepté"
-                      : virement.status === "PAID"
-                        ? "Payé"
-                        : "En attente"
-                  }}
-                }
-              </span>
-                </hlm-td>
+                </form>
               </div>
-            </hlm-trow>
-          } }} @else if (state.accountGroup()) { @for(virement of
-          state.accountGroup()?.virementSepa; track virement.id) {
-          @if (virement.transaction_type == "INCOMING") {
-            <hlm-trow
-              class="flex flex-col lg:flex-row lg:justify-between border-b lg:border-none p-2 lg:p-0"
-            >
-              <div class="flex flex-col gap-2 lg:hidden">
-                <div class="flex justify-between items-center">
-                  <span class="text-sm font-semibold">Date:</span>
-                  <span class="text-sm">{{
-                      virement.created_at | date : "dd/MM/yyyy"
-                    }}</span>
-                </div>
-                <div class="flex justify-between items-center">
-                  <span class="text-sm font-semibold">Titulaire:</span>
-                  <span class="text-sm">{{ virement.account_owner }}</span>
-                </div>
-                <div class="flex justify-between items-center">
-                  <span class="text-sm font-semibold">IBAN:</span>
-                  <span class="text-sm">{{ virement.iban }}</span>
-                </div>
-                <div class="flex justify-between items-center">
-                  <span class="text-sm font-semibold">Communication:</span>
-                  <brn-popover>
-                    <button
-                      brnPopoverTrigger
-                      class="text-sm truncate max-w-[150px] cursor-pointer hover:text-gray-600 text-left"
-                    >
-                      {{ virement.communication }}
-                    </button>
-                    <div
-                      class="p-2 text-sm max-w-[200px] bg-white rounded shadow-lg"
-                      hlmPopoverContent
-                      *brnPopoverContent="let ctx"
-                    >
-                      {{ virement.communication }}
-                    </div>
-                  </brn-popover>
-                </div>
-                <div class="flex justify-between items-center">
-                  <span class="text-sm font-semibold">Comm. structurée:</span>
-                  <span class="text-sm">{{
-                      virement.structured_communication
-                    }}</span>
-                </div>
-                <div class="flex justify-between items-center">
-                  <span class="text-sm font-semibold">Montant débité:</span>
-                  <span class="text-sm">{{
-                      virement.amount_htva | euroFormat
-                    }}</span>
-                </div>
-                <div class="flex justify-between items-center">
-                  <span class="text-sm font-semibold">Statut:</span>
-                  <span
-                    class="text-sm px-2 py-1 rounded-full cursor-pointer"
-                    [ngClass]="{
-                  'bg-green-100 text-green-800':
-                    virement.status === 'ACCEPTED' ||
-                    virement.status === 'PAID',
-                  'bg-yellow-100 text-yellow-800':
-                    virement.status === 'PENDING',
-                  'bg-red-100 text-red-800': virement.status === 'REJECTED'
-                }"
-                  >
-                @if (virement.status === 'REJECTED') {
-                  <brn-popover>
-                  <button brnPopoverTrigger class="flex items-center gap-1">
-                    Rejeté
-                    <hlm-icon name="lucideBell" size="sm" />
-                  </button>
-                  <div
-                    hlmPopoverContent
-                    class="p-2 text-sm bg-white rounded shadow-lg"
-                    *brnPopoverContent="let ctx"
-                  >
-                    {{ virement.rejected_reason }}
-                  </div>
-                </brn-popover>
-                } @else {
-                  {{
-                    virement.status === "ACCEPTED"
-                      ? "Accepté"
-                      : virement.status === "PAID"
-                        ? "Payé"
-                        : "En attente"
-                  }}
-                }
-              </span>
-                </div>
-              </div>
-
-              <div class="hidden lg:flex lg:justify-between w-full">
-                <hlm-td class="lg:w-[11%] text-sm">{{
-                    virement.created_at | date : "dd/MM/yyyy"
-                  }}</hlm-td>
-                <hlm-td class="lg:w-[11%] text-sm">{{
-                    virement.account_owner
-                  }}</hlm-td>
-                <hlm-td class="lg:w-[13%] text-sm">{{ virement.iban }}</hlm-td>
-                <hlm-td class="lg:w-[13%] text-sm">
-                  <brn-popover>
-                    <button
-                      brnPopoverTrigger
-                      class="truncate block max-w-[150px] cursor-pointer hover:text-gray-600 text-left"
-                    >
-                      {{ virement.communication }}
-                    </button>
-                    <div
-                      class="p-2 text-[10px] max-w-[200px] bg-white rounded shadow-lg"
-                      hlmPopoverContent
-                      *brnPopoverContent="let ctx"
-                    >
-                      {{ virement.communication }}
-                    </div>
-                  </brn-popover>
-                </hlm-td>
-                <hlm-td class="lg:w-[13%] text-sm">{{
-                    virement.structured_communication
-                  }}</hlm-td>
-                <hlm-td class="lg:w-[11%] text-sm">{{
-                    virement.amount_htva | euroFormat
-                  }}</hlm-td>
-                <hlm-td class="lg:w-[9%] text-sm">
-              <span
-                class="px-2 py-1 rounded-full cursor-pointer"
-                [ngClass]="{
-                  'bg-green-100 text-green-800':
-                    virement.status === 'ACCEPTED' ||
-                    virement.status === 'PAID',
-                  'bg-yellow-100 text-yellow-800':
-                    virement.status === 'PENDING',
-                  'bg-red-100 text-red-800': virement.status === 'REJECTED'
-                }"
-              >
-                @if (virement.status === 'REJECTED') {
-                  <brn-popover>
-                  <button brnPopoverTrigger class="flex items-center gap-1">
-                    Rejeté
-                    <hlm-icon name="lucideBell" size="sm" />
-                  </button>
-                  <div
-                    hlmPopoverContent
-                    class="p-2 text-sm bg-white rounded shadow-lg"
-                    *brnPopoverContent="let ctx"
-                  >
-                    {{ virement.rejected_reason }}
-                  </div>
-                </brn-popover>
-                } @else {
-                  {{
-                    virement.status === "ACCEPTED"
-                      ? "Accepté"
-                      : virement.status === "PAID"
-                        ? "Payé"
-                        : "En attente"
-                  }}
-                }
-              </span>
-                </hlm-td>
-              </div>
-            </hlm-trow>
-          } }}
+            </hlm-dialog-content>
+          </hlm-dialog>
+        </div>
       </div>
-    </hlm-table>
 
-    @if (state.accountPrincipal()?.virementSepa?.length ||
-    state.accountGroup()?.virementSepa?.length) {
-      <nav hlmPagination class="mt-4 flex justify-center">
-        <ul
-          hlmPaginationContent
-          class="flex flex-wrap gap-1 justify-center items-center"
-        >
-          <li hlmPaginationItem class="md:mx-1">
-            <button
-              class="px-3 py-1.5 text-sm font-medium transition-colors hover:bg-gray-100 rounded-md"
-              [class.opacity-50]="pagination.virement.currentPage() === 1"
-              [disabled]="pagination.virement.currentPage() === 1"
-              (click)="
-              pagination.virement.currentPage() > 1 &&
-                onPageChangeVirement(pagination.virement.currentPage() - 1)
-            "
+      <div class="flex flex-col gap-5">
+        <hlm-table class="overflow-x-auto p-4 bg-white rounded-xl shadow-lg">
+          <p class="text-lg font-semibold px-4 mb-2">Virement entrant</p>
+          <div class="overflow-auto touch-none w-full">
+            <hlm-trow class="hidden lg:flex lg:justify-between">
+              <hlm-th class="lg:w-[11%] text-sm font-semibold">Date</hlm-th>
+              <hlm-th class="lg:w-[11%] text-sm font-semibold"
+                >Titulaire</hlm-th
+              >
+              <hlm-th class="lg:w-[13%] text-sm font-semibold">IBAN</hlm-th>
+              <hlm-th class="lg:w-[13%] text-sm font-semibold"
+                >Communication</hlm-th
+              >
+              <hlm-th class="lg:w-[13%] text-sm font-semibold"
+                >Comm. structurée</hlm-th
+              >
+              <hlm-th class="lg:w-[11%] text-sm font-semibold"
+                >Montant ajouté</hlm-th
+              >
+
+              <hlm-th class="lg:w-[9%] text-sm font-semibold">Statut</hlm-th>
+            </hlm-trow>
+
+            @if (state.accountPrincipal()) {
+              @for (
+                virement of state.accountPrincipal()?.virementSepa;
+                track virement.id
+              ) {
+                @if (virement.transaction_type == "INCOMING") {
+                  <hlm-trow
+                    class="flex flex-col lg:flex-row lg:justify-between border-b lg:border-none p-2 lg:p-0"
+                  >
+                    <div class="flex flex-col gap-2 lg:hidden">
+                      <div class="flex justify-between items-center">
+                        <span class="text-sm font-semibold">Date:</span>
+                        <span class="text-sm">{{
+                          virement.created_at | date: "dd/MM/yyyy"
+                        }}</span>
+                      </div>
+                      <div class="flex justify-between items-center">
+                        <span class="text-sm font-semibold">Titulaire:</span>
+                        <span class="text-sm">{{
+                          virement.account_owner
+                        }}</span>
+                      </div>
+                      <div class="flex justify-between items-center">
+                        <span class="text-sm font-semibold">IBAN:</span>
+                        <span class="text-sm">{{ virement.iban }}</span>
+                      </div>
+                      <div class="flex justify-between items-center">
+                        <span class="text-sm font-semibold"
+                          >Communication:</span
+                        >
+                        <brn-popover>
+                          <button
+                            brnPopoverTrigger
+                            class="text-sm truncate max-w-[150px] cursor-pointer hover:text-gray-600 text-left"
+                          >
+                            {{ virement.communication }}
+                          </button>
+                          <div
+                            class="p-2 text-sm max-w-[200px] bg-white rounded shadow-lg"
+                            hlmPopoverContent
+                            *brnPopoverContent="let ctx"
+                          >
+                            {{ virement.communication }}
+                          </div>
+                        </brn-popover>
+                      </div>
+                      <div class="flex justify-between items-center">
+                        <span class="text-sm font-semibold"
+                          >Comm. structurée:</span
+                        >
+                        <span class="text-sm">{{
+                          virement.structured_communication
+                        }}</span>
+                      </div>
+                      <div class="flex justify-between items-center">
+                        <span class="text-sm font-semibold"
+                          >Montant ajouté:</span
+                        >
+                        <span class="text-sm">{{
+                          virement.amount_htva | euroFormat
+                        }}</span>
+                      </div>
+                      <div class="flex justify-between items-center">
+                        <span class="text-sm font-semibold">Statut:</span>
+                        <span
+                          class="text-sm px-2 py-1 rounded-full cursor-pointer"
+                          [ngClass]="{
+                            'bg-green-100 text-green-800':
+                              virement.status === 'ACCEPTED' ||
+                              virement.status === 'PAID',
+                            'bg-yellow-100 text-yellow-800':
+                              virement.status === 'PENDING',
+                            'bg-red-100 text-red-800':
+                              virement.status === 'REJECTED',
+                          }"
+                        >
+                          @if (virement.status === "REJECTED") {
+                            <brn-popover>
+                              <button
+                                brnPopoverTrigger
+                                class="flex items-center gap-1"
+                              >
+                                Rejeté
+                                <hlm-icon name="lucideBell" size="sm" />
+                              </button>
+                              <div
+                                hlmPopoverContent
+                                class="p-2 text-sm bg-white rounded shadow-lg"
+                                *brnPopoverContent="let ctx"
+                              >
+                                {{
+                                  virement.rejected_reason === null
+                                    ? "Aucun motif de rejet"
+                                    : virement.rejected_reason
+                                }}
+                              </div>
+                            </brn-popover>
+                          } @else {
+                            {{
+                              virement.status === "ACCEPTED"
+                                ? "Accepté"
+                                : virement.status === "PAID"
+                                  ? "Payé"
+                                  : "En attente"
+                            }}
+                          }
+                        </span>
+                      </div>
+                    </div>
+
+                    <div class="hidden lg:flex lg:justify-between w-full">
+                      <hlm-td class="lg:w-[11%] text-sm">{{
+                        virement.created_at | date: "dd/MM/yyyy"
+                      }}</hlm-td>
+                      <hlm-td class="lg:w-[11%] text-sm">{{
+                        virement.account_owner
+                      }}</hlm-td>
+                      <hlm-td class="lg:w-[13%] text-sm">{{
+                        virement.iban
+                      }}</hlm-td>
+                      <hlm-td class="lg:w-[13%] text-sm">
+                        <brn-popover>
+                          <button
+                            brnPopoverTrigger
+                            class="truncate block max-w-[150px] cursor-pointer hover:text-gray-600 text-left"
+                          >
+                            {{ virement.communication }}
+                          </button>
+                          <div
+                            class="p-2 text-[10px] max-w-[200px] bg-white rounded shadow-lg"
+                            hlmPopoverContent
+                            *brnPopoverContent="let ctx"
+                          >
+                            {{ virement.communication }}
+                          </div>
+                        </brn-popover>
+                      </hlm-td>
+                      <hlm-td class="lg:w-[13%] text-sm">{{
+                        virement.structured_communication
+                      }}</hlm-td>
+                      <hlm-td class="lg:w-[11%] text-sm">{{
+                        virement.amount_htva | euroFormat
+                      }}</hlm-td>
+
+                      <hlm-td class="lg:w-[9%] text-sm">
+                        <span
+                          class="px-2 py-1 rounded-full cursor-pointer"
+                          [ngClass]="{
+                            'bg-green-100 text-green-800':
+                              virement.status === 'ACCEPTED' ||
+                              virement.status === 'PAID',
+                            'bg-yellow-100 text-yellow-800':
+                              virement.status === 'PENDING',
+                            'bg-red-100 text-red-800':
+                              virement.status === 'REJECTED',
+                          }"
+                        >
+                          @if (virement.status === "REJECTED") {
+                            <brn-popover>
+                              <button
+                                brnPopoverTrigger
+                                class="flex items-center gap-1"
+                              >
+                                Rejeté
+                                <hlm-icon name="lucideBell" size="sm" />
+                              </button>
+                              <div
+                                hlmPopoverContent
+                                class="p-2 text-sm bg-white rounded shadow-lg"
+                                *brnPopoverContent="let ctx"
+                              >
+                                {{ virement.rejected_reason }}
+                              </div>
+                            </brn-popover>
+                          } @else {
+                            {{
+                              virement.status === "ACCEPTED"
+                                ? "Accepté"
+                                : virement.status === "PAID"
+                                  ? "Payé"
+                                  : "En attente"
+                            }}
+                          }
+                        </span>
+                      </hlm-td>
+                    </div>
+                  </hlm-trow>
+                }
+              }
+            } @else if (state.accountGroup()) {
+              @for (
+                virement of state.accountGroup()?.virementSepa;
+                track virement.id
+              ) {
+                @if (virement.transaction_type == "INCOMING") {
+                  <hlm-trow
+                    class="flex flex-col lg:flex-row lg:justify-between border-b lg:border-none p-2 lg:p-0"
+                  >
+                    <div class="flex flex-col gap-2 lg:hidden">
+                      <div class="flex justify-between items-center">
+                        <span class="text-sm font-semibold">Date:</span>
+                        <span class="text-sm">{{
+                          virement.created_at | date: "dd/MM/yyyy"
+                        }}</span>
+                      </div>
+                      <div class="flex justify-between items-center">
+                        <span class="text-sm font-semibold">Titulaire:</span>
+                        <span class="text-sm">{{
+                          virement.account_owner
+                        }}</span>
+                      </div>
+                      <div class="flex justify-between items-center">
+                        <span class="text-sm font-semibold">IBAN:</span>
+                        <span class="text-sm">{{ virement.iban }}</span>
+                      </div>
+                      <div class="flex justify-between items-center">
+                        <span class="text-sm font-semibold"
+                          >Communication:</span
+                        >
+                        <brn-popover>
+                          <button
+                            brnPopoverTrigger
+                            class="text-sm truncate max-w-[150px] cursor-pointer hover:text-gray-600 text-left"
+                          >
+                            {{ virement.communication }}
+                          </button>
+                          <div
+                            class="p-2 text-sm max-w-[200px] bg-white rounded shadow-lg"
+                            hlmPopoverContent
+                            *brnPopoverContent="let ctx"
+                          >
+                            {{ virement.communication }}
+                          </div>
+                        </brn-popover>
+                      </div>
+                      <div class="flex justify-between items-center">
+                        <span class="text-sm font-semibold"
+                          >Comm. structurée:</span
+                        >
+                        <span class="text-sm">{{
+                          virement.structured_communication
+                        }}</span>
+                      </div>
+                      <div class="flex justify-between items-center">
+                        <span class="text-sm font-semibold"
+                          >Montant débité:</span
+                        >
+                        <span class="text-sm">{{
+                          virement.amount_htva | euroFormat
+                        }}</span>
+                      </div>
+                      <div class="flex justify-between items-center">
+                        <span class="text-sm font-semibold">Statut:</span>
+                        <span
+                          class="text-sm px-2 py-1 rounded-full cursor-pointer"
+                          [ngClass]="{
+                            'bg-green-100 text-green-800':
+                              virement.status === 'ACCEPTED' ||
+                              virement.status === 'PAID',
+                            'bg-yellow-100 text-yellow-800':
+                              virement.status === 'PENDING',
+                            'bg-red-100 text-red-800':
+                              virement.status === 'REJECTED',
+                          }"
+                        >
+                          @if (virement.status === "REJECTED") {
+                            <brn-popover>
+                              <button
+                                brnPopoverTrigger
+                                class="flex items-center gap-1"
+                              >
+                                Rejeté
+                                <hlm-icon name="lucideBell" size="sm" />
+                              </button>
+                              <div
+                                hlmPopoverContent
+                                class="p-2 text-sm bg-white rounded shadow-lg"
+                                *brnPopoverContent="let ctx"
+                              >
+                                {{ virement.rejected_reason }}
+                              </div>
+                            </brn-popover>
+                          } @else {
+                            {{
+                              virement.status === "ACCEPTED"
+                                ? "Accepté"
+                                : virement.status === "PAID"
+                                  ? "Payé"
+                                  : "En attente"
+                            }}
+                          }
+                        </span>
+                      </div>
+                    </div>
+
+                    <div class="hidden lg:flex lg:justify-between w-full">
+                      <hlm-td class="lg:w-[11%] text-sm">{{
+                        virement.created_at | date: "dd/MM/yyyy"
+                      }}</hlm-td>
+                      <hlm-td class="lg:w-[11%] text-sm">{{
+                        virement.account_owner
+                      }}</hlm-td>
+                      <hlm-td class="lg:w-[13%] text-sm">{{
+                        virement.iban
+                      }}</hlm-td>
+                      <hlm-td class="lg:w-[13%] text-sm">
+                        <brn-popover>
+                          <button
+                            brnPopoverTrigger
+                            class="truncate block max-w-[150px] cursor-pointer hover:text-gray-600 text-left"
+                          >
+                            {{ virement.communication }}
+                          </button>
+                          <div
+                            class="p-2 text-[10px] max-w-[200px] bg-white rounded shadow-lg"
+                            hlmPopoverContent
+                            *brnPopoverContent="let ctx"
+                          >
+                            {{ virement.communication }}
+                          </div>
+                        </brn-popover>
+                      </hlm-td>
+                      <hlm-td class="lg:w-[13%] text-sm">{{
+                        virement.structured_communication
+                      }}</hlm-td>
+                      <hlm-td class="lg:w-[11%] text-sm">{{
+                        virement.amount_htva | euroFormat
+                      }}</hlm-td>
+                      <hlm-td class="lg:w-[9%] text-sm">
+                        <span
+                          class="px-2 py-1 rounded-full cursor-pointer"
+                          [ngClass]="{
+                            'bg-green-100 text-green-800':
+                              virement.status === 'ACCEPTED' ||
+                              virement.status === 'PAID',
+                            'bg-yellow-100 text-yellow-800':
+                              virement.status === 'PENDING',
+                            'bg-red-100 text-red-800':
+                              virement.status === 'REJECTED',
+                          }"
+                        >
+                          @if (virement.status === "REJECTED") {
+                            <brn-popover>
+                              <button
+                                brnPopoverTrigger
+                                class="flex items-center gap-1"
+                              >
+                                Rejeté
+                                <hlm-icon name="lucideBell" size="sm" />
+                              </button>
+                              <div
+                                hlmPopoverContent
+                                class="p-2 text-sm bg-white rounded shadow-lg"
+                                *brnPopoverContent="let ctx"
+                              >
+                                {{ virement.rejected_reason }}
+                              </div>
+                            </brn-popover>
+                          } @else {
+                            {{
+                              virement.status === "ACCEPTED"
+                                ? "Accepté"
+                                : virement.status === "PAID"
+                                  ? "Payé"
+                                  : "En attente"
+                            }}
+                          }
+                        </span>
+                      </hlm-td>
+                    </div>
+                  </hlm-trow>
+                }
+              }
+            }
+          </div>
+        </hlm-table>
+
+        @if (
+          state.accountPrincipal()?.virementSepa?.length ||
+          state.accountGroup()?.virementSepa?.length
+        ) {
+          <nav hlmPagination class="mt-4 flex justify-center">
+            <ul
+              hlmPaginationContent
+              class="flex flex-wrap gap-1 justify-center items-center"
             >
-              Précédent
-            </button>
-          </li>
-
-          @for (page of getVisiblePages(pagination.virement.currentPage(),
-            pagination.virement.totalPages()); track $index) { @if (page ===
-          'ellipsis') {
-            <li hlmPaginationItem class="md:mx-1">
-              <span class="px-3 py-1.5">...</span>
-            </li>
-          } @else {
-            <li hlmPaginationItem class="md:mx-1">
-              <button
-                class="min-w-[40px] h-9 px-3 py-1.5 text-sm font-medium transition-colors rounded-md"
-                [class.bg-zinc-800]="pagination.virement.currentPage() === page"
-                [class.text-white]="pagination.virement.currentPage() === page"
-                [class.hover:bg-gray-100]="
-              pagination.virement.currentPage() !== page
-            "
-                (click)="onPageChangeVirement(page)"
-              >
-                {{ page }}
-              </button>
-            </li>
-          } }
-
-          <li hlmPaginationItem class="md:mx-1">
-            <button
-              class="px-3 py-1.5 text-sm font-medium transition-colors hover:bg-gray-100 rounded-md"
-              [class.opacity-50]="
-              pagination.virement.currentPage() ===
-              pagination.virement.totalPages()
-            "
-              [disabled]="
-              pagination.virement.currentPage() ===
-              pagination.virement.totalPages()
-            "
-              (click)="
-              pagination.virement.currentPage() <
-                pagination.virement.totalPages() &&
-                onPageChangeVirement(pagination.virement.currentPage() + 1)
-            "
-            >
-              Suivant
-            </button>
-          </li>
-        </ul>
-      </nav>
-    }
-  </div>
-
-  <div class="flex flex-col gap-5">
-    <hlm-table class="overflow-x-auto p-4 bg-white rounded-xl shadow-lg">
-      <p class="text-lg font-semibold px-4 mb-2">Virement sortant</p>
-      <div class="overflow-auto touch-none w-full">
-        <hlm-trow class="hidden lg:flex lg:justify-between">
-          <hlm-th class="lg:w-[11%] text-sm font-semibold">Date</hlm-th>
-          <hlm-th class="lg:w-[11%] text-sm font-semibold">Titulaire</hlm-th>
-          <hlm-th class="lg:w-[13%] text-sm font-semibold">IBAN</hlm-th>
-          <hlm-th class="lg:w-[13%] text-sm font-semibold"
-            >Communication</hlm-th
-          >
-          <hlm-th class="lg:w-[13%] text-sm font-semibold"
-            >Comm. structurée</hlm-th
-          >
-          <hlm-th class="lg:w-[11%] text-sm font-semibold"
-            >Montant total</hlm-th
-          >
-          <hlm-th class="lg:w-[11%] text-sm font-semibold"
-            >Montant débité</hlm-th
-          >
-          <hlm-th class="lg:w-[8%] text-sm font-semibold">Facture</hlm-th>
-          <hlm-th class="lg:w-[9%] text-sm font-semibold">Statut</hlm-th>
-        </hlm-trow>
-
-        @if(state.accountPrincipal()) { @for(virement of
-        state.accountPrincipal()?.virementSepa; track virement.id) {
-          @if (virement.transaction_type == "OUTGOING") {
-
-        <hlm-trow
-          class="flex flex-col lg:flex-row lg:justify-between border-b lg:border-none p-2 lg:p-0"
-        >
-          <div class="flex flex-col gap-2 lg:hidden">
-            <div class="flex justify-between items-center">
-              <span class="text-sm font-semibold">Date:</span>
-              <span class="text-sm">{{
-                virement.created_at | date : "dd/MM/yyyy"
-              }}</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-sm font-semibold">Titulaire:</span>
-              <span class="text-sm">{{ virement.account_owner }}</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-sm font-semibold">IBAN:</span>
-              <span class="text-sm">{{ virement.iban }}</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-sm font-semibold">Communication:</span>
-              <brn-popover>
+              <li hlmPaginationItem class="md:mx-1">
                 <button
-                  brnPopoverTrigger
-                  class="text-sm truncate max-w-[150px] cursor-pointer hover:text-gray-600 text-left"
+                  class="px-3 py-1.5 text-sm font-medium transition-colors hover:bg-gray-100 rounded-md"
+                  [class.opacity-50]="pagination.virement.currentPage() === 1"
+                  [disabled]="pagination.virement.currentPage() === 1"
+                  (click)="
+                    pagination.virement.currentPage() > 1 &&
+                      onPageChangeVirement(
+                        pagination.virement.currentPage() - 1
+                      )
+                  "
                 >
-                  {{ virement.communication }}
+                  Précédent
                 </button>
-                <div
-                  class="p-2 text-sm max-w-[200px] bg-white rounded shadow-lg"
-                  hlmPopoverContent
-                  *brnPopoverContent="let ctx"
-                >
-                  {{ virement.communication }}
-                </div>
-              </brn-popover>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-sm font-semibold">Comm. structurée:</span>
-              <span class="text-sm">{{
-                virement.structured_communication
-              }}</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-sm font-semibold">Montant total:</span>
-              <span class="text-sm">{{
-                virement.amount_total | euroFormat
-              }}</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-sm font-semibold">Montant débité:</span>
-              <span class="text-sm">{{
-                virement.amount_htva | euroFormat
-              }}</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-sm font-semibold">Facture:</span>
-              <a
-                (click)="downloadInvoice(virement)"
-                (keydown.enter)="downloadInvoice(virement)"
-                class="cursor-pointer text-sm text-blue-600 border p-2 border-blue-600 transition-all rounded-full hover:bg-blue-600 hover:text-white"
-                role="button"
-                tabindex="0"
-                >Voir</a
-              >
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-sm font-semibold">Statut:</span>
-              <span
-                class="text-sm px-2 py-1 rounded-full cursor-pointer"
-                [ngClass]="{
-                  'bg-green-100 text-green-800':
-                    virement.status === 'ACCEPTED' ||
-                    virement.status === 'PAID',
-                  'bg-yellow-100 text-yellow-800':
-                    virement.status === 'PENDING',
-                  'bg-red-100 text-red-800': virement.status === 'REJECTED'
-                }"
-              >
-                @if (virement.status === 'REJECTED') {
-                <brn-popover>
-                  <button brnPopoverTrigger class="flex items-center gap-1">
-                    Rejeté
-                    <hlm-icon name="lucideBell" size="sm" />
-                  </button>
-                  <div
-                    hlmPopoverContent
-                    class="p-2 text-sm bg-white rounded shadow-lg"
-                    *brnPopoverContent="let ctx"
-                  >
-                    {{
-                      virement.rejected_reason === null
-                        ? "Aucun motif de rejet"
-                        : virement.rejected_reason
-                    }}
-                  </div>
-                </brn-popover>
-                } @else {
-                {{
-                  virement.status === "ACCEPTED"
-                    ? "Accepté"
-                    : virement.status === "PAID"
-                    ? "Payé"
-                    : "En attente"
-                }}
-                }
-              </span>
-            </div>
-          </div>
+              </li>
 
-          <div class="hidden lg:flex lg:justify-between w-full">
-            <hlm-td class="lg:w-[11%] text-sm">{{
-              virement.created_at | date : "dd/MM/yyyy"
-            }}</hlm-td>
-            <hlm-td class="lg:w-[11%] text-sm">{{
-              virement.account_owner
-            }}</hlm-td>
-            <hlm-td class="lg:w-[13%] text-sm">{{ virement.iban }}</hlm-td>
-            <hlm-td class="lg:w-[13%] text-sm">
-              <brn-popover>
+              @for (
+                page of getVisiblePages(
+                  pagination.virement.currentPage(),
+                  pagination.virement.totalPages()
+                );
+                track $index
+              ) {
+                @if (page === "ellipsis") {
+                  <li hlmPaginationItem class="md:mx-1">
+                    <span class="px-3 py-1.5">...</span>
+                  </li>
+                } @else {
+                  <li hlmPaginationItem class="md:mx-1">
+                    <button
+                      class="min-w-[40px] h-9 px-3 py-1.5 text-sm font-medium transition-colors rounded-md"
+                      [class.bg-zinc-800]="
+                        pagination.virement.currentPage() === page
+                      "
+                      [class.text-white]="
+                        pagination.virement.currentPage() === page
+                      "
+                      [class.hover:bg-gray-100]="
+                        pagination.virement.currentPage() !== page
+                      "
+                      (click)="onPageChangeVirement(page)"
+                    >
+                      {{ page }}
+                    </button>
+                  </li>
+                }
+              }
+
+              <li hlmPaginationItem class="md:mx-1">
                 <button
-                  brnPopoverTrigger
-                  class="truncate block max-w-[150px] cursor-pointer hover:text-gray-600 text-left"
+                  class="px-3 py-1.5 text-sm font-medium transition-colors hover:bg-gray-100 rounded-md"
+                  [class.opacity-50]="
+                    pagination.virement.currentPage() ===
+                    pagination.virement.totalPages()
+                  "
+                  [disabled]="
+                    pagination.virement.currentPage() ===
+                    pagination.virement.totalPages()
+                  "
+                  (click)="
+                    pagination.virement.currentPage() <
+                      pagination.virement.totalPages() &&
+                      onPageChangeVirement(
+                        pagination.virement.currentPage() + 1
+                      )
+                  "
                 >
-                  {{ virement.communication }}
+                  Suivant
                 </button>
-                <div
-                  class="p-2 text-[10px] max-w-[200px] bg-white rounded shadow-lg"
-                  hlmPopoverContent
-                  *brnPopoverContent="let ctx"
-                >
-                  {{ virement.communication }}
-                </div>
-              </brn-popover>
-            </hlm-td>
-            <hlm-td class="lg:w-[13%] text-sm">{{
-              virement.structured_communication
-            }}</hlm-td>
-            <hlm-td class="lg:w-[11%] text-sm">{{
-              virement.amount_total | euroFormat
-            }}</hlm-td>
-            <hlm-td class="lg:w-[11%] text-sm">{{
-              virement.amount_htva | euroFormat
-            }}</hlm-td>
-            <hlm-td class="lg:w-[8%] text-sm">
-              <a
-                (click)="downloadInvoice(virement)"
-                (keydown.enter)="downloadInvoice(virement)"
-                class="cursor-pointer text-blue-600 border p-2 border-blue-600 transition-all rounded-full hover:bg-blue-600 hover:text-white"
-                role="button"
-                tabindex="0"
-                >Voir</a
-              >
-            </hlm-td>
-            <hlm-td class="lg:w-[9%] text-sm">
-              <span
-                class="px-2 py-1 rounded-full cursor-pointer"
-                [ngClass]="{
-                  'bg-green-100 text-green-800':
-                    virement.status === 'ACCEPTED' ||
-                    virement.status === 'PAID',
-                  'bg-yellow-100 text-yellow-800':
-                    virement.status === 'PENDING',
-                  'bg-red-100 text-red-800': virement.status === 'REJECTED'
-                }"
-              >
-                @if (virement.status === 'REJECTED') {
-                <brn-popover>
-                  <button brnPopoverTrigger class="flex items-center gap-1">
-                    Rejeté
-                    <hlm-icon name="lucideBell" size="sm" />
-                  </button>
-                  <div
-                    hlmPopoverContent
-                    class="p-2 text-sm bg-white rounded shadow-lg"
-                    *brnPopoverContent="let ctx"
-                  >
-                    {{ virement.rejected_reason }}
-                  </div>
-                </brn-popover>
-                } @else {
-                {{
-                  virement.status === "ACCEPTED"
-                    ? "Accepté"
-                    : virement.status === "PAID"
-                    ? "Payé"
-                    : "En attente"
-                }}
-                }
-              </span>
-            </hlm-td>
-          </div>
-        </hlm-trow>
-        }} } @else if (state.accountGroup()) { @for(virement of
-        state.accountGroup()?.virementSepa; track virement.id) {
-          @if (virement.transaction_type == "OUTGOING") {
-        <hlm-trow
-          class="flex flex-col lg:flex-row lg:justify-between border-b lg:border-none p-2 lg:p-0"
-        >
-          <div class="flex flex-col gap-2 lg:hidden">
-            <div class="flex justify-between items-center">
-              <span class="text-sm font-semibold">Date:</span>
-              <span class="text-sm">{{
-                virement.created_at | date : "dd/MM/yyyy"
-              }}</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-sm font-semibold">Titulaire:</span>
-              <span class="text-sm">{{ virement.account_owner }}</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-sm font-semibold">IBAN:</span>
-              <span class="text-sm">{{ virement.iban }}</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-sm font-semibold">Communication:</span>
-              <brn-popover>
-                <button
-                  brnPopoverTrigger
-                  class="text-sm truncate max-w-[150px] cursor-pointer hover:text-gray-600 text-left"
-                >
-                  {{ virement.communication }}
-                </button>
-                <div
-                  class="p-2 text-sm max-w-[200px] bg-white rounded shadow-lg"
-                  hlmPopoverContent
-                  *brnPopoverContent="let ctx"
-                >
-                  {{ virement.communication }}
-                </div>
-              </brn-popover>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-sm font-semibold">Comm. structurée:</span>
-              <span class="text-sm">{{
-                virement.structured_communication
-              }}</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-sm font-semibold">Montant total:</span>
-              <span class="text-sm">{{
-                virement.amount_total | euroFormat
-              }}</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-sm font-semibold">Montant débité:</span>
-              <span class="text-sm">{{
-                virement.amount_htva | euroFormat
-              }}</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-sm font-semibold">Facture:</span>
-              <a
-                (click)="downloadInvoice(virement)"
-                (keydown.enter)="downloadInvoice(virement)"
-                class="cursor-pointer text-blue-600 border p-2 border-blue-600 transition-all rounded-full hover:bg-blue-600 hover:text-white"
-                role="button"
-                tabindex="0"
-                >Voir</a
-              >
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-sm font-semibold">Statut:</span>
-              <span
-                class="text-sm px-2 py-1 rounded-full cursor-pointer"
-                [ngClass]="{
-                  'bg-green-100 text-green-800':
-                    virement.status === 'ACCEPTED' ||
-                    virement.status === 'PAID',
-                  'bg-yellow-100 text-yellow-800':
-                    virement.status === 'PENDING',
-                  'bg-red-100 text-red-800': virement.status === 'REJECTED'
-                }"
-              >
-                @if (virement.status === 'REJECTED') {
-                <brn-popover>
-                  <button brnPopoverTrigger class="flex items-center gap-1">
-                    Rejeté
-                    <hlm-icon name="lucideBell" size="sm" />
-                  </button>
-                  <div
-                    hlmPopoverContent
-                    class="p-2 text-sm bg-white rounded shadow-lg"
-                    *brnPopoverContent="let ctx"
-                  >
-                    {{ virement.rejected_reason }}
-                  </div>
-                </brn-popover>
-                } @else {
-                {{
-                  virement.status === "ACCEPTED"
-                    ? "Accepté"
-                    : virement.status === "PAID"
-                    ? "Payé"
-                    : "En attente"
-                }}
-                }
-              </span>
-            </div>
-          </div>
-
-          <div class="hidden lg:flex lg:justify-between w-full">
-            <hlm-td class="lg:w-[11%] text-sm">{{
-              virement.created_at | date : "dd/MM/yyyy"
-            }}</hlm-td>
-            <hlm-td class="lg:w-[11%] text-sm">{{
-              virement.account_owner
-            }}</hlm-td>
-            <hlm-td class="lg:w-[13%] text-sm">{{ virement.iban }}</hlm-td>
-            <hlm-td class="lg:w-[13%] text-sm">
-              <brn-popover>
-                <button
-                  brnPopoverTrigger
-                  class="truncate block max-w-[150px] cursor-pointer hover:text-gray-600 text-left"
-                >
-                  {{ virement.communication }}
-                </button>
-                <div
-                  class="p-2 text-[10px] max-w-[200px] bg-white rounded shadow-lg"
-                  hlmPopoverContent
-                  *brnPopoverContent="let ctx"
-                >
-                  {{ virement.communication }}
-                </div>
-              </brn-popover>
-            </hlm-td>
-            <hlm-td class="lg:w-[13%] text-sm">{{
-              virement.structured_communication
-            }}</hlm-td>
-            <hlm-td class="lg:w-[11%] text-sm">{{
-              virement.amount_total | euroFormat
-            }}</hlm-td>
-            <hlm-td class="lg:w-[11%] text-sm">{{
-              virement.amount_htva | euroFormat
-            }}</hlm-td>
-            <hlm-td class="lg:w-[8%] text-sm">
-              <a
-                (click)="downloadInvoice(virement)"
-                (keydown.enter)="downloadInvoice(virement)"
-                class="cursor-pointer text-blue-600 border p-2 border-blue-600 transition-all rounded-full hover:bg-blue-600 hover:text-white"
-                role="button"
-                tabindex="0"
-                >Voir</a
-              >
-            </hlm-td>
-            <hlm-td class="lg:w-[9%] text-sm">
-              <span
-                class="px-2 py-1 rounded-full cursor-pointer"
-                [ngClass]="{
-                  'bg-green-100 text-green-800':
-                    virement.status === 'ACCEPTED' ||
-                    virement.status === 'PAID',
-                  'bg-yellow-100 text-yellow-800':
-                    virement.status === 'PENDING',
-                  'bg-red-100 text-red-800': virement.status === 'REJECTED'
-                }"
-              >
-                @if (virement.status === 'REJECTED') {
-                <brn-popover>
-                  <button brnPopoverTrigger class="flex items-center gap-1">
-                    Rejeté
-                    <hlm-icon name="lucideBell" size="sm" />
-                  </button>
-                  <div
-                    hlmPopoverContent
-                    class="p-2 text-sm bg-white rounded shadow-lg"
-                    *brnPopoverContent="let ctx"
-                  >
-                    {{ virement.rejected_reason }}
-                  </div>
-                </brn-popover>
-                } @else {
-                {{
-                  virement.status === "ACCEPTED"
-                    ? "Accepté"
-                    : virement.status === "PAID"
-                    ? "Payé"
-                    : "En attente"
-                }}
-                }
-              </span>
-            </hlm-td>
-          </div>
-        </hlm-trow>
-        }}}
-      </div>
-    </hlm-table>
-  </div>
-
-
-  <div class="flex flex-col gap-5">
-    <hlm-table class="overflow-x-auto p-4 bg-white rounded-xl shadow-lg">
-      <p class="text-lg font-semibold px-4 mb-2">Transfert entrant</p>
-      <div class="overflow-auto touch-none w-full">
-        <hlm-trow class="hidden lg:flex lg:justify-between">
-          <hlm-th class="lg:w-[20%] text-sm font-semibold">Date</hlm-th>
-          <hlm-th class="lg:w-[20%] text-sm font-semibold">Expéditeur</hlm-th>
-          <hlm-th class="lg:w-[20%] text-sm font-semibold"
-          >Destinataire</hlm-th
-          >
-          <hlm-th class="lg:w-[20%] text-sm font-semibold"
-          >Communication</hlm-th
-          >
-          <hlm-th class="lg:w-[20%] text-sm font-semibold">Montant</hlm-th>
-        </hlm-trow>
-
-        @for (transaction of state.transactionRecipient(); track
-          transaction.id) {
-          <hlm-trow
-            class="flex flex-col lg:flex-row lg:justify-between border-b lg:border-none p-2 lg:p-0"
-          >
-            <div class="flex flex-col gap-2 lg:hidden">
-              <div class="flex justify-between items-center">
-                <span class="text-sm font-semibold">Date:</span>
-                <span class="text-sm">{{
-                    transaction.date | date : "dd/MM/yyyy"
-                  }}</span>
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-sm font-semibold">Expéditeur:</span>
-                <span class="text-sm">
-                  @if(transaction.senderGroup !== null) {
-                    {{ transaction.senderGroup.username || "" }}
-                  } @else if(transaction.senderPrincipal !== null) {
-                    {{ transaction.senderPrincipal.username || "" }}
-                  } @else {
-                    {{ "" }}
-                  }
-                </span>
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-sm font-semibold">Destinataire:</span>
-                <span class="text-sm">{{
-                    state.accountPrincipal()?.username ||
-                    state.accountGroup()?.username ||
-                    ""
-                  }}</span>
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-sm font-semibold">Communication:</span>
-                <brn-popover>
-                  <button
-                    brnPopoverTrigger
-                    class="text-sm truncate max-w-[150px] cursor-pointer hover:text-gray-600 text-left"
-                  >
-                    {{ transaction.communication }}
-                  </button>
-                  <div
-                    class="p-2 text-sm max-w-[200px] bg-white rounded shadow-lg"
-                    hlmPopoverContent
-                    *brnPopoverContent="let ctx"
-                  >
-                    {{ transaction.communication }}
-                  </div>
-                </brn-popover>
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-sm font-semibold">Montant:</span>
-                <span class="text-sm text-green-400">{{
-                    transaction.amount | euroFormat
-                  }}</span>
-              </div>
-            </div>
-
-            <div class="hidden lg:flex lg:justify-between w-full">
-              <hlm-td class="lg:w-[20%] text-sm">{{
-                  transaction.date | date : "dd/MM/yyyy"
-                }}</hlm-td>
-              <hlm-td class="lg:w-[20%] text-sm">{{
-                  transaction.senderPrincipal !== null
-                    ? transaction?.senderPrincipal?.username || ""
-                    : transaction?.senderGroup?.username || ""
-                }}</hlm-td>
-              <hlm-td class="lg:w-[20%] text-sm">{{
-                  state.accountPrincipal()?.username ||
-                  state.accountGroup()?.username ||
-                  ""
-                }}</hlm-td>
-              <hlm-td class="lg:w-[20%] font-bold text-[10px]">
-                <brn-popover>
-                  <button
-                    brnPopoverTrigger
-                    class="truncate block max-w-[150px] cursor-pointer hover:text-gray-600 text-left"
-                  >
-                    {{ transaction.communication }}
-                  </button>
-                  <div
-                    class="p-2 text-[10px] max-w-[200px] bg-white rounded shadow-lg"
-                    hlmPopoverContent
-                    *brnPopoverContent="let ctx"
-                  >
-                    {{ transaction.communication }}
-                  </div>
-                </brn-popover>
-              </hlm-td>
-              <hlm-td class="lg:w-[20%] font-bold text-[10px] text-green-400">{{
-                  transaction.amount | euroFormat
-                }}</hlm-td>
-            </div>
-          </hlm-trow>
+              </li>
+            </ul>
+          </nav>
         }
       </div>
-    </hlm-table>
 
-    @if (state.transactionRecipient()?.length) {
-      <nav hlmPagination class="mt-4 flex justify-center">
-        <ul
-          hlmPaginationContent
-          class="flex flex-wrap gap-1 justify-center items-center"
-        >
-          <li hlmPaginationItem class="md:mx-1">
-            <button
-              class="px-3 py-1.5 text-sm font-medium transition-colors hover:bg-gray-100 rounded-md"
-              [class.opacity-50]="pagination.recipient.currentPage() === 1"
-              [disabled]="pagination.recipient.currentPage() === 1"
-              (click)="
-                pagination.recipient.currentPage() > 1 &&
-                  onPageChangeRecipient(pagination.recipient.currentPage() - 1)
-              "
-            >
-              Précédent
-            </button>
-          </li>
-
-          @for (page of getVisiblePages(pagination.recipient.currentPage(),
-            pagination.recipient.totalPages()); track $index) { @if (page ===
-          'ellipsis') {
-            <li hlmPaginationItem class="md:mx-1">
-              <span class="px-3 py-1.5">...</span>
-            </li>
-          } @else {
-            <li hlmPaginationItem class="md:mx-1">
-              <button
-                class="min-w-[40px] h-9 px-3 py-1.5 text-sm font-medium transition-colors rounded-md"
-                [class.bg-zinc-800]="pagination.recipient.currentPage() === page"
-                [class.text-white]="pagination.recipient.currentPage() === page"
-                [class.hover:bg-gray-100]="
-                pagination.recipient.currentPage() !== page
-              "
-                (click)="onPageChangeRecipient(page)"
+      <div class="flex flex-col gap-5">
+        <hlm-table class="overflow-x-auto p-4 bg-white rounded-xl shadow-lg">
+          <p class="text-lg font-semibold px-4 mb-2">Virement sortant</p>
+          <div class="overflow-auto touch-none w-full">
+            <hlm-trow class="hidden lg:flex lg:justify-between">
+              <hlm-th class="lg:w-[11%] text-sm font-semibold">Date</hlm-th>
+              <hlm-th class="lg:w-[11%] text-sm font-semibold"
+                >Titulaire</hlm-th
               >
-                {{ page }}
-              </button>
-            </li>
-          } }
+              <hlm-th class="lg:w-[13%] text-sm font-semibold">IBAN</hlm-th>
+              <hlm-th class="lg:w-[13%] text-sm font-semibold"
+                >Communication</hlm-th
+              >
+              <hlm-th class="lg:w-[13%] text-sm font-semibold"
+                >Comm. structurée</hlm-th
+              >
+              <hlm-th class="lg:w-[11%] text-sm font-semibold"
+                >Montant total</hlm-th
+              >
+              <hlm-th class="lg:w-[11%] text-sm font-semibold"
+                >Montant débité</hlm-th
+              >
+              <hlm-th class="lg:w-[8%] text-sm font-semibold">Facture</hlm-th>
+              <hlm-th class="lg:w-[9%] text-sm font-semibold">Statut</hlm-th>
+            </hlm-trow>
 
-          <li hlmPaginationItem class="md:mx-1">
-            <button
-              class="px-3 py-1.5 text-sm font-medium transition-colors hover:bg-gray-100 rounded-md"
-              [class.opacity-50]="
-                pagination.recipient.currentPage() ===
-                pagination.recipient.totalPages()
-              "
-              [disabled]="
-                pagination.recipient.currentPage() ===
-                pagination.recipient.totalPages()
-              "
-              (click)="
-                pagination.recipient.currentPage() <
-                  pagination.recipient.totalPages() &&
-                  onPageChangeRecipient(pagination.recipient.currentPage() + 1)
-              "
-            >
-              Suivant
-            </button>
-          </li>
-        </ul>
-      </nav>
-    }
-  </div>
+            @if (state.accountPrincipal()) {
+              @for (
+                virement of state.accountPrincipal()?.virementSepa;
+                track virement.id
+              ) {
+                @if (virement.transaction_type == "OUTGOING") {
+                  <hlm-trow
+                    class="flex flex-col lg:flex-row lg:justify-between border-b lg:border-none p-2 lg:p-0"
+                  >
+                    <div class="flex flex-col gap-2 lg:hidden">
+                      <div class="flex justify-between items-center">
+                        <span class="text-sm font-semibold">Date:</span>
+                        <span class="text-sm">{{
+                          virement.created_at | date: "dd/MM/yyyy"
+                        }}</span>
+                      </div>
+                      <div class="flex justify-between items-center">
+                        <span class="text-sm font-semibold">Titulaire:</span>
+                        <span class="text-sm">{{
+                          virement.account_owner
+                        }}</span>
+                      </div>
+                      <div class="flex justify-between items-center">
+                        <span class="text-sm font-semibold">IBAN:</span>
+                        <span class="text-sm">{{ virement.iban }}</span>
+                      </div>
+                      <div class="flex justify-between items-center">
+                        <span class="text-sm font-semibold"
+                          >Communication:</span
+                        >
+                        <brn-popover>
+                          <button
+                            brnPopoverTrigger
+                            class="text-sm truncate max-w-[150px] cursor-pointer hover:text-gray-600 text-left"
+                          >
+                            {{ virement.communication }}
+                          </button>
+                          <div
+                            class="p-2 text-sm max-w-[200px] bg-white rounded shadow-lg"
+                            hlmPopoverContent
+                            *brnPopoverContent="let ctx"
+                          >
+                            {{ virement.communication }}
+                          </div>
+                        </brn-popover>
+                      </div>
+                      <div class="flex justify-between items-center">
+                        <span class="text-sm font-semibold"
+                          >Comm. structurée:</span
+                        >
+                        <span class="text-sm">{{
+                          virement.structured_communication
+                        }}</span>
+                      </div>
+                      <div class="flex justify-between items-center">
+                        <span class="text-sm font-semibold"
+                          >Montant total:</span
+                        >
+                        <span class="text-sm">{{
+                          virement.amount_total | euroFormat
+                        }}</span>
+                      </div>
+                      <div class="flex justify-between items-center">
+                        <span class="text-sm font-semibold"
+                          >Montant débité:</span
+                        >
+                        <span class="text-sm">{{
+                          virement.amount_htva | euroFormat
+                        }}</span>
+                      </div>
+                      <div class="flex justify-between items-center">
+                        <span class="text-sm font-semibold">Facture:</span>
+                        <a
+                          (click)="downloadInvoice(virement)"
+                          (keydown.enter)="downloadInvoice(virement)"
+                          class="cursor-pointer text-sm text-blue-600 border p-2 border-blue-600 transition-all rounded-full hover:bg-blue-600 hover:text-white"
+                          role="button"
+                          tabindex="0"
+                          >Voir</a
+                        >
+                      </div>
+                      <div class="flex justify-between items-center">
+                        <span class="text-sm font-semibold">Statut:</span>
+                        <span
+                          class="text-sm px-2 py-1 rounded-full cursor-pointer"
+                          [ngClass]="{
+                            'bg-green-100 text-green-800':
+                              virement.status === 'ACCEPTED' ||
+                              virement.status === 'PAID',
+                            'bg-yellow-100 text-yellow-800':
+                              virement.status === 'PENDING',
+                            'bg-red-100 text-red-800':
+                              virement.status === 'REJECTED',
+                          }"
+                        >
+                          @if (virement.status === "REJECTED") {
+                            <brn-popover>
+                              <button
+                                brnPopoverTrigger
+                                class="flex items-center gap-1"
+                              >
+                                Rejeté
+                                <hlm-icon name="lucideBell" size="sm" />
+                              </button>
+                              <div
+                                hlmPopoverContent
+                                class="p-2 text-sm bg-white rounded shadow-lg"
+                                *brnPopoverContent="let ctx"
+                              >
+                                {{
+                                  virement.rejected_reason === null
+                                    ? "Aucun motif de rejet"
+                                    : virement.rejected_reason
+                                }}
+                              </div>
+                            </brn-popover>
+                          } @else {
+                            {{
+                              virement.status === "ACCEPTED"
+                                ? "Accepté"
+                                : virement.status === "PAID"
+                                  ? "Payé"
+                                  : "En attente"
+                            }}
+                          }
+                        </span>
+                      </div>
+                    </div>
 
-  <div class="md:flex md:gap-5 w-full flex flex-col gap-5">
-    <div class="flex flex-col gap-5">
-      <hlm-table class="overflow-x-auto p-4 bg-white rounded-xl shadow-lg">
-        <p class="font-bold px-4 text-sm">Transfert sortant</p>
-        <div class="overflow-auto touch-none w-full">
-          <hlm-trow class="hidden lg:flex lg:justify-between">
-            <hlm-th class="lg:w-[20%] text-sm font-semibold">Date</hlm-th>
-            <hlm-th class="lg:w-[20%] text-sm font-semibold">Expéditeur</hlm-th>
-            <hlm-th class="lg:w-[20%] text-sm font-semibold"
-            >Destinataire</hlm-th
-            >
-            <hlm-th class="lg:w-[20%] text-sm font-semibold"
-            >Communication</hlm-th
-            >
-            <hlm-th class="lg:w-[20%] text-sm font-semibold">Montant</hlm-th>
-          </hlm-trow>
-          @for (transaction of state.transactionSender(); track transaction.id)
-          {
-            <hlm-trow
-              class="flex flex-col lg:flex-row lg:justify-between border-b lg:border-none p-2 lg:p-0"
-            >
-              <div class="flex flex-col gap-2 lg:hidden">
-                <div class="flex justify-between items-center">
-                  <span class="text-sm font-semibold">Date:</span>
-                  <span class="text-sm">{{
-                      transaction.date | date : "dd/MM/yyyy"
+                    <div class="hidden lg:flex lg:justify-between w-full">
+                      <hlm-td class="lg:w-[11%] text-sm">{{
+                        virement.created_at | date: "dd/MM/yyyy"
+                      }}</hlm-td>
+                      <hlm-td class="lg:w-[11%] text-sm">{{
+                        virement.account_owner
+                      }}</hlm-td>
+                      <hlm-td class="lg:w-[13%] text-sm">{{
+                        virement.iban
+                      }}</hlm-td>
+                      <hlm-td class="lg:w-[13%] text-sm">
+                        <brn-popover>
+                          <button
+                            brnPopoverTrigger
+                            class="truncate block max-w-[150px] cursor-pointer hover:text-gray-600 text-left"
+                          >
+                            {{ virement.communication }}
+                          </button>
+                          <div
+                            class="p-2 text-[10px] max-w-[200px] bg-white rounded shadow-lg"
+                            hlmPopoverContent
+                            *brnPopoverContent="let ctx"
+                          >
+                            {{ virement.communication }}
+                          </div>
+                        </brn-popover>
+                      </hlm-td>
+                      <hlm-td class="lg:w-[13%] text-sm">{{
+                        virement.structured_communication
+                      }}</hlm-td>
+                      <hlm-td class="lg:w-[11%] text-sm">{{
+                        virement.amount_total | euroFormat
+                      }}</hlm-td>
+                      <hlm-td class="lg:w-[11%] text-sm">{{
+                        virement.amount_htva | euroFormat
+                      }}</hlm-td>
+                      <hlm-td class="lg:w-[8%] text-sm">
+                        <a
+                          (click)="downloadInvoice(virement)"
+                          (keydown.enter)="downloadInvoice(virement)"
+                          class="cursor-pointer text-blue-600 border p-2 border-blue-600 transition-all rounded-full hover:bg-blue-600 hover:text-white"
+                          role="button"
+                          tabindex="0"
+                          >Voir</a
+                        >
+                      </hlm-td>
+                      <hlm-td class="lg:w-[9%] text-sm">
+                        <span
+                          class="px-2 py-1 rounded-full cursor-pointer"
+                          [ngClass]="{
+                            'bg-green-100 text-green-800':
+                              virement.status === 'ACCEPTED' ||
+                              virement.status === 'PAID',
+                            'bg-yellow-100 text-yellow-800':
+                              virement.status === 'PENDING',
+                            'bg-red-100 text-red-800':
+                              virement.status === 'REJECTED',
+                          }"
+                        >
+                          @if (virement.status === "REJECTED") {
+                            <brn-popover>
+                              <button
+                                brnPopoverTrigger
+                                class="flex items-center gap-1"
+                              >
+                                Rejeté
+                                <hlm-icon name="lucideBell" size="sm" />
+                              </button>
+                              <div
+                                hlmPopoverContent
+                                class="p-2 text-sm bg-white rounded shadow-lg"
+                                *brnPopoverContent="let ctx"
+                              >
+                                {{ virement.rejected_reason }}
+                              </div>
+                            </brn-popover>
+                          } @else {
+                            {{
+                              virement.status === "ACCEPTED"
+                                ? "Accepté"
+                                : virement.status === "PAID"
+                                  ? "Payé"
+                                  : "En attente"
+                            }}
+                          }
+                        </span>
+                      </hlm-td>
+                    </div>
+                  </hlm-trow>
+                }
+              }
+            } @else if (state.accountGroup()) {
+              @for (
+                virement of state.accountGroup()?.virementSepa;
+                track virement.id
+              ) {
+                @if (virement.transaction_type == "OUTGOING") {
+                  <hlm-trow
+                    class="flex flex-col lg:flex-row lg:justify-between border-b lg:border-none p-2 lg:p-0"
+                  >
+                    <div class="flex flex-col gap-2 lg:hidden">
+                      <div class="flex justify-between items-center">
+                        <span class="text-sm font-semibold">Date:</span>
+                        <span class="text-sm">{{
+                          virement.created_at | date: "dd/MM/yyyy"
+                        }}</span>
+                      </div>
+                      <div class="flex justify-between items-center">
+                        <span class="text-sm font-semibold">Titulaire:</span>
+                        <span class="text-sm">{{
+                          virement.account_owner
+                        }}</span>
+                      </div>
+                      <div class="flex justify-between items-center">
+                        <span class="text-sm font-semibold">IBAN:</span>
+                        <span class="text-sm">{{ virement.iban }}</span>
+                      </div>
+                      <div class="flex justify-between items-center">
+                        <span class="text-sm font-semibold"
+                          >Communication:</span
+                        >
+                        <brn-popover>
+                          <button
+                            brnPopoverTrigger
+                            class="text-sm truncate max-w-[150px] cursor-pointer hover:text-gray-600 text-left"
+                          >
+                            {{ virement.communication }}
+                          </button>
+                          <div
+                            class="p-2 text-sm max-w-[200px] bg-white rounded shadow-lg"
+                            hlmPopoverContent
+                            *brnPopoverContent="let ctx"
+                          >
+                            {{ virement.communication }}
+                          </div>
+                        </brn-popover>
+                      </div>
+                      <div class="flex justify-between items-center">
+                        <span class="text-sm font-semibold"
+                          >Comm. structurée:</span
+                        >
+                        <span class="text-sm">{{
+                          virement.structured_communication
+                        }}</span>
+                      </div>
+                      <div class="flex justify-between items-center">
+                        <span class="text-sm font-semibold"
+                          >Montant total:</span
+                        >
+                        <span class="text-sm">{{
+                          virement.amount_total | euroFormat
+                        }}</span>
+                      </div>
+                      <div class="flex justify-between items-center">
+                        <span class="text-sm font-semibold"
+                          >Montant débité:</span
+                        >
+                        <span class="text-sm">{{
+                          virement.amount_htva | euroFormat
+                        }}</span>
+                      </div>
+                      <div class="flex justify-between items-center">
+                        <span class="text-sm font-semibold">Facture:</span>
+                        <a
+                          (click)="downloadInvoice(virement)"
+                          (keydown.enter)="downloadInvoice(virement)"
+                          class="cursor-pointer text-blue-600 border p-2 border-blue-600 transition-all rounded-full hover:bg-blue-600 hover:text-white"
+                          role="button"
+                          tabindex="0"
+                          >Voir</a
+                        >
+                      </div>
+                      <div class="flex justify-between items-center">
+                        <span class="text-sm font-semibold">Statut:</span>
+                        <span
+                          class="text-sm px-2 py-1 rounded-full cursor-pointer"
+                          [ngClass]="{
+                            'bg-green-100 text-green-800':
+                              virement.status === 'ACCEPTED' ||
+                              virement.status === 'PAID',
+                            'bg-yellow-100 text-yellow-800':
+                              virement.status === 'PENDING',
+                            'bg-red-100 text-red-800':
+                              virement.status === 'REJECTED',
+                          }"
+                        >
+                          @if (virement.status === "REJECTED") {
+                            <brn-popover>
+                              <button
+                                brnPopoverTrigger
+                                class="flex items-center gap-1"
+                              >
+                                Rejeté
+                                <hlm-icon name="lucideBell" size="sm" />
+                              </button>
+                              <div
+                                hlmPopoverContent
+                                class="p-2 text-sm bg-white rounded shadow-lg"
+                                *brnPopoverContent="let ctx"
+                              >
+                                {{ virement.rejected_reason }}
+                              </div>
+                            </brn-popover>
+                          } @else {
+                            {{
+                              virement.status === "ACCEPTED"
+                                ? "Accepté"
+                                : virement.status === "PAID"
+                                  ? "Payé"
+                                  : "En attente"
+                            }}
+                          }
+                        </span>
+                      </div>
+                    </div>
+
+                    <div class="hidden lg:flex lg:justify-between w-full">
+                      <hlm-td class="lg:w-[11%] text-sm">{{
+                        virement.created_at | date: "dd/MM/yyyy"
+                      }}</hlm-td>
+                      <hlm-td class="lg:w-[11%] text-sm">{{
+                        virement.account_owner
+                      }}</hlm-td>
+                      <hlm-td class="lg:w-[13%] text-sm">{{
+                        virement.iban
+                      }}</hlm-td>
+                      <hlm-td class="lg:w-[13%] text-sm">
+                        <brn-popover>
+                          <button
+                            brnPopoverTrigger
+                            class="truncate block max-w-[150px] cursor-pointer hover:text-gray-600 text-left"
+                          >
+                            {{ virement.communication }}
+                          </button>
+                          <div
+                            class="p-2 text-[10px] max-w-[200px] bg-white rounded shadow-lg"
+                            hlmPopoverContent
+                            *brnPopoverContent="let ctx"
+                          >
+                            {{ virement.communication }}
+                          </div>
+                        </brn-popover>
+                      </hlm-td>
+                      <hlm-td class="lg:w-[13%] text-sm">{{
+                        virement.structured_communication
+                      }}</hlm-td>
+                      <hlm-td class="lg:w-[11%] text-sm">{{
+                        virement.amount_total | euroFormat
+                      }}</hlm-td>
+                      <hlm-td class="lg:w-[11%] text-sm">{{
+                        virement.amount_htva | euroFormat
+                      }}</hlm-td>
+                      <hlm-td class="lg:w-[8%] text-sm">
+                        <a
+                          (click)="downloadInvoice(virement)"
+                          (keydown.enter)="downloadInvoice(virement)"
+                          class="cursor-pointer text-blue-600 border p-2 border-blue-600 transition-all rounded-full hover:bg-blue-600 hover:text-white"
+                          role="button"
+                          tabindex="0"
+                          >Voir</a
+                        >
+                      </hlm-td>
+                      <hlm-td class="lg:w-[9%] text-sm">
+                        <span
+                          class="px-2 py-1 rounded-full cursor-pointer"
+                          [ngClass]="{
+                            'bg-green-100 text-green-800':
+                              virement.status === 'ACCEPTED' ||
+                              virement.status === 'PAID',
+                            'bg-yellow-100 text-yellow-800':
+                              virement.status === 'PENDING',
+                            'bg-red-100 text-red-800':
+                              virement.status === 'REJECTED',
+                          }"
+                        >
+                          @if (virement.status === "REJECTED") {
+                            <brn-popover>
+                              <button
+                                brnPopoverTrigger
+                                class="flex items-center gap-1"
+                              >
+                                Rejeté
+                                <hlm-icon name="lucideBell" size="sm" />
+                              </button>
+                              <div
+                                hlmPopoverContent
+                                class="p-2 text-sm bg-white rounded shadow-lg"
+                                *brnPopoverContent="let ctx"
+                              >
+                                {{ virement.rejected_reason }}
+                              </div>
+                            </brn-popover>
+                          } @else {
+                            {{
+                              virement.status === "ACCEPTED"
+                                ? "Accepté"
+                                : virement.status === "PAID"
+                                  ? "Payé"
+                                  : "En attente"
+                            }}
+                          }
+                        </span>
+                      </hlm-td>
+                    </div>
+                  </hlm-trow>
+                }
+              }
+            }
+          </div>
+        </hlm-table>
+      </div>
+
+      <div class="flex flex-col gap-5">
+        <hlm-table class="overflow-x-auto p-4 bg-white rounded-xl shadow-lg">
+          <p class="text-lg font-semibold px-4 mb-2">Transfert entrant</p>
+          <div class="overflow-auto touch-none w-full">
+            <hlm-trow class="hidden lg:flex lg:justify-between">
+              <hlm-th class="lg:w-[20%] text-sm font-semibold">Date</hlm-th>
+              <hlm-th class="lg:w-[20%] text-sm font-semibold"
+                >Expéditeur</hlm-th
+              >
+              <hlm-th class="lg:w-[20%] text-sm font-semibold"
+                >Destinataire</hlm-th
+              >
+              <hlm-th class="lg:w-[20%] text-sm font-semibold"
+                >Communication</hlm-th
+              >
+              <hlm-th class="lg:w-[20%] text-sm font-semibold">Montant</hlm-th>
+            </hlm-trow>
+
+            @for (
+              transaction of state.transactionRecipient();
+              track transaction.id
+            ) {
+              <hlm-trow
+                class="flex flex-col lg:flex-row lg:justify-between border-b lg:border-none p-2 lg:p-0"
+              >
+                <div class="flex flex-col gap-2 lg:hidden">
+                  <div class="flex justify-between items-center">
+                    <span class="text-sm font-semibold">Date:</span>
+                    <span class="text-sm">{{
+                      transaction.date | date: "dd/MM/yyyy"
                     }}</span>
+                  </div>
+                  <div class="flex justify-between items-center">
+                    <span class="text-sm font-semibold">Expéditeur:</span>
+                    <span class="text-sm">
+                      @if (transaction.senderGroup !== null) {
+                        {{ transaction.senderGroup.username || "" }}
+                      } @else if (transaction.senderPrincipal !== null) {
+                        {{ transaction.senderPrincipal.username || "" }}
+                      } @else {
+                        {{ "" }}
+                      }
+                    </span>
+                  </div>
+                  <div class="flex justify-between items-center">
+                    <span class="text-sm font-semibold">Destinataire:</span>
+                    <span class="text-sm">{{
+                      state.accountPrincipal()?.username ||
+                        state.accountGroup()?.username ||
+                        ""
+                    }}</span>
+                  </div>
+                  <div class="flex justify-between items-center">
+                    <span class="text-sm font-semibold">Communication:</span>
+                    <brn-popover>
+                      <button
+                        brnPopoverTrigger
+                        class="text-sm truncate max-w-[150px] cursor-pointer hover:text-gray-600 text-left"
+                      >
+                        {{ transaction.communication }}
+                      </button>
+                      <div
+                        class="p-2 text-sm max-w-[200px] bg-white rounded shadow-lg"
+                        hlmPopoverContent
+                        *brnPopoverContent="let ctx"
+                      >
+                        {{ transaction.communication }}
+                      </div>
+                    </brn-popover>
+                  </div>
+                  <div class="flex justify-between items-center">
+                    <span class="text-sm font-semibold">Montant:</span>
+                    <span class="text-sm text-green-400">{{
+                      transaction.amount | euroFormat
+                    }}</span>
+                  </div>
                 </div>
-                <div class="flex justify-between items-center">
-                  <span class="text-sm font-semibold">Expéditeur:</span>
-                  <span class="text-sm">{{
+
+                <div class="hidden lg:flex lg:justify-between w-full">
+                  <hlm-td class="lg:w-[20%] text-sm">{{
+                    transaction.date | date: "dd/MM/yyyy"
+                  }}</hlm-td>
+                  <hlm-td class="lg:w-[20%] text-sm">{{
+                    transaction.senderPrincipal !== null
+                      ? transaction?.senderPrincipal?.username || ""
+                      : transaction?.senderGroup?.username || ""
+                  }}</hlm-td>
+                  <hlm-td class="lg:w-[20%] text-sm">{{
+                    state.accountPrincipal()?.username ||
+                      state.accountGroup()?.username ||
+                      ""
+                  }}</hlm-td>
+                  <hlm-td class="lg:w-[20%] font-bold text-[10px]">
+                    <brn-popover>
+                      <button
+                        brnPopoverTrigger
+                        class="truncate block max-w-[150px] cursor-pointer hover:text-gray-600 text-left"
+                      >
+                        {{ transaction.communication }}
+                      </button>
+                      <div
+                        class="p-2 text-[10px] max-w-[200px] bg-white rounded shadow-lg"
+                        hlmPopoverContent
+                        *brnPopoverContent="let ctx"
+                      >
+                        {{ transaction.communication }}
+                      </div>
+                    </brn-popover>
+                  </hlm-td>
+                  <hlm-td
+                    class="lg:w-[20%] font-bold text-[10px] text-green-400"
+                    >{{ transaction.amount | euroFormat }}</hlm-td
+                  >
+                </div>
+              </hlm-trow>
+            }
+          </div>
+        </hlm-table>
+
+        @if (state.transactionRecipient()?.length) {
+          <nav hlmPagination class="mt-4 flex justify-center">
+            <ul
+              hlmPaginationContent
+              class="flex flex-wrap gap-1 justify-center items-center"
+            >
+              <li hlmPaginationItem class="md:mx-1">
+                <button
+                  class="px-3 py-1.5 text-sm font-medium transition-colors hover:bg-gray-100 rounded-md"
+                  [class.opacity-50]="pagination.recipient.currentPage() === 1"
+                  [disabled]="pagination.recipient.currentPage() === 1"
+                  (click)="
+                    pagination.recipient.currentPage() > 1 &&
+                      onPageChangeRecipient(
+                        pagination.recipient.currentPage() - 1
+                      )
+                  "
+                >
+                  Précédent
+                </button>
+              </li>
+
+              @for (
+                page of getVisiblePages(
+                  pagination.recipient.currentPage(),
+                  pagination.recipient.totalPages()
+                );
+                track $index
+              ) {
+                @if (page === "ellipsis") {
+                  <li hlmPaginationItem class="md:mx-1">
+                    <span class="px-3 py-1.5">...</span>
+                  </li>
+                } @else {
+                  <li hlmPaginationItem class="md:mx-1">
+                    <button
+                      class="min-w-[40px] h-9 px-3 py-1.5 text-sm font-medium transition-colors rounded-md"
+                      [class.bg-zinc-800]="
+                        pagination.recipient.currentPage() === page
+                      "
+                      [class.text-white]="
+                        pagination.recipient.currentPage() === page
+                      "
+                      [class.hover:bg-gray-100]="
+                        pagination.recipient.currentPage() !== page
+                      "
+                      (click)="onPageChangeRecipient(page)"
+                    >
+                      {{ page }}
+                    </button>
+                  </li>
+                }
+              }
+
+              <li hlmPaginationItem class="md:mx-1">
+                <button
+                  class="px-3 py-1.5 text-sm font-medium transition-colors hover:bg-gray-100 rounded-md"
+                  [class.opacity-50]="
+                    pagination.recipient.currentPage() ===
+                    pagination.recipient.totalPages()
+                  "
+                  [disabled]="
+                    pagination.recipient.currentPage() ===
+                    pagination.recipient.totalPages()
+                  "
+                  (click)="
+                    pagination.recipient.currentPage() <
+                      pagination.recipient.totalPages() &&
+                      onPageChangeRecipient(
+                        pagination.recipient.currentPage() + 1
+                      )
+                  "
+                >
+                  Suivant
+                </button>
+              </li>
+            </ul>
+          </nav>
+        }
+      </div>
+
+      <div class="md:flex md:gap-5 w-full flex flex-col gap-5">
+        <div class="flex flex-col gap-5">
+          <hlm-table class="overflow-x-auto p-4 bg-white rounded-xl shadow-lg">
+            <p class="font-bold px-4 text-sm">Transfert sortant</p>
+            <div class="overflow-auto touch-none w-full">
+              <hlm-trow class="hidden lg:flex lg:justify-between">
+                <hlm-th class="lg:w-[20%] text-sm font-semibold">Date</hlm-th>
+                <hlm-th class="lg:w-[20%] text-sm font-semibold"
+                  >Expéditeur</hlm-th
+                >
+                <hlm-th class="lg:w-[20%] text-sm font-semibold"
+                  >Destinataire</hlm-th
+                >
+                <hlm-th class="lg:w-[20%] text-sm font-semibold"
+                  >Communication</hlm-th
+                >
+                <hlm-th class="lg:w-[20%] text-sm font-semibold"
+                  >Montant</hlm-th
+                >
+              </hlm-trow>
+              @for (
+                transaction of state.transactionSender();
+                track transaction.id
+              ) {
+                <hlm-trow
+                  class="flex flex-col lg:flex-row lg:justify-between border-b lg:border-none p-2 lg:p-0"
+                >
+                  <div class="flex flex-col gap-2 lg:hidden">
+                    <div class="flex justify-between items-center">
+                      <span class="text-sm font-semibold">Date:</span>
+                      <span class="text-sm">{{
+                        transaction.date | date: "dd/MM/yyyy"
+                      }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                      <span class="text-sm font-semibold">Expéditeur:</span>
+                      <span class="text-sm">{{
+                        transaction.senderPrincipal !== null
+                          ? transaction.senderPrincipal.username || ""
+                          : transaction.senderGroup.username || ""
+                      }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                      <span class="text-sm font-semibold">Destinataire:</span>
+                      @if (
+                        transaction.recipientGroup.length > 1 ||
+                        transaction.recipientPrincipal.length > 1 ||
+                        transaction.recipientGroup.length +
+                          transaction.recipientPrincipal.length >
+                          1
+                      ) {
+                        <div class="text-right">
+                          <span
+                            class="text-sm font-semibold text-gray-600 bg-gray-100 px-2 py-1 rounded-full"
+                            >Destinataires multiples</span
+                          >
+                          <div
+                            class="mt-2 space-y-1 bg-white p-2 rounded-lg shadow-sm"
+                          >
+                            @if (transaction.recipientGroup.length > 0) {
+                              <div
+                                class="text-xs text-gray-500 font-medium mb-1"
+                              >
+                                Projets de groupe:
+                              </div>
+                              @for (
+                                recipient of transaction.recipientGroup;
+                                track recipient.id
+                              ) {
+                                @if (
+                                  recipient.username !==
+                                  state.accountGroup()?.username
+                                ) {
+                                  <div
+                                    class="text-sm pl-2 py-0.5 border-l-2 border-blue-400"
+                                  >
+                                    {{ recipient.username }}
+                                  </div>
+                                }
+                              }
+                            }
+                            @if (transaction.recipientPrincipal.length > 0) {
+                              <div
+                                class="text-xs text-gray-500 font-medium mb-1 mt-2"
+                              >
+                                Projets individuels:
+                              </div>
+                              @for (
+                                recipient of transaction.recipientPrincipal;
+                                track recipient.id
+                              ) {
+                                @if (
+                                  recipient.username !==
+                                  state.accountPrincipal()?.username
+                                ) {
+                                  <div
+                                    class="text-sm pl-2 py-0.5 border-l-2 border-green-400"
+                                  >
+                                    {{ recipient.username }}
+                                  </div>
+                                }
+                              }
+                            }
+                          </div>
+                        </div>
+                      } @else {
+                        <span class="text-sm">
+                          @if (
+                            transaction.recipientGroup!.length > 0 &&
+                            transaction.recipientGroup[0]
+                          ) {
+                            {{ transaction.recipientGroup[0].username || "" }}
+                          } @else if (
+                            transaction.recipientPrincipal!.length > 0 &&
+                            transaction.recipientPrincipal[0]
+                          ) {
+                            {{
+                              transaction.recipientPrincipal[0].username || ""
+                            }}
+                          } @else {
+                            {{ "" }}
+                          }
+                        </span>
+                      }
+                    </div>
+                    <div class="flex justify-between items-center">
+                      <span class="text-sm font-semibold">Communication:</span>
+                      <brn-popover>
+                        <button
+                          brnPopoverTrigger
+                          class="text-sm truncate max-w-[150px] cursor-pointer hover:text-gray-600 text-left"
+                        >
+                          {{ transaction.communication }}
+                        </button>
+                        <div
+                          class="p-2 text-sm max-w-[200px] bg-white rounded shadow-lg"
+                          hlmPopoverContent
+                          *brnPopoverContent="let ctx"
+                        >
+                          {{ transaction.communication }}
+                        </div>
+                      </brn-popover>
+                    </div>
+                    <div class="flex justify-between items-center">
+                      <span class="text-sm font-semibold">Montant:</span>
+                      <span class="text-sm text-red-400"
+                        >-{{
+                          transaction.amount *
+                            (transaction.recipientGroup.length +
+                              transaction.recipientPrincipal.length)
+                            | euroFormat
+                        }}</span
+                      >
+                    </div>
+                  </div>
+
+                  <div class="hidden lg:flex lg:justify-between w-full">
+                    <hlm-td class="lg:w-[20%] text-sm">{{
+                      transaction.date | date: "dd/MM/yyyy"
+                    }}</hlm-td>
+                    <hlm-td class="lg:w-[20%] text-sm">{{
                       transaction.senderPrincipal !== null
                         ? transaction.senderPrincipal.username || ""
                         : transaction.senderGroup.username || ""
-                    }}</span>
-                </div>
-                <div class="flex justify-between items-center">
-                  <span class="text-sm font-semibold">Destinataire:</span>
-                  @if (transaction.recipientGroup.length > 1 ||
-                  transaction.recipientPrincipal.length > 1 ||
-                  (transaction.recipientGroup.length +
-                    transaction.recipientPrincipal.length > 1)) {
-                    <div class="text-right">
-                  <span
-                    class="text-sm font-semibold text-gray-600 bg-gray-100 px-2 py-1 rounded-full"
-                  >Destinataires multiples</span
-                  >
-                      <div class="mt-2 space-y-1 bg-white p-2 rounded-lg shadow-sm">
-                        @if (transaction.recipientGroup.length > 0) {
-                          <div class="text-xs text-gray-500 font-medium mb-1">
-                            Projets de groupe:
-                          </div>
-                          @for (recipient of transaction.recipientGroup; track
-                            recipient.id) { @if (recipient.username !==
-                          state.accountGroup()?.username ) {
-                            <div class="text-sm pl-2 py-0.5 border-l-2 border-blue-400">
-                              {{ recipient.username }}
-                            </div>
-                          } } } @if (transaction.recipientPrincipal.length > 0) {
-                        <div class="text-xs text-gray-500 font-medium mb-1 mt-2">
-                          Projets individuels:
-                        </div>
-                        @for (recipient of transaction.recipientPrincipal; track
-                          recipient.id) { @if (recipient.username !==
-                        state.accountPrincipal()?.username) {
-                          <div
-                            class="text-sm pl-2 py-0.5 border-l-2 border-green-400"
-                          >
-                            {{ recipient.username }}
-                          </div>
-                        } } }
-                      </div>
-                    </div>
-                  } @else {
-                    <span class="text-sm">
-                  @if(transaction.recipientGroup!.length > 0 &&
-                  transaction.recipientGroup[0]) {
-                    {{ transaction.recipientGroup[0].username || "" }}
-                  } @else if(transaction.recipientPrincipal!.length > 0 &&
-                  transaction.recipientPrincipal[0]) {
-                    {{ transaction.recipientPrincipal[0].username || "" }}
-                  } @else {
-                    {{ "" }}
-                  }
-                </span>
-                  }
-                </div>
-                <div class="flex justify-between items-center">
-                  <span class="text-sm font-semibold">Communication:</span>
-                  <brn-popover>
-                    <button
-                      brnPopoverTrigger
-                      class="text-sm truncate max-w-[150px] cursor-pointer hover:text-gray-600 text-left"
-                    >
-                      {{ transaction.communication }}
-                    </button>
-                    <div
-                      class="p-2 text-sm max-w-[200px] bg-white rounded shadow-lg"
-                      hlmPopoverContent
-                      *brnPopoverContent="let ctx"
-                    >
-                      {{ transaction.communication }}
-                    </div>
-                  </brn-popover>
-                </div>
-                <div class="flex justify-between items-center">
-                  <span class="text-sm font-semibold">Montant:</span>
-                  <span class="text-sm text-red-400"
-                  >-{{
-                      transaction.amount *
-                      (transaction.recipientGroup.length +
-                        transaction.recipientPrincipal.length) | euroFormat
-                    }}</span
-                  >
-                </div>
-              </div>
+                    }}</hlm-td>
 
-              <div class="hidden lg:flex lg:justify-between w-full">
-                <hlm-td class="lg:w-[20%] text-sm">{{
-                    transaction.date | date : "dd/MM/yyyy"
-                  }}</hlm-td>
-                <hlm-td class="lg:w-[20%] text-sm">{{
-                    transaction.senderPrincipal !== null
-                      ? transaction.senderPrincipal.username || ""
-                      : transaction.senderGroup.username || ""
-                  }}</hlm-td>
-
-                @if (transaction.recipientGroup.length > 1 ||
-                transaction.recipientPrincipal.length > 1 ||
-                (transaction.recipientGroup.length +
-                  transaction.recipientPrincipal.length > 1)) {
-                  <hlm-td class="lg:w-[20%]">
-                    <div hlmAccordion>
-                      <div class="border-b-0" hlmAccordionItem>
-                        <button
-                          class="hover:no-underline font-medium text-sm bg-gray-100 px-3 py-1 rounded-full flex items-center gap-2 text-gray-600 w-full justify-center"
-                          hlmAccordionTrigger
-                        >
-                          Destinataires multiples
-                          <hlm-icon name="lucideChevronDown" size="sm" />
-                        </button>
-                        <hlm-accordion-content class="" hlmAccordionContent>
-                          @if (transaction.recipientGroup.length > 0) {
-                            <div class="text-xs text-gray-500 font-medium">
-                              Projets de groupe:
-                            </div>
-                            <div class="space-y-1">
-                              @for (recipient of transaction.recipientGroup; track
-                                recipient.id) { @if (recipient.username !==
-                              state.accountGroup()?.username) {
-                                <div
-                                  class="text-sm pl-2 py-0.5 border-l-2 border-blue-400"
-                                >
-                                  {{ recipient.username }}
+                    @if (
+                      transaction.recipientGroup.length > 1 ||
+                      transaction.recipientPrincipal.length > 1 ||
+                      transaction.recipientGroup.length +
+                        transaction.recipientPrincipal.length >
+                        1
+                    ) {
+                      <hlm-td class="lg:w-[20%]">
+                        <div hlmAccordion>
+                          <div class="border-b-0" hlmAccordionItem>
+                            <button
+                              class="hover:no-underline font-medium text-sm bg-gray-100 px-3 py-1 rounded-full flex items-center gap-2 text-gray-600 w-full justify-center"
+                              hlmAccordionTrigger
+                            >
+                              Destinataires multiples
+                              <hlm-icon name="lucideChevronDown" size="sm" />
+                            </button>
+                            <hlm-accordion-content class="" hlmAccordionContent>
+                              @if (transaction.recipientGroup.length > 0) {
+                                <div class="text-xs text-gray-500 font-medium">
+                                  Projets de groupe:
                                 </div>
-                              } }
-                            </div>
-                          } @if (transaction.recipientPrincipal.length > 0) {
-                          <div class="text-xs text-gray-500 font-medium mt-2">
-                            Projets individuels:
+                                <div class="space-y-1">
+                                  @for (
+                                    recipient of transaction.recipientGroup;
+                                    track recipient.id
+                                  ) {
+                                    @if (
+                                      recipient.username !==
+                                      state.accountGroup()?.username
+                                    ) {
+                                      <div
+                                        class="text-sm pl-2 py-0.5 border-l-2 border-blue-400"
+                                      >
+                                        {{ recipient.username }}
+                                      </div>
+                                    }
+                                  }
+                                </div>
+                              }
+                              @if (transaction.recipientPrincipal.length > 0) {
+                                <div
+                                  class="text-xs text-gray-500 font-medium mt-2"
+                                >
+                                  Projets individuels:
+                                </div>
+                                <div class="space-y-1">
+                                  @for (
+                                    recipient of transaction.recipientPrincipal;
+                                    track recipient.id
+                                  ) {
+                                    @if (
+                                      recipient.username !==
+                                      state.accountPrincipal()?.username
+                                    ) {
+                                      <div
+                                        class="text-sm pl-2 py-0.5 border-l-2 border-green-400"
+                                      >
+                                        {{ recipient.username }}
+                                      </div>
+                                    }
+                                  }
+                                </div>
+                              }
+                            </hlm-accordion-content>
                           </div>
-                          <div class="space-y-1">
-                            @for (recipient of transaction.recipientPrincipal; track
-                              recipient.id) { @if (recipient.username !==
-                            state.accountPrincipal()?.username) {
-                              <div
-                                class="text-sm pl-2 py-0.5 border-l-2 border-green-400"
-                              >
-                                {{ recipient.username }}
-                              </div>
-                            } }
-                          </div>
-                        }
-                        </hlm-accordion-content>
-                      </div>
-                    </div>
-                  </hlm-td>
-                } @else {
-                  <hlm-th class="lg:w-[20%] font-bold text-[10px]">
-                    @if(transaction.recipientGroup!.length > 0 &&
-                    transaction.recipientGroup![0]) {
-                      {{ transaction.recipientGroup![0].username || "" }}
-                    } @else if(transaction.recipientPrincipal!.length > 0 &&
-                    transaction.recipientPrincipal![0]) {
-                      {{ transaction.recipientPrincipal![0].username || "" }}
+                        </div>
+                      </hlm-td>
                     } @else {
-                      {{ "" }}
+                      <hlm-th class="lg:w-[20%] font-bold text-[10px]">
+                        @if (
+                          transaction.recipientGroup!.length > 0 &&
+                          transaction.recipientGroup![0]
+                        ) {
+                          {{ transaction.recipientGroup![0].username || "" }}
+                        } @else if (
+                          transaction.recipientPrincipal!.length > 0 &&
+                          transaction.recipientPrincipal![0]
+                        ) {
+                          {{
+                            transaction.recipientPrincipal![0].username || ""
+                          }}
+                        } @else {
+                          {{ "" }}
+                        }
+                      </hlm-th>
                     }
-                  </hlm-th>
+
+                    <hlm-th class="lg:w-[20%] font-bold text-[10px]">
+                      <brn-popover>
+                        <button
+                          brnPopoverTrigger
+                          class="truncate block max-w-[150px] cursor-pointer hover:text-gray-600 text-left"
+                        >
+                          {{ transaction.communication }}
+                        </button>
+                        <div
+                          class="p-2 text-[10px] max-w-[200px] bg-white rounded shadow-lg"
+                          hlmPopoverContent
+                          *brnPopoverContent="let ctx"
+                        >
+                          {{ transaction.communication }}
+                        </div>
+                      </brn-popover>
+                    </hlm-th>
+                    <hlm-th
+                      class="lg:w-[20%] font-bold text-[10px] text-red-400"
+                      >-{{
+                        transaction.amount *
+                          (transaction.recipientGroup.length +
+                            transaction.recipientPrincipal.length) | euroFormat
+                      }}</hlm-th
+                    >
+                  </div>
+                </hlm-trow>
+              }
+            </div>
+          </hlm-table>
+
+          @if (state.transactionSender()?.length) {
+            <nav hlmPagination class="mt-4 flex justify-center">
+              <ul
+                hlmPaginationContent
+                class="flex flex-wrap gap-1 justify-center items-center"
+              >
+                <li hlmPaginationItem class="md:mx-1">
+                  <button
+                    class="px-3 py-1.5 text-sm font-medium transition-colors hover:bg-gray-100 rounded-md"
+                    [class.opacity-50]="pagination.sender.currentPage() === 1"
+                    [disabled]="pagination.sender.currentPage() === 1"
+                    (click)="
+                      pagination.sender.currentPage() > 1 &&
+                        onPageChangeSender(pagination.sender.currentPage() - 1)
+                    "
+                  >
+                    Précédent
+                  </button>
+                </li>
+
+                @for (
+                  page of getVisiblePages(
+                    pagination.sender.currentPage(),
+                    pagination.sender.totalPages()
+                  );
+                  track $index
+                ) {
+                  @if (page === "ellipsis") {
+                    <li hlmPaginationItem class="md:mx-1">
+                      <span class="px-3 py-1.5">...</span>
+                    </li>
+                  } @else {
+                    <li hlmPaginationItem class="md:mx-1">
+                      <button
+                        class="min-w-[40px] h-9 px-3 py-1.5 text-sm font-medium transition-colors rounded-md"
+                        [class.bg-zinc-800]="
+                          pagination.sender.currentPage() === page
+                        "
+                        [class.text-white]="
+                          pagination.sender.currentPage() === page
+                        "
+                        [class.hover:bg-gray-100]="
+                          pagination.sender.currentPage() !== page
+                        "
+                        (click)="onPageChangeSender(page)"
+                      >
+                        {{ page }}
+                      </button>
+                    </li>
+                  }
                 }
 
-                <hlm-th class="lg:w-[20%] font-bold text-[10px]">
-                  <brn-popover>
-                    <button
-                      brnPopoverTrigger
-                      class="truncate block max-w-[150px] cursor-pointer hover:text-gray-600 text-left"
-                    >
-                      {{ transaction.communication }}
-                    </button>
-                    <div
-                      class="p-2 text-[10px] max-w-[200px] bg-white rounded shadow-lg"
-                      hlmPopoverContent
-                      *brnPopoverContent="let ctx"
-                    >
-                      {{ transaction.communication }}
-                    </div>
-                  </brn-popover>
-                </hlm-th>
-                <hlm-th class="lg:w-[20%] font-bold text-[10px] text-red-400"
-                >-{{
-                    transaction.amount *
-                    (transaction.recipientGroup.length +
-                      transaction.recipientPrincipal.length) | euroFormat
-                  }}</hlm-th
-                >
-              </div>
-            </hlm-trow>
+                <li hlmPaginationItem class="md:mx-1">
+                  <button
+                    class="px-3 py-1.5 text-sm font-medium transition-colors hover:bg-gray-100 rounded-md"
+                    [class.opacity-50]="
+                      pagination.sender.currentPage() ===
+                      pagination.sender.totalPages()
+                    "
+                    [disabled]="
+                      pagination.sender.currentPage() ===
+                      pagination.sender.totalPages()
+                    "
+                    (click)="
+                      pagination.sender.currentPage() <
+                        pagination.sender.totalPages() &&
+                        onPageChangeSender(pagination.sender.currentPage() + 1)
+                    "
+                  >
+                    Suivant
+                  </button>
+                </li>
+              </ul>
+            </nav>
           }
         </div>
-      </hlm-table>
-
-      @if (state.transactionSender()?.length) {
-        <nav hlmPagination class="mt-4 flex justify-center">
-          <ul
-            hlmPaginationContent
-            class="flex flex-wrap gap-1 justify-center items-center"
-          >
-            <li hlmPaginationItem class="md:mx-1">
-              <button
-                class="px-3 py-1.5 text-sm font-medium transition-colors hover:bg-gray-100 rounded-md"
-                [class.opacity-50]="pagination.sender.currentPage() === 1"
-                [disabled]="pagination.sender.currentPage() === 1"
-                (click)="
-                pagination.sender.currentPage() > 1 &&
-                  onPageChangeSender(pagination.sender.currentPage() - 1)
-              "
-              >
-                Précédent
-              </button>
-            </li>
-
-            @for (page of getVisiblePages(pagination.sender.currentPage(),
-              pagination.sender.totalPages()); track $index) { @if (page ===
-            'ellipsis') {
-              <li hlmPaginationItem class="md:mx-1">
-                <span class="px-3 py-1.5">...</span>
-              </li>
-            } @else {
-              <li hlmPaginationItem class="md:mx-1">
-                <button
-                  class="min-w-[40px] h-9 px-3 py-1.5 text-sm font-medium transition-colors rounded-md"
-                  [class.bg-zinc-800]="pagination.sender.currentPage() === page"
-                  [class.text-white]="pagination.sender.currentPage() === page"
-                  [class.hover:bg-gray-100]="
-                pagination.sender.currentPage() !== page
-              "
-                  (click)="onPageChangeSender(page)"
-                >
-                  {{ page }}
-                </button>
-              </li>
-            } }
-
-            <li hlmPaginationItem class="md:mx-1">
-              <button
-                class="px-3 py-1.5 text-sm font-medium transition-colors hover:bg-gray-100 rounded-md"
-                [class.opacity-50]="
-                pagination.sender.currentPage() ===
-                pagination.sender.totalPages()
-              "
-                [disabled]="
-                pagination.sender.currentPage() ===
-                pagination.sender.totalPages()
-              "
-                (click)="
-                pagination.sender.currentPage() <
-                  pagination.sender.totalPages() &&
-                  onPageChangeSender(pagination.sender.currentPage() + 1)
-              "
-              >
-                Suivant
-              </button>
-            </li>
-          </ul>
-        </nav>
-      }
+      </div>
     </div>
-
-
-  </div>
-
-
-</div>
-} @else {
-<hlm-spinner class="mx-auto" />
-} } @loading (minimum 500ms) {
-<hlm-spinner class="mx-auto" />
+  } @else {
+    <hlm-spinner class="mx-auto" />
+  }
+} @loading (minimum 500ms) {
+  <hlm-spinner class="mx-auto" />
 }

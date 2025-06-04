@@ -55,8 +55,10 @@ import {
 } from '@ng-icons/lucide';
 import { provideIcons } from '@ng-icons/core';
 import { PdfViewerComponent } from '../../shared/components/pdf-viewer/pdf-viewer.component';
-import {HlmInputDirective} from "@spartan-ng/ui-input-helm";
-import {HlmTableDirective} from "@spartan-ng/ui-table-helm";
+import { HlmInputDirective } from '@spartan-ng/ui-input-helm';
+import { HlmTableDirective } from '@spartan-ng/ui-table-helm';
+import { ibanValidator } from '../../shared/validators/iban.validator';
+import { belgianStructuredCommunicationValidator } from '../../shared/validators/belgian-structured-communication.validator';
 
 @Component({
   selector: 'app-sepa-validation',
@@ -77,7 +79,6 @@ import {HlmTableDirective} from "@spartan-ng/ui-table-helm";
     HlmDialogHeaderComponent,
     HlmDialogTitleDirective,
     PdfViewerComponent,
-
 
     NgIf,
     NgClass,
@@ -131,7 +132,7 @@ export class SepaValidationComponent implements AfterViewInit {
   protected currentPagePending = signal(1);
   protected itemsPerPagePending = signal(10); // Ou toute autre valeur par défaut
   protected sortFieldPending = signal<keyof VirementSepaEntity | null>(
-    'created_at'
+    'created_at',
   );
   protected sortOrderPending = signal<'asc' | 'desc'>('desc');
 
@@ -139,7 +140,7 @@ export class SepaValidationComponent implements AfterViewInit {
   protected currentPageAll = signal(1);
   protected itemsPerPageAll = signal(10);
   protected sortFieldAll = signal<keyof VirementSepaEntity | null>(
-    'created_at'
+    'created_at',
   );
   protected sortOrderAll = signal<'asc' | 'desc'>('desc');
   protected searchTermAll = signal<string>('');
@@ -184,7 +185,7 @@ export class SepaValidationComponent implements AfterViewInit {
 
   protected totalPagesPending = computed(() => {
     return Math.ceil(
-      this.virementsSepaInPending().length / this.itemsPerPagePending()
+      this.virementsSepaInPending().length / this.itemsPerPagePending(),
     );
   });
 
@@ -238,7 +239,7 @@ export class SepaValidationComponent implements AfterViewInit {
       (virement) =>
         virement.projet_username.toLowerCase().includes(term) ||
         virement.account_owner.toLowerCase().includes(term) ||
-        virement.iban.toLowerCase().includes(term)
+        virement.iban.toLowerCase().includes(term),
     );
   });
 
@@ -250,7 +251,7 @@ export class SepaValidationComponent implements AfterViewInit {
 
   protected totalPagesAll = computed(() => {
     return Math.ceil(
-      this.filteredAllVirements().length / this.itemsPerPageAll()
+      this.filteredAllVirements().length / this.itemsPerPageAll(),
     );
   });
 
@@ -292,7 +293,7 @@ export class SepaValidationComponent implements AfterViewInit {
           const sortedData = [...data].sort(
             (a, b) =>
               new Date(b.created_at).getTime() -
-              new Date(a.created_at).getTime()
+              new Date(a.created_at).getTime(),
           );
 
           sortedData.forEach((virement) => {
@@ -307,7 +308,7 @@ export class SepaValidationComponent implements AfterViewInit {
                 updatedVirements.sort(
                   (a, b) =>
                     new Date(b.created_at).getTime() -
-                    new Date(a.created_at).getTime()
+                    new Date(a.created_at).getTime(),
                 );
                 return updatedVirements;
               });
@@ -317,7 +318,7 @@ export class SepaValidationComponent implements AfterViewInit {
               });
             }
           });
-        })
+        }),
       )
       .subscribe();
   }
@@ -346,7 +347,7 @@ export class SepaValidationComponent implements AfterViewInit {
   acceptVirement(id: number) {
     this.virementSepaService.acceptVirement(id).subscribe(() => {
       const acceptedVirement = this.virementsSepaInPending().find(
-        (virement) => virement.id === id
+        (virement) => virement.id === id,
       );
       if (acceptedVirement) {
         this.virementsSepaInPending.update((virements) => {
@@ -395,7 +396,7 @@ export class SepaValidationComponent implements AfterViewInit {
 
   protected openDetailedView(virement: VirementSepaEntity) {
     const index = this.virementsSepaInPending().findIndex(
-      (v) => v.id === virement.id
+      (v) => v.id === virement.id,
     );
     if (index !== -1) {
       this.currentVirementsIndex.set(index);
@@ -466,7 +467,7 @@ export class SepaValidationComponent implements AfterViewInit {
         if (response.success) {
           this.virementsSepaAccepted.update((virements) => {
             return virements.filter(
-              (virement) => virement.status !== 'ACCEPTED'
+              (virement) => virement.status !== 'ACCEPTED',
             );
           });
 
@@ -499,7 +500,7 @@ export class SepaValidationComponent implements AfterViewInit {
   protected sortByPending(field: keyof VirementSepaEntity) {
     if (this.sortFieldPending() === field) {
       this.sortOrderPending.set(
-        this.sortOrderPending() === 'asc' ? 'desc' : 'asc'
+        this.sortOrderPending() === 'asc' ? 'desc' : 'asc',
       );
     } else {
       this.sortFieldPending.set(field);
@@ -602,7 +603,7 @@ export class SepaValidationComponent implements AfterViewInit {
 
     return finalRange.filter(
       (item, index, self) =>
-        item !== 'ellipsis' || (index > 0 && self[index - 1] !== 'ellipsis')
+        item !== 'ellipsis' || (index > 0 && self[index - 1] !== 'ellipsis'),
     );
   }
 
@@ -700,7 +701,7 @@ export class SepaValidationComponent implements AfterViewInit {
 
     return finalRange.filter(
       (item, index, self) =>
-        item !== 'ellipsis' || (index > 0 && self[index - 1] !== 'ellipsis')
+        item !== 'ellipsis' || (index > 0 && self[index - 1] !== 'ellipsis'),
     );
   }
 
@@ -753,7 +754,7 @@ export class SepaValidationComponent implements AfterViewInit {
 
   validateEdit() {
     const confirmation = confirm(
-      'Êtes-vous sûr de vouloir valider les modifications ? Si oui, la page sera rechargée pour afficher les changements.'
+      'Êtes-vous sûr de vouloir valider les modifications ? Si oui, la page sera rechargée pour afficher les changements.',
     );
     if (!confirmation || !this.editedVirement) return;
 
@@ -773,17 +774,47 @@ export class SepaValidationComponent implements AfterViewInit {
       structured_communication,
     } = this.editedVirement;
 
-    return (
+    // Validation basique
+    const basicValidation =
       iban?.trim() !== '' &&
       amount_total !== null &&
       amount_htva !== null &&
-      communication?.trim() !== ''
-    );
+      communication?.trim() !== '';
+
+    if (!basicValidation) return false;
+
+    // Validation IBAN
+    if (iban && !this.isValidIban(iban)) return false;
+
+    // Validation communication structurée (si fournie)
+    if (
+      structured_communication &&
+      structured_communication.trim() !== '' &&
+      !this.isValidBelgianStructuredCommunication(structured_communication)
+    ) {
+      return false;
+    }
+
+    return true;
   }
 
+  /**
+   * Valide un IBAN
+   */
+  isValidIban(iban: string): boolean {
+    const validator = ibanValidator();
+    const mockControl = { value: iban } as any;
+    return validator(mockControl) === null;
+  }
 
-
-
+  /**
+   * Valide une communication structurée belge
+   */
+  isValidBelgianStructuredCommunication(communication: string): boolean {
+    const validator = belgianStructuredCommunicationValidator();
+    const mockControl = { value: communication } as any;
+    return validator(mockControl) === null;
+  }
 
   // Méthodes pour gérer les changements de montant
 
@@ -852,7 +883,4 @@ export class SepaValidationComponent implements AfterViewInit {
   private roundToTwo(value: number): number {
     return Math.round(Math.max(0, value) * 100) / 100;
   }
-
-
-
 }
